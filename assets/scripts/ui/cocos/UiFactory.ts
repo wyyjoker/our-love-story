@@ -45,7 +45,7 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
   const cam = cameraNode.addComponent(Camera);
   cam.projection = Camera.ProjectionType.ORTHO;
   cam.orthoHeight = DESIGN_H / 2;
-  cam.clearFlags = Camera.ClearFlagFlag.SOLID_COLOR;
+  cam.clearFlags = Camera.ClearFlag.SOLID_COLOR;
   cam.visibility = Layers.Enum.UI_2D;
   cam.priority = 10;
 
