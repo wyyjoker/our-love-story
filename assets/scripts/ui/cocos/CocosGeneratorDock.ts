@@ -51,7 +51,7 @@ class GenButton {
   render(vm: GeneratorVm): void {
     this.id = vm.id;
     this.nameLabel.string = vm.displayName;
-    this.subLabel.string = vm.locked ? `Lv${vm.unlockLevel} 解锁` : vm.costText;
+    this.subLabel.string = vm.locked ? `Lv${vm.unlockLevel} 解锁` : `体力${vm.energyCost}`;
     this.node.getComponent(UIOpacity)!.opacity = vm.locked ? 170 : 255;
     paintRoundRect(
       this.g,

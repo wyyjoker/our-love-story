@@ -54,7 +54,7 @@ export class GameController {
     const result = this.game.claimOrder(orderUid);
     if (result.ok) {
       return {
-        toast: `交付成功！\n💰${result.rewardCoins}  ♥${result.rewardHearts}`,
+        toast: `交付成功！\n金币 +${result.rewardCoins}  爱心 +${result.rewardHearts}`,
         tone: 'success',
       };
     }

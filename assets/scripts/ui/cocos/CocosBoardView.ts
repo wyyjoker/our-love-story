@@ -1,26 +1,29 @@
 /**
- * CocosBoardView — 7x9 cells, touch drag with threshold, drop resolution via Core.
- * Does not own board truth — renders GameContext BoardState only.
+ * CocosBoardView — per-cell touch binding (reliable hit) + board-space drop resolve.
+ * Pointer math uses getUILocation + UITransform.convertToNodeSpaceAR.
  */
-import {
-  EventTouch,
-  Vec2,
-  Vec3,
-  UITransform,
-  Node,
-} from 'cc';
+import { EventTouch, Vec2, Vec3, UITransform, Node, Graphics, Camera } from 'cc';
 import type { BoardVm, ItemVm } from '../../presentation/GameViewMapper';
 import type { DropResolve } from '../../core/types';
 import { CocosCellView } from './CocosCellView';
 import { CocosItemView } from './CocosItemView';
-import { CocosTheme, createUiNode, ensureOpacity, ensureTransform, paintRoundRect } from './CocosTheme';
-import { Graphics } from 'cc';
+import {
+  CocosTheme,
+  createUiNode,
+  ensureOpacity,
+  ensureTransform,
+  paintRoundRect,
+} from './CocosTheme';
 
 export type BoardDeps = {
   previewDrop: (from: number, to: number | null) => DropResolve;
   onDrop: (from: number, to: number | null) => void;
   dragThreshold: number;
 };
+
+function logInput(tag: string, payload: unknown): void {
+  console.debug(`[INPUT] ${tag}`, payload);
+}
 
 export class CocosBoardView {
   readonly node: Node;
@@ -32,6 +35,7 @@ export class CocosBoardView {
   private boardW = 0;
   private boardH = 0;
   private deps: BoardDeps;
+  private camera: Camera | null = null;
 
   private drag: {
     fromIndex: number;
@@ -39,10 +43,10 @@ export class CocosBoardView {
     startUI: Vec2;
     active: boolean;
     ghost: Node | null;
-    ghostItem: CocosItemView | null;
   } | null = null;
 
-  private lastMergedIndex = -1;
+  private dragLayer: Node | null = null;
+  private pendingVm: Map<string, ItemVm> | null = null;
 
   constructor(
     parent: Node,
@@ -75,6 +79,14 @@ export class CocosBoardView {
     this.bindTouch();
   }
 
+  setDragLayer(layer: Node): void {
+    this.dragLayer = layer;
+  }
+
+  setCamera(camera: Camera | null): void {
+    this.camera = camera;
+  }
+
   private layoutCells(): void {
     this.cellSize = Math.floor(
       Math.min(
@@ -95,13 +107,19 @@ export class CocosBoardView {
         const x = originX + c * (this.cellSize + this.gap);
         const y = originY - r * (this.cellSize + this.gap);
         cell.node.setPosition(x, y, 0);
+        // Per-cell hit target — avoids fragile board-space conversion for pickup
+        cell.node.on(
+          Node.EventType.TOUCH_START,
+          (e: EventTouch) => this.onCellTouchStart(e, index),
+          this,
+        );
         this.cells.push(cell);
       }
     }
   }
 
   private bindTouch(): void {
-    this.node.on(Node.EventType.TOUCH_START, this.onTouchStart, this);
+    // Board-level move/end still needed for drag continuation
     this.node.on(Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
     this.node.on(Node.EventType.TOUCH_END, this.onTouchEnd, this);
     this.node.on(Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
@@ -111,10 +129,26 @@ export class CocosBoardView {
     return touch.getUILocation();
   }
 
-  private localPos(touch: EventTouch): Vec3 {
-    const tr = this.node.getComponent(UITransform)!;
+  /** UI → node local. convertToNodeSpaceAR expects world; map UI via camera when possible. */
+  private localPos(touch: EventTouch, target: Node = this.node): Vec3 {
+    const transform = target.getComponent(UITransform);
+    if (!transform) {
+      return new Vec3();
+    }
     const ui = touch.getUILocation();
-    return tr.convertToNodeSpaceAR(new Vec3(ui.x, ui.y, 0));
+    const world = this.uiToWorld(ui, touch);
+    return transform.convertToNodeSpaceAR(world);
+  }
+
+  private uiToWorld(ui: Vec2, touch: EventTouch): Vec3 {
+    if (this.camera) {
+      const screen = touch.getLocation();
+      const world = new Vec3();
+      this.camera.screenToWorld(world, new Vec3(screen.x, screen.y, 0));
+      return world;
+    }
+    // Canvas UI fallback: UI location ≈ world in design space for standard canvas
+    return new Vec3(ui.x, ui.y, 0);
   }
 
   private indexFromLocal(local: Vec3): number | null {
@@ -126,51 +160,71 @@ export class CocosBoardView {
     const y = local.y - originY;
     if (x < 0 || y < 0 || x > totalW || y > totalH) return null;
 
-    const stepX = this.cellSize + this.gap;
-    const stepY = this.cellSize + this.gap;
-    const c = Math.floor(x / stepX);
-    const r = Math.floor(y / stepY);
+    const step = this.cellSize + this.gap;
+    const c = Math.floor(x / step);
+    const r = Math.floor(y / step);
     if (c < 0 || r < 0 || c >= this.columns || r >= this.rows) return null;
 
-    // ignore gaps between cells
-    const offsetX = x % stepX;
-    const offsetY = y % stepY;
+    const offsetX = x % step;
+    const offsetY = y % step;
     if (offsetX > this.cellSize || offsetY > this.cellSize) {
       return null;
     }
 
-    // local y grows up; row 0 is top
     const row = this.rows - 1 - r;
     const index = row * this.columns + c;
     if (index < 0 || index > this.rows * this.columns - 1) return null;
     return index;
   }
 
+  /** Fallback: which cell UITransform contains this touch. */
+  private indexFromHitTest(touch: EventTouch): number | null {
+    const ui = touch.getUILocation();
+    const world = this.uiToWorld(ui, touch);
+    for (const cell of this.cells) {
+      const tr = cell.node.getComponent(UITransform);
+      if (!tr) continue;
+      // hitTest accepts screen point in 3.8 — also try UI/world converted
+      const local = tr.convertToNodeSpaceAR(world);
+      const w = tr.width / 2;
+      const h = tr.height / 2;
+      if (local.x >= -w && local.x <= w && local.y >= -h && local.y <= h) {
+        return cell.index;
+      }
+    }
+    return null;
+  }
+
+  private resolveIndex(touch: EventTouch, hint?: number): number | null {
+    if (hint !== undefined) return hint;
+    const local = this.localPos(touch);
+    return this.indexFromLocal(local) ?? this.indexFromHitTest(touch);
+  }
+
+  private onCellTouchStart(e: EventTouch, index: number): void {
+    this.beginDrag(e, index);
+  }
+
   private onTouchStart(e: EventTouch): void {
+    this.beginDrag(e, this.resolveIndex(e));
+  }
+
+  private beginDrag(e: EventTouch, index: number | null): void {
+    const ui = e.getUILocation();
     const local = this.localPos(e);
-    const index = this.indexFromLocal(local);
-    console.debug('[BOARD_TOUCH_START]', {
-      ui: e.getUILocation(),
-      local,
-      index,
-    });
+    logInput('start', { ui, local, index });
     if (index === null) return;
     const cell = this.cells[index];
     const item = cell?.itemView;
-    if (!cell || !item || !item.node.active) return;
+    if (!cell || !item || !item.node.active || !item.uid) return;
 
-    console.debug('[BOARD_DRAG_ITEM]', {
-      index,
-      uid: item.uid,
-    });
-
+    logInput('item', { index, uid: item.uid });
     this.drag = {
       fromIndex: index,
       uid: item.uid,
       startUI: this.uiPos(e),
       active: false,
       ghost: null,
-      ghostItem: null,
     };
   }
 
@@ -182,11 +236,14 @@ export class CocosBoardView {
     if (!this.drag.active) {
       if (Math.hypot(dx, dy) < this.deps.dragThreshold) return;
       this.drag.active = true;
+      logInput('drag-start', { fromIndex: this.drag.fromIndex });
       this.startGhost();
       this.cells[this.drag.fromIndex]?.setSourceDim(true);
     }
+    const to = this.resolveIndex(e);
+    logInput('drag-move', { toIndex: to });
     this.moveGhost(e);
-    this.highlightTarget(e);
+    this.highlightTarget(e, to);
   }
 
   private onTouchEnd(e: EventTouch): void {
@@ -196,15 +253,11 @@ export class CocosBoardView {
     this.clearHighlights();
     this.endGhost();
     this.cells[drag.fromIndex]?.setSourceDim(false);
-
     if (!drag.active) return;
 
-    const to = this.indexFromLocal(this.localPos(e));
-    console.debug('[BOARD_TOUCH_END]', {
-      from: drag.fromIndex,
-      to,
-      ui: e.getUILocation(),
-    });
+    const to = this.resolveIndex(e);
+    const preview = this.deps.previewDrop(drag.fromIndex, to);
+    logInput('drop', { from: drag.fromIndex, to, preview });
     this.deps.onDrop(drag.fromIndex, to);
   }
 
@@ -228,41 +281,35 @@ export class CocosBoardView {
     const size = this.cellSize;
     ensureTransform(ghost, size, size);
     const item = new CocosItemView(ghost, size);
-    const vm = source?.itemView?.uid
-      ? this.pendingVm?.get(source.itemView.uid)
-      : undefined;
+    const uid = source?.itemView?.uid;
+    const vm = uid ? this.pendingVm?.get(uid) : undefined;
     if (vm) item.render(vm);
     this.drag.ghost = ghost;
-    this.drag.ghostItem = item;
     source?.setSourceDim(true);
   }
 
   private moveGhost(e: EventTouch): void {
-    if (!this.drag?.ghost || !this.dragLayer) return;
-    const ui = e.getUILocation();
-    const transform = this.dragLayer.getComponent(UITransform);
+    if (!this.drag?.ghost) return;
+    const layer = this.dragLayer ?? this.node;
+    const transform = layer.getComponent(UITransform);
     if (!transform) return;
-    const local = transform.convertToNodeSpaceAR(new Vec3(ui.x, ui.y, 0));
+    const world = this.uiToWorld(e.getUILocation(), e);
+    const local = transform.convertToNodeSpaceAR(world);
     this.drag.ghost.setPosition(local);
   }
 
-  private highlightTarget(e: EventTouch): void {
+  private highlightTarget(e: EventTouch, to: number | null): void {
     if (!this.drag) return;
     this.clearHighlights();
-    const to = this.indexFromLocal(this.localPos(e));
-    if (to === null || to === this.drag.fromIndex) return;
-    const preview = this.deps.previewDrop(this.drag.fromIndex, to);
-    const cell = this.cells[to];
+    const index = to ?? this.resolveIndex(e);
+    if (index === null || index === this.drag.fromIndex) return;
+    const preview = this.deps.previewDrop(this.drag.fromIndex, index);
+    const cell = this.cells[index];
     if (!cell) return;
     if (preview.kind === 'MERGE') cell.setHighlight('merge');
-    else if (preview.kind === 'MOVE' || preview.kind === 'SWAP') cell.setHighlight('move');
-  }
-
-  private dragLayer: Node | null = null;
-  private pendingVm: Map<string, ItemVm> | null = null;
-
-  setDragLayer(layer: Node): void {
-    this.dragLayer = layer;
+    else if (preview.kind === 'MOVE' || preview.kind === 'SWAP') {
+      cell.setHighlight('move');
+    }
   }
 
   private clearHighlights(): void {
@@ -271,10 +318,7 @@ export class CocosBoardView {
 
   private endGhost(): void {
     this.drag?.ghost?.destroy();
-    if (this.drag) {
-      this.drag.ghost = null;
-      this.drag.ghostItem = null;
-    }
+    if (this.drag) this.drag.ghost = null;
   }
 
   render(vm: BoardVm): void {
@@ -286,17 +330,11 @@ export class CocosBoardView {
     }
     this.pendingVm = byUid;
     for (const cell of this.cells) {
-      const item = byCell.get(cell.index) ?? null;
-      const prev = cell.itemView?.uid;
-      cell.setItem(item);
-      if (item && prev !== item.uid && cell.index === this.lastMergedIndex) {
-        cell.playMergePop();
-      }
+      cell.setItem(byCell.get(cell.index) ?? null);
     }
   }
 
   markMerge(index: number): void {
-    this.lastMergedIndex = index;
     this.cells[index]?.playMergePop();
   }
 
@@ -305,7 +343,9 @@ export class CocosBoardView {
   }
 
   dispose(): void {
-    this.node.off(Node.EventType.TOUCH_START, this.onTouchStart, this);
+    for (const cell of this.cells) {
+      cell.node.off(Node.EventType.TOUCH_START);
+    }
     this.node.off(Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
     this.node.off(Node.EventType.TOUCH_END, this.onTouchEnd, this);
     this.node.off(Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);

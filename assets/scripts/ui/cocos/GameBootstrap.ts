@@ -8,6 +8,7 @@ import { CocosPlatformAdapter } from '../../platform/cocos/CocosPlatformAdapter'
 import { CocosLifecycleAdapter } from '../../platform/cocos/CocosLifecycleAdapter';
 import { CocosSafeArea } from '../../platform/cocos/CocosSafeArea';
 import { createGameContext, type GameContext } from '../../gameplay/GameContext';
+import { runRuntimeSelfTest } from '../../gameplay/RuntimeSelfTest';
 import { GameLogger } from '../../infrastructure/GameLogger';
 import {
   applyDesignResolution,
@@ -69,6 +70,7 @@ export class GameBootstrap extends Component {
 
   private boot(): void {
     applyDesignResolution();
+    runRuntimeSelfTest(logger);
 
     const storage = new CocosStorageAdapter();
     const platform = new CocosPlatformAdapter();

@@ -52,6 +52,7 @@ describe('GameViewMapper', () => {
       ready: true,
     });
     expect(ready.buttonText).toBe('交付');
+    expect(ready.rewardText).toContain('金币');
     const notReady = mapper.mapOrder(order, {
       requirements: [
         { itemId: 'coffee_02', count: 1, have: 0, done: false },

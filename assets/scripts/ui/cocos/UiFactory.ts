@@ -1,6 +1,7 @@
 /**
  * Runtime UI hierarchy factory (no prefab UUID required).
- * Builds Canvas + Camera + layered UI under SafeArea.
+ * Explicit pixel layout so Status/Orders/Board/Dock are fully visible.
+ * Overlay layers are pass-through (0×0 hit area) so they never block Board input.
  */
 import {
   Node,
@@ -30,13 +31,29 @@ export type UiRoots = {
   debugLayer: Node;
 };
 
-/** Design reference 750x1334 portrait. */
 export const DESIGN_W = 750;
 export const DESIGN_H = 1334;
+
+/** Vertical rhythm (design px). */
+export const LAYOUT = {
+  topPad: 28,
+  bottomPad: 28,
+  statusH: 112,
+  ordersH: 210,
+  dockH: 168,
+  gap: 10,
+} as const;
 
 export function applyDesignResolution(): void {
   // 2 = FIXED_WIDTH (Fit Width)
   view.setDesignResolutionSize(DESIGN_W, DESIGN_H, 2);
+}
+
+/** Full-screen decorative layer must not swallow Board touches. */
+export function makePassThrough(node: Node): void {
+  const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
+  tr.setContentSize(0, 0);
+  tr.setAnchorPoint(0.5, 0.5);
 }
 
 export function buildUiTree(insets: SafeInsets): UiRoots {
@@ -64,10 +81,17 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
   safeWidget.isAlignLeft = true;
   safeWidget.isAlignRight = true;
   const visible = view.getVisibleSize();
-  safeWidget.top = Math.ceil((insets.top / Math.max(1, visible.height)) * DESIGN_H);
-  safeWidget.bottom = Math.ceil((insets.bottom / Math.max(1, visible.height)) * DESIGN_H);
-  safeWidget.left = Math.ceil((insets.left / Math.max(1, visible.width)) * DESIGN_W);
-  safeWidget.right = Math.ceil((insets.right / Math.max(1, visible.width)) * DESIGN_W);
+  const scaleX = DESIGN_W / Math.max(1, visible.width);
+  const scaleY = DESIGN_H / Math.max(1, visible.height);
+  // Map real safe-area screen insets into design units
+  const insetTop = Math.ceil(insets.top * scaleY);
+  const insetBottom = Math.ceil(insets.bottom * scaleY);
+  const insetLeft = Math.ceil(insets.left * scaleX);
+  const insetRight = Math.ceil(insets.right * scaleX);
+  safeWidget.top = insetTop;
+  safeWidget.bottom = insetBottom;
+  safeWidget.left = insetLeft;
+  safeWidget.right = insetRight;
   safeWidget.alignMode = Widget.AlignMode.ON_WINDOW_RESIZE;
   safeWidget.updateAlignment();
 
@@ -80,51 +104,68 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
   bgWidget.isAlignRight = true;
   bgWidget.updateAlignment();
 
-  const contentH = DESIGN_H - safeWidget.top - safeWidget.bottom;
-  const statusH = Math.floor(contentH * 0.08);
-  const ordersH = Math.floor(contentH * 0.18);
-  const dockH = Math.floor(contentH * 0.16);
-  const boardH = contentH - statusH - ordersH - dockH;
+  const contentH = DESIGN_H - insetTop - insetBottom;
+  const contentW = DESIGN_W - insetLeft - insetRight;
+  const topPad = LAYOUT.topPad;
+  const bottomPad = LAYOUT.bottomPad;
+  const gap = LAYOUT.gap;
+  const used =
+    topPad +
+    LAYOUT.statusH +
+    gap +
+    LAYOUT.ordersH +
+    gap +
+    LAYOUT.dockH +
+    bottomPad +
+    gap;
+  const boardH = Math.max(420, contentH - used);
+
+  // Stack from top of safe content area (y from center of safeArea)
+  const topY = contentH / 2;
+  let cursor = topY - topPad;
 
   const statusSlot = createUiNode('StatusBar');
   safeArea.addChild(statusSlot);
-  ensureTransform(statusSlot, DESIGN_W, statusH, 0.5, 1);
-  statusSlot.setPosition(0, contentH / 2, 0);
+  ensureTransform(statusSlot, contentW, LAYOUT.statusH, 0.5, 1);
+  statusSlot.setPosition(0, cursor, 0);
+  cursor -= LAYOUT.statusH + gap;
 
   const ordersSlot = createUiNode('OrderPanel');
   safeArea.addChild(ordersSlot);
-  ensureTransform(ordersSlot, DESIGN_W, ordersH, 0.5, 1);
-  ordersSlot.setPosition(0, contentH / 2 - statusH, 0);
+  ensureTransform(ordersSlot, contentW, LAYOUT.ordersH, 0.5, 1);
+  ordersSlot.setPosition(0, cursor, 0);
+  cursor -= LAYOUT.ordersH + gap;
 
   const boardSlot = createUiNode('BoardPanel');
   safeArea.addChild(boardSlot);
-  ensureTransform(boardSlot, DESIGN_W, boardH, 0.5, 1);
-  boardSlot.setPosition(0, contentH / 2 - statusH - ordersH, 0);
+  ensureTransform(boardSlot, contentW, boardH, 0.5, 1);
+  boardSlot.setPosition(0, cursor, 0);
+  cursor -= boardH + gap;
 
   const dockSlot = createUiNode('GeneratorDock');
   safeArea.addChild(dockSlot);
-  ensureTransform(dockSlot, DESIGN_W, dockH, 0.5, 1);
-  dockSlot.setPosition(0, contentH / 2 - statusH - ordersH - boardH, 0);
+  ensureTransform(dockSlot, contentW, LAYOUT.dockH, 0.5, 1);
+  dockSlot.setPosition(0, cursor, 0);
 
   const dragLayer = createUiNode('DragLayer');
   canvas.addChild(dragLayer);
-  ensureTransform(dragLayer, DESIGN_W, DESIGN_H);
+  makePassThrough(dragLayer);
 
   const toastLayer = createUiNode('ToastLayer');
   canvas.addChild(toastLayer);
-  ensureTransform(toastLayer, DESIGN_W, DESIGN_H);
+  makePassThrough(toastLayer);
 
   const tutorialLayer = createUiNode('TutorialLayer');
   canvas.addChild(tutorialLayer);
-  ensureTransform(tutorialLayer, DESIGN_W, DESIGN_H);
+  makePassThrough(tutorialLayer);
 
   const modalLayer = createUiNode('ModalLayer');
   canvas.addChild(modalLayer);
-  ensureTransform(modalLayer, DESIGN_W, DESIGN_H);
+  makePassThrough(modalLayer);
 
   const debugLayer = createUiNode('DebugLayer');
   canvas.addChild(debugLayer);
-  ensureTransform(debugLayer, DESIGN_W, DESIGN_H);
+  makePassThrough(debugLayer);
 
   setLayerTree(cameraNode, Layers.Enum.UI_2D);
   setLayerTree(canvas, Layers.Enum.UI_2D);
@@ -151,10 +192,11 @@ export function attachUiToScene(sceneRoot: Node, roots: UiRoots): void {
   sceneRoot.addChild(roots.canvas);
 }
 
-export function sizeOf(node: Node, fallbackW: number, fallbackH: number): {
-  width: number;
-  height: number;
-} {
+export function sizeOf(
+  node: Node,
+  fallbackW: number,
+  fallbackH: number,
+): { width: number; height: number } {
   const tr = node.getComponent(UITransform);
   if (!tr) return { width: fallbackW, height: fallbackH };
   return { width: tr.width, height: tr.height };

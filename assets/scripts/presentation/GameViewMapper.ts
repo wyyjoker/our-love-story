@@ -180,7 +180,7 @@ export class GameViewMapper {
       rewardHearts: order.rewardHearts,
       ready: progress.ready,
       buttonText: progress.ready ? '交付' : '还差一点',
-      rewardText: `💰${order.rewardCoins}  ♥${order.rewardHearts}`,
+      rewardText: `金币 ${order.rewardCoins}  爱心 ${order.rewardHearts}`,
     };
   }
 

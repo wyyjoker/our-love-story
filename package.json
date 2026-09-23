@@ -18,5 +18,9 @@
     "esbuild": "^0.25.0",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"
-  }
+  },
+  "creator": {
+    "version": "3.8.8"
+  },
+  "uuid": "d9275282-2d08-4f47-b3e2-6b7a8af4044c"
 }

@@ -1,8 +1,7 @@
 /**
  * CocosGameView — composes status/orders/board/dock/toast/tutorial/levelup/debug.
- * Event-driven refresh only; never mutates domain state directly.
+ * Merge/spawn VFX come from EventBus only (no double animation).
  */
-import { Node, tween, UIOpacity, UITransform } from 'cc';
 import type { GameContext } from '../../gameplay/GameContext';
 import type { GameEventBus } from '../../events/GameEventBus';
 import { GameController } from '../GameController';
@@ -21,13 +20,13 @@ import { CocosToastView, ToastMessages } from './CocosToastView';
 import { CocosTutorialView } from './CocosTutorialView';
 import { CocosLevelUpView } from './CocosLevelUpView';
 import { CocosDebugPanel } from './CocosDebugPanel';
+import { Camera, Graphics } from 'cc';
 import {
   CocosTheme,
   createUiNode,
   ensureTransform,
   paintRoundRect,
 } from './CocosTheme';
-import { Graphics } from 'cc';
 
 export class CocosGameView {
   private readonly mapper: GameViewMapper;
@@ -56,10 +55,10 @@ export class CocosGameView {
     const bgG = bg.addComponent(Graphics);
     paintRoundRect(bgG, 750, 1334, 0, CocosTheme.background());
 
-    const statusSize = sizeOf(roots.statusSlot, 750, 100);
-    const ordersSize = sizeOf(roots.ordersSlot, 750, 220);
+    const statusSize = sizeOf(roots.statusSlot, 750, 112);
+    const ordersSize = sizeOf(roots.ordersSlot, 750, 210);
     const boardSize = sizeOf(roots.boardSlot, 750, 700);
-    const dockSize = sizeOf(roots.dockSlot, 750, 180);
+    const dockSize = sizeOf(roots.dockSlot, 750, 168);
 
     this.status = new CocosStatusBar(
       roots.statusSlot,
@@ -84,6 +83,7 @@ export class CocosGameView {
       },
     );
     this.board.setDragLayer(roots.dragLayer);
+    this.board.setCamera(roots.camera.getComponent(Camera));
 
     this.dock = new CocosGeneratorDock(
       roots.dockSlot,
@@ -140,12 +140,10 @@ export class CocosGameView {
 
   private handleDrop(from: number, to: number | null): void {
     const result = this.controller.onDrop(from, to);
-    if (result.ok && result.kind === 'MERGE' && to != null) {
-      this.board.markMerge(to);
-      if (result.toast) this.toast.show(result.toast, result.tone ?? 'success');
-    } else if (result.ok && result.kind === 'MOVE' && to != null) {
-      this.board.markSpawn(to);
+    if (result.ok && result.kind === 'MERGE' && result.toast) {
+      this.toast.show(result.toast, result.tone ?? 'success');
     }
+    // VFX only via EventBus (ITEM_MERGED / ITEM_SPAWNED)
     this.renderAll();
     this.renderTutorial();
   }
@@ -159,6 +157,7 @@ export class CocosGameView {
     );
     this.unsubs.push(
       bus.on('ITEM_MERGED', (p) => {
+        console.debug('[MERGE]', p.resultDefinitionId, '@', p.to);
         this.board.markMerge(p.to);
       }),
     );
@@ -180,7 +179,7 @@ export class CocosGameView {
     this.unsubs.push(
       bus.on('ORDER_COMPLETED', (p) => {
         this.toast.show(
-          `交付成功！\n💰${p.rewardCoins}  ♥${p.rewardHearts}`,
+          `交付成功！\n金币 +${p.rewardCoins}  爱心 +${p.rewardHearts}`,
           'success',
         );
       }),
