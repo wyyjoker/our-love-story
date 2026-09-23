@@ -13,14 +13,7 @@ import type { BoardVm, ItemVm } from '../../presentation/GameViewMapper';
 import type { DropResolve } from '../../core/types';
 import { CocosCellView } from './CocosCellView';
 import { CocosItemView } from './CocosItemView';
-import {
-  CocosTheme,
-  createUiNode,
-  ensureOpacity,
-  ensureTransform,
-  paintRoundRect,
-} from './CocosTheme';
-import { DESIGN_W, DESIGN_H } from './UiFactory';
+import { CocosTheme, createUiNode, ensureOpacity, ensureTransform, paintRoundRect } from './CocosTheme';
 import { Graphics } from 'cc';
 
 export type BoardDeps = {
@@ -120,8 +113,8 @@ export class CocosBoardView {
 
   private localPos(touch: EventTouch): Vec3 {
     const tr = this.node.getComponent(UITransform)!;
-    const world = touch.getLocation();
-    return tr.convertToNodeSpaceAR(new Vec3(world.x, world.y, 0));
+    const ui = touch.getUILocation();
+    return tr.convertToNodeSpaceAR(new Vec3(ui.x, ui.y, 0));
   }
 
   private indexFromLocal(local: Vec3): number | null {
@@ -132,21 +125,44 @@ export class CocosBoardView {
     const x = local.x - originX;
     const y = local.y - originY;
     if (x < 0 || y < 0 || x > totalW || y > totalH) return null;
-    const c = Math.floor(x / (this.cellSize + this.gap));
-    const r = Math.floor(y / (this.cellSize + this.gap));
+
+    const stepX = this.cellSize + this.gap;
+    const stepY = this.cellSize + this.gap;
+    const c = Math.floor(x / stepX);
+    const r = Math.floor(y / stepY);
     if (c < 0 || r < 0 || c >= this.columns || r >= this.rows) return null;
-    // y grows up in local; row 0 is top
+
+    // ignore gaps between cells
+    const offsetX = x % stepX;
+    const offsetY = y % stepY;
+    if (offsetX > this.cellSize || offsetY > this.cellSize) {
+      return null;
+    }
+
+    // local y grows up; row 0 is top
     const row = this.rows - 1 - r;
-    return row * this.columns + c;
+    const index = row * this.columns + c;
+    if (index < 0 || index > this.rows * this.columns - 1) return null;
+    return index;
   }
 
   private onTouchStart(e: EventTouch): void {
     const local = this.localPos(e);
     const index = this.indexFromLocal(local);
+    console.debug('[BOARD_TOUCH_START]', {
+      ui: e.getUILocation(),
+      local,
+      index,
+    });
     if (index === null) return;
     const cell = this.cells[index];
     const item = cell?.itemView;
     if (!cell || !item || !item.node.active) return;
+
+    console.debug('[BOARD_DRAG_ITEM]', {
+      index,
+      uid: item.uid,
+    });
 
     this.drag = {
       fromIndex: index,
@@ -184,6 +200,11 @@ export class CocosBoardView {
     if (!drag.active) return;
 
     const to = this.indexFromLocal(this.localPos(e));
+    console.debug('[BOARD_TOUCH_END]', {
+      from: drag.fromIndex,
+      to,
+      ui: e.getUILocation(),
+    });
     this.deps.onDrop(drag.fromIndex, to);
   }
 
@@ -216,18 +237,13 @@ export class CocosBoardView {
     source?.setSourceDim(true);
   }
 
-  private dragLayer: Node | null = null;
-  private pendingVm: Map<string, ItemVm> | null = null;
-
-  setDragLayer(layer: Node): void {
-    this.dragLayer = layer;
-  }
-
   private moveGhost(e: EventTouch): void {
-    if (!this.drag?.ghost) return;
+    if (!this.drag?.ghost || !this.dragLayer) return;
     const ui = e.getUILocation();
-    // UI location origin is bottom-left in design pixels
-    this.drag.ghost.setPosition(ui.x - DESIGN_W / 2, ui.y - DESIGN_H / 2, 0);
+    const transform = this.dragLayer.getComponent(UITransform);
+    if (!transform) return;
+    const local = transform.convertToNodeSpaceAR(new Vec3(ui.x, ui.y, 0));
+    this.drag.ghost.setPosition(local);
   }
 
   private highlightTarget(e: EventTouch): void {
@@ -240,6 +256,13 @@ export class CocosBoardView {
     if (!cell) return;
     if (preview.kind === 'MERGE') cell.setHighlight('merge');
     else if (preview.kind === 'MOVE' || preview.kind === 'SWAP') cell.setHighlight('move');
+  }
+
+  private dragLayer: Node | null = null;
+  private pendingVm: Map<string, ItemVm> | null = null;
+
+  setDragLayer(layer: Node): void {
+    this.dragLayer = layer;
   }
 
   private clearHighlights(): void {
