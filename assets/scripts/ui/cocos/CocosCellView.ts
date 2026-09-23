@@ -1,7 +1,7 @@
 /**
  * CocosCellView — one board cell shell (highlight states for drop).
  */
-import { Node, Graphics, Vec3, tween } from 'cc';
+import { Node, Graphics, Vec3, tween, Color } from 'cc';
 import {
   CocosTheme,
   createUiNode,
@@ -10,6 +10,11 @@ import {
 } from './CocosTheme';
 import { CocosItemView } from './CocosItemView';
 import type { ItemVm } from '../../presentation/GameViewMapper';
+
+function alpha(color: Color, a: number): Color {
+  const c = new Color(color.r, color.g, color.b, a);
+  return c;
+}
 
 export class CocosCellView {
   readonly node: Node;
@@ -34,7 +39,7 @@ export class CocosCellView {
       this.size - 4,
       this.size - 4,
       10,
-      CocosTheme.surface().clone().set(255, 255, 255, 180),
+      alpha(CocosTheme.surface(), 190),
       CocosTheme.border(),
     );
   }
@@ -42,19 +47,17 @@ export class CocosCellView {
   private paintHighlight(kind: 'move' | 'merge'): void {
     const fill =
       kind === 'merge'
-        ? CocosTheme.accent().clone().set(
-            CocosTheme.accent().r,
-            CocosTheme.accent().g,
-            CocosTheme.accent().b,
-            70,
-          )
-        : CocosTheme.primary().clone().set(
-            CocosTheme.primary().r,
-            CocosTheme.primary().g,
-            CocosTheme.primary().b,
-            50,
-          );
-    paintRoundRect(this.g, this.size - 4, this.size - 4, 10, fill, CocosTheme.primary(), 2);
+        ? alpha(CocosTheme.accent(), 80)
+        : alpha(CocosTheme.primary(), 60);
+    paintRoundRect(
+      this.g,
+      this.size - 4,
+      this.size - 4,
+      10,
+      fill,
+      CocosTheme.primary(),
+      2,
+    );
     if (kind === 'merge') {
       tween(this.node)
         .to(0.12, { scale: new Vec3(1.04, 1.04, 1) })

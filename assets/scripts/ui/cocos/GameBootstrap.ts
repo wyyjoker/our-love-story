@@ -70,11 +70,13 @@ export class GameBootstrap extends Component {
 
   private boot(): void {
     applyDesignResolution();
-    runRuntimeSelfTest(logger);
 
     const storage = new CocosStorageAdapter();
     const platform = new CocosPlatformAdapter();
     logger.info('BOOT', `platform=${platform.kind}`);
+    if (platform.isDevBuild()) {
+      runRuntimeSelfTest(logger);
+    }
 
     this.game = createGameContext({
       storage,
