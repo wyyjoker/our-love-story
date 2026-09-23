@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <title>我们的浪漫小屋 · V0.1</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app" class="app">
+      <header class="status-bar" id="status-bar">
+        <div class="level-block">
+          <span class="level-badge" id="level-badge">Lv.1</span>
+          <div class="xp-wrap">
+            <div class="xp-track"><div class="xp-fill" id="xp-fill"></div></div>
+            <span class="xp-text" id="xp-text">0 / 30</span>
+          </div>
+        </div>
+        <div class="stat-pills">
+          <button type="button" class="pill energy" id="energy-pill" title="体力">
+            <span class="pill-icon">⚡</span>
+            <span id="energy-text">50/50</span>
+          </button>
+          <div class="pill coins"><span class="pill-icon">💰</span><span id="coins-text">0</span></div>
+          <div class="pill hearts"><span class="pill-icon">❤</span><span id="hearts-text">0</span></div>
+        </div>
+      </header>
+
+      <section class="orders" id="orders" aria-label="订单"></section>
+
+      <section class="board-wrap">
+        <div class="board" id="board" aria-label="合成棋盘"></div>
+      </section>
+
+      <section class="dock" id="dock" aria-label="生成器">
+        <div class="dock-inner" id="dock-inner"></div>
+      </section>
+
+      <div class="tutorial" id="tutorial" hidden></div>
+      <div class="toast-root" id="toast-root" aria-live="polite"></div>
+      <div class="levelup" id="levelup" hidden>
+        <div class="levelup-card">
+          <div class="levelup-title">LEVEL UP</div>
+          <div class="levelup-level" id="levelup-level">Lv.2</div>
+          <div class="levelup-desc" id="levelup-desc"></div>
+        </div>
+      </div>
+
+      <button type="button" class="dev-btn" id="dev-btn" title="Debug">DEV</button>
+      <div class="dev-panel" id="dev-panel" hidden>
+        <div class="dev-title">Debug Panel</div>
+        <button type="button" data-dev="energy">+50 Energy</button>
+        <button type="button" data-dev="xp">+100 XP</button>
+        <button type="button" data-dev="coins">+1000 Coins</button>
+        <button type="button" data-dev="clear">Clear Board</button>
+        <button type="button" data-dev="reset">Reset Save</button>
+        <label class="dev-spawn">
+          Spawn
+          <select id="dev-chain">
+            <option value="coffee">coffee</option>
+            <option value="flower">flower</option>
+            <option value="dessert">dessert</option>
+            <option value="gift">gift</option>
+          </select>
+          <select id="dev-level">
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option>
+          </select>
+          <button type="button" data-dev="spawn">Spawn</button>
+        </label>
+      </div>
+    </div>
+    <script src="game.js"></script>
+  </body>
+</html>
