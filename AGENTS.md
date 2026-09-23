@@ -2,45 +2,58 @@
 
 ## 项目技术栈
 
-- Cocos Creator 3.8.8（目标平台：微信小游戏，竖屏）
+- Cocos Creator 3.8.8（目标：微信小游戏，竖屏）— **正式客户端**
+- 浏览器 `index.html` — Debug Harness，不是第二产品
 - TypeScript strict
 - 纯 TS Domain / Gameplay（禁止依赖 cc）
 - JSON 配置驱动
-- Vitest 测试 core / gameplay / infrastructure
+- Vitest 测试 core / gameplay / infrastructure / presentation
 
 ## 核心架构
 
 ```text
-Presentation (UI: web or Cocos)
+Presentation (Web UI or Cocos UI)
   → GameController
-  → Gameplay Services (Board/Generator/Order/Energy/Progression)
-  → Domain/Core (MergeEngine, Board rules, types)
+  → Gameplay Services
+  → Domain/Core
 Infrastructure: Save, Clock, Id, Random, Platform
-Config: assets/resources/config + assets/scripts/config loader
+Cocos adapters: platform/cocos/* (may import cc)
+Config: assets/resources/config + assets/scripts/config
 ```
+
+### Cocos 边界规则（V0.1B）
+
+- Cocos presentation 可以 `import { ... } from 'cc'`
+- `assets/scripts/core/**` 与 `assets/scripts/gameplay/**` **禁止**依赖 `cc`
+- 禁止在 Cocos 组件里复制玩法逻辑；只调 `GameContext` / services
+- 禁止手工伪造 Cocos UUID / meta；让 Creator 生成
+- 提交前必须 `npm run test:core` 通过
+- Node 类型检查：`npm run lint:core`（`tsconfig.core.json`）
 
 ## 目录责任
 
 | 路径 | 责任 |
 | --- | --- |
-| assets/scripts/core/ | 纯逻辑：棋盘、合成、类型、订单规则、进度规则 |
-| assets/scripts/gameplay/ | 编排服务与 GameContext |
-| assets/scripts/infrastructure/ | 存档、时钟、UID、随机、平台 |
-| assets/scripts/events/ | 类型化 GameEventBus |
+| assets/scripts/core/ | 纯逻辑 Domain |
+| assets/scripts/gameplay/ | 服务 + GameContext |
+| assets/scripts/infrastructure/ | Save / Clock / Id / Random / Platform |
+| assets/scripts/events/ | 类型化事件总线 |
 | assets/scripts/config/ | 配置加载与校验 |
-| assets/scripts/ui/ | Cocos / 通用 UI 组件 |
-| src/web/ | 浏览器可玩 UI |
-| assets/resources/config/ | 唯一数值/内容配置源 |
-| tests/ | Vitest 单元测试 |
-| docs/ | 产品、架构、测试计划、路线图 |
+| assets/scripts/presentation/ | ViewModel mapper |
+| assets/scripts/platform/cocos/ | Cocos 适配（storage/lifecycle/safe area） |
+| assets/scripts/ui/cocos/ | Cocos Runtime UI + GameBootstrap |
+| src/web/ | 浏览器 Debug Harness |
+| assets/resources/config/ | 唯一数值配置源 |
+| tests/ | Vitest |
+| docs/ | 产品 / 架构 / Cocos setup & smoke |
 
 ## 必须运行的测试
 
-改动以下任一内容后必须跑通：
-
 ```bash
 npm run test:core
-npm run lint
+npm run lint:core
+npm run build:web
+npm run verify:cocos
 ```
 
 **修改 Merge 核心规则后必须同时修改或新增对应测试。**
@@ -48,32 +61,24 @@ npm run lint
 ## 代码规范
 
 - TypeScript strict，禁止滥用 any
-- 正常游戏失败用 Result type，不 throw
-- 时间只用 ClockService.now()
-- 随机只用 RandomService
-- UID 只用 IdService
-- 存档只用 SaveService + Storage 抽象
-- 资源 snake_case；TypeScript PascalCase / camelCase / UPPER_SNAKE_CASE
-- 禁止魔法字符串解锁等级；用 progression config
-- 禁止在 update() 每帧 new / JSON.stringify / localStorage
+- 正常游戏失败用 Result type
+- 时间 / 随机 / UID / 存档走 Infrastructure 抽象
+- UI 文案中文；资源 snake_case
+- 配置驱动，禁止魔法字符串解锁等级
+- 禁止每帧 full rebuild / localStorage
 
 ## 禁止事项
 
-- 复制商业游戏代码 / UI / 美术 / 剧情 / 名称
-- 把全部逻辑塞进 Game.ts / GameManager
+- 复制商业游戏内容
 - UI 直接改 SaveData
-- MergeEngine import cc
-- 运行时依赖 DOM / Node fs / process（web 专用代码仅限 src/web）
-- 未执行测试却声称测试通过
-- git reset --hard / git clean -fd / git push --force
-- 未经确认 push 到远程
-
-## 配置驱动要求
-
-棋盘尺寸、体力、经验、物品、合成链、生成器、订单、解锁等级必须来自 config，不得散落硬编码。
+- Core/gameplay import cc
+- 在 Cocos 层复制 WebMergeEngine / CocosOrderService 等双逻辑
+- 伪造测试结果 / 未跑 Creator 却写 Build PASS
+- git reset --hard / clean -fd / push --force
+- 未经确认 push main/master
 
 ## Git 规范
 
-- 提交信息：chore: / feat: / fix: / docs: / test: / refactor:
-- 功能分支：feat/v0.1-core-merge
-- 不主动 push
+- 分支：`feat/v0.1-core-merge`、`feat/v0.1b-cocos-native`
+- 提交：`chore:` / `feat:` / `fix:` / `docs:` / `test:` / `build:`
+- 不主动 push main

@@ -2,17 +2,18 @@
 
 送给重要的人的专属 Merge 情侣小游戏。
 
-当前版本：**V0.1（核心 Merge 闭环）**
+当前版本：**V0.1B — Cocos Runtime Source Ready**（Creator 构建需本机验证后才能标 Ready）
+
+**正式客户端：Cocos Creator 3.8.8**（目标微信小游戏）。  
+**Browser client（`index.html`）：开发/逻辑验证辅助 Debug Harness**，与 Cocos 共用同一套 Domain/Gameplay，不是第二款产品。
 
 ## 项目是什么
 
 一款微信小游戏（竖屏），核心玩法为 Merge-2 合成 + 订单 + 体力 + 等级成长。后续版本会逐步加入情侣剧情、回忆照片、小屋装修等内容。
 
-V0.1 的目标是把**真正可运行的核心循环**做稳：
+V0.1 做稳核心循环；V0.1B 把同一套 Pure TS Core 接到真正的 Cocos Runtime UI / Touch / Storage / Lifecycle。
 
-启动 → 读档 → 点击生成器 → 扣体力 → 生成物品 → 拖动 / 合成 → 交付订单 → 金币 / XP / 爱心 → 升级解锁 → 自动存档 → 重进恢复。
-
-## 玩法（V0.1）
+## 玩法（V0.1 / V0.1B）
 
 - 7×9 Merge 棋盘
 - 底部 4 个生成器：咖啡机、花篮、甜品烤箱（Lv3）、礼物盒（Lv5）
@@ -20,55 +21,56 @@ V0.1 的目标是把**真正可运行的核心循环**做稳：
 - 每条链 8 级，两个相同物品可合成下一级
 - 顶部 3 个订单，收集指定物品后可交付
 - 体力 50 上限，每 120 秒恢复 1 点（支持离线恢复）
-- 等级 Lv1–Lv5，金币 / 爱心获取并保存（V0.1 不消费）
+- 等级 Lv1–Lv5，金币 / 爱心获取并保存（当前版本不消费）
 
 ## 技术栈
 
 | 层 | 技术 |
 | --- | --- |
-| 客户端目标 | Cocos Creator 3.8.8 + TypeScript + 微信小游戏 |
-| 核心逻辑 | 纯 TypeScript（不依赖 Cocos） |
+| 正式客户端 | Cocos Creator 3.8.8 + TypeScript + 微信小游戏 |
+| 核心逻辑 | 纯 TypeScript（禁止依赖 cc） |
 | 配置 | JSON（items / generators / orders / progression / game） |
-| 存档 | Storage 抽象（Cocos sys.localStorage / Web / 微信） |
-| 测试 | Vitest（core + gameplay + infrastructure） |
-| 本地可玩预览 | 浏览器 index.html（同一套 Domain / Gameplay） |
+| 存档 | Storage 抽象（Cocos `sys.localStorage` / Web / mock） |
+| 测试 | Vitest（core + gameplay + infrastructure + presentation） |
+| 辅助 | 浏览器 `index.html` Debug Harness |
 
 ## 环境要求
 
-- Node.js 18+（开发与测试）
+- Node.js 18+
 - npm 9+
-- Cocos Creator **3.8.8**（编辑器打开 / 预览 / 构建微信小游戏）
-- 微信开发者工具（WeChat Mini Game 构建后导入）
+- Cocos Creator **3.8.8**
+- 微信开发者工具（可选，用于 WeChat 运行时验证）
 
 ## 安装与测试
 
 ```bash
 npm install
 npm run test:core
-npm run lint
+npm run lint:core
+npm run build:web
+npm run verify:cocos
+# 或一次跑完
+npm run verify
 ```
 
-## 浏览器预览（V0.1 可玩版）
+## 浏览器预览（Debug Harness）
 
 ```bash
 npm run build:web
 ```
 
-然后用浏览器打开项目根目录的 `index.html`。
-
-浏览器版与 Cocos 版共享 `assets/scripts/core`、`assets/scripts/gameplay`、`assets/scripts/infrastructure`、`assets/scripts/events` 同一套逻辑；UI 层可替换。
+打开项目根目录 `index.html`。
 
 ## 用 Cocos Creator 打开
 
-1. 安装 Cocos Dashboard，安装 **Cocos Creator 3.8.8**
-2. 用 Creator 打开本仓库根目录
-3. 打开场景 `assets/scenes/Game.scene`（若编辑器提示重建资源 UUID，按默认确认）
-4. 在 Editor Preview 中验证交互
-5. 菜单 **Project → Build**
-6. Platform 选择 **WeChat Mini Game**
-7. 用微信开发者工具打开构建输出目录
+详见 [docs/COCOS_SETUP.md](docs/COCOS_SETUP.md) 与 [docs/COCOS_SMOKE_TEST.md](docs/COCOS_SMOKE_TEST.md)。
 
-竖屏：设计分辨率 **750×1334**，Fit Width 开启。
+摘要：
+
+1. Cocos Creator **3.8.8** 打开仓库根目录
+2. 打开 `assets/scenes/Game.scene`，将自定义组件 **GameBootstrap** 挂到 `GameRoot`
+3. 设为 Start Scene，设计分辨率 750×1334 Fit Width，竖屏
+4. Editor Preview 验证后 Build：`Web Mobile` → 再 `WeChat Mini Game`
 
 ## 目录结构
 
@@ -77,53 +79,39 @@ our-love-story/
 ├─ assets/
 │  ├─ scenes/Game.scene
 │  ├─ scripts/
-│  │  ├─ core/             # 纯 TS Domain
-│  │  ├─ gameplay/         # 玩法服务 + GameContext
-│  │  ├─ infrastructure/   # Save / Clock / Id / Random / Platform
+│  │  ├─ core/             # 纯 TS Domain（禁 cc）
+│  │  ├─ gameplay/         # 服务 + GameContext（禁 cc）
+│  │  ├─ infrastructure/   # Save/Clock/Id/Random/Platform
 │  │  ├─ events/           # 类型化事件总线
 │  │  ├─ config/           # 配置加载与校验
-│  │  └─ ui/               # Cocos / 通用 UI
-│  └─ resources/config/    # items/generators/orders/progression/game
-├─ src/web/                # 浏览器可玩 UI
-├─ tests/                  # Vitest
-├─ docs/
-├─ tools/
-├─ index.html
-├─ styles.css
-└─ game.js                 # npm run build:web
+│  │  ├─ presentation/     # GameViewMapper
+│  │  ├─ platform/cocos/   # Cocos 适配层（可 import cc）
+│  │  └─ ui/
+│  │     ├─ cocos/         # Cocos Runtime UI + GameBootstrap
+│  │     └─ *              # 平台无关 UI 契约 / Theme
+│  └─ resources/config/
+├─ src/web/                # 浏览器 Debug Harness
+├─ tests/
+├─ docs/                   # 含 COCOS_SETUP / COCOS_SMOKE_TEST
+├─ tools/                  # verify-cocos-project / verify-all
+├─ index.html · styles.css · game.js
+└─ package.json · tsconfig.json · tsconfig.core.json
 ```
 
-## 已完成功能（V0.1）
+## 已完成功能
 
-- 配置驱动的 4 条 × 8 级合成链
-- MergeEngine（同 id 合成，满级不可合）
-- 棋盘 Move / Swap / Merge / Cancel
-- 4 个生成器、锁定解锁、加权掉落
-- 体力消耗与离线恢复
-- 订单生成 / 进度 / 交付事务
-- 金币 / XP / 爱心 / 等级 / 链解锁
-- 本地存档、版本号、坏档恢复
-- 新手引导、Toast、合成反馈、升级提示
-- 核心自动化测试
-- 浏览器可玩界面
-- Cocos UI 脚本骨架（GameBootstrap / GameController 等）
+见 [CHANGELOG.md](CHANGELOG.md)。V0.1 核心闭环 + V0.1B Cocos Runtime 源码层（Component / UI / Touch / Storage / Lifecycle / Safe Area）。
 
 ## 未完成功能
 
-- 正式美术（当前为程序化色块 / 缩写）
+- 本环境未执行 Cocos Editor Preview / Web Mobile Build / WeChat Build（见报告）
+- 正式美术
 - 情侣剧情、照片、回忆、装修
 - 微信登录 / 云存档 / 广告 / 支付 / 多人
-- Cocos Prefab 美化与真机安全区微调
 
 ## Roadmap
 
 见 [docs/ROADMAP.md](docs/ROADMAP.md)。
-
-## 验证状态
-
-- Automated tests: 见实现报告中的真实命令与结果
-- Cocos Editor Preview: 需本机 Cocos Creator
-- WeChat build: 需 Cocos Creator + 微信开发者工具
 
 ## License
 

@@ -1,15 +1,18 @@
 {
   "name": "our-love-story",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
-  "description": "《我们的浪漫小屋》— 情侣 Merge 小游戏 V0.1",
+  "description": "《我们的浪漫小屋》— 情侣 Merge 小游戏 V0.1B",
   "scripts": {
     "test": "vitest run",
     "test:core": "vitest run",
     "test:watch": "vitest",
-    "lint": "tsc --noEmit",
+    "lint": "tsc -p tsconfig.core.json",
+    "lint:core": "tsc -p tsconfig.core.json",
     "build:web": "esbuild src/web/main.ts --bundle --outfile=game.js --format=iife --target=es2020 --sourcemap",
-    "build:web:watch": "esbuild src/web/main.ts --bundle --outfile=game.js --format=iife --target=es2020 --sourcemap --watch"
+    "build:web:watch": "esbuild src/web/main.ts --bundle --outfile=game.js --format=iife --target=es2020 --sourcemap --watch",
+    "verify:cocos": "node tools/verify-cocos-project.mjs",
+    "verify": "node tools/verify-all.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.25.0",

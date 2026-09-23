@@ -9,8 +9,10 @@ local/
 build/
 native/
 profiles/
-# Keep settings/ if present as project config; ignore local caches
 *.tsbuildinfo
+
+# Keep settings/ tracked when Creator generates project settings
+# (do not ignore settings/)
 
 # OS / editor
 .DS_Store

@@ -14,10 +14,8 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "declaration": false,
-    "outDir": "dist",
-    "rootDir": ".",
-    "types": [],
-    "noEmit": true
+    "noEmit": true,
+    "types": []
   },
   "include": [
     "assets/scripts/core/**/*",
