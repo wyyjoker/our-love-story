@@ -55,9 +55,10 @@ export function makeLabel(
   color: Color,
   bold = false,
 ): Label {
-  const node = new Node('Label');
-  const tr = node.addComponent(UITransform);
+  const node = createUiNode('Label');
+  const tr = node.getComponent(UITransform)!;
   tr.setContentSize(200, size + 8);
+
   const label = node.addComponent(Label);
   label.string = text;
   label.fontSize = size;

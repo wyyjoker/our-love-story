@@ -40,7 +40,7 @@ export class CocosStatusBar {
     const g = card.addComponent(Graphics);
     paintRoundRect(g, cardW, cardH, 16, CocosTheme.surface(), CocosTheme.border());
 
-    const level = makeLabel('Lv.1', 22, CocosTheme.surface(), true);
+    const level = makeLabel('Lv.1', 22, CocosTheme.textPrimary(), true);
     this.node.addChild(level.node);
     level.node.setPosition(-cardW / 2 + 48, 0, 0);
     this.levelLabel = level;

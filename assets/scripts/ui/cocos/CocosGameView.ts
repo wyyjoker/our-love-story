@@ -259,9 +259,5 @@ export class CocosGameView {
     for (const u of this.unsubs) u();
     this.unsubs = [];
     this.board.dispose();
-    void (0 as unknown as UIOpacity);
-    void (0 as unknown as UITransform);
-    void tween;
-    void new Node();
   }
 }
