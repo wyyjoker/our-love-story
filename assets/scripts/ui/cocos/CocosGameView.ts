@@ -2,6 +2,7 @@
  * CocosGameView — composes status/orders/board/dock/toast/tutorial/levelup/debug.
  * Merge/spawn VFX come from EventBus only (no double animation).
  */
+import { Camera, Graphics } from 'cc';
 import type { GameContext } from '../../gameplay/GameContext';
 import type { GameEventBus } from '../../events/GameEventBus';
 import { GameController } from '../GameController';
@@ -20,7 +21,6 @@ import { CocosToastView, ToastMessages } from './CocosToastView';
 import { CocosTutorialView } from './CocosTutorialView';
 import { CocosLevelUpView } from './CocosLevelUpView';
 import { CocosDebugPanel } from './CocosDebugPanel';
-import { Camera, Graphics } from 'cc';
 import {
   CocosTheme,
   createUiNode,
@@ -49,16 +49,19 @@ export class CocosGameView {
     this.controller = new GameController(game);
     this.controller.bootUi();
 
+    const dw = roots.designWidth;
+    const dh = roots.designHeight;
+
     const bg = createUiNode('BgFill');
     roots.background.addChild(bg);
-    ensureTransform(bg, 750, 1334);
+    ensureTransform(bg, dw, dh);
     const bgG = bg.addComponent(Graphics);
-    paintRoundRect(bgG, 750, 1334, 0, CocosTheme.background());
+    paintRoundRect(bgG, dw, dh, 0, CocosTheme.background());
 
-    const statusSize = sizeOf(roots.statusSlot, 750, 112);
-    const ordersSize = sizeOf(roots.ordersSlot, 750, 210);
-    const boardSize = sizeOf(roots.boardSlot, 750, 700);
-    const dockSize = sizeOf(roots.dockSlot, 750, 168);
+    const statusSize = sizeOf(roots.statusSlot, dw, Math.round(dh * 0.09));
+    const ordersSize = sizeOf(roots.ordersSlot, dw, Math.round(dh * 0.16));
+    const boardSize = sizeOf(roots.boardSlot, dw, Math.round(dh * 0.5));
+    const dockSize = sizeOf(roots.dockSlot, dw, Math.round(dh * 0.14));
 
     this.status = new CocosStatusBar(
       roots.statusSlot,
@@ -90,10 +93,10 @@ export class CocosGameView {
       dockSize.width,
       dockSize.height,
     );
-    this.toast = new CocosToastView(roots.toastLayer, 750, 1334);
-    this.tutorial = new CocosTutorialView(roots.tutorialLayer, 750, 1334);
-    this.levelUp = new CocosLevelUpView(roots.modalLayer, 750, 1334);
-    this.debug = new CocosDebugPanel(roots.debugLayer, 750, 1334, {
+    this.toast = new CocosToastView(roots.toastLayer, dw, dh);
+    this.tutorial = new CocosTutorialView(roots.tutorialLayer, dw, dh);
+    this.levelUp = new CocosLevelUpView(roots.modalLayer, dw, dh);
+    this.debug = new CocosDebugPanel(roots.debugLayer, dw, dh, {
       addEnergy: () => {
         game.debugAddEnergy(50);
         this.renderAll();
@@ -143,7 +146,6 @@ export class CocosGameView {
     if (result.ok && result.kind === 'MERGE' && result.toast) {
       this.toast.show(result.toast, result.tone ?? 'success');
     }
-    // VFX only via EventBus (ITEM_MERGED / ITEM_SPAWNED)
     this.renderAll();
     this.renderTutorial();
   }

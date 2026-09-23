@@ -1,5 +1,5 @@
 /**
- * CocosTutorialView — lightweight tutorial hint bubble.
+ * CocosTutorialView — hint bubble (never blocks board input).
  */
 import { Node, Label, Graphics } from 'cc';
 import {
@@ -18,13 +18,14 @@ export class CocosTutorialView {
   constructor(parent: Node, width: number, height: number) {
     this.node = createUiNode('TutorialView');
     parent.addChild(this.node);
-    ensureTransform(this.node, width, height);
+    ensureTransform(this.node, 0, 0);
     this.bubble = createUiNode('Bubble');
     this.node.addChild(this.bubble);
-    ensureTransform(this.bubble, 420, 72);
-    this.bubble.setPosition(0, height * 0.08, 0);
+    const bw = Math.min(420, width * 0.7);
+    ensureTransform(this.bubble, bw, 64);
+    this.bubble.setPosition(0, height * 0.12, 0);
     const g = this.bubble.addComponent(Graphics);
-    paintRoundRect(g, 420, 72, 18, CocosTheme.surface(), CocosTheme.primary(), 2);
+    paintRoundRect(g, bw, 64, 18, CocosTheme.surface(), CocosTheme.primary(), 2);
     this.label = makeLabel('', 16, CocosTheme.textPrimary(), true);
     this.bubble.addChild(this.label.node);
     this.bubble.active = false;

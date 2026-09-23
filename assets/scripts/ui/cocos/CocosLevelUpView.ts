@@ -1,7 +1,7 @@
 /**
  * CocosLevelUpView — short modal for LEVEL UP + unlock text.
  */
-import { Node, Label, Graphics, UIOpacity, tween, Vec3 } from 'cc';
+import { Node, Label, Graphics, tween, Vec3 } from 'cc';
 import {
   CocosTheme,
   createUiNode,
@@ -14,32 +14,33 @@ import {
 export class CocosLevelUpView {
   readonly node: Node;
   private card: Node;
-  private titleLabel: Label;
   private levelLabel: Label;
   private descLabel: Label;
 
   constructor(parent: Node, width: number, height: number) {
     this.node = createUiNode('LevelUpView');
     parent.addChild(this.node);
-    ensureTransform(this.node, width, height);
+    ensureTransform(this.node, 0, 0);
     this.node.active = false;
 
     this.card = createUiNode('Card');
     this.node.addChild(this.card);
-    ensureTransform(this.card, 420, 240);
+    const cw = Math.min(380, width * 0.7);
+    ensureTransform(this.card, cw, 200);
+    this.card.setPosition(0, 0, 0);
     const g = this.card.addComponent(Graphics);
-    paintRoundRect(g, 420, 240, 24, CocosTheme.surface(), CocosTheme.border());
+    paintRoundRect(g, cw, 200, 22, CocosTheme.surface(), CocosTheme.border());
     ensureOpacity(this.card);
 
-    this.titleLabel = makeLabel('LEVEL UP', 14, CocosTheme.textSecondary(), true);
-    this.card.addChild(this.titleLabel.node);
-    this.titleLabel.node.setPosition(0, 70, 0);
+    const title = makeLabel('LEVEL UP', 13, CocosTheme.textSecondary(), true);
+    this.card.addChild(title.node);
+    title.node.setPosition(0, 60, 0);
 
-    this.levelLabel = makeLabel('Lv.2', 40, CocosTheme.primary(), true);
+    this.levelLabel = makeLabel('Lv.2', 36, CocosTheme.primary(), true);
     this.card.addChild(this.levelLabel.node);
-    this.levelLabel.node.setPosition(0, 20, 0);
+    this.levelLabel.node.setPosition(0, 16, 0);
 
-    this.descLabel = makeLabel('', 16, CocosTheme.textPrimary());
+    this.descLabel = makeLabel('', 15, CocosTheme.textPrimary());
     this.card.addChild(this.descLabel.node);
     this.descLabel.node.setPosition(0, -40, 0);
     void height;
@@ -69,6 +70,5 @@ export class CocosLevelUpView {
         this.node.active = false;
       })
       .start();
-    void (0 as unknown as UIOpacity);
   }
 }

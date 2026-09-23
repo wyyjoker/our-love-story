@@ -1,7 +1,7 @@
 /**
- * CocosToastView — unified toast layer (Chinese copy).
+ * CocosToastView — unified toast layer (Chinese copy). Layer is pass-through.
  */
-import { Node, Label, Graphics, UIOpacity, tween, Vec3 } from 'cc';
+import { Node, Graphics, tween, Vec3 } from 'cc';
 import {
   CocosTheme,
   createUiNode,
@@ -19,23 +19,25 @@ export const ToastMessages = {
   locked: (level: number) => `达到 Lv${level} 后解锁`,
   mergeOk: '合成成功！',
   maxLevel: '已经是最高等级啦',
-  orderReady: '订单完成啦，点击交付吧 ♥',
+  orderReady: '订单完成啦，点击交付吧',
   generatorFail: '暂时无法生成',
 } as const;
 
 export class CocosToastView {
   readonly node: Node;
+  private width: number;
 
   constructor(parent: Node, width: number, height: number) {
+    this.width = width;
     this.node = createUiNode('ToastView');
     parent.addChild(this.node);
-    ensureTransform(this.node, width, height);
-    this.node.setPosition(0, -height * 0.15, 0);
+    ensureTransform(this.node, 0, 0);
+    this.node.setPosition(0, -height * 0.18, 0);
   }
 
   show(message: string, tone: ToastTone = 'info'): void {
-    const w = 420;
-    const h = 64;
+    const w = Math.min(400, this.width * 0.7);
+    const h = 56;
     const item = createUiNode('Toast');
     this.node.addChild(item);
     ensureTransform(item, w, h);
@@ -47,8 +49,8 @@ export class CocosToastView {
         : tone === 'warn'
           ? CocosTheme.danger()
           : CocosTheme.textPrimary();
-    paintRoundRect(g, w, h, 32, bg);
-    const label = makeLabel(message, 16, CocosTheme.surface(), true);
+    paintRoundRect(g, w, h, 28, bg);
+    const label = makeLabel(message, 15, CocosTheme.surface(), true);
     item.addChild(label.node);
     const op = ensureOpacity(item);
     op.opacity = 0;
@@ -64,6 +66,5 @@ export class CocosToastView {
           .start();
       })
       .start();
-    void (0 as unknown as UIOpacity);
   }
 }

@@ -1,7 +1,8 @@
 /**
- * Runtime UI hierarchy factory (no prefab UUID required).
- * Explicit pixel layout so Status/Orders/Board/Dock are fully visible.
- * Overlay layers are pass-through (0×0 hit area) so they never block Board input.
+ * Runtime UI hierarchy factory.
+ * Uses the live design resolution (project settings) — no hardcoded 750 assumptions
+ * beyond the portrait reference. Layout is widget/percent based so Status/Orders/Board/Dock
+ * stay visible. Overlay layers are pass-through (0×0 hit) so they never block Board input.
  */
 import {
   Node,
@@ -29,23 +30,21 @@ export type UiRoots = {
   tutorialLayer: Node;
   modalLayer: Node;
   debugLayer: Node;
+  designWidth: number;
+  designHeight: number;
 };
 
+/** Portrait reference (project settings should match). */
 export const DESIGN_W = 750;
 export const DESIGN_H = 1334;
 
-/** Vertical rhythm (design px). */
-export const LAYOUT = {
-  topPad: 28,
-  bottomPad: 28,
-  statusH: 112,
-  ordersH: 210,
-  dockH: 168,
-  gap: 10,
-} as const;
-
 export function applyDesignResolution(): void {
-  // 2 = FIXED_WIDTH (Fit Width)
+  // Keep project design resolution; only enforce portrait fit-width if wrong.
+  const d = view.getDesignResolutionSize();
+  if (d.width <= d.height) {
+    // already portrait — leave as project settings
+    return;
+  }
   view.setDesignResolutionSize(DESIGN_W, DESIGN_H, 2);
 }
 
@@ -56,36 +55,48 @@ export function makePassThrough(node: Node): void {
   tr.setAnchorPoint(0.5, 0.5);
 }
 
+function contentSizeOf(node: Node, fallbackW: number, fallbackH: number) {
+  const tr = node.getComponent(UITransform);
+  return {
+    width: tr?.width || fallbackW,
+    height: tr?.height || fallbackH,
+  };
+}
+
 export function buildUiTree(insets: SafeInsets): UiRoots {
+  const design = view.getDesignResolutionSize();
+  const designW = design.width > 0 ? design.width : DESIGN_W;
+  const designH = design.height > 0 ? design.height : DESIGN_H;
+
   const cameraNode = new Node('UICamera');
   cameraNode.layer = Layers.Enum.UI_2D;
   const cam = cameraNode.addComponent(Camera);
   cam.projection = Camera.ProjectionType.ORTHO;
-  cam.orthoHeight = DESIGN_H / 2;
+  cam.orthoHeight = designH / 2;
   cam.clearFlags = Camera.ClearFlag.SOLID_COLOR;
   cam.visibility = Layers.Enum.UI_2D;
   cam.priority = 10;
 
   const canvas = new Node('Canvas');
   canvas.layer = Layers.Enum.UI_2D;
-  ensureTransform(canvas, DESIGN_W, DESIGN_H, 0.5, 0.5);
+  ensureTransform(canvas, designW, designH, 0.5, 0.5);
   const canvasComp = canvas.addComponent(Canvas);
   canvasComp.cameraComponent = cam;
 
+  // Safe area: widget stretch with real device insets mapped to design units
   const safeArea = createUiNode('SafeArea');
   canvas.addChild(safeArea);
-  ensureTransform(safeArea, DESIGN_W, DESIGN_H);
+  ensureTransform(safeArea, designW, designH);
   const safeWidget = safeArea.addComponent(Widget);
   safeWidget.isAlignTop = true;
   safeWidget.isAlignBottom = true;
   safeWidget.isAlignLeft = true;
   safeWidget.isAlignRight = true;
   const visible = view.getVisibleSize();
-  const scaleX = DESIGN_W / Math.max(1, visible.width);
-  const scaleY = DESIGN_H / Math.max(1, visible.height);
-  // Map real safe-area screen insets into design units
-  const insetTop = Math.ceil(insets.top * scaleY);
-  const insetBottom = Math.ceil(insets.bottom * scaleY);
+  const scaleX = designW / Math.max(1, visible.width);
+  const scaleY = designH / Math.max(1, visible.height);
+  const insetTop = Math.min(Math.ceil(insets.top * scaleY), Math.floor(designH * 0.12));
+  const insetBottom = Math.min(Math.ceil(insets.bottom * scaleY), Math.floor(designH * 0.1));
   const insetLeft = Math.ceil(insets.left * scaleX);
   const insetRight = Math.ceil(insets.right * scaleX);
   safeWidget.top = insetTop;
@@ -104,37 +115,33 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
   bgWidget.isAlignRight = true;
   bgWidget.updateAlignment();
 
-  const contentH = DESIGN_H - insetTop - insetBottom;
-  const contentW = DESIGN_W - insetLeft - insetRight;
-  const topPad = LAYOUT.topPad;
-  const bottomPad = LAYOUT.bottomPad;
-  const gap = LAYOUT.gap;
-  const used =
-    topPad +
-    LAYOUT.statusH +
-    gap +
-    LAYOUT.ordersH +
-    gap +
-    LAYOUT.dockH +
-    bottomPad +
-    gap;
-  const boardH = Math.max(420, contentH - used);
+  const sa = contentSizeOf(safeArea, designW, designH);
+  const contentW = sa.width;
+  const contentH = sa.height;
 
-  // Stack from top of safe content area (y from center of safeArea)
-  const topY = contentH / 2;
-  let cursor = topY - topPad;
+  // Vertical slots as fractions of content (portrait)
+  const topPad = 16;
+  const bottomPad = 16;
+  const gap = 8;
+  const statusH = Math.round(contentH * 0.09);
+  const ordersH = Math.round(contentH * 0.16);
+  const dockH = Math.round(contentH * 0.14);
+  const boardH = Math.max(280, contentH - topPad - bottomPad - statusH - ordersH - dockH - gap * 3);
+
+  // Position from top of safeArea (local y up, origin center)
+  let cursor = contentH / 2 - topPad;
 
   const statusSlot = createUiNode('StatusBar');
   safeArea.addChild(statusSlot);
-  ensureTransform(statusSlot, contentW, LAYOUT.statusH, 0.5, 1);
+  ensureTransform(statusSlot, contentW, statusH, 0.5, 1);
   statusSlot.setPosition(0, cursor, 0);
-  cursor -= LAYOUT.statusH + gap;
+  cursor -= statusH + gap;
 
   const ordersSlot = createUiNode('OrderPanel');
   safeArea.addChild(ordersSlot);
-  ensureTransform(ordersSlot, contentW, LAYOUT.ordersH, 0.5, 1);
+  ensureTransform(ordersSlot, contentW, ordersH, 0.5, 1);
   ordersSlot.setPosition(0, cursor, 0);
-  cursor -= LAYOUT.ordersH + gap;
+  cursor -= ordersH + gap;
 
   const boardSlot = createUiNode('BoardPanel');
   safeArea.addChild(boardSlot);
@@ -144,7 +151,7 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
 
   const dockSlot = createUiNode('GeneratorDock');
   safeArea.addChild(dockSlot);
-  ensureTransform(dockSlot, contentW, LAYOUT.dockH, 0.5, 1);
+  ensureTransform(dockSlot, contentW, dockH, 0.5, 1);
   dockSlot.setPosition(0, cursor, 0);
 
   const dragLayer = createUiNode('DragLayer');
@@ -184,6 +191,8 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
     tutorialLayer,
     modalLayer,
     debugLayer,
+    designWidth: designW,
+    designHeight: designH,
   };
 }
 
@@ -197,7 +206,5 @@ export function sizeOf(
   fallbackW: number,
   fallbackH: number,
 ): { width: number; height: number } {
-  const tr = node.getComponent(UITransform);
-  if (!tr) return { width: fallbackW, height: fallbackH };
-  return { width: tr.width, height: tr.height };
+  return contentSizeOf(node, fallbackW, fallbackH);
 }

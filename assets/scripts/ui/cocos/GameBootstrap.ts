@@ -117,14 +117,16 @@ export class GameBootstrap extends Component {
     const parent: Node = this.node.scene ?? this.node;
     const errorNode = createUiNode('BootError');
     parent.addChild(errorNode);
-    ensureTransform(errorNode, 750, 400);
+    const w = 640;
+    const h = 360;
+    ensureTransform(errorNode, w, h);
     const g = errorNode.addComponent(Graphics);
-    paintRoundRect(g, 750, 400, 16, CocosTheme.surface(), CocosTheme.danger(), 2);
+    paintRoundRect(g, w, h, 16, CocosTheme.surface(), CocosTheme.danger(), 2);
     const title = makeLabel('游戏启动失败', 28, CocosTheme.danger(), true);
     errorNode.addChild(title.node);
-    title.node.setPosition(0, 120, 0);
+    title.node.setPosition(0, 100, 0);
     const message = err instanceof Error ? err.message : String(err);
-    const body = makeLabel(message, 16, CocosTheme.textPrimary());
+    const body = makeLabel(message.slice(0, 80), 14, CocosTheme.textPrimary());
     errorNode.addChild(body.node);
   }
 }
