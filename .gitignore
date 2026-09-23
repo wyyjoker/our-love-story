@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Build / Cocos generated
+dist/
+library/
+temp/
+local/
+build/
+native/
+profiles/
+# Keep settings/ if present as project config; ignore local caches
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+npm-debug.log*
+
+# Coverage
+coverage/
+
+# Optional local env
+.env
+.env.local
+
+# Do NOT ignore:
+# assets/
+# settings/
+# assets/**/*.meta

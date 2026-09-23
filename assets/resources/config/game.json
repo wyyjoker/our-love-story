@@ -1,0 +1,29 @@
+{
+  "gameTitle": "我们的浪漫小屋",
+  "saveKey": "our-love-story-save",
+  "saveVersion": 1,
+  "board": {
+    "rows": 9,
+    "columns": 7
+  },
+  "energy": {
+    "maxEnergy": 50,
+    "initialEnergy": 50,
+    "generatorCost": 1,
+    "recoverIntervalMs": 120000
+  },
+  "dragThresholdPx": 12,
+  "orders": {
+    "activeSlots": 3,
+    "minRequirements": 1,
+    "maxRequirements": 2,
+    "minItemLevel": 2,
+    "maxItemLevel": 5
+  },
+  "couple": {
+    "gameTitle": "我们的浪漫小屋",
+    "coupleDisplayName": "",
+    "anniversary": "",
+    "theme": "warm-romantic"
+  }
+}

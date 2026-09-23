@@ -1,0 +1,46 @@
+[
+  {
+    "id": "coffee_machine",
+    "displayName": "咖啡机",
+    "chainId": "coffee",
+    "unlockLevel": 1,
+    "energyCost": 1,
+    "outputs": [
+      { "itemId": "coffee_01", "weight": 85 },
+      { "itemId": "coffee_02", "weight": 15 }
+    ]
+  },
+  {
+    "id": "flower_basket",
+    "displayName": "花篮",
+    "chainId": "flower",
+    "unlockLevel": 1,
+    "energyCost": 1,
+    "outputs": [
+      { "itemId": "flower_01", "weight": 85 },
+      { "itemId": "flower_02", "weight": 15 }
+    ]
+  },
+  {
+    "id": "dessert_oven",
+    "displayName": "甜品烤箱",
+    "chainId": "dessert",
+    "unlockLevel": 3,
+    "energyCost": 1,
+    "outputs": [
+      { "itemId": "dessert_01", "weight": 85 },
+      { "itemId": "dessert_02", "weight": 15 }
+    ]
+  },
+  {
+    "id": "gift_box",
+    "displayName": "礼物盒",
+    "chainId": "gift",
+    "unlockLevel": 5,
+    "energyCost": 1,
+    "outputs": [
+      { "itemId": "gift_01", "weight": 85 },
+      { "itemId": "gift_02", "weight": 15 }
+    ]
+  }
+]

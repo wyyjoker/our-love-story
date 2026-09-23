@@ -1,0 +1,9 @@
+{
+  "levels": [
+    { "level": 1, "xpRequired": 0, "unlockChains": ["coffee", "flower"] },
+    { "level": 2, "xpRequired": 30, "unlockChains": [] },
+    { "level": 3, "xpRequired": 80, "unlockChains": ["dessert"] },
+    { "level": 4, "xpRequired": 150, "unlockChains": [] },
+    { "level": 5, "xpRequired": 250, "unlockChains": ["gift"] }
+  ]
+}

@@ -1,0 +1,37 @@
+[
+  { "id": "coffee_01", "chainId": "coffee", "level": 1, "displayName": "咖啡豆", "nextItemId": "coffee_02", "sellValue": 1 },
+  { "id": "coffee_02", "chainId": "coffee", "level": 2, "displayName": "咖啡粉", "nextItemId": "coffee_03", "sellValue": 2 },
+  { "id": "coffee_03", "chainId": "coffee", "level": 3, "displayName": "浓缩咖啡", "nextItemId": "coffee_04", "sellValue": 4 },
+  { "id": "coffee_04", "chainId": "coffee", "level": 4, "displayName": "美式咖啡", "nextItemId": "coffee_05", "sellValue": 8 },
+  { "id": "coffee_05", "chainId": "coffee", "level": 5, "displayName": "拿铁", "nextItemId": "coffee_06", "sellValue": 16 },
+  { "id": "coffee_06", "chainId": "coffee", "level": 6, "displayName": "爱心拿铁", "nextItemId": "coffee_07", "sellValue": 32 },
+  { "id": "coffee_07", "chainId": "coffee", "level": 7, "displayName": "双人咖啡", "nextItemId": "coffee_08", "sellValue": 64 },
+  { "id": "coffee_08", "chainId": "coffee", "level": 8, "displayName": "纪念日咖啡", "sellValue": 128 },
+
+  { "id": "flower_01", "chainId": "flower", "level": 1, "displayName": "花种", "nextItemId": "flower_02", "sellValue": 1 },
+  { "id": "flower_02", "chainId": "flower", "level": 2, "displayName": "花苗", "nextItemId": "flower_03", "sellValue": 2 },
+  { "id": "flower_03", "chainId": "flower", "level": 3, "displayName": "郁金香", "nextItemId": "flower_04", "sellValue": 4 },
+  { "id": "flower_04", "chainId": "flower", "level": 4, "displayName": "玫瑰", "nextItemId": "flower_05", "sellValue": 8 },
+  { "id": "flower_05", "chainId": "flower", "level": 5, "displayName": "小花束", "nextItemId": "flower_06", "sellValue": 16 },
+  { "id": "flower_06", "chainId": "flower", "level": 6, "displayName": "爱心花束", "nextItemId": "flower_07", "sellValue": 32 },
+  { "id": "flower_07", "chainId": "flower", "level": 7, "displayName": "纪念日花束", "nextItemId": "flower_08", "sellValue": 64 },
+  { "id": "flower_08", "chainId": "flower", "level": 8, "displayName": "浪漫花束", "sellValue": 128 },
+
+  { "id": "dessert_01", "chainId": "dessert", "level": 1, "displayName": "面粉", "nextItemId": "dessert_02", "sellValue": 1 },
+  { "id": "dessert_02", "chainId": "dessert", "level": 2, "displayName": "面团", "nextItemId": "dessert_03", "sellValue": 2 },
+  { "id": "dessert_03", "chainId": "dessert", "level": 3, "displayName": "小蛋糕", "nextItemId": "dessert_04", "sellValue": 4 },
+  { "id": "dessert_04", "chainId": "dessert", "level": 4, "displayName": "草莓蛋糕", "nextItemId": "dessert_05", "sellValue": 8 },
+  { "id": "dessert_05", "chainId": "dessert", "level": 5, "displayName": "双层蛋糕", "nextItemId": "dessert_06", "sellValue": 16 },
+  { "id": "dessert_06", "chainId": "dessert", "level": 6, "displayName": "心形蛋糕", "nextItemId": "dessert_07", "sellValue": 32 },
+  { "id": "dessert_07", "chainId": "dessert", "level": 7, "displayName": "纪念日蛋糕", "nextItemId": "dessert_08", "sellValue": 64 },
+  { "id": "dessert_08", "chainId": "dessert", "level": 8, "displayName": "梦幻蛋糕", "sellValue": 128 },
+
+  { "id": "gift_01", "chainId": "gift", "level": 1, "displayName": "丝带", "nextItemId": "gift_02", "sellValue": 1 },
+  { "id": "gift_02", "chainId": "gift", "level": 2, "displayName": "礼物袋", "nextItemId": "gift_03", "sellValue": 2 },
+  { "id": "gift_03", "chainId": "gift", "level": 3, "displayName": "小礼盒", "nextItemId": "gift_04", "sellValue": 4 },
+  { "id": "gift_04", "chainId": "gift", "level": 4, "displayName": "精致礼盒", "nextItemId": "gift_05", "sellValue": 8 },
+  { "id": "gift_05", "chainId": "gift", "level": 5, "displayName": "惊喜礼盒", "nextItemId": "gift_06", "sellValue": 16 },
+  { "id": "gift_06", "chainId": "gift", "level": 6, "displayName": "心意礼物", "nextItemId": "gift_07", "sellValue": 32 },
+  { "id": "gift_07", "chainId": "gift", "level": 7, "displayName": "纪念礼物", "nextItemId": "gift_08", "sellValue": 64 },
+  { "id": "gift_08", "chainId": "gift", "level": 8, "displayName": "珍藏礼物", "sellValue": 128 }
+]
