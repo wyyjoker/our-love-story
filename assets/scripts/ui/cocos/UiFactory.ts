@@ -1,8 +1,8 @@
 /**
  * Runtime UI hierarchy factory.
- * Uses the live design resolution (project settings) — no hardcoded 750 assumptions
- * beyond the portrait reference. Layout is widget/percent based so Status/Orders/Board/Dock
- * stay visible. Overlay layers are pass-through (0×0 hit) so they never block Board input.
+ * Widget-pinned layout so Status/Orders/Board/Dock follow the real Canvas size
+ * (Canvas component resizes to visible size — do not assume 750x1334 node size).
+ * Overlay layers are pass-through (0x0 hit) so they never block Board input.
  */
 import {
   Node,
@@ -34,125 +34,116 @@ export type UiRoots = {
   designHeight: number;
 };
 
-/** Portrait reference (project settings should match). */
 export const DESIGN_W = 750;
 export const DESIGN_H = 1334;
 
+const TOP_BAR_H = 110;
+const ORDERS_H = 190;
+const DOCK_H = 150;
+const EDGE = 12;
+const GAP = 8;
+
 export function applyDesignResolution(): void {
-  // Keep project design resolution; only enforce portrait fit-width if wrong.
+  view.setDesignResolutionSize(DESIGN_W, DESIGN_H, 2); // FIXED_WIDTH
   const d = view.getDesignResolutionSize();
-  if (d.width <= d.height) {
-    // already portrait — leave as project settings
-    return;
-  }
-  view.setDesignResolutionSize(DESIGN_W, DESIGN_H, 2);
+  const v = view.getVisibleSize();
+  console.log('[UI] design', d.width, d.height, 'visible', v.width, v.height);
 }
 
-/** Full-screen decorative layer must not swallow Board touches. */
 export function makePassThrough(node: Node): void {
   const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
   tr.setContentSize(0, 0);
   tr.setAnchorPoint(0.5, 0.5);
 }
 
-function contentSizeOf(node: Node, fallbackW: number, fallbackH: number) {
-  const tr = node.getComponent(UITransform);
-  return {
-    width: tr?.width || fallbackW,
-    height: tr?.height || fallbackH,
-  };
+function pinBox(
+  node: Node,
+  height: number,
+  opts: { top?: number; bottom?: number },
+): void {
+  const tr = ensureTransform(node, 400, height, 0.5, 0.5);
+  void tr;
+  const w = node.addComponent(Widget);
+  w.isAlignLeft = true;
+  w.isAlignRight = true;
+  w.isAlignHorizontalCenter = true;
+  w.left = EDGE;
+  w.right = EDGE;
+  if (opts.top !== undefined) {
+    w.isAlignTop = true;
+    w.top = opts.top;
+  }
+  if (opts.bottom !== undefined) {
+    w.isAlignBottom = true;
+    w.bottom = opts.bottom;
+  }
+  w.alignMode = Widget.AlignMode.ON_WINDOW_RESIZE;
+  w.updateAlignment();
+}
+
+function pinFill(
+  node: Node,
+  top: number,
+  bottom: number,
+): void {
+  ensureTransform(node, 400, 100, 0.5, 0.5);
+  const w = node.addComponent(Widget);
+  w.isAlignTop = true;
+  w.isAlignBottom = true;
+  w.isAlignLeft = true;
+  w.isAlignRight = true;
+  w.top = top;
+  w.bottom = bottom;
+  w.left = EDGE;
+  w.right = EDGE;
+  w.alignMode = Widget.AlignMode.ON_WINDOW_RESIZE;
+  w.updateAlignment();
 }
 
 export function buildUiTree(insets: SafeInsets): UiRoots {
-  const design = view.getDesignResolutionSize();
-  const designW = design.width > 0 ? design.width : DESIGN_W;
-  const designH = design.height > 0 ? design.height : DESIGN_H;
+  applyDesignResolution();
 
   const cameraNode = new Node('UICamera');
   cameraNode.layer = Layers.Enum.UI_2D;
   const cam = cameraNode.addComponent(Camera);
   cam.projection = Camera.ProjectionType.ORTHO;
-  cam.orthoHeight = designH / 2;
+  cam.orthoHeight = DESIGN_H / 2;
   cam.clearFlags = Camera.ClearFlag.SOLID_COLOR;
   cam.visibility = Layers.Enum.UI_2D;
   cam.priority = 10;
 
   const canvas = new Node('Canvas');
   canvas.layer = Layers.Enum.UI_2D;
-  ensureTransform(canvas, designW, designH, 0.5, 0.5);
+  ensureTransform(canvas, DESIGN_W, DESIGN_H, 0.5, 0.5);
   const canvasComp = canvas.addComponent(Canvas);
   canvasComp.cameraComponent = cam;
 
-  // Safe area: widget stretch with real device insets mapped to design units
-  const safeArea = createUiNode('SafeArea');
-  canvas.addChild(safeArea);
-  ensureTransform(safeArea, designW, designH);
-  const safeWidget = safeArea.addComponent(Widget);
-  safeWidget.isAlignTop = true;
-  safeWidget.isAlignBottom = true;
-  safeWidget.isAlignLeft = true;
-  safeWidget.isAlignRight = true;
-  const visible = view.getVisibleSize();
-  const scaleX = designW / Math.max(1, visible.width);
-  const scaleY = designH / Math.max(1, visible.height);
-  const insetTop = Math.min(Math.ceil(insets.top * scaleY), Math.floor(designH * 0.12));
-  const insetBottom = Math.min(Math.ceil(insets.bottom * scaleY), Math.floor(designH * 0.1));
-  const insetLeft = Math.ceil(insets.left * scaleX);
-  const insetRight = Math.ceil(insets.right * scaleX);
-  safeWidget.top = insetTop;
-  safeWidget.bottom = insetBottom;
-  safeWidget.left = insetLeft;
-  safeWidget.right = insetRight;
-  safeWidget.alignMode = Widget.AlignMode.ON_WINDOW_RESIZE;
-  safeWidget.updateAlignment();
+  const insetTop = Math.min(56, 12 + Math.round(insets.top * 0.15));
+  const insetBottom = Math.min(40, 8 + Math.round(insets.bottom * 0.15));
 
   const background = createUiNode('Background');
-  safeArea.addChild(background);
-  const bgWidget = background.addComponent(Widget);
-  bgWidget.isAlignTop = true;
-  bgWidget.isAlignBottom = true;
-  bgWidget.isAlignLeft = true;
-  bgWidget.isAlignRight = true;
-  bgWidget.updateAlignment();
+  canvas.addChild(background);
+  pinFill(background, 0, 0);
 
-  const sa = contentSizeOf(safeArea, designW, designH);
-  const contentW = sa.width;
-  const contentH = sa.height;
-
-  // Vertical slots as fractions of content (portrait)
-  const topPad = 16;
-  const bottomPad = 16;
-  const gap = 8;
-  const statusH = Math.round(contentH * 0.09);
-  const ordersH = Math.round(contentH * 0.16);
-  const dockH = Math.round(contentH * 0.14);
-  const boardH = Math.max(280, contentH - topPad - bottomPad - statusH - ordersH - dockH - gap * 3);
-
-  // Position from top of safeArea (local y up, origin center)
-  let cursor = contentH / 2 - topPad;
-
-  const statusSlot = createUiNode('StatusBar');
-  safeArea.addChild(statusSlot);
-  ensureTransform(statusSlot, contentW, statusH, 0.5, 1);
-  statusSlot.setPosition(0, cursor, 0);
-  cursor -= statusH + gap;
-
-  const ordersSlot = createUiNode('OrderPanel');
-  safeArea.addChild(ordersSlot);
-  ensureTransform(ordersSlot, contentW, ordersH, 0.5, 1);
-  ordersSlot.setPosition(0, cursor, 0);
-  cursor -= ordersH + gap;
+  // Board first (under), then dock, then orders, then status (top chrome)
+  const boardTop = insetTop + TOP_BAR_H + GAP + ORDERS_H + GAP;
+  const boardBottom = insetBottom + DOCK_H + GAP;
 
   const boardSlot = createUiNode('BoardPanel');
-  safeArea.addChild(boardSlot);
-  ensureTransform(boardSlot, contentW, boardH, 0.5, 1);
-  boardSlot.setPosition(0, cursor, 0);
-  cursor -= boardH + gap;
+  canvas.addChild(boardSlot);
+  pinFill(boardSlot, boardTop, boardBottom);
 
   const dockSlot = createUiNode('GeneratorDock');
-  safeArea.addChild(dockSlot);
-  ensureTransform(dockSlot, contentW, dockH, 0.5, 1);
-  dockSlot.setPosition(0, cursor, 0);
+  canvas.addChild(dockSlot);
+  pinBox(dockSlot, DOCK_H, { bottom: insetBottom + EDGE });
+
+  const ordersSlot = createUiNode('OrderPanel');
+  canvas.addChild(ordersSlot);
+  pinBox(ordersSlot, ORDERS_H, { top: insetTop + TOP_BAR_H + GAP });
+
+  const statusSlot = createUiNode('StatusBar');
+  canvas.addChild(statusSlot);
+  pinBox(statusSlot, TOP_BAR_H, { top: insetTop });
 
   const dragLayer = createUiNode('DragLayer');
   canvas.addChild(dragLayer);
@@ -177,10 +168,24 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
   setLayerTree(cameraNode, Layers.Enum.UI_2D);
   setLayerTree(canvas, Layers.Enum.UI_2D);
 
+  // Force alignment after hierarchy is complete
+  for (const n of [background, boardSlot, dockSlot, ordersSlot, statusSlot]) {
+    n.getComponent(Widget)?.updateAlignment();
+  }
+
+  const canvasTr = canvas.getComponent(UITransform);
+  console.log('[UI] canvas size', canvasTr?.width, canvasTr?.height);
+  console.log('[UI] slots', {
+    status: statusSlot.getComponent(UITransform)?.height,
+    orders: ordersSlot.getComponent(UITransform)?.height,
+    board: boardSlot.getComponent(UITransform)?.height,
+    dock: dockSlot.getComponent(UITransform)?.height,
+  });
+
   return {
     camera: cameraNode,
     canvas,
-    safeArea,
+    safeArea: canvas,
     background,
     statusSlot,
     ordersSlot,
@@ -191,8 +196,8 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
     tutorialLayer,
     modalLayer,
     debugLayer,
-    designWidth: designW,
-    designHeight: designH,
+    designWidth: DESIGN_W,
+    designHeight: DESIGN_H,
   };
 }
 
@@ -206,5 +211,9 @@ export function sizeOf(
   fallbackW: number,
   fallbackH: number,
 ): { width: number; height: number } {
-  return contentSizeOf(node, fallbackW, fallbackH);
+  const tr = node.getComponent(UITransform);
+  return {
+    width: tr?.width || fallbackW,
+    height: tr?.height || fallbackH,
+  };
 }

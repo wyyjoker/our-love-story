@@ -1,7 +1,8 @@
 /**
  * CocosItemView — colored chip + Chinese short code (咖1 / 花2 …).
+ * Forwards touches to the board via bubbling parent cell handlers.
  */
-import { Node, Label, Graphics, UIOpacity, tween, Vec3 } from 'cc';
+import { Node, Label, Graphics, UIOpacity, tween, Vec3, EventTouch } from 'cc';
 import type { ItemVm } from '../../presentation/GameViewMapper';
 import {
   CocosTheme,
@@ -26,7 +27,7 @@ export class CocosItemView {
     ensureTransform(this.node, size, size);
     this.g = this.node.addComponent(Graphics);
     ensureOpacity(this.node);
-    this.codeLabel = makeLabel('', Math.floor(size * 0.32), CocosTheme.surface(), true);
+    this.codeLabel = makeLabel('', Math.floor(size * 0.34), CocosTheme.surface(), true);
     this.node.addChild(this.codeLabel.node);
   }
 
@@ -68,5 +69,18 @@ export class CocosItemView {
       .to(0.1, { scale: new Vec3(1.08, 1.08, 1) })
       .to(0.08, { scale: new Vec3(1, 1, 1) })
       .start();
+  }
+
+  /** Let board cell receive the same touch (item sits above cell). */
+  bindForwardTouch(
+    start: (e: EventTouch, index: number) => void,
+    index: number,
+  ): void {
+    this.node.off(Node.EventType.TOUCH_START);
+    this.node.on(
+      Node.EventType.TOUCH_START,
+      (e: EventTouch) => start(e, index),
+      this,
+    );
   }
 }

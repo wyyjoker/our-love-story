@@ -87,6 +87,10 @@ export class CocosCellView {
     this.item.setDragging(false);
   }
 
+  bindPickup(fn: (e: unknown, index: number) => void): void {
+    this.item?.bindForwardTouch(fn as never, this.index);
+  }
+
   playMergePop(): void {
     this.item?.playMergePop();
   }

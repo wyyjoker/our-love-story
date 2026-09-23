@@ -209,7 +209,7 @@ export class CocosBoardView {
     this.beginDrag(e, this.resolveIndex(e));
   }
 
-  private beginDrag(e: EventTouch, index: number | null): void {
+  beginDrag(e: EventTouch, index: number | null): void {
     const ui = e.getUILocation();
     const local = this.localPos(e);
     logInput('start', { ui, local, index });
@@ -331,6 +331,7 @@ export class CocosBoardView {
     this.pendingVm = byUid;
     for (const cell of this.cells) {
       cell.setItem(byCell.get(cell.index) ?? null);
+      cell.bindPickup((e, index) => this.beginDrag(e as EventTouch, index));
     }
   }
 
