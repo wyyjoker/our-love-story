@@ -1,11 +1,12 @@
 /**
- * Presentation controller contract shared by Cocos UI and Web UI.
+ * Presentation controller shared by Web UI and Cocos UI.
+ * Chinese copy for product-facing messages.
  */
 import type { GameContext } from '../gameplay/GameContext';
 
 export type UIMessage = {
   toast?: string;
-  levelUp?: { level: number; unlockedChains: string[] };
+  tone?: 'info' | 'success' | 'warn';
 };
 
 export class GameController {
@@ -22,35 +23,44 @@ export class GameController {
     if (result.ok) return {};
     switch (result.reason) {
       case 'BOARD_FULL':
-        return { toast: 'Board is full. Merge some items first.' };
+        return { toast: '棋盘满啦～\n先合成一些物品吧', tone: 'warn' };
       case 'NOT_ENOUGH_ENERGY':
-        return { toast: 'Not enough energy. Take a short rest.' };
-      case 'LOCKED':
-        return { toast: 'Locked. Level up to unlock.' };
+        return { toast: '体力不足啦～\n休息一下再回来吧', tone: 'warn' };
+      case 'LOCKED': {
+        const gen = this.game.generators.get(generatorId);
+        const lv = gen?.unlockLevel ?? 3;
+        return { toast: `达到 Lv${lv} 后解锁`, tone: 'warn' };
+      }
       default:
-        return { toast: 'Unable to spawn right now.' };
+        return { toast: '暂时无法生成', tone: 'warn' };
     }
   }
 
-  onDrop(from: number, to: number | null): UIMessage {
+  onDrop(from: number, to: number | null): UIMessage & {
+    ok: boolean;
+    kind?: 'MOVE' | 'MERGE' | 'SWAP';
+  } {
     const result = this.game.dropItem(from, to);
-    if (!result.ok) return {};
-    if (result.kind === 'MERGE') {
-      return { toast: 'Merge success!' };
+    if (!result.ok) {
+      return { ok: false };
     }
-    return {};
+    if (result.kind === 'MERGE') {
+      return { ok: true, kind: 'MERGE', toast: '合成成功！', tone: 'success' };
+    }
+    return { ok: true, kind: result.kind };
   }
 
   onClaim(orderUid: string): UIMessage {
     const result = this.game.claimOrder(orderUid);
     if (result.ok) {
       return {
-        toast: `Delivered! coins ${result.rewardCoins} hearts ${result.rewardHearts}`,
+        toast: `交付成功！\n💰${result.rewardCoins}  ♥${result.rewardHearts}`,
+        tone: 'success',
       };
     }
     if (result.reason === 'INVENTORY_RACE') {
-      return { toast: 'Need more items first.' };
+      return { toast: '还差一点，先凑齐物品吧', tone: 'warn' };
     }
-    return { toast: 'Order not ready.' };
+    return { toast: '订单未完成', tone: 'warn' };
   }
 }

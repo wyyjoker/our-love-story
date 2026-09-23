@@ -1,4 +1,4 @@
-/** Shared UI theme tokens — keep colors centralized. */
+/** Shared UI theme tokens — Cocos converts via Color.fromHEX / CocosTheme. */
 export const Theme = {
   background: '#FFF8F3',
   surface: '#FFFFFF',
@@ -11,6 +11,12 @@ export const Theme = {
   shadow: 'rgba(73, 63, 63, 0.08)',
   danger: '#E07A7A',
   ok: '#8FBF9F',
+  chains: {
+    coffee: '#C4A484',
+    flower: '#E8A0B5',
+    dessert: '#E8C07A',
+    gift: '#B8A0D8',
+  },
 } as const;
 
 export type ThemeTokens = typeof Theme;
