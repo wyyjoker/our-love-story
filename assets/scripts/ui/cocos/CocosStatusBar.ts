@@ -1,5 +1,6 @@
 /**
- * CocosStatusBar — Lv / XP / energy countdown / coins / hearts (text labels, no emoji).
+ * CocosStatusBar — Lv / XP / energy / coins / hearts.
+ * Two-row layout to avoid text overlap.
  */
 import { Node, Label, Graphics, tween, Vec3 } from 'cc';
 import type { StatusVm } from '../../presentation/GameViewMapper';
@@ -32,49 +33,50 @@ export class CocosStatusBar {
   private build(width: number, height: number): void {
     const card = createUiNode('Card');
     this.node.addChild(card);
-    const cardW = width - 24;
-    const cardH = height - 8;
+    const cardW = width - 20;
+    const cardH = height - 10;
     ensureTransform(card, cardW, cardH);
     const g = card.addComponent(Graphics);
-    paintRoundRect(g, cardW, cardH, 16, CocosTheme.surface(), CocosTheme.border());
+    paintRoundRect(g, cardW, cardH, 14, CocosTheme.surface(), CocosTheme.border());
 
-    const level = makeLabel('Lv.1', 22, CocosTheme.textPrimary(), true);
-    this.node.addChild(level.node);
-    level.node.setPosition(-cardW / 2 + 48, 6, 0);
-    this.levelLabel = level;
+    // Row 1 (top half): Lv | XP bar | energy
+    this.levelLabel = makeLabel('Lv.1', 20, CocosTheme.textPrimary(), true);
+    this.node.addChild(this.levelLabel.node);
+    this.levelLabel.node.setPosition(-cardW / 2 + 44, cardH * 0.2, 0);
 
+    this.barBgW = Math.min(150, cardW * 0.28);
     const barNode = createUiNode('XpBar');
     this.node.addChild(barNode);
-    this.barBgW = Math.min(180, cardW * 0.32);
-    ensureTransform(barNode, this.barBgW, 10);
-    barNode.setPosition(-10, 14, 0);
+    ensureTransform(barNode, this.barBgW, 8);
+    barNode.setPosition(-cardW * 0.05, cardH * 0.28, 0);
     const bgG = barNode.addComponent(Graphics);
-    paintRoundRect(bgG, this.barBgW, 10, 5, CocosTheme.border());
+    paintRoundRect(bgG, this.barBgW, 8, 4, CocosTheme.border());
     const fillNode = createUiNode('XpFill');
     barNode.addChild(fillNode);
-    ensureTransform(fillNode, this.barBgW, 10);
+    ensureTransform(fillNode, this.barBgW, 8);
     this.xpBar = fillNode.addComponent(Graphics);
-    paintRoundRect(this.xpBar, this.barBgW, 10, 5, CocosTheme.primary());
+    paintRoundRect(this.xpBar, this.barBgW, 8, 4, CocosTheme.primary());
 
-    this.xpLabel = makeLabel('XP 0 / 30', 14, CocosTheme.textSecondary());
+    this.xpLabel = makeLabel('XP 0 / 30', 12, CocosTheme.textSecondary());
     this.node.addChild(this.xpLabel.node);
-    this.xpLabel.node.setPosition(-10, -10, 0);
+    this.xpLabel.node.setPosition(-cardW * 0.05, cardH * 0.05, 0);
 
-    this.energyLabel = makeLabel('体力 50/50', 16, CocosTheme.textPrimary(), true);
+    this.energyLabel = makeLabel('体力 50/50', 15, CocosTheme.textPrimary(), true);
     this.node.addChild(this.energyLabel.node);
-    this.energyLabel.node.setPosition(cardW * 0.16, 8, 0);
+    this.energyLabel.node.setPosition(cardW * 0.28, cardH * 0.22, 0);
 
-    this.energyCdLabel = makeLabel('', 12, CocosTheme.textSecondary());
+    this.energyCdLabel = makeLabel('', 11, CocosTheme.textSecondary());
     this.node.addChild(this.energyCdLabel.node);
-    this.energyCdLabel.node.setPosition(cardW * 0.16, -14, 0);
+    this.energyCdLabel.node.setPosition(cardW * 0.28, cardH * 0.02, 0);
 
-    this.coinsLabel = makeLabel('金币 0', 16, CocosTheme.textPrimary());
+    // Row 2 (bottom): coins | hearts
+    this.coinsLabel = makeLabel('金币 0', 14, CocosTheme.textPrimary());
     this.node.addChild(this.coinsLabel.node);
-    this.coinsLabel.node.setPosition(cardW * 0.34, 0, 0);
+    this.coinsLabel.node.setPosition(-cardW * 0.18, -cardH * 0.22, 0);
 
-    this.heartsLabel = makeLabel('爱心 0', 16, CocosTheme.primary());
+    this.heartsLabel = makeLabel('爱心 0', 14, CocosTheme.primary());
     this.node.addChild(this.heartsLabel.node);
-    this.heartsLabel.node.setPosition(cardW * 0.46, 0, 0);
+    this.heartsLabel.node.setPosition(cardW * 0.18, -cardH * 0.22, 0);
   }
 
   render(vm: StatusVm): void {
@@ -85,12 +87,12 @@ export class CocosStatusBar {
     this.coinsLabel.string = `金币 ${vm.coinsText}`;
     this.heartsLabel.string = `爱心 ${vm.heartsText}`;
     const w = Math.max(2, this.barBgW * vm.xpRatio);
-    paintRoundRect(this.xpBar, w, 10, 5, CocosTheme.primary());
+    paintRoundRect(this.xpBar, w, 8, 4, CocosTheme.primary());
   }
 
   pulseEnergy(): void {
     tween(this.energyLabel.node)
-      .to(0.08, { scale: new Vec3(1.1, 1.1, 1) })
+      .to(0.08, { scale: new Vec3(1.08, 1.08, 1) })
       .to(0.1, { scale: new Vec3(1, 1, 1) })
       .start();
   }

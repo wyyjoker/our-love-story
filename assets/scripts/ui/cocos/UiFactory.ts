@@ -37,9 +37,9 @@ export type UiRoots = {
 export const DESIGN_W = 750;
 export const DESIGN_H = 1334;
 
-const TOP_BAR_H = 110;
-const ORDERS_H = 190;
-const DOCK_H = 150;
+const TOP_BAR_H = 120;
+const ORDERS_H = 180;
+const DOCK_H = 140;
 const EDGE = 12;
 const GAP = 8;
 

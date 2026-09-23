@@ -1,6 +1,8 @@
 /**
- * CocosBoardView — per-cell touch binding (reliable hit) + board-space drop resolve.
- * Pointer math uses getUILocation + UITransform.convertToNodeSpaceAR.
+ * CocosBoardView — per-cell touch binding.
+ * CRITICAL: TOUCH_MOVE/END must be on the SAME node as TOUCH_START (Cocos
+ * dispatches the gesture to the hit target, not the parent). Bind all 4 events
+ * on every cell + board fallback.
  */
 import { EventTouch, Vec2, Vec3, UITransform, Node, Graphics, Camera } from 'cc';
 import type { BoardVm, ItemVm } from '../../presentation/GameViewMapper';
@@ -20,10 +22,6 @@ export type BoardDeps = {
   onDrop: (from: number, to: number | null) => void;
   dragThreshold: number;
 };
-
-function logInput(tag: string, payload: unknown): void {
-  console.debug(`[INPUT] ${tag}`, payload);
-}
 
 export class CocosBoardView {
   readonly node: Node;
@@ -76,7 +74,7 @@ export class CocosBoardView {
     );
 
     this.layoutCells();
-    this.bindTouch();
+    this.bindBoardTouch();
   }
 
   setDragLayer(layer: Node): void {
@@ -107,34 +105,36 @@ export class CocosBoardView {
         const x = originX + c * (this.cellSize + this.gap);
         const y = originY - r * (this.cellSize + this.gap);
         cell.node.setPosition(x, y, 0);
-        // Per-cell hit target — avoids fragile board-space conversion for pickup
-        cell.node.on(
-          Node.EventType.TOUCH_START,
-          (e: EventTouch) => this.onCellTouchStart(e, index),
-          this,
-        );
         this.cells.push(cell);
+        this.bindNodeTouch(cell.node, index);
       }
     }
   }
 
-  private bindTouch(): void {
-    // Board-level move/end still needed for drag continuation
-    this.node.on(Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
-    this.node.on(Node.EventType.TOUCH_END, this.onTouchEnd, this);
-    this.node.on(Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
+  /** Bind the full gesture on one node so MOVE/END arrive at the same target as START. */
+  private bindNodeTouch(node: Node, index: number): void {
+    node.on(
+      Node.EventType.TOUCH_START,
+      (e: EventTouch) => this.onTouchStart(e, index),
+      this,
+    );
+    node.on(Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
+    node.on(Node.EventType.TOUCH_END, this.onTouchEnd, this);
+    node.on(Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
+  }
+
+  private bindBoardTouch(): void {
+    // Fallback when touching empty board padding
+    this.bindNodeTouch(this.node, -1);
   }
 
   private uiPos(touch: EventTouch): Vec2 {
     return touch.getUILocation();
   }
 
-  /** UI → node local. convertToNodeSpaceAR expects world; map UI via camera when possible. */
   private localPos(touch: EventTouch, target: Node = this.node): Vec3 {
     const transform = target.getComponent(UITransform);
-    if (!transform) {
-      return new Vec3();
-    }
+    if (!transform) return new Vec3();
     const ui = touch.getUILocation();
     const world = this.uiToWorld(ui, touch);
     return transform.convertToNodeSpaceAR(world);
@@ -147,7 +147,6 @@ export class CocosBoardView {
       this.camera.screenToWorld(world, new Vec3(screen.x, screen.y, 0));
       return world;
     }
-    // Canvas UI fallback: UI location ≈ world in design space for standard canvas
     return new Vec3(ui.x, ui.y, 0);
   }
 
@@ -159,32 +158,23 @@ export class CocosBoardView {
     const x = local.x - originX;
     const y = local.y - originY;
     if (x < 0 || y < 0 || x > totalW || y > totalH) return null;
-
     const step = this.cellSize + this.gap;
     const c = Math.floor(x / step);
     const r = Math.floor(y / step);
     if (c < 0 || r < 0 || c >= this.columns || r >= this.rows) return null;
-
     const offsetX = x % step;
     const offsetY = y % step;
-    if (offsetX > this.cellSize || offsetY > this.cellSize) {
-      return null;
-    }
-
+    if (offsetX > this.cellSize || offsetY > this.cellSize) return null;
     const row = this.rows - 1 - r;
-    const index = row * this.columns + c;
-    if (index < 0 || index > this.rows * this.columns - 1) return null;
-    return index;
+    return row * this.columns + c;
   }
 
-  /** Fallback: which cell UITransform contains this touch. */
   private indexFromHitTest(touch: EventTouch): number | null {
     const ui = touch.getUILocation();
     const world = this.uiToWorld(ui, touch);
     for (const cell of this.cells) {
       const tr = cell.node.getComponent(UITransform);
       if (!tr) continue;
-      // hitTest accepts screen point in 3.8 — also try UI/world converted
       const local = tr.convertToNodeSpaceAR(world);
       const w = tr.width / 2;
       const h = tr.height / 2;
@@ -196,29 +186,24 @@ export class CocosBoardView {
   }
 
   private resolveIndex(touch: EventTouch, hint?: number): number | null {
-    if (hint !== undefined) return hint;
+    if (hint !== undefined && hint >= 0) return hint;
     const local = this.localPos(touch);
     return this.indexFromLocal(local) ?? this.indexFromHitTest(touch);
   }
 
-  private onCellTouchStart(e: EventTouch, index: number): void {
-    this.beginDrag(e, index);
-  }
-
-  private onTouchStart(e: EventTouch): void {
-    this.beginDrag(e, this.resolveIndex(e));
-  }
-
-  beginDrag(e: EventTouch, index: number | null): void {
-    const ui = e.getUILocation();
-    const local = this.localPos(e);
-    logInput('start', { ui, local, index });
-    if (index === null) return;
+  onTouchStart(e: EventTouch, hintIndex = -1): void {
+    const index = this.resolveIndex(e, hintIndex >= 0 ? hintIndex : undefined);
+    console.debug('[INPUT] start', {
+      hintIndex,
+      index,
+      ui: e.getUILocation(),
+    });
+    if (index === null || index < 0) return;
     const cell = this.cells[index];
     const item = cell?.itemView;
     if (!cell || !item || !item.node.active || !item.uid) return;
 
-    logInput('item', { index, uid: item.uid });
+    console.debug('[INPUT] item', { index, uid: item.uid });
     this.drag = {
       fromIndex: index,
       uid: item.uid,
@@ -228,7 +213,7 @@ export class CocosBoardView {
     };
   }
 
-  private onTouchMove(e: EventTouch): void {
+  onTouchMove(e: EventTouch): void {
     if (!this.drag) return;
     const ui = this.uiPos(e);
     const dx = ui.x - this.drag.startUI.x;
@@ -236,17 +221,17 @@ export class CocosBoardView {
     if (!this.drag.active) {
       if (Math.hypot(dx, dy) < this.deps.dragThreshold) return;
       this.drag.active = true;
-      logInput('drag-start', { fromIndex: this.drag.fromIndex });
+      console.debug('[INPUT] drag-start', { fromIndex: this.drag.fromIndex });
       this.startGhost();
       this.cells[this.drag.fromIndex]?.setSourceDim(true);
     }
     const to = this.resolveIndex(e);
-    logInput('drag-move', { toIndex: to });
+    console.debug('[INPUT] drag-move', { toIndex: to });
     this.moveGhost(e);
     this.highlightTarget(e, to);
   }
 
-  private onTouchEnd(e: EventTouch): void {
+  onTouchEnd(e: EventTouch): void {
     if (!this.drag) return;
     const drag = this.drag;
     this.drag = null;
@@ -254,14 +239,13 @@ export class CocosBoardView {
     this.endGhost();
     this.cells[drag.fromIndex]?.setSourceDim(false);
     if (!drag.active) return;
-
     const to = this.resolveIndex(e);
     const preview = this.deps.previewDrop(drag.fromIndex, to);
-    logInput('drop', { from: drag.fromIndex, to, preview });
+    console.debug('[INPUT] drop', { from: drag.fromIndex, to, preview });
     this.deps.onDrop(drag.fromIndex, to);
   }
 
-  private onTouchCancel(): void {
+  onTouchCancel(): void {
     if (!this.drag) return;
     const from = this.drag.fromIndex;
     this.drag = null;
@@ -302,7 +286,7 @@ export class CocosBoardView {
     if (!this.drag) return;
     this.clearHighlights();
     const index = to ?? this.resolveIndex(e);
-    if (index === null || index === this.drag.fromIndex) return;
+    if (index === null || index < 0 || index === this.drag.fromIndex) return;
     const preview = this.deps.previewDrop(this.drag.fromIndex, index);
     const cell = this.cells[index];
     if (!cell) return;
@@ -330,8 +314,12 @@ export class CocosBoardView {
     }
     this.pendingVm = byUid;
     for (const cell of this.cells) {
-      cell.setItem(byCell.get(cell.index) ?? null);
-      cell.bindPickup((e, index) => this.beginDrag(e as EventTouch, index));
+      const item = byCell.get(cell.index) ?? null;
+      cell.setItem(item);
+      if (item && cell.itemView) {
+        // Item sits above cell — bind full gesture on the item node too
+        this.bindNodeTouch(cell.itemView.node, cell.index);
+      }
     }
   }
 
@@ -346,10 +334,18 @@ export class CocosBoardView {
   dispose(): void {
     for (const cell of this.cells) {
       cell.node.off(Node.EventType.TOUCH_START);
+      cell.node.off(Node.EventType.TOUCH_MOVE);
+      cell.node.off(Node.EventType.TOUCH_END);
+      cell.node.off(Node.EventType.TOUCH_CANCEL);
+      cell.itemView?.node.off(Node.EventType.TOUCH_START);
+      cell.itemView?.node.off(Node.EventType.TOUCH_MOVE);
+      cell.itemView?.node.off(Node.EventType.TOUCH_END);
+      cell.itemView?.node.off(Node.EventType.TOUCH_CANCEL);
     }
-    this.node.off(Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
-    this.node.off(Node.EventType.TOUCH_END, this.onTouchEnd, this);
-    this.node.off(Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
+    this.node.off(Node.EventType.TOUCH_START);
+    this.node.off(Node.EventType.TOUCH_MOVE);
+    this.node.off(Node.EventType.TOUCH_END);
+    this.node.off(Node.EventType.TOUCH_CANCEL);
     this.endGhost();
   }
 }
