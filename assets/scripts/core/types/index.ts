@@ -65,6 +65,59 @@ export type TutorialState = {
   firstOrderHintShown?: boolean;
 };
 
+export type GameStats = {
+  spawns: number;
+  merges: number;
+  orders: number;
+};
+
+export type MemoryDefinition = {
+  id: string;
+  title: string;
+  summary: string;
+  diary: string;
+  heartCost: number;
+  art: string;
+};
+
+export type FurnitureDefinition = {
+  id: string;
+  title: string;
+  category: string;
+  room: 'living' | 'bedroom' | 'garden';
+  placement: { x: number; y: number; width: number; height: number };
+  coinCost: number;
+  unlockLevel: number;
+  decorPoints: number;
+  art: string;
+};
+
+export type WishMetric = 'spawns' | 'merges' | 'orders' | 'level' | 'memories' | 'furniture' | 'decor';
+
+export type WishDefinition = {
+  id: string;
+  title: string;
+  metric: WishMetric;
+  target: number;
+  rewardCoins: number;
+  rewardHearts: number;
+};
+
+export type LevelRewardConfig = {
+  default: { coinsPerLevel: number; heartsPerLevel: number; xp: number };
+  special: Array<{ level: number; coins: number; hearts: number; xp: number }>;
+};
+
+export type LifeState = {
+  unlockedMemoryIds: string[];
+  ownedFurnitureIds: string[];
+  placedFurnitureIds: string[];
+  claimedWishIds: string[];
+  claimedLevelRewards: number[];
+  photoPaths: string[];
+  stats: GameStats;
+};
+
 export type SaveData = {
   version: number;
   savedAt: number;
@@ -73,6 +126,7 @@ export type SaveData = {
   activeOrders: ActiveOrder[];
   tutorial: TutorialState;
   recentOrderIds?: string[];
+  life: LifeState;
 };
 
 export type GameConfig = {

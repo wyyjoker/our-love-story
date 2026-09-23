@@ -50,16 +50,16 @@
   var game_default = {
     gameTitle: "\u6211\u4EEC\u7684\u6D6A\u6F2B\u5C0F\u5C4B",
     saveKey: "our-love-story-save",
-    saveVersion: 1,
+    saveVersion: 2,
     board: {
       rows: 9,
-      columns: 7
+      columns: 9
     },
     energy: {
-      maxEnergy: 50,
-      initialEnergy: 50,
+      maxEnergy: 100,
+      initialEnergy: 100,
       generatorCost: 1,
-      recoverIntervalMs: 12e4
+      recoverIntervalMs: 24e4
     },
     dragThresholdPx: 12,
     orders: {
@@ -130,7 +130,7 @@
       id: "flower_basket",
       displayName: "\u82B1\u7BEE",
       chainId: "flower",
-      unlockLevel: 1,
+      unlockLevel: 3,
       energyCost: 1,
       outputs: [
         { itemId: "flower_01", weight: 85 },
@@ -141,7 +141,7 @@
       id: "dessert_oven",
       displayName: "\u751C\u54C1\u70E4\u7BB1",
       chainId: "dessert",
-      unlockLevel: 3,
+      unlockLevel: 5,
       energyCost: 1,
       outputs: [
         { itemId: "dessert_01", weight: 85 },
@@ -152,7 +152,7 @@
       id: "gift_box",
       displayName: "\u793C\u7269\u76D2",
       chainId: "gift",
-      unlockLevel: 5,
+      unlockLevel: 8,
       energyCost: 1,
       outputs: [
         { itemId: "gift_01", weight: 85 },
@@ -190,6 +190,24 @@
       rewardCoins: 18,
       rewardXp: 8,
       rewardHearts: 1
+    },
+    {
+      id: "order_coffee_cup",
+      minLevel: 1,
+      maxLevel: 99,
+      requirements: [{ itemId: "coffee_03", count: 1 }],
+      rewardCoins: 30,
+      rewardXp: 12,
+      rewardHearts: 5
+    },
+    {
+      id: "order_coffee_pair",
+      minLevel: 1,
+      maxLevel: 99,
+      requirements: [{ itemId: "coffee_02", count: 2 }],
+      rewardCoins: 32,
+      rewardXp: 14,
+      rewardHearts: 5
     },
     {
       id: "order_flower_seed",
@@ -316,11 +334,78 @@
   // assets/resources/config/progression.json
   var progression_default = {
     levels: [
-      { level: 1, xpRequired: 0, unlockChains: ["coffee", "flower"] },
-      { level: 2, xpRequired: 30, unlockChains: [] },
-      { level: 3, xpRequired: 80, unlockChains: ["dessert"] },
-      { level: 4, xpRequired: 150, unlockChains: [] },
-      { level: 5, xpRequired: 250, unlockChains: ["gift"] }
+      { level: 1, xpRequired: 0, unlockChains: ["coffee"] },
+      { level: 2, xpRequired: 50, unlockChains: [] },
+      { level: 3, xpRequired: 150, unlockChains: ["flower"] },
+      { level: 4, xpRequired: 300, unlockChains: [] },
+      { level: 5, xpRequired: 500, unlockChains: ["dessert"] },
+      { level: 6, xpRequired: 750, unlockChains: [] },
+      { level: 7, xpRequired: 1050, unlockChains: [] },
+      { level: 8, xpRequired: 1400, unlockChains: ["gift"] },
+      { level: 9, xpRequired: 1800, unlockChains: [] },
+      { level: 10, xpRequired: 2250, unlockChains: [] },
+      { level: 11, xpRequired: 2750, unlockChains: [] },
+      { level: 12, xpRequired: 3300, unlockChains: [] },
+      { level: 13, xpRequired: 3900, unlockChains: [] },
+      { level: 14, xpRequired: 4550, unlockChains: [] },
+      { level: 15, xpRequired: 5250, unlockChains: [] },
+      { level: 16, xpRequired: 6e3, unlockChains: [] },
+      { level: 17, xpRequired: 6800, unlockChains: [] },
+      { level: 18, xpRequired: 7650, unlockChains: [] }
+    ]
+  };
+
+  // assets/resources/config/memories.json
+  var memories_default = [
+    { id: "letters", title: "100\u5C01\u60C5\u4E66", summary: "\u4ECE\u7B2C\u4E00\u6B21\u5FC3\u52A8\u5F00\u59CB\uFF0C\u628A\u60F3\u8BF4\u7684\u8BDD\u90FD\u5199\u7ED9\u4F60\u3002", diary: "\u90A3\u5929\u7684\u9633\u5149\u5F88\u8F7B\u3002\u5199\u4E0B\u7B2C\u4E00\u5C01\u4FE1\u65F6\uFF0C\u6211\u5DF2\u7ECF\u5F00\u59CB\u671F\u5F85\u4E0E\u4F60\u7684\u6BCF\u4E00\u4E2A\u660E\u5929\u3002", heartCost: 50, art: "art/memory_letters" },
+    { id: "first_trip", title: "\u9996\u5C14\u65C5\u884C", summary: "\u548C\u4F60\u4E00\u8D77\u53BB\u770B\u66F4\u5927\u7684\u4E16\u754C\uFF0C\u6536\u96C6\u5C5E\u4E8E\u6211\u4EEC\u7684\u98CE\u666F\u3002", diary: "\u5730\u56FE\u4E0A\u53C8\u591A\u4E86\u4E00\u679A\u5C0F\u5C0F\u7684\u6807\u8BB0\u3002\u964C\u751F\u7684\u8857\u9053\u56E0\u4E3A\u4F60\u5728\u8EAB\u8FB9\uFF0C\u53D8\u5F97\u50CF\u5BB6\u4E00\u6837\u719F\u6089\u3002", heartCost: 80, art: "art/memory_trip" },
+    { id: "night_view", title: "\u5357\u5C71\u5854", summary: "\u5728\u591C\u8272\u548C\u661F\u5149\u4E0B\uFF0C\u6211\u4EEC\u9760\u5F97\u66F4\u8FD1\u4E86\u3002", diary: "\u706F\u5149\u4EAE\u8D77\u6765\u7684\u65F6\u5019\uFF0C\u6211\u5077\u5077\u8BB8\u4E86\u4E00\u4E2A\u613F\uFF1A\u5F80\u540E\u7684\u6BCF\u4E2A\u591C\u665A\u90FD\u80FD\u4E0E\u4F60\u5206\u4EAB\u3002", heartCost: 100, art: "art/memory_night" },
+    { id: "promise", title: "\u6C42\u5A5A\u65F6\u523B", summary: "\u90A3\u4E00\u523B\uFF0C\u65F6\u95F4\u4EFF\u4F5B\u9759\u6B62\u4E86\u3002", diary: "\u7B54\u6848\u5176\u5B9E\u65E9\u5C31\u85CF\u5728\u4E00\u8D77\u5EA6\u8FC7\u7684\u5BFB\u5E38\u65E5\u5B50\u91CC\u3002\u8C22\u8C22\u4F60\uFF0C\u4E5F\u9009\u62E9\u4E86\u6211\u4EEC\u7684\u672A\u6765\u3002", heartCost: 120, art: "art/memory_promise" },
+    { id: "wedding", title: "\u5A5A\u793C\u5012\u8BA1\u65F6", summary: "\u4ECE\u604B\u7231\u5230\u5A5A\u793C\uFF0C\u6211\u4EEC\u6B63\u5728\u8D70\u5411\u66F4\u5E78\u798F\u7684\u660E\u5929\u3002", diary: "\u65E5\u5386\u7FFB\u8FC7\u4E00\u9875\u53C8\u4E00\u9875\uFF0C\u51C6\u5907\u597D\u7684\u4E0D\u53EA\u662F\u5E86\u5178\uFF0C\u8FD8\u6709\u4E00\u8D77\u751F\u6D3B\u7684\u52C7\u6C14\u3002", heartCost: 150, art: "art/memory_wedding" },
+    { id: "first_home", title: "\u7B2C\u4E00\u628A\u94A5\u5319", summary: "\u628A\u4E24\u4E2A\u4EBA\u7684\u68A6\u60F3\uFF0C\u6162\u6162\u88C5\u8FDB\u540C\u4E00\u95F4\u5C0F\u5C4B\u3002", diary: "\u94A5\u5319\u843D\u5728\u638C\u5FC3\u65F6\uFF0C\u6211\u4EEC\u90FD\u7B11\u4E86\u3002\u8FD9\u91CC\u4F1A\u88C5\u6EE1\u70ED\u996D\u3001\u9C9C\u82B1\u548C\u665A\u5B89\u3002", heartCost: 180, art: "art/memory_home" },
+    { id: "rainy_day", title: "\u96E8\u5929\u6563\u6B65", summary: "\u4E00\u628A\u4F1E\uFF0C\u4E24\u4E2A\u4EBA\uFF0C\u6162\u6162\u8D70\u8FC7\u719F\u6089\u7684\u8857\u3002", diary: "\u96E8\u6EF4\u6253\u5728\u4F1E\u9762\u4E0A\u7684\u58F0\u97F3\uFF0C\u50CF\u662F\u53EA\u4E3A\u6211\u4EEC\u6F14\u594F\u7684\u5C0F\u66F2\u3002", heartCost: 210, art: "art/memory_rain" },
+    { id: "birthday", title: "\u751F\u65E5\u60CA\u559C", summary: "\u86CB\u7CD5\u4E0A\u7684\u70DB\u5149\uFF0C\u7167\u4EAE\u4E86\u4F60\u7684\u7B11\u5BB9\u3002", diary: "\u95ED\u4E0A\u773C\u775B\u8BB8\u613F\u5427\u3002\u6211\u4E5F\u6709\u4E00\u4E2A\u613F\u671B\uFF1A\u8BA9\u4F60\u6BCF\u5E74\u90FD\u8FD9\u6837\u5F00\u5FC3\u3002", heartCost: 240, art: "art/memory_birthday" },
+    { id: "garden", title: "\u4E00\u8D77\u79CD\u82B1", summary: "\u4E00\u6735\u82B1\u5F00\u4E86\uFF0C\u6211\u4EEC\u7684\u65E5\u5B50\u4E5F\u66F4\u660E\u4EAE\u4E86\u3002", diary: "\u4F60\u8D1F\u8D23\u6D47\u6C34\uFF0C\u6211\u8D1F\u8D23\u8BB0\u4F4F\u6BCF\u6735\u82B1\u5F00\u653E\u7684\u65E5\u5B50\u3002", heartCost: 270, art: "art/memory_garden" },
+    { id: "anniversary", title: "\u7EAA\u5FF5\u65E5", summary: "\u628A\u6BCF\u4E00\u4E2A\u5E73\u51E1\u7684\u65E5\u5B50\uFF0C\u90FD\u62FC\u6210\u6D6A\u6F2B\u7684\u5BB6\u3002", diary: "\u6545\u4E8B\u8FD8\u5728\u7EE7\u7EED\u3002\u4E0B\u4E00\u9875\uFF0C\u4ECD\u7136\u60F3\u548C\u4F60\u4E00\u8D77\u5199\u3002", heartCost: 300, art: "art/memory_anniversary" }
+  ];
+
+  // assets/resources/config/furniture.json
+  var furniture_default = [
+    { id: "sofa", title: "\u751C\u871C\u6C99\u53D1", category: "\u5BA2\u5385", room: "living", placement: { x: -185, y: -145, width: 245, height: 185 }, coinCost: 100, unlockLevel: 1, decorPoints: 4, art: "art/furniture_sofa" },
+    { id: "tea_table", title: "\u6696\u5FC3\u8336\u51E0", category: "\u5BA2\u5385", room: "living", placement: { x: -25, y: -192, width: 158, height: 142 }, coinCost: 150, unlockLevel: 1, decorPoints: 4, art: "art/furniture_table" },
+    { id: "rose_arch", title: "\u73AB\u7470\u82B1\u62F1\u95E8", category: "\u82B1\u56ED", room: "garden", placement: { x: 145, y: -5, width: 190, height: 235 }, coinCost: 200, unlockLevel: 1, decorPoints: 5, art: "art/furniture_arch" },
+    { id: "bed", title: "\u6708\u5149\u5C0F\u5E8A", category: "\u5367\u5BA4", room: "bedroom", placement: { x: -55, y: -60, width: 315, height: 230 }, coinCost: 250, unlockLevel: 1, decorPoints: 5, art: "art/furniture_bed" },
+    { id: "lamp", title: "\u6E29\u67D4\u843D\u5730\u706F", category: "\u5BA2\u5385", room: "living", placement: { x: -288, y: -75, width: 86, height: 215 }, coinCost: 300, unlockLevel: 5, decorPoints: 5, art: "art/furniture_lamp" },
+    { id: "bookshelf", title: "\u56DE\u5FC6\u4E66\u67B6", category: "\u88C5\u9970", room: "living", placement: { x: -250, y: 97, width: 135, height: 225 }, coinCost: 350, unlockLevel: 8, decorPoints: 5, art: "art/furniture_bookshelf" },
+    { id: "flower_wall", title: "\u82B1\u8BED\u5899", category: "\u88C5\u9970", room: "living", placement: { x: 240, y: 97, width: 120, height: 215 }, coinCost: 400, unlockLevel: 10, decorPoints: 5, art: "art/furniture_flowers" },
+    { id: "dining_set", title: "\u53CC\u4EBA\u9910\u684C", category: "\u7279\u6B8A", room: "living", placement: { x: 190, y: -145, width: 195, height: 185 }, coinCost: 450, unlockLevel: 12, decorPoints: 5, art: "art/furniture_dining" },
+    { id: "fountain", title: "\u8BB8\u613F\u55B7\u6CC9", category: "\u82B1\u56ED", room: "garden", placement: { x: 238, y: -115, width: 135, height: 175 }, coinCost: 500, unlockLevel: 15, decorPoints: 6, art: "art/furniture_fountain" },
+    { id: "swing", title: "\u82B1\u56ED\u79CB\u5343", category: "\u82B1\u56ED", room: "garden", placement: { x: -102, y: -125, width: 225, height: 195 }, coinCost: 600, unlockLevel: 18, decorPoints: 6, art: "art/furniture_swing" }
+  ];
+
+  // assets/resources/config/wishes.json
+  var wishes_default = [
+    { id: "first_spawns", title: "\u70B9\u4EAE\u5496\u5561\u673A", metric: "spawns", target: 5, rewardCoins: 100, rewardHearts: 20 },
+    { id: "first_merges", title: "\u5C0F\u5C0F\u7684\u5408\u6210", metric: "merges", target: 3, rewardCoins: 100, rewardHearts: 20 },
+    { id: "first_order", title: "\u7B2C\u4E00\u4EFD\u59D4\u6258", metric: "orders", target: 1, rewardCoins: 100, rewardHearts: 20 },
+    { id: "flower_time", title: "\u82B1\u7BEE\u5F00\u653E", metric: "level", target: 3, rewardCoins: 100, rewardHearts: 20 },
+    { id: "first_memory", title: "\u7FFB\u5F00\u7B2C\u4E00\u9875", metric: "memories", target: 1, rewardCoins: 100, rewardHearts: 20 },
+    { id: "first_furniture", title: "\u88C5\u70B9\u5C0F\u5C4B", metric: "furniture", target: 1, rewardCoins: 100, rewardHearts: 20 },
+    { id: "helpful_neighbor", title: "\u70ED\u5FC3\u5C0F\u5C4B", metric: "orders", target: 5, rewardCoins: 100, rewardHearts: 20 },
+    { id: "gift_time", title: "\u793C\u7269\u65F6\u5149", metric: "level", target: 8, rewardCoins: 100, rewardHearts: 20 },
+    { id: "more_memories", title: "\u73CD\u85CF\u7684\u6545\u4E8B", metric: "memories", target: 3, rewardCoins: 100, rewardHearts: 20 },
+    { id: "cozy_home", title: "\u6E29\u6696\u7684\u5BB6", metric: "decor", target: 20, rewardCoins: 100, rewardHearts: 20 }
+  ];
+
+  // assets/resources/config/level_rewards.json
+  var level_rewards_default = {
+    default: {
+      coinsPerLevel: 20,
+      heartsPerLevel: 2,
+      xp: 0
+    },
+    special: [
+      { level: 3, coins: 200, hearts: 50, xp: 300 }
     ]
   };
 
@@ -332,11 +417,15 @@
     const orders = orders_default;
     const progression = progression_default;
     const catalog = createItemCatalog(items);
-    return { game, items, catalog, generators, orders, progression };
+    const memories = memories_default;
+    const furniture = furniture_default;
+    const wishes = wishes_default;
+    const levelRewards = level_rewards_default;
+    return { game, items, catalog, generators, orders, progression, memories, furniture, wishes, levelRewards };
   }
   function validateConfig(bundle) {
     const issues = [];
-    const { game, items, catalog, generators, orders, progression } = bundle;
+    const { game, items, catalog, generators, orders, progression, memories, furniture, wishes, levelRewards } = bundle;
     const seen = /* @__PURE__ */ new Set();
     for (const item of items) {
       if (seen.has(item.id)) {
@@ -447,6 +536,49 @@
     if (game.energy.recoverIntervalMs <= 0) {
       issues.push({ level: "error", message: "Energy recoverIntervalMs invalid" });
     }
+    for (const [name, values] of [
+      ["memory", memories],
+      ["furniture", furniture],
+      ["wish", wishes]
+    ]) {
+      const ids = /* @__PURE__ */ new Set();
+      for (const entry of values) {
+        if (ids.has(entry.id)) issues.push({ level: "error", message: `Duplicate ${name} id: ${entry.id}` });
+        ids.add(entry.id);
+      }
+    }
+    if (memories.length !== 10 || furniture.length !== 10 || wishes.length !== 10) {
+      issues.push({ level: "error", message: "Life content must have 10 memories, furniture, and wishes" });
+    }
+    if (furniture.reduce((n, f) => n + f.decorPoints, 0) !== 50) {
+      issues.push({ level: "error", message: "Furniture decor points must total 50" });
+    }
+    for (const memory of memories) {
+      if (memory.heartCost <= 0) issues.push({ level: "error", message: `Memory ${memory.id} cost invalid` });
+    }
+    for (const item of furniture) {
+      if (item.coinCost < 0 || item.unlockLevel < 1 || item.decorPoints <= 0) {
+        issues.push({ level: "error", message: `Furniture ${item.id} invalid` });
+      }
+      if (!["living", "bedroom", "garden"].includes(item.room) || !item.placement || ![item.placement.x, item.placement.y, item.placement.width, item.placement.height].every(Number.isFinite) || item.placement.width <= 0 || item.placement.height <= 0) {
+        issues.push({ level: "error", message: `Furniture ${item.id} placement invalid` });
+      }
+    }
+    for (const wish of wishes) {
+      if (wish.target <= 0 || wish.rewardCoins < 0 || wish.rewardHearts < 0) {
+        issues.push({ level: "error", message: `Wish ${wish.id} invalid` });
+      }
+    }
+    if (levelRewards.default.coinsPerLevel < 0 || levelRewards.default.heartsPerLevel < 0 || levelRewards.default.xp < 0) {
+      issues.push({ level: "error", message: "Default level reward invalid" });
+    }
+    const specialLevels = /* @__PURE__ */ new Set();
+    for (const reward of levelRewards.special) {
+      if (specialLevels.has(reward.level) || reward.level < 2 || reward.coins < 0 || reward.hearts < 0 || reward.xp < 0) {
+        issues.push({ level: "error", message: `Level reward ${reward.level} invalid` });
+      }
+      specialLevels.add(reward.level);
+    }
     return issues;
   }
   function assertConfigValid(bundle) {
@@ -484,7 +616,7 @@
     emit(type, payload) {
       const set = this.listeners.get(type);
       if (!set) return;
-      for (const handler of [...set]) {
+      for (const handler of Array.from(set)) {
         handler(payload);
       }
     }
@@ -727,11 +859,11 @@
       if (version > this.options.version) {
         return null;
       }
-      const player = this.mergePlayer(parsed.player, defaults.player);
+      const player = this.mergePlayer(parsed.player, defaults.player, version);
       const boardCells = this.mergeBoard(
         parsed.board,
         defaults.board,
-        defaults.player
+        version
       );
       if (!boardCells) return null;
       const activeOrders = Array.isArray(parsed.activeOrders) ? parsed.activeOrders.filter(isActiveOrder) : defaults.activeOrders;
@@ -739,6 +871,14 @@
         repaired = true;
       }
       const tutorial = this.mergeTutorial(parsed.tutorial, defaults.tutorial);
+      const life = this.mergeLife(parsed.life, defaults.life);
+      const rawLife = parsed.life;
+      const brokenSet = (value) => Array.isArray(value) && value.length === 1 && value[0] !== null && typeof value[0] === "object" && Object.keys(value[0]).length === 0;
+      if (this.options.legacyStarterFurnitureId && brokenSet(rawLife?.ownedFurnitureIds) && brokenSet(rawLife?.placedFurnitureIds) && life.ownedFurnitureIds.length === 0 && life.placedFurnitureIds.length === 0) {
+        life.ownedFurnitureIds = [this.options.legacyStarterFurnitureId];
+        life.placedFurnitureIds = [this.options.legacyStarterFurnitureId];
+        repaired = true;
+      }
       const data = {
         version: this.options.version,
         savedAt: typeof parsed.savedAt === "number" ? parsed.savedAt : this.options.clock.now(),
@@ -746,32 +886,48 @@
         board: boardCells,
         activeOrders: activeOrders.length > 0 ? activeOrders : defaults.activeOrders,
         tutorial,
-        recentOrderIds: Array.isArray(parsed.recentOrderIds) ? parsed.recentOrderIds.filter((x) => typeof x === "string") : []
+        recentOrderIds: Array.isArray(parsed.recentOrderIds) ? parsed.recentOrderIds.filter((x) => typeof x === "string") : [],
+        life
       };
       return { data, repaired };
     }
-    mergePlayer(raw, fallback) {
+    mergePlayer(raw, fallback, version) {
       if (!raw || typeof raw !== "object") return { ...fallback };
       const p = raw;
+      const level = Math.max(1, Math.min(18, Math.floor(num(p.level, fallback.level))));
+      const oldXp = Math.max(0, Math.floor(num(p.xp, fallback.xp)));
+      let xp = oldXp;
+      if (version === 1) {
+        const oldFloors = [0, 30, 80, 150, 250];
+        const oldFloor = oldFloors[Math.min(level - 1, 4)];
+        const oldNext = oldFloors[level] ?? oldFloor;
+        const newFloor = 25 * level * (level - 1);
+        const progress = oldNext > oldFloor ? Math.min(1, Math.max(0, (oldXp - oldFloor) / (oldNext - oldFloor))) : 0;
+        xp = newFloor + Math.round(progress * 50 * level) + (level >= 5 ? Math.max(0, oldXp - oldFloor) : 0);
+      }
+      const oldMax = Math.max(1, num(p.maxEnergy, fallback.maxEnergy));
+      const oldEnergy = Math.min(oldMax, Math.max(0, num(p.energy, fallback.energy)));
+      const energy = version === 1 ? Math.max(0, fallback.maxEnergy - (oldMax - oldEnergy)) : Math.min(fallback.maxEnergy, oldEnergy);
       return {
-        level: num(p.level, fallback.level),
-        xp: num(p.xp, fallback.xp),
+        level,
+        xp,
         coins: num(p.coins, fallback.coins),
         hearts: num(p.hearts, fallback.hearts),
-        energy: num(p.energy, fallback.energy),
-        maxEnergy: num(p.maxEnergy, fallback.maxEnergy),
+        energy,
+        maxEnergy: fallback.maxEnergy,
         lastEnergyAt: num(p.lastEnergyAt, fallback.lastEnergyAt),
         unlockedChainIds: Array.isArray(p.unlockedChainIds) ? p.unlockedChainIds.filter((x) => typeof x === "string") : [...fallback.unlockedChainIds]
       };
     }
-    mergeBoard(raw, fallback, _player) {
+    mergeBoard(raw, fallback, version) {
       if (!Array.isArray(raw)) {
         return fallback.map((c) => ({ ...c, item: c.item ? { ...c.item } : void 0 }));
       }
-      if (raw.length !== fallback.length) {
+      const legacy = version === 1 && raw.length === 63 && fallback.length === 81;
+      if (raw.length !== fallback.length && !legacy) {
         return null;
       }
-      const cells = [];
+      const cells = fallback.map((c) => ({ index: c.index }));
       for (let i = 0; i < raw.length; i += 1) {
         const cell = raw[i];
         if (!cell || typeof cell !== "object") return null;
@@ -781,12 +937,33 @@
           if (typeof it.uid !== "string" || typeof it.definitionId !== "string") {
             return null;
           }
-          cells.push({ index: i, item: { uid: it.uid, definitionId: it.definitionId } });
-        } else {
-          cells.push({ index: i });
+          const index = legacy ? Math.floor(i / 7) * 9 + i % 7 : i;
+          cells[index].item = { uid: it.uid, definitionId: it.definitionId };
         }
       }
       return cells;
+    }
+    mergeLife(raw, fallback) {
+      if (!raw || typeof raw !== "object") return {
+        ...fallback,
+        stats: { ...fallback.stats }
+      };
+      const state = raw;
+      const strings = (value) => Array.isArray(value) ? Array.from(new Set(value.filter((x) => typeof x === "string"))) : [];
+      const claimedLevels = Array.isArray(state.claimedLevelRewards) ? Array.from(new Set(state.claimedLevelRewards.filter((x) => typeof x === "number" && Number.isInteger(x) && x >= 2 && x <= 18))) : [];
+      return {
+        unlockedMemoryIds: strings(state.unlockedMemoryIds),
+        ownedFurnitureIds: strings(state.ownedFurnitureIds),
+        placedFurnitureIds: strings(state.placedFurnitureIds),
+        claimedWishIds: strings(state.claimedWishIds),
+        claimedLevelRewards: claimedLevels,
+        photoPaths: strings(state.photoPaths),
+        stats: {
+          spawns: Math.max(0, Math.floor(num(state.stats?.spawns, 0))),
+          merges: Math.max(0, Math.floor(num(state.stats?.merges, 0))),
+          orders: Math.max(0, Math.floor(num(state.stats?.orders, 0)))
+        }
+      };
     }
     mergeTutorial(raw, fallback) {
       if (!raw || typeof raw !== "object") return { ...fallback };
@@ -823,8 +1000,8 @@
     if (board.length >= 4) {
       board[0].item = { uid: "start_c1a", definitionId: "coffee_01" };
       board[1].item = { uid: "start_c1b", definitionId: "coffee_01" };
-      board[2].item = { uid: "start_f1a", definitionId: "flower_01" };
-      board[3].item = { uid: "start_f1b", definitionId: "flower_01" };
+      board[2].item = { uid: "start_c1c", definitionId: "coffee_01" };
+      board[3].item = { uid: "start_c1d", definitionId: "coffee_01" };
     }
     const player = {
       level: 1,
@@ -834,7 +1011,7 @@
       energy: config.energy.initialEnergy,
       maxEnergy: config.energy.maxEnergy,
       lastEnergyAt: savedAt,
-      unlockedChainIds: ["coffee", "flower"]
+      unlockedChainIds: ["coffee"]
     };
     return {
       version: config.saveVersion,
@@ -852,19 +1029,19 @@
         },
         {
           uid: "order_start_2",
-          templateId: "order_flower_seed",
-          requirements: [{ itemId: "flower_01", count: 2 }],
-          rewardCoins: 12,
-          rewardXp: 6,
-          rewardHearts: 1
-        },
-        {
-          uid: "order_start_3",
           templateId: "order_coffee_powder",
           requirements: [{ itemId: "coffee_02", count: 1 }],
           rewardCoins: 18,
           rewardXp: 8,
-          rewardHearts: 1
+          rewardHearts: 3
+        },
+        {
+          uid: "order_start_3",
+          templateId: "order_coffee_cup",
+          requirements: [{ itemId: "coffee_03", count: 1 }],
+          rewardCoins: 30,
+          rewardXp: 12,
+          rewardHearts: 5
         }
       ],
       tutorial: {
@@ -873,7 +1050,16 @@
         firstOrderCompleted: false,
         firstOrderHintShown: false
       },
-      recentOrderIds: ["order_tutorial_coffee", "order_flower_seed", "order_coffee_powder"]
+      recentOrderIds: ["order_tutorial_coffee", "order_coffee_powder", "order_coffee_cup"],
+      life: {
+        unlockedMemoryIds: [],
+        ownedFurnitureIds: [],
+        placedFurnitureIds: [],
+        claimedWishIds: [],
+        claimedLevelRewards: [],
+        photoPaths: [],
+        stats: { spawns: 0, merges: 0, orders: 0 }
+      }
     };
   }
 
@@ -1322,7 +1508,7 @@
       return this.generators.find((g) => g.id === id);
     }
     isUnlocked(generator) {
-      return this.player.level >= generator.unlockLevel;
+      return this.player.level >= generator.unlockLevel || this.player.unlockedChainIds.includes(generator.chainId);
     }
     rollOutput(generator) {
       return pickWeighted(generator.outputs, this.random);
@@ -1576,7 +1762,7 @@
         for (const c of entry.unlockChains) chains.add(c);
       }
     }
-    return [...chains];
+    return Array.from(chains);
   }
 
   // assets/scripts/gameplay/ProgressionService.ts
@@ -1605,13 +1791,16 @@
       const newLevel = getLevelForXp(this.progression, this.player.xp);
       let unlockedChains = [];
       if (newLevel > previousLevel) {
-        this.player.level = newLevel;
-        unlockedChains = this.syncUnlocks(previousLevel, newLevel);
-        this.bus.emit("LEVEL_UP", {
-          level: newLevel,
-          previousLevel,
-          unlockedChains
-        });
+        for (let level = previousLevel + 1; level <= newLevel; level += 1) {
+          this.player.level = level;
+          const newly = this.syncUnlocks(level - 1, level);
+          unlockedChains.push(...newly);
+          this.bus.emit("LEVEL_UP", {
+            level,
+            previousLevel: level - 1,
+            unlockedChains: newly
+          });
+        }
       }
       return {
         xp: this.player.xp,
@@ -1632,13 +1821,25 @@
       this.player.hearts += delta;
       this.bus.emit("HEARTS_CHANGED", { hearts: this.player.hearts, delta });
     }
+    spendCoins(amount) {
+      if (!Number.isInteger(amount) || amount < 0 || this.player.coins < amount) return false;
+      this.player.coins -= amount;
+      this.bus.emit("COINS_CHANGED", { coins: this.player.coins, delta: -amount });
+      return true;
+    }
+    spendHearts(amount) {
+      if (!Number.isInteger(amount) || amount < 0 || this.player.hearts < amount) return false;
+      this.player.hearts -= amount;
+      this.bus.emit("HEARTS_CHANGED", { hearts: this.player.hearts, delta: -amount });
+      return true;
+    }
     unlockedChains() {
       return [...this.player.unlockedChainIds];
     }
     isGeneratorUnlocked(generatorId) {
       const gen = this.generators.find((g) => g.id === generatorId);
       if (!gen) return false;
-      return this.player.level >= gen.unlockLevel;
+      return this.player.level >= gen.unlockLevel || this.player.unlockedChainIds.includes(gen.chainId);
     }
     syncUnlocks(fromLevel = 0, toLevel = this.player.level) {
       const expected = new Set(collectUnlockChains(this.progression, toLevel));
@@ -1649,10 +1850,132 @@
           if (fromLevel > 0) newly.push(chain);
         }
       }
-      this.player.unlockedChainIds = this.player.unlockedChainIds.filter(
-        (c) => expected.has(c)
-      );
       return newly;
+    }
+  };
+
+  // assets/scripts/gameplay/LifeService.ts
+  var LifeService = class {
+    constructor(state, memories, furniture, wishes, levelRewards, player, progression, bus) {
+      this.state = state;
+      this.memories = memories;
+      this.furniture = furniture;
+      this.wishes = wishes;
+      this.levelRewards = levelRewards;
+      this.player = player;
+      this.progression = progression;
+      this.bus = bus;
+    }
+    record(metric) {
+      this.state.stats[metric] += 1;
+      this.bus.emit("LIFE_CHANGED", { reason: "progress" });
+    }
+    getDecorPoints() {
+      const placed = new Set(this.state.placedFurnitureIds);
+      return this.furniture.reduce((total, item) => total + (placed.has(item.id) ? item.decorPoints : 0), 0);
+    }
+    getWishProgress(wish) {
+      const metric = wish.metric;
+      switch (metric) {
+        case "spawns":
+        case "merges":
+        case "orders":
+          return this.state.stats[metric];
+        case "level":
+          return this.player.level;
+        case "memories":
+          return this.state.unlockedMemoryIds.length;
+        case "furniture":
+          return this.state.placedFurnitureIds.length;
+        case "decor":
+          return this.getDecorPoints();
+      }
+    }
+    unlockMemory(id) {
+      const index = this.memories.findIndex((item) => item.id === id);
+      if (index < 0) return { ok: false, reason: "NOT_FOUND" };
+      if (this.state.unlockedMemoryIds.includes(id)) return { ok: false, reason: "ALREADY_OWNED" };
+      if (index > 0 && !this.state.unlockedMemoryIds.includes(this.memories[index - 1].id)) {
+        return { ok: false, reason: "LOCKED" };
+      }
+      if (!this.progression.spendHearts(this.memories[index].heartCost)) {
+        return { ok: false, reason: "NOT_ENOUGH_HEARTS" };
+      }
+      this.state.unlockedMemoryIds.push(id);
+      this.bus.emit("LIFE_CHANGED", { reason: "memory" });
+      return { ok: true };
+    }
+    buyFurniture(id) {
+      const item = this.furniture.find((entry) => entry.id === id);
+      if (!item) return { ok: false, reason: "NOT_FOUND" };
+      if (this.state.ownedFurnitureIds.includes(id)) return { ok: false, reason: "ALREADY_OWNED" };
+      if (this.player.level < item.unlockLevel) return { ok: false, reason: "LOCKED" };
+      if (!this.progression.spendCoins(item.coinCost)) {
+        return { ok: false, reason: "NOT_ENOUGH_COINS" };
+      }
+      this.state.ownedFurnitureIds.push(id);
+      this.state.placedFurnitureIds.push(id);
+      this.bus.emit("LIFE_CHANGED", { reason: "furniture" });
+      return { ok: true };
+    }
+    placeFurniture(id) {
+      if (!this.furniture.some((item) => item.id === id)) return { ok: false, reason: "NOT_FOUND" };
+      if (!this.state.ownedFurnitureIds.includes(id)) return { ok: false, reason: "LOCKED" };
+      if (this.state.placedFurnitureIds.includes(id)) {
+        this.state.placedFurnitureIds = this.state.placedFurnitureIds.filter((value) => value !== id);
+      } else {
+        this.state.placedFurnitureIds.push(id);
+      }
+      this.bus.emit("LIFE_CHANGED", { reason: "furniture" });
+      return { ok: true };
+    }
+    claimWish(id) {
+      const wish = this.wishes.find((item) => item.id === id);
+      if (!wish) return { ok: false, reason: "NOT_FOUND" };
+      if (this.state.claimedWishIds.includes(id)) return { ok: false, reason: "ALREADY_CLAIMED" };
+      if (this.getWishProgress(wish) < wish.target) return { ok: false, reason: "NOT_READY" };
+      this.state.claimedWishIds.push(id);
+      this.progression.addCoins(wish.rewardCoins);
+      this.progression.addHearts(wish.rewardHearts);
+      this.bus.emit("LIFE_CHANGED", { reason: "wish" });
+      return { ok: true };
+    }
+    pendingLevelRewards() {
+      const claimed = new Set(this.state.claimedLevelRewards);
+      const levels = [];
+      for (let level = 2; level <= this.player.level; level += 1) {
+        if (!claimed.has(level)) levels.push(level);
+      }
+      return levels;
+    }
+    rewardForLevel(level) {
+      const special = this.levelRewards.special.find((reward) => reward.level === level);
+      return special ? { coins: special.coins, hearts: special.hearts, xp: special.xp } : {
+        coins: this.levelRewards.default.coinsPerLevel * level,
+        hearts: this.levelRewards.default.heartsPerLevel * level,
+        xp: this.levelRewards.default.xp
+      };
+    }
+    claimLevelReward(level) {
+      if (!Number.isInteger(level) || level < 2 || level > this.player.level) {
+        return { ok: false, reason: "LOCKED" };
+      }
+      if (this.state.claimedLevelRewards.includes(level)) {
+        return { ok: false, reason: "ALREADY_CLAIMED" };
+      }
+      this.state.claimedLevelRewards.push(level);
+      const reward = this.rewardForLevel(level);
+      this.progression.addCoins(reward.coins);
+      this.progression.addHearts(reward.hearts);
+      if (reward.xp > 0) this.progression.addXp(reward.xp);
+      this.bus.emit("LIFE_CHANGED", { reason: "level-reward" });
+      return { ok: true };
+    }
+    addPhoto(path) {
+      if (!path || this.state.photoPaths.includes(path)) return { ok: false, reason: "ALREADY_OWNED" };
+      this.state.photoPaths.push(path);
+      this.bus.emit("LIFE_CHANGED", { reason: "photo" });
+      return { ok: true };
     }
   };
 
@@ -1676,7 +1999,8 @@
         version: this.config.saveVersion,
         createDefault: () => createDefaultSaveData(this.config, this.clock.now()),
         debounceMs: options.saveDebounceMs ?? 200,
-        logger: (m) => this.logger.debug("SAVE", m)
+        logger: (m) => this.logger.debug("SAVE", m),
+        legacyStarterFurnitureId: this.bundle.furniture[0]?.id
       });
     }
     get player() {
@@ -1709,6 +2033,16 @@
           unlockedChainIds: [...data.player.unlockedChainIds]
         };
         this.tutorialRef = { ...data.tutorial };
+        this.lifeRef = {
+          ...data.life,
+          unlockedMemoryIds: [...data.life.unlockedMemoryIds],
+          ownedFurnitureIds: [...data.life.ownedFurnitureIds],
+          placedFurnitureIds: [...data.life.placedFurnitureIds],
+          claimedWishIds: [...data.life.claimedWishIds],
+          claimedLevelRewards: [...data.life.claimedLevelRewards],
+          photoPaths: [...data.life.photoPaths],
+          stats: { ...data.life.stats }
+        };
         this.board = new BoardService(
           this.bundle.catalog,
           this.ids,
@@ -1731,6 +2065,16 @@
           this.playerRef,
           this.bundle.progression,
           this.bundle.generators,
+          this.bus
+        );
+        this.life = new LifeService(
+          this.lifeRef,
+          this.bundle.memories,
+          this.bundle.furniture,
+          this.bundle.wishes,
+          this.bundle.levelRewards,
+          this.playerRef,
+          this.progression,
           this.bus
         );
         this.generators = new GeneratorService(
@@ -1774,6 +2118,7 @@
     spawnFromGenerator(generatorId) {
       const result = this.generators.spawn(generatorId);
       if (result.ok) {
+        this.life.record("spawns");
         if (!this.tutorialRef.generatorClicked) {
           this.tutorialRef.generatorClicked = true;
           this.bus.emit("TUTORIAL_UPDATED", { ...this.tutorialRef });
@@ -1786,6 +2131,7 @@
     dropItem(from, to) {
       const result = this.board.tryDrop(from, to);
       if (result.ok && result.kind === "MERGE") {
+        this.life.record("merges");
         if (!this.tutorialRef.firstMergeCompleted) {
           this.tutorialRef.firstMergeCompleted = true;
           this.bus.emit("TUTORIAL_UPDATED", { ...this.tutorialRef });
@@ -1797,9 +2143,43 @@
       }
       return result;
     }
+    unlockMemory(id) {
+      const result = this.life.unlockMemory(id);
+      if (result.ok) this.save();
+      return result;
+    }
+    buyFurniture(id) {
+      const result = this.life.buyFurniture(id);
+      if (result.ok) this.save();
+      return result;
+    }
+    placeFurniture(id) {
+      const result = this.life.placeFurniture(id);
+      if (result.ok) this.save();
+      return result;
+    }
+    claimWish(id) {
+      const result = this.life.claimWish(id);
+      if (result.ok) this.save();
+      return result;
+    }
+    claimLevelReward(level) {
+      const result = this.life.claimLevelReward(level);
+      if (result.ok) this.save();
+      return result;
+    }
+    addPhoto(path) {
+      const result = this.life.addPhoto(path);
+      if (result.ok) this.save();
+      return result;
+    }
+    tick() {
+      if (this.energy.tick().recovered > 0) this.scheduleSave();
+    }
     claimOrder(orderUid) {
       const result = this.orders.claim(orderUid);
       if (result.ok) {
+        this.life.record("orders");
         if (!this.tutorialRef.firstOrderCompleted) {
           this.tutorialRef.firstOrderCompleted = true;
           this.bus.emit("TUTORIAL_UPDATED", { ...this.tutorialRef });
@@ -1847,7 +2227,17 @@
         })),
         activeOrders: this.orders.getOrders(),
         tutorial: { ...this.tutorialRef },
-        recentOrderIds: this.orders.getRecentIds()
+        recentOrderIds: this.orders.getRecentIds(),
+        life: {
+          ...this.lifeRef,
+          unlockedMemoryIds: [...this.lifeRef.unlockedMemoryIds],
+          ownedFurnitureIds: [...this.lifeRef.ownedFurnitureIds],
+          placedFurnitureIds: [...this.lifeRef.placedFurnitureIds],
+          claimedWishIds: [...this.lifeRef.claimedWishIds],
+          claimedLevelRewards: [...this.lifeRef.claimedLevelRewards],
+          photoPaths: [...this.lifeRef.photoPaths],
+          stats: { ...this.lifeRef.stats }
+        }
       };
     }
     save() {
@@ -2143,7 +2533,7 @@
       const span = xpInfo.nextThreshold !== null ? Math.max(1, xpInfo.nextThreshold - currentFloor) : 1;
       const progress = xpInfo.nextThreshold === null ? 1 : Math.min(1, (p.xp - currentFloor) / span);
       this.dom.xpFill.style.width = `${Math.round(progress * 100)}%`;
-      this.dom.xpText.textContent = xpInfo.nextThreshold === null ? `${p.xp} XP` : `${p.xp} / ${xpInfo.nextThreshold}`;
+      this.dom.xpText.textContent = xpInfo.nextThreshold === null ? `${Math.max(0, p.xp - currentFloor)} / MAX` : `${Math.max(0, p.xp - currentFloor)} / ${span}`;
       this.dom.energyText.textContent = `${p.energy}/${p.maxEnergy}`;
       this.dom.coinsText.textContent = String(p.coins);
       this.dom.heartsText.textContent = String(p.hearts);

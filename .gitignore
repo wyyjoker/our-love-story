@@ -25,6 +25,9 @@ npm-debug.log*
 # Coverage
 coverage/
 
+# Local copies of generated art; runtime assets live in assets/resources/art/
+tools/art-source/
+
 # Optional local env
 .env
 .env.local

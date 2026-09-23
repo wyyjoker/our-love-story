@@ -104,6 +104,7 @@ export class GameViewMapper {
       xpInfo.nextThreshold !== null
         ? Math.max(1, xpInfo.nextThreshold - currentFloor)
         : 1;
+    const stepXp = Math.max(0, player.xp - currentFloor);
     const xpRatio =
       xpInfo.nextThreshold === null
         ? 1
@@ -126,8 +127,8 @@ export class GameViewMapper {
       xp: player.xp,
       xpText:
         xpInfo.nextThreshold === null
-          ? `XP ${player.xp}`
-          : `XP ${player.xp} / ${xpInfo.nextThreshold}`,
+          ? `XP ${stepXp} / MAX`
+          : `XP ${stepXp} / ${span}`,
       xpRatio,
       energy: player.energy,
       maxEnergy: player.maxEnergy,
@@ -189,7 +190,7 @@ export class GameViewMapper {
     player: PlayerState,
   ): GeneratorVm[] {
     return generators.map((gen) => {
-      const locked = player.level < gen.unlockLevel;
+      const locked = player.level < gen.unlockLevel && !player.unlockedChainIds.includes(gen.chainId);
       return {
         id: gen.id,
         displayName: gen.displayName,

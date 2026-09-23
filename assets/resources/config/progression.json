@@ -1,9 +1,22 @@
 {
   "levels": [
-    { "level": 1, "xpRequired": 0, "unlockChains": ["coffee", "flower"] },
-    { "level": 2, "xpRequired": 30, "unlockChains": [] },
-    { "level": 3, "xpRequired": 80, "unlockChains": ["dessert"] },
-    { "level": 4, "xpRequired": 150, "unlockChains": [] },
-    { "level": 5, "xpRequired": 250, "unlockChains": ["gift"] }
+    { "level": 1, "xpRequired": 0, "unlockChains": ["coffee"] },
+    { "level": 2, "xpRequired": 50, "unlockChains": [] },
+    { "level": 3, "xpRequired": 150, "unlockChains": ["flower"] },
+    { "level": 4, "xpRequired": 300, "unlockChains": [] },
+    { "level": 5, "xpRequired": 500, "unlockChains": ["dessert"] },
+    { "level": 6, "xpRequired": 750, "unlockChains": [] },
+    { "level": 7, "xpRequired": 1050, "unlockChains": [] },
+    { "level": 8, "xpRequired": 1400, "unlockChains": ["gift"] },
+    { "level": 9, "xpRequired": 1800, "unlockChains": [] },
+    { "level": 10, "xpRequired": 2250, "unlockChains": [] },
+    { "level": 11, "xpRequired": 2750, "unlockChains": [] },
+    { "level": 12, "xpRequired": 3300, "unlockChains": [] },
+    { "level": 13, "xpRequired": 3900, "unlockChains": [] },
+    { "level": 14, "xpRequired": 4550, "unlockChains": [] },
+    { "level": 15, "xpRequired": 5250, "unlockChains": [] },
+    { "level": 16, "xpRequired": 6000, "unlockChains": [] },
+    { "level": 17, "xpRequired": 6800, "unlockChains": [] },
+    { "level": 18, "xpRequired": 7650, "unlockChains": [] }
   ]
 }

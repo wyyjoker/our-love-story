@@ -66,6 +66,11 @@ export function runRuntimeSelfTest(logger: GameLogger = new GameLogger(true)): b
     }
 
     // save roundtrip
+    const starterFurnitureId = game.bundle.furniture[0].id;
+    game.progression.addCoins(game.bundle.furniture[0].coinCost);
+    if (!game.buyFurniture(starterFurnitureId).ok) {
+      throw new Error('furniture purchase failed');
+    }
     game.save();
     const game2 = createGameContext({
       storage,
@@ -77,6 +82,10 @@ export function runRuntimeSelfTest(logger: GameLogger = new GameLogger(true)): b
     });
     if (game2.player.energy > game.player.energy) {
       throw new Error('save roundtrip energy mismatch');
+    }
+    if (!game2.life.state.ownedFurnitureIds.includes(starterFurnitureId)
+      || !game2.life.state.placedFurnitureIds.includes(starterFurnitureId)) {
+      throw new Error('save roundtrip furniture mismatch');
     }
 
     logger.info('BOOT', '[SELF_TEST] PASS');

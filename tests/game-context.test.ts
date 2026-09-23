@@ -31,9 +31,9 @@ describe('GameContext full loop', () => {
 
     expect(game.bootState).toBe('READY');
     expect(game.player.level).toBe(1);
-    expect(game.player.energy).toBe(50);
+    expect(game.player.energy).toBe(100);
     expect(game.player.unlockedChainIds).toEqual(
-      expect.arrayContaining(['coffee', 'flower']),
+      expect.arrayContaining(['coffee']),
     );
 
     // starter: coffee_01 x2 at 0,1 â€?merge them
@@ -52,7 +52,7 @@ describe('GameContext full loop', () => {
     // spawn from generator
     const spawn = game.spawnFromGenerator('coffee_machine');
     expect(spawn.ok).toBe(true);
-    expect(game.player.energy).toBe(49);
+    expect(game.player.energy).toBe(99);
 
     // save and reload
     game.save();
@@ -73,7 +73,7 @@ describe('GameContext full loop', () => {
     // 10 minutes later
     clock.advance(600_000);
     const game2 = createGameContext({ storage, clock, saveDebounceMs: 0 });
-    // 600/120 = 5
-    expect(game2.player.energy).toBe(45);
+    // 600/240 = 2
+    expect(game2.player.energy).toBe(42);
   });
 });

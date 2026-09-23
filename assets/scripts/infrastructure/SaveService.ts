@@ -2,6 +2,7 @@ import type {
   ActiveOrder,
   BoardCellState,
   GameConfig,
+  LifeState,
   PlayerState,
   SaveData,
   TutorialState,
@@ -22,6 +23,8 @@ export type SaveServiceOptions = {
   /** Debounce ms for scheduleSave; 0 = immediate */
   debounceMs?: number;
   logger?: (message: string) => void;
+  /** First starter furniture, used only to repair the former Creator Set-serialization bug. */
+  legacyStarterFurnitureId?: string;
 };
 
 export class SaveService {
@@ -131,11 +134,11 @@ export class SaveService {
       return null;
     }
 
-    const player = this.mergePlayer(parsed.player, defaults.player);
+    const player = this.mergePlayer(parsed.player, defaults.player, version);
     const boardCells = this.mergeBoard(
       parsed.board,
       defaults.board,
-      defaults.player,
+      version,
     );
     if (!boardCells) return null;
 
@@ -148,6 +151,25 @@ export class SaveService {
 
     const tutorial = this.mergeTutorial(parsed.tutorial, defaults.tutorial);
 
+    const life = this.mergeLife(parsed.life, defaults.life);
+    const rawLife = parsed.life as Partial<LifeState> | undefined;
+    const brokenSet = (value: unknown): boolean => Array.isArray(value)
+      && value.length === 1
+      && value[0] !== null
+      && typeof value[0] === 'object'
+      && Object.keys(value[0]).length === 0;
+    if (this.options.legacyStarterFurnitureId
+      && brokenSet(rawLife?.ownedFurnitureIds)
+      && brokenSet(rawLife?.placedFurnitureIds)
+      && life.ownedFurnitureIds.length === 0
+      && life.placedFurnitureIds.length === 0) {
+      // Old Web Mobile builds wrote a Set as [{}] during readback. The exact
+      // contents are gone; restore the known starter furnishing once.
+      life.ownedFurnitureIds = [this.options.legacyStarterFurnitureId];
+      life.placedFurnitureIds = [this.options.legacyStarterFurnitureId];
+      repaired = true;
+    }
+
     const data: SaveData = {
       version: this.options.version,
       savedAt:
@@ -159,6 +181,7 @@ export class SaveService {
       recentOrderIds: Array.isArray(parsed.recentOrderIds)
         ? parsed.recentOrderIds.filter((x): x is string => typeof x === 'string')
         : [],
+      life,
     };
 
     return { data, repaired };
@@ -167,16 +190,35 @@ export class SaveService {
   private mergePlayer(
     raw: unknown,
     fallback: PlayerState,
+    version: number,
   ): PlayerState {
     if (!raw || typeof raw !== 'object') return { ...fallback };
     const p = raw as Partial<PlayerState>;
+    const level = Math.max(1, Math.min(18, Math.floor(num(p.level, fallback.level))));
+    const oldXp = Math.max(0, Math.floor(num(p.xp, fallback.xp)));
+    let xp = oldXp;
+    if (version === 1) {
+      const oldFloors = [0, 30, 80, 150, 250];
+      const oldFloor = oldFloors[Math.min(level - 1, 4)];
+      const oldNext = oldFloors[level] ?? oldFloor;
+      const newFloor = 25 * level * (level - 1);
+      const progress = oldNext > oldFloor
+        ? Math.min(1, Math.max(0, (oldXp - oldFloor) / (oldNext - oldFloor)))
+        : 0;
+      xp = newFloor + Math.round(progress * 50 * level) + (level >= 5 ? Math.max(0, oldXp - oldFloor) : 0);
+    }
+    const oldMax = Math.max(1, num(p.maxEnergy, fallback.maxEnergy));
+    const oldEnergy = Math.min(oldMax, Math.max(0, num(p.energy, fallback.energy)));
+    const energy = version === 1
+      ? Math.max(0, fallback.maxEnergy - (oldMax - oldEnergy))
+      : Math.min(fallback.maxEnergy, oldEnergy);
     return {
-      level: num(p.level, fallback.level),
-      xp: num(p.xp, fallback.xp),
+      level,
+      xp,
       coins: num(p.coins, fallback.coins),
       hearts: num(p.hearts, fallback.hearts),
-      energy: num(p.energy, fallback.energy),
-      maxEnergy: num(p.maxEnergy, fallback.maxEnergy),
+      energy,
+      maxEnergy: fallback.maxEnergy,
       lastEnergyAt: num(p.lastEnergyAt, fallback.lastEnergyAt),
       unlockedChainIds: Array.isArray(p.unlockedChainIds)
         ? p.unlockedChainIds.filter((x): x is string => typeof x === 'string')
@@ -187,15 +229,16 @@ export class SaveService {
   private mergeBoard(
     raw: unknown,
     fallback: BoardCellState[],
-    _player: PlayerState,
+    version: number,
   ): BoardCellState[] | null {
     if (!Array.isArray(raw)) {
       return fallback.map((c) => ({ ...c, item: c.item ? { ...c.item } : undefined }));
     }
-    if (raw.length !== fallback.length) {
+    const legacy = version === 1 && raw.length === 63 && fallback.length === 81;
+    if (raw.length !== fallback.length && !legacy) {
       return null; // board length invalid �?fail safe (caller uses default)
     }
-    const cells: BoardCellState[] = [];
+    const cells: BoardCellState[] = fallback.map((c) => ({ index: c.index }));
     for (let i = 0; i < raw.length; i += 1) {
       const cell = raw[i] as Partial<BoardCellState> | null;
       if (!cell || typeof cell !== 'object') return null;
@@ -205,12 +248,40 @@ export class SaveService {
         if (typeof it.uid !== 'string' || typeof it.definitionId !== 'string') {
           return null;
         }
-        cells.push({ index: i, item: { uid: it.uid, definitionId: it.definitionId } });
-      } else {
-        cells.push({ index: i });
+        const index = legacy ? Math.floor(i / 7) * 9 + (i % 7) : i;
+        cells[index].item = { uid: it.uid, definitionId: it.definitionId };
       }
     }
     return cells;
+  }
+
+  private mergeLife(raw: unknown, fallback: LifeState): LifeState {
+    if (!raw || typeof raw !== 'object') return {
+      ...fallback,
+      stats: { ...fallback.stats },
+    };
+    const state = raw as Partial<LifeState>;
+    // Use Array.from: Creator's Web Mobile transpiler compiles a Set spread as
+    // [].concat(set), which serializes the Set as {} in a saved array.
+    const strings = (value: unknown): string[] => Array.isArray(value)
+      ? Array.from(new Set(value.filter((x): x is string => typeof x === 'string')))
+      : [];
+    const claimedLevels = Array.isArray(state.claimedLevelRewards)
+      ? Array.from(new Set(state.claimedLevelRewards.filter((x): x is number => typeof x === 'number' && Number.isInteger(x) && x >= 2 && x <= 18)))
+      : [];
+    return {
+      unlockedMemoryIds: strings(state.unlockedMemoryIds),
+      ownedFurnitureIds: strings(state.ownedFurnitureIds),
+      placedFurnitureIds: strings(state.placedFurnitureIds),
+      claimedWishIds: strings(state.claimedWishIds),
+      claimedLevelRewards: claimedLevels,
+      photoPaths: strings(state.photoPaths),
+      stats: {
+        spawns: Math.max(0, Math.floor(num(state.stats?.spawns, 0))),
+        merges: Math.max(0, Math.floor(num(state.stats?.merges, 0))),
+        orders: Math.max(0, Math.floor(num(state.stats?.orders, 0))),
+      },
+    };
   }
 
   private mergeTutorial(raw: unknown, fallback: TutorialState): TutorialState {
@@ -255,12 +326,12 @@ export function createDefaultSaveData(config: GameConfig, savedAt: number): Save
     board.push({ index });
   }
 
-  // Starter items so first merge is immediate
+  // Coffee-only starter items so the first merge and tutorial order are immediate.
   if (board.length >= 4) {
     board[0].item = { uid: 'start_c1a', definitionId: 'coffee_01' };
     board[1].item = { uid: 'start_c1b', definitionId: 'coffee_01' };
-    board[2].item = { uid: 'start_f1a', definitionId: 'flower_01' };
-    board[3].item = { uid: 'start_f1b', definitionId: 'flower_01' };
+    board[2].item = { uid: 'start_c1c', definitionId: 'coffee_01' };
+    board[3].item = { uid: 'start_c1d', definitionId: 'coffee_01' };
   }
 
   const player: PlayerState = {
@@ -271,7 +342,7 @@ export function createDefaultSaveData(config: GameConfig, savedAt: number): Save
     energy: config.energy.initialEnergy,
     maxEnergy: config.energy.maxEnergy,
     lastEnergyAt: savedAt,
-    unlockedChainIds: ['coffee', 'flower'],
+    unlockedChainIds: ['coffee'],
   };
 
   return {
@@ -290,19 +361,19 @@ export function createDefaultSaveData(config: GameConfig, savedAt: number): Save
       },
       {
         uid: 'order_start_2',
-        templateId: 'order_flower_seed',
-        requirements: [{ itemId: 'flower_01', count: 2 }],
-        rewardCoins: 12,
-        rewardXp: 6,
-        rewardHearts: 1,
-      },
-      {
-        uid: 'order_start_3',
         templateId: 'order_coffee_powder',
         requirements: [{ itemId: 'coffee_02', count: 1 }],
         rewardCoins: 18,
         rewardXp: 8,
-        rewardHearts: 1,
+        rewardHearts: 3,
+      },
+      {
+        uid: 'order_start_3',
+        templateId: 'order_coffee_cup',
+        requirements: [{ itemId: 'coffee_03', count: 1 }],
+        rewardCoins: 30,
+        rewardXp: 12,
+        rewardHearts: 5,
       },
     ],
     tutorial: {
@@ -311,6 +382,15 @@ export function createDefaultSaveData(config: GameConfig, savedAt: number): Save
       firstOrderCompleted: false,
       firstOrderHintShown: false,
     },
-    recentOrderIds: ['order_tutorial_coffee', 'order_flower_seed', 'order_coffee_powder'],
+    recentOrderIds: ['order_tutorial_coffee', 'order_coffee_powder', 'order_coffee_cup'],
+    life: {
+      unlockedMemoryIds: [],
+      ownedFurnitureIds: [],
+      placedFurnitureIds: [],
+      claimedWishIds: [],
+      claimedLevelRewards: [],
+      photoPaths: [],
+      stats: { spawns: 0, merges: 0, orders: 0 },
+    },
   };
 }

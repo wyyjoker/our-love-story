@@ -18,10 +18,10 @@ function makePlayer(): PlayerState {
     xp: 0,
     coins: 0,
     hearts: 0,
-    energy: 50,
-    maxEnergy: 50,
+    energy: 100,
+    maxEnergy: 100,
     lastEnergyAt: 0,
-    unlockedChainIds: ['coffee', 'flower'],
+    unlockedChainIds: ['coffee'],
   };
 }
 
@@ -49,7 +49,7 @@ describe('GeneratorService', () => {
       bundle.game.board.rows,
       bundle.game.board.columns,
     );
-    const energy = new EnergyService(player, new FakeClockService(), bus, 120_000);
+    const energy = new EnergyService(player, new FakeClockService(), bus, bundle.game.energy.recoverIntervalMs);
     const progression = new ProgressionService(
       player,
       bundle.progression,
@@ -76,8 +76,8 @@ describe('GeneratorService', () => {
       expect(result.itemDefinitionId).toBe('coffee_01');
       expect(result.cellIndex).toBe(0);
     }
-    expect(energy.energy).toBe(49);
-    expect(player.energy).toBe(49);
+    expect(energy.energy).toBe(99);
+    expect(player.energy).toBe(99);
   });
 
   it('weighted output with high roll yields Lv2', () => {
@@ -120,10 +120,10 @@ describe('GeneratorService', () => {
     if (!result.ok) expect(result.reason).toBe('LOCKED');
   });
 
-  it('unlocks dessert at level 3', () => {
+  it('unlocks dessert at level 5', () => {
     const { gen, player, progression, bundle } = setup();
-    progression.addXp(80);
-    expect(player.level).toBe(3);
+    progression.addXp(500);
+    expect(player.level).toBe(5);
     expect(player.unlockedChainIds).toContain('dessert');
     expect(progression.isGeneratorUnlocked('dessert_oven')).toBe(true);
     void bundle;
@@ -136,18 +136,18 @@ describe('Progression', () => {
   it('xp thresholds', () => {
     const progression = loadConfigBundle().progression;
     expect(getLevelForXp(progression, 0)).toBe(1);
-    expect(getLevelForXp(progression, 30)).toBe(2);
-    expect(getLevelForXp(progression, 80)).toBe(3);
-    expect(getLevelForXp(progression, 150)).toBe(4);
-    expect(getLevelForXp(progression, 250)).toBe(5);
+    expect(getLevelForXp(progression, 50)).toBe(2);
+    expect(getLevelForXp(progression, 150)).toBe(3);
+    expect(getLevelForXp(progression, 300)).toBe(4);
+    expect(getLevelForXp(progression, 500)).toBe(5);
   });
 
   it('unlocks chains by level', () => {
     expect(collectUnlockChains(loadConfigBundle().progression, 1).sort()).toEqual(
-      ['coffee', 'flower'].sort(),
+      ['coffee'].sort(),
     );
-    expect(collectUnlockChains(loadConfigBundle().progression, 3)).toContain('dessert');
-    expect(collectUnlockChains(loadConfigBundle().progression, 5)).toContain('gift');
+    expect(collectUnlockChains(loadConfigBundle().progression, 3)).toContain('flower');
+    expect(collectUnlockChains(loadConfigBundle().progression, 5)).toContain('dessert');
   });
 });
 

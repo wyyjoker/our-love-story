@@ -49,13 +49,16 @@ export class ProgressionService {
     let unlockedChains: string[] = [];
 
     if (newLevel > previousLevel) {
-      this.player.level = newLevel;
-      unlockedChains = this.syncUnlocks(previousLevel, newLevel);
-      this.bus.emit('LEVEL_UP', {
-        level: newLevel,
-        previousLevel,
-        unlockedChains,
-      });
+      for (let level = previousLevel + 1; level <= newLevel; level += 1) {
+        this.player.level = level;
+        const newly = this.syncUnlocks(level - 1, level);
+        unlockedChains.push(...newly);
+        this.bus.emit('LEVEL_UP', {
+          level,
+          previousLevel: level - 1,
+          unlockedChains: newly,
+        });
+      }
     }
 
     return {
@@ -80,6 +83,20 @@ export class ProgressionService {
     this.bus.emit('HEARTS_CHANGED', { hearts: this.player.hearts, delta });
   }
 
+  spendCoins(amount: number): boolean {
+    if (!Number.isInteger(amount) || amount < 0 || this.player.coins < amount) return false;
+    this.player.coins -= amount;
+    this.bus.emit('COINS_CHANGED', { coins: this.player.coins, delta: -amount });
+    return true;
+  }
+
+  spendHearts(amount: number): boolean {
+    if (!Number.isInteger(amount) || amount < 0 || this.player.hearts < amount) return false;
+    this.player.hearts -= amount;
+    this.bus.emit('HEARTS_CHANGED', { hearts: this.player.hearts, delta: -amount });
+    return true;
+  }
+
   unlockedChains(): string[] {
     return [...this.player.unlockedChainIds];
   }
@@ -87,7 +104,7 @@ export class ProgressionService {
   isGeneratorUnlocked(generatorId: string): boolean {
     const gen = this.generators.find((g) => g.id === generatorId);
     if (!gen) return false;
-    return this.player.level >= gen.unlockLevel;
+    return this.player.level >= gen.unlockLevel || this.player.unlockedChainIds.includes(gen.chainId);
   }
 
   private syncUnlocks(fromLevel = 0, toLevel = this.player.level): string[] {
@@ -99,10 +116,7 @@ export class ProgressionService {
         if (fromLevel > 0) newly.push(chain);
       }
     }
-    // Keep only chains from progression
-    this.player.unlockedChainIds = this.player.unlockedChainIds.filter((c) =>
-      expected.has(c),
-    );
+    // Existing saves retain previously earned unlocks after balance changes.
     return newly;
   }
 }

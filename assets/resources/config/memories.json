@@ -1,0 +1,12 @@
+[
+  { "id": "letters", "title": "100封情书", "summary": "从第一次心动开始，把想说的话都写给你。", "diary": "那天的阳光很轻。写下第一封信时，我已经开始期待与你的每一个明天。", "heartCost": 50, "art": "art/memory_letters" },
+  { "id": "first_trip", "title": "首尔旅行", "summary": "和你一起去看更大的世界，收集属于我们的风景。", "diary": "地图上又多了一枚小小的标记。陌生的街道因为你在身边，变得像家一样熟悉。", "heartCost": 80, "art": "art/memory_trip" },
+  { "id": "night_view", "title": "南山塔", "summary": "在夜色和星光下，我们靠得更近了。", "diary": "灯光亮起来的时候，我偷偷许了一个愿：往后的每个夜晚都能与你分享。", "heartCost": 100, "art": "art/memory_night" },
+  { "id": "promise", "title": "求婚时刻", "summary": "那一刻，时间仿佛静止了。", "diary": "答案其实早就藏在一起度过的寻常日子里。谢谢你，也选择了我们的未来。", "heartCost": 120, "art": "art/memory_promise" },
+  { "id": "wedding", "title": "婚礼倒计时", "summary": "从恋爱到婚礼，我们正在走向更幸福的明天。", "diary": "日历翻过一页又一页，准备好的不只是庆典，还有一起生活的勇气。", "heartCost": 150, "art": "art/memory_wedding" },
+  { "id": "first_home", "title": "第一把钥匙", "summary": "把两个人的梦想，慢慢装进同一间小屋。", "diary": "钥匙落在掌心时，我们都笑了。这里会装满热饭、鲜花和晚安。", "heartCost": 180, "art": "art/memory_home" },
+  { "id": "rainy_day", "title": "雨天散步", "summary": "一把伞，两个人，慢慢走过熟悉的街。", "diary": "雨滴打在伞面上的声音，像是只为我们演奏的小曲。", "heartCost": 210, "art": "art/memory_rain" },
+  { "id": "birthday", "title": "生日惊喜", "summary": "蛋糕上的烛光，照亮了你的笑容。", "diary": "闭上眼睛许愿吧。我也有一个愿望：让你每年都这样开心。", "heartCost": 240, "art": "art/memory_birthday" },
+  { "id": "garden", "title": "一起种花", "summary": "一朵花开了，我们的日子也更明亮了。", "diary": "你负责浇水，我负责记住每朵花开放的日子。", "heartCost": 270, "art": "art/memory_garden" },
+  { "id": "anniversary", "title": "纪念日", "summary": "把每一个平凡的日子，都拼成浪漫的家。", "diary": "故事还在继续。下一页，仍然想和你一起写。", "heartCost": 300, "art": "art/memory_anniversary" }
+]

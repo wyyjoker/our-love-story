@@ -20,7 +20,9 @@ export class GameEventBus {
   emit<K extends GameEventType>(type: K, payload: GameEventMap[K]): void {
     const set = this.listeners.get(type);
     if (!set) return;
-    for (const handler of [...set]) {
+    // Creator's Web Mobile transpiler lowers a Set spread to [].concat(set),
+    // leaving the Set itself in the array instead of its handlers.
+    for (const handler of Array.from(set)) {
       (handler as GameEventHandler<K>)(payload);
     }
   }

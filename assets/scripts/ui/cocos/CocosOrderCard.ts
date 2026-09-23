@@ -1,112 +1,95 @@
-/**
- * CocosOrderCard — one order card with requirements + claim button.
- */
-import { Node, Label, Graphics, Button, UITransform } from 'cc';
+import { Button, Graphics, Label, Node } from 'cc';
 import type { OrderVm } from '../../presentation/GameViewMapper';
-import {
-  CocosTheme,
-  createUiNode,
-  ensureTransform,
-  makeLabel,
-  paintRoundRect,
-} from './CocosTheme';
+import { applyArt, itemArt } from './CocosArt';
+import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect } from './CocosTheme';
+
+const cardColors = [
+  { fill: '#FFF0F0', edge: '#EAB0B2', badge: '#DB7C86' },
+  { fill: '#F4F8EA', edge: '#C6D6B0', badge: '#83A67B' },
+  { fill: '#F4F0FF', edge: '#D6C7EE', badge: '#9C84C4' },
+];
+
+function text(parent: Node, value: string, x: number, y: number, size: number, width: number, bold = false): Label {
+  const label = makeLabel(value, size, CocosTheme.textPrimary(), bold);
+  parent.addChild(label.node);
+  ensureTransform(label.node, width, size + 6);
+  label.overflow = Label.Overflow.SHRINK;
+  label.node.setPosition(x, y, 0);
+  return label;
+}
 
 export class CocosOrderCard {
   readonly node: Node;
-  private reqLabels: Label[] = [];
-  private rewardLabel!: Label;
-  private buttonLabel!: Label;
-  private buttonNode!: Node;
-  private buttonG!: Graphics;
-  private cardG!: Graphics;
-  private cardW = 0;
-  private cardH = 0;
-  private onClaim: (orderUid: string) => void = () => {};
+  private readonly icons: Node[] = [];
+  private readonly reqLabels: Label[] = [];
+  private readonly rewardLabel: Label;
+  private readonly buttonLabel: Label;
+  private readonly buttonG: Graphics;
+  private readonly onClaim: { callback: (orderUid: string) => void } = { callback: () => {} };
   private uid = '';
-  private built = false;
 
-  constructor(parent: Node, width: number, height: number) {
-    this.cardW = width;
-    this.cardH = height;
+  constructor(parent: Node, private readonly width: number, private readonly height: number, index: number) {
     this.node = createUiNode('OrderCard');
     parent.addChild(this.node);
     ensureTransform(this.node, width, height);
+    const palette = cardColors[index % cardColors.length];
+    paintRoundRect(this.node.addComponent(Graphics), width, height, 24, hexColor(palette.fill, 246), hexColor(palette.edge), 3);
+    text(this.node, '顾客订单', -48, height / 2 - 30, 25, 130, true);
+    const badge = createUiNode('RewardBadge');
+    this.node.addChild(badge);
+    ensureTransform(badge, 70, 36);
+    badge.setPosition(width / 2 - 46, height / 2 - 28, 0);
+    paintRoundRect(badge.addComponent(Graphics), 70, 36, 18, hexColor(palette.badge));
+    this.rewardLabel = text(badge, '+0', 0, 0, 20, 68, true);
+    this.rewardLabel.color = hexColor('#FFFFFF');
+
+    for (let i = 0; i < 2; i += 1) {
+      const holder = createUiNode(`Required_${i}`);
+      this.node.addChild(holder);
+      ensureTransform(holder, 91, 82);
+      holder.setPosition(i === 0 ? -52 : 52, 0, 0);
+      paintRoundRect(holder.addComponent(Graphics), 91, 82, 16, hexColor('#FFFFFF', 240));
+      const icon = createUiNode('Art');
+      holder.addChild(icon);
+      icon.setPosition(0, 10, 0);
+      this.icons.push(icon);
+      this.reqLabels.push(text(holder, '', 0, -31, 15, 87, true));
+    }
+    const button = createUiNode('ClaimButton');
+    this.node.addChild(button);
+    ensureTransform(button, 122, 30);
+    button.setPosition(0, -height / 2 + 24, 0);
+    this.buttonG = button.addComponent(Graphics);
+    this.buttonLabel = text(button, '还差一点', 0, 0, 16, 114, true);
+    button.addComponent(Button);
+    button.on(Button.EventType.CLICK, () => { if (this.uid) this.onClaim.callback(this.uid); });
   }
 
   bind(onClaim: (orderUid: string) => void): void {
-    this.onClaim = onClaim;
-    if (!this.built) {
-      this.buildChrome();
-      this.built = true;
-    }
-    this.buttonNode.off(Button.EventType.CLICK, this.handleClick, this);
-    this.buttonNode.on(Button.EventType.CLICK, this.handleClick, this);
-  }
-
-  private handleClick = (): void => {
-    if (this.uid) this.onClaim(this.uid);
-  };
-
-  private buildChrome(): void {
-    this.cardG = this.node.addComponent(Graphics);
-    paintRoundRect(this.cardG, this.cardW, this.cardH, 14, CocosTheme.surface(), CocosTheme.border());
-
-    for (let i = 0; i < 2; i += 1) {
-      const label = makeLabel('', 14, CocosTheme.textPrimary());
-      this.node.addChild(label.node);
-      label.node.setPosition(0, this.cardH * 0.22 - i * 22, 0);
-      this.reqLabels.push(label);
-    }
-
-    this.rewardLabel = makeLabel('', 12, CocosTheme.textSecondary());
-    this.node.addChild(this.rewardLabel.node);
-    this.rewardLabel.node.setPosition(0, -this.cardH * 0.08, 0);
-
-    this.buttonNode = createUiNode('ClaimBtn');
-    this.node.addChild(this.buttonNode);
-    const tr = ensureTransform(this.buttonNode, Math.min(110, this.cardW - 16), 32);
-    void tr;
-    this.buttonNode.setPosition(0, -this.cardH * 0.32, 0);
-    this.buttonG = this.buttonNode.addComponent(Graphics);
-    paintRoundRect(this.buttonG, Math.min(110, this.cardW - 16), 32, 16, CocosTheme.primary());
-    this.buttonLabel = makeLabel('还差一点', 14, CocosTheme.surface(), true);
-    this.buttonNode.addChild(this.buttonLabel.node);
-    this.buttonNode.addComponent(Button);
+    this.onClaim.callback = onClaim;
   }
 
   render(vm: OrderVm): void {
     this.uid = vm.uid;
-    if (!this.built) {
-      this.buildChrome();
-      this.built = true;
-    }
-    for (let i = 0; i < this.reqLabels.length; i += 1) {
+    this.rewardLabel.string = `★${vm.rewardCoins}`;
+    const count = vm.requirements.length;
+    for (let i = 0; i < 2; i += 1) {
+      const holder = this.icons[i].parent!;
       const req = vm.requirements[i];
-      const label = this.reqLabels[i];
-      if (!req) {
-        label.string = '';
-        continue;
-      }
-      label.string = req.done
-        ? `${req.displayName} ✓`
-        : `${req.displayName}  ${req.have}/${req.count}`;
-      label.color = req.done ? CocosTheme.ok() : CocosTheme.textPrimary();
+      holder.active = !!req;
+      if (!req) continue;
+      holder.setPosition(count === 1 ? 0 : i === 0 ? -52 : 52, 0, 0);
+      const art = itemArt(req.itemId);
+      if (art) applyArt(this.icons[i], art, 64, 54);
+      this.reqLabels[i].string = `${req.have}/${req.count}`;
+      this.reqLabels[i].color = req.done ? CocosTheme.ok() : CocosTheme.textPrimary();
     }
-    this.rewardLabel.string = vm.rewardText;
-    this.buttonLabel.string = vm.buttonText;
-    const btnW = Math.min(110, this.cardW - 16);
-    if (vm.ready) {
-      paintRoundRect(this.buttonG, btnW, 32, 16, CocosTheme.primary());
-      this.buttonLabel.color = CocosTheme.surface();
-    } else {
-      paintRoundRect(this.buttonG, btnW, 32, 16, CocosTheme.border());
-      this.buttonLabel.color = CocosTheme.textSecondary();
-    }
-    void this.node.getComponent(UITransform);
+    this.buttonLabel.string = vm.ready ? '交付订单' : '还差一点';
+    this.buttonLabel.color = vm.ready ? hexColor('#FFFFFF') : CocosTheme.textSecondary();
+    paintRoundRect(this.buttonG, 122, 30, 15, vm.ready ? CocosTheme.primary() : hexColor('#F5E4DE'));
   }
 
   destroy(): void {
-    this.buttonNode?.off(Button.EventType.CLICK, this.handleClick, this);
     this.node.destroy();
   }
 }

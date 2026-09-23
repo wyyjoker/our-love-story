@@ -41,7 +41,7 @@ export class GeneratorService {
   }
 
   isUnlocked(generator: GeneratorDefinition): boolean {
-    return this.player.level >= generator.unlockLevel;
+    return this.player.level >= generator.unlockLevel || this.player.unlockedChainIds.includes(generator.chainId);
   }
 
   rollOutput(generator: GeneratorDefinition): GeneratorOutput | null {

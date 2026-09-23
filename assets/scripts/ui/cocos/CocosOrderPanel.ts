@@ -18,7 +18,7 @@ export class CocosOrderPanel {
     const cardW = (width - 24 - gap * 2) / 3;
     const cardH = height - 12;
     for (let i = 0; i < 3; i += 1) {
-      const card = new CocosOrderCard(this.node, cardW, cardH);
+      const card = new CocosOrderCard(this.node, cardW, cardH, i);
       card.node.setPosition(-width / 2 + 12 + cardW / 2 + i * (cardW + gap), 0, 0);
       this.cards.push(card);
     }

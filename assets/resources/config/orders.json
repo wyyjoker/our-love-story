@@ -28,6 +28,24 @@
     "rewardHearts": 1
   },
   {
+    "id": "order_coffee_cup",
+    "minLevel": 1,
+    "maxLevel": 99,
+    "requirements": [{ "itemId": "coffee_03", "count": 1 }],
+    "rewardCoins": 30,
+    "rewardXp": 12,
+    "rewardHearts": 5
+  },
+  {
+    "id": "order_coffee_pair",
+    "minLevel": 1,
+    "maxLevel": 99,
+    "requirements": [{ "itemId": "coffee_02", "count": 2 }],
+    "rewardCoins": 32,
+    "rewardXp": 14,
+    "rewardHearts": 5
+  },
+  {
     "id": "order_flower_seed",
     "minLevel": 1,
     "maxLevel": 99,

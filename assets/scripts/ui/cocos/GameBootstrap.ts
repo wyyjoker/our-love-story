@@ -46,7 +46,7 @@ export class GameBootstrap extends Component {
 
   onEnable(): void {
     if (this.game) {
-      this.game.energy.tick();
+      this.game.tick();
       this.view?.renderAll();
     }
   }
@@ -56,6 +56,7 @@ export class GameBootstrap extends Component {
   }
 
   onDestroy(): void {
+    this.unscheduleAllCallbacks();
     this.lifecycle?.detach();
     this.lifecycle = null;
     this.view?.dispose();
@@ -97,12 +98,17 @@ export class GameBootstrap extends Component {
         logger.debug('SAVE', 'flush on hide');
       },
       onShow: () => {
-        this.game?.energy.tick();
+        this.game?.tick();
         this.view?.renderAll();
         logger.debug('ENERGY', 'recover on show');
       },
     });
     this.lifecycle.attach();
+
+    this.schedule(() => {
+      this.game?.tick();
+      this.view?.renderClock();
+    }, 1);
 
     this.onSceneLoading = () => {
       this.game?.flushSave();

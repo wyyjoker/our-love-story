@@ -40,6 +40,7 @@ export const DESIGN_H = 1334;
 const TOP_BAR_H = 120;
 const ORDERS_H = 180;
 const DOCK_H = 140;
+const NAV_H = 88;
 const EDGE = 12;
 const GAP = 8;
 
@@ -66,7 +67,6 @@ function pinBox(
   const w = node.addComponent(Widget);
   w.isAlignLeft = true;
   w.isAlignRight = true;
-  w.isAlignHorizontalCenter = true;
   w.left = EDGE;
   w.right = EDGE;
   if (opts.top !== undefined) {
@@ -127,7 +127,7 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
 
   // Board first (under), then dock, then orders, then status (top chrome)
   const boardTop = insetTop + TOP_BAR_H + GAP + ORDERS_H + GAP;
-  const boardBottom = insetBottom + DOCK_H + GAP;
+  const boardBottom = insetBottom + DOCK_H + GAP + NAV_H;
 
   const boardSlot = createUiNode('BoardPanel');
   canvas.addChild(boardSlot);
@@ -135,7 +135,7 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
 
   const dockSlot = createUiNode('GeneratorDock');
   canvas.addChild(dockSlot);
-  pinBox(dockSlot, DOCK_H, { bottom: insetBottom + EDGE });
+  pinBox(dockSlot, DOCK_H, { bottom: insetBottom + EDGE + NAV_H });
 
   const ordersSlot = createUiNode('OrderPanel');
   canvas.addChild(ordersSlot);

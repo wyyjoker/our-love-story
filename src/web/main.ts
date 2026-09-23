@@ -336,8 +336,8 @@ class WebGameUI {
     this.dom.xpFill.style.width = `${Math.round(progress * 100)}%`;
     this.dom.xpText.textContent =
       xpInfo.nextThreshold === null
-        ? `${p.xp} XP`
-        : `${p.xp} / ${xpInfo.nextThreshold}`;
+        ? `${Math.max(0, p.xp - currentFloor)} / MAX`
+        : `${Math.max(0, p.xp - currentFloor)} / ${span}`;
     this.dom.energyText.textContent = `${p.energy}/${p.maxEnergy}`;
     this.dom.coinsText.textContent = String(p.coins);
     this.dom.heartsText.textContent = String(p.hearts);

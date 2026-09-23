@@ -47,7 +47,7 @@ export function collectUnlockChains(
       for (const c of entry.unlockChains) chains.add(c);
     }
   }
-  return [...chains];
+  return Array.from(chains);
 }
 
 export function chainsUnlockedAtLevel(

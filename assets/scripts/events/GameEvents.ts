@@ -67,6 +67,9 @@ export type GameEventMap = {
   BOARD_CHANGED: {
     reason: 'spawn' | 'move' | 'swap' | 'merge' | 'claim' | 'reset' | 'debug';
   };
+  LIFE_CHANGED: {
+    reason: 'memory' | 'furniture' | 'wish' | 'level-reward' | 'photo' | 'progress';
+  };
 };
 
 export type GameEventType = keyof GameEventMap;

@@ -14,7 +14,7 @@
     "id": "flower_basket",
     "displayName": "花篮",
     "chainId": "flower",
-    "unlockLevel": 1,
+    "unlockLevel": 3,
     "energyCost": 1,
     "outputs": [
       { "itemId": "flower_01", "weight": 85 },
@@ -25,7 +25,7 @@
     "id": "dessert_oven",
     "displayName": "甜品烤箱",
     "chainId": "dessert",
-    "unlockLevel": 3,
+    "unlockLevel": 5,
     "energyCost": 1,
     "outputs": [
       { "itemId": "dessert_01", "weight": 85 },
@@ -36,7 +36,7 @@
     "id": "gift_box",
     "displayName": "礼物盒",
     "chainId": "gift",
-    "unlockLevel": 5,
+    "unlockLevel": 8,
     "energyCost": 1,
     "outputs": [
       { "itemId": "gift_01", "weight": 85 },

@@ -66,6 +66,6 @@ describe('GameViewMapper', () => {
     const list = mapper.mapGenerators(bundle.generators, player({ level: 1 }));
     const dessert = list.find((g) => g.id === 'dessert_oven');
     expect(dessert?.locked).toBe(true);
-    expect(dessert?.lockText).toContain('Lv3');
+    expect(dessert?.lockText).toContain('Lv5');
   });
 });

@@ -1,0 +1,12 @@
+[
+  { "id": "first_spawns", "title": "点亮咖啡机", "metric": "spawns", "target": 5, "rewardCoins": 100, "rewardHearts": 20 },
+  { "id": "first_merges", "title": "小小的合成", "metric": "merges", "target": 3, "rewardCoins": 100, "rewardHearts": 20 },
+  { "id": "first_order", "title": "第一份委托", "metric": "orders", "target": 1, "rewardCoins": 100, "rewardHearts": 20 },
+  { "id": "flower_time", "title": "花篮开放", "metric": "level", "target": 3, "rewardCoins": 100, "rewardHearts": 20 },
+  { "id": "first_memory", "title": "翻开第一页", "metric": "memories", "target": 1, "rewardCoins": 100, "rewardHearts": 20 },
+  { "id": "first_furniture", "title": "装点小屋", "metric": "furniture", "target": 1, "rewardCoins": 100, "rewardHearts": 20 },
+  { "id": "helpful_neighbor", "title": "热心小屋", "metric": "orders", "target": 5, "rewardCoins": 100, "rewardHearts": 20 },
+  { "id": "gift_time", "title": "礼物时光", "metric": "level", "target": 8, "rewardCoins": 100, "rewardHearts": 20 },
+  { "id": "more_memories", "title": "珍藏的故事", "metric": "memories", "target": 3, "rewardCoins": 100, "rewardHearts": 20 },
+  { "id": "cozy_home", "title": "温暖的家", "metric": "decor", "target": 20, "rewardCoins": 100, "rewardHearts": 20 }
+]

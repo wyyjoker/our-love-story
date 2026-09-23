@@ -10,6 +10,7 @@ import {
   makeLabel,
   paintRoundRect,
 } from './CocosTheme';
+import { applyArt, generatorArt } from './CocosArt';
 
 class GenButton {
   readonly node: Node;
@@ -20,6 +21,7 @@ class GenButton {
   private h: number;
   private onTap: (id: string) => void = () => {};
   private id = '';
+  private artNode: Node;
 
   constructor(parent: Node, width: number, height: number) {
     this.w = width;
@@ -29,12 +31,15 @@ class GenButton {
     ensureTransform(this.node, width, height);
     this.g = this.node.addComponent(Graphics);
     paintRoundRect(this.g, width, height, 14, CocosTheme.surface(), CocosTheme.border());
+    this.artNode = createUiNode('GeneratorArt');
+    this.node.addChild(this.artNode);
+    this.artNode.setPosition(0, height * 0.1, 0);
     this.nameLabel = makeLabel('', 14, CocosTheme.textPrimary(), true);
     this.node.addChild(this.nameLabel.node);
-    this.nameLabel.node.setPosition(0, 12, 0);
+    this.nameLabel.node.setPosition(0, -height * 0.28, 0);
     this.subLabel = makeLabel('', 12, CocosTheme.textSecondary());
     this.node.addChild(this.subLabel.node);
-    this.subLabel.node.setPosition(0, -12, 0);
+    this.subLabel.node.setPosition(0, -height * 0.43, 0);
     this.node.addComponent(Button);
     this.node.on(Button.EventType.CLICK, this.handle, this);
     this.node.addComponent(UIOpacity);
@@ -50,6 +55,8 @@ class GenButton {
 
   render(vm: GeneratorVm): void {
     this.id = vm.id;
+    const art = generatorArt(vm.id);
+    if (art) applyArt(this.artNode, art, Math.min(this.w - 8, this.h * 0.85), this.h * 0.65);
     this.nameLabel.string = vm.displayName;
     this.subLabel.string = vm.locked ? `Lv${vm.unlockLevel} 解锁` : `体力${vm.energyCost}`;
     this.node.getComponent(UIOpacity)!.opacity = vm.locked ? 170 : 255;

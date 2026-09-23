@@ -34,7 +34,7 @@ describe('Playable loop (UI-independent)', () => {
     // spawn x2 coffee
     expect(game.spawnFromGenerator('coffee_machine').ok).toBe(true);
     expect(game.spawnFromGenerator('coffee_machine').ok).toBe(true);
-    expect(game.player.energy).toBe(48);
+    expect(game.player.energy).toBe(98);
 
     // starter merge
     const merged = game.dropItem(0, 1);
@@ -72,8 +72,8 @@ describe('Playable loop (UI-independent)', () => {
     }
 
     // force xp toward level 3 unlock path via debug
-    game.debugAddXp(200);
-    expect(game.player.level).toBeGreaterThanOrEqual(3);
+    game.debugAddXp(500);
+    expect(game.player.level).toBeGreaterThanOrEqual(5);
     expect(game.player.unlockedChainIds).toContain('dessert');
 
     // save reload

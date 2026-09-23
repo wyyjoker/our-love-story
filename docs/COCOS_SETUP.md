@@ -1,4 +1,4 @@
-# Cocos Setup Guide (V0.1B)
+# Cocos Setup Guide (V0.2)
 
 ## 环境
 
@@ -13,16 +13,13 @@
 3. 首次导入会生成 `library/`、`temp/`、`local/`（已在 `.gitignore`）
 4. Creator 会为脚本与场景生成/更新 `*.meta`（**请提交 meta**）
 
-## 挂载 GameBootstrap（首次必做）
+## 场景与启动
 
-当前 `Game.scene` 仅含轻量 `GameRoot` 节点。  
-为避免手写脚本 UUID，**请在 Creator 中把组件挂上去**：
+`Game.scene` 的 `GameRoot` 已挂载 `GameBootstrap`，构建时的 Start Scene 为 `Game.scene`。如需检查：
 
 1. 打开 `assets/scenes/Game.scene`
-2. 在 Hierarchy 选中 `GameRoot`（没有就新建空节点）
-3. Inspector → Add Component → Custom Script → `GameBootstrap`
-4. 保存场景（Ctrl+S）
-5. 将 `Game.scene` 设为 **Start Scene**（Project Settings → Project Data）
+2. 在 Hierarchy 选中 `GameRoot`，确认 Inspector 包含 `GameBootstrap`
+3. 在构建配置中确认 Start Scene 为 `Game.scene`
 
 运行时 `GameBootstrap` 会构建：
 
@@ -31,10 +28,11 @@ UICamera
 Canvas
 └─ SafeArea
    ├─ Background
-   ├─ StatusBar   (~8%)
-   ├─ OrderPanel  (~18%)
-   ├─ BoardPanel  (~58%, 7×9)
-   ├─ GeneratorDock (~16%)
+   ├─ StatusBar
+   ├─ OrderPanel
+   ├─ BoardPanel  (9×9)
+   ├─ GeneratorDock
+   └─ 任务 / 回忆 / 家园页面
 DragLayer / ToastLayer / TutorialLayer / ModalLayer / DebugLayer
 ```
 
@@ -44,15 +42,15 @@ DragLayer / ToastLayer / TutorialLayer / ModalLayer / DebugLayer
 
 1. 确认无 Script compile error（Console）
 2. 点击 Preview / Browser
-3. 检查状态栏、3 订单、7×9 棋盘、4 生成器
-4. 点「咖啡机」生成物品；拖动合并；交付订单；刷新后进度应恢复
+3. 检查状态栏、3 订单、9×9 棋盘、4 生成器与导航
+4. 点「咖啡机」生成物品；拖动合并；交付订单；进入回忆和家园；重启后进度应恢复
 
 ## 构建 Web Mobile
 
 菜单 **Project → Build**：
 
 - Platform: `Web Mobile`
-- Debug: 勾选（V0.1B）
+- Debug: 开发构建时可勾选
 - Start Scene: `Game`
 - 构建后目录：`build/web-mobile`
 
@@ -72,8 +70,8 @@ Web 构建通过后再做：
 2. AppID 可留空 / 使用测试号（不要求正式 AppID）
 3. 构建目录：`build/wechatgame`
 4. 校验产物大致包含：`game.js`、`game.json`、`project.config.json`、`src/`、`assets/`
-5. 记录主包体积（V0.1B 无正式美术，应很小）
-6. 用微信开发者工具导入 `build/wechatgame`（若未安装工具：Creator Build 记 PASS，DevTools Runtime 记 NOT RUN）
+5. 记录主包体积并检查微信包体限制；当前 12 张原创 PNG 运行时素材总量约 26MB，需要在正式上传前优化资源分包与压缩
+6. 用微信开发者工具导入 `build/wechatgame`；测试触摸、安全区、拍照权限与重启恢复
 
 ## 常见问题
 

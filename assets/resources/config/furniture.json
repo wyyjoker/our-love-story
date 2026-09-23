@@ -1,0 +1,12 @@
+[
+  { "id": "sofa", "title": "甜蜜沙发", "category": "客厅", "room": "living", "placement": { "x": -185, "y": -145, "width": 245, "height": 185 }, "coinCost": 100, "unlockLevel": 1, "decorPoints": 4, "art": "art/furniture_sofa" },
+  { "id": "tea_table", "title": "暖心茶几", "category": "客厅", "room": "living", "placement": { "x": -25, "y": -192, "width": 158, "height": 142 }, "coinCost": 150, "unlockLevel": 1, "decorPoints": 4, "art": "art/furniture_table" },
+  { "id": "rose_arch", "title": "玫瑰花拱门", "category": "花园", "room": "garden", "placement": { "x": 145, "y": -5, "width": 190, "height": 235 }, "coinCost": 200, "unlockLevel": 1, "decorPoints": 5, "art": "art/furniture_arch" },
+  { "id": "bed", "title": "月光小床", "category": "卧室", "room": "bedroom", "placement": { "x": -55, "y": -60, "width": 315, "height": 230 }, "coinCost": 250, "unlockLevel": 1, "decorPoints": 5, "art": "art/furniture_bed" },
+  { "id": "lamp", "title": "温柔落地灯", "category": "客厅", "room": "living", "placement": { "x": -288, "y": -75, "width": 86, "height": 215 }, "coinCost": 300, "unlockLevel": 5, "decorPoints": 5, "art": "art/furniture_lamp" },
+  { "id": "bookshelf", "title": "回忆书架", "category": "装饰", "room": "living", "placement": { "x": -250, "y": 97, "width": 135, "height": 225 }, "coinCost": 350, "unlockLevel": 8, "decorPoints": 5, "art": "art/furniture_bookshelf" },
+  { "id": "flower_wall", "title": "花语墙", "category": "装饰", "room": "living", "placement": { "x": 240, "y": 97, "width": 120, "height": 215 }, "coinCost": 400, "unlockLevel": 10, "decorPoints": 5, "art": "art/furniture_flowers" },
+  { "id": "dining_set", "title": "双人餐桌", "category": "特殊", "room": "living", "placement": { "x": 190, "y": -145, "width": 195, "height": 185 }, "coinCost": 450, "unlockLevel": 12, "decorPoints": 5, "art": "art/furniture_dining" },
+  { "id": "fountain", "title": "许愿喷泉", "category": "花园", "room": "garden", "placement": { "x": 238, "y": -115, "width": 135, "height": 175 }, "coinCost": 500, "unlockLevel": 15, "decorPoints": 6, "art": "art/furniture_fountain" },
+  { "id": "swing", "title": "花园秋千", "category": "花园", "room": "garden", "placement": { "x": -102, "y": -125, "width": 225, "height": 195 }, "coinCost": 600, "unlockLevel": 18, "decorPoints": 6, "art": "art/furniture_swing" }
+]

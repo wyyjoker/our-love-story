@@ -12,6 +12,7 @@ import {
   makeLabel,
   paintRoundRect,
 } from './CocosTheme';
+import { applyArt, itemArt } from './CocosArt';
 
 export class CocosItemView {
   readonly node: Node;
@@ -19,6 +20,7 @@ export class CocosItemView {
   private codeLabel!: Label;
   private size = 64;
   private currentUid = '';
+  private artNode: Node;
 
   constructor(parent: Node, size: number) {
     this.size = size;
@@ -27,6 +29,9 @@ export class CocosItemView {
     ensureTransform(this.node, size, size);
     this.g = this.node.addComponent(Graphics);
     ensureOpacity(this.node);
+    this.artNode = createUiNode('ItemArt');
+    this.node.addChild(this.artNode);
+    ensureTransform(this.artNode, size * 0.9, size * 0.9);
     this.codeLabel = makeLabel('', Math.floor(size * 0.34), CocosTheme.surface(), true);
     this.node.addChild(this.codeLabel.node);
   }
@@ -37,7 +42,11 @@ export class CocosItemView {
 
   render(vm: ItemVm): void {
     this.currentUid = vm.uid;
-    paintRoundRect(this.g, this.size, this.size, 12, CocosTheme.chain(vm.chainId));
+    paintRoundRect(this.g, this.size, this.size, 12, CocosTheme.surface());
+    const art = itemArt(vm.definitionId);
+    this.artNode.active = !!art;
+    if (art) applyArt(this.artNode, art, this.size * 0.9, this.size * 0.9);
+    this.codeLabel.node.active = !art;
     this.codeLabel.string = `${vm.code}`;
     this.node.active = true;
   }

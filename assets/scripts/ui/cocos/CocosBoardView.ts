@@ -4,7 +4,7 @@
  * dispatches the gesture to the hit target, not the parent). Bind all 4 events
  * on every cell + board fallback.
  */
-import { EventTouch, Vec2, Vec3, UITransform, Node, Graphics, Camera } from 'cc';
+import { EventMouse, EventTouch, Input, input, Vec2, Vec3, UITransform, Node, Graphics, Camera } from 'cc';
 import type { BoardVm, ItemVm } from '../../presentation/GameViewMapper';
 import type { DropResolve } from '../../core/types';
 import { CocosCellView } from './CocosCellView';
@@ -14,6 +14,7 @@ import {
   createUiNode,
   ensureOpacity,
   ensureTransform,
+  hexColor,
   paintRoundRect,
 } from './CocosTheme';
 
@@ -45,6 +46,7 @@ export class CocosBoardView {
 
   private dragLayer: Node | null = null;
   private pendingVm: Map<string, ItemVm> | null = null;
+  private readonly boundItemNodes = new WeakSet<Node>();
 
   constructor(
     parent: Node,
@@ -69,12 +71,18 @@ export class CocosBoardView {
       this.boardW,
       this.boardH,
       20,
-      CocosTheme.background(),
-      CocosTheme.border(),
+      hexColor('#FFF4E9', 244),
+      hexColor('#FFFFFF'),
     );
 
     this.layoutCells();
     this.bindBoardTouch();
+    // Desktop browsers may cancel a node touch as the pointer leaves the source
+    // cell. Global release still arrives and must finish the drag.
+    input.on(Input.EventType.MOUSE_MOVE, this.onTouchMove, this);
+    input.on(Input.EventType.MOUSE_UP, this.onTouchEnd, this);
+    input.on(Input.EventType.TOUCH_MOVE, this.onTouchMove, this);
+    input.on(Input.EventType.TOUCH_END, this.onTouchEnd, this);
   }
 
   setDragLayer(layer: Node): void {
@@ -115,12 +123,24 @@ export class CocosBoardView {
   private bindNodeTouch(node: Node, index: number): void {
     node.on(
       Node.EventType.TOUCH_START,
-      (e: EventTouch) => this.onTouchStart(e, index),
+      (e: EventTouch) => {
+        e.propagationStopped = true;
+        this.onTouchStart(e, index);
+      },
       this,
     );
-    node.on(Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
-    node.on(Node.EventType.TOUCH_END, this.onTouchEnd, this);
-    node.on(Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
+    node.on(Node.EventType.TOUCH_MOVE, (e: EventTouch) => {
+      e.propagationStopped = true;
+      this.onTouchMove(e);
+    }, this);
+    node.on(Node.EventType.TOUCH_END, (e: EventTouch) => {
+      e.propagationStopped = true;
+      this.onTouchEnd(e);
+    }, this);
+    node.on(Node.EventType.TOUCH_CANCEL, (e: EventTouch) => {
+      e.propagationStopped = true;
+      this.onTouchCancel();
+    }, this);
   }
 
   private bindBoardTouch(): void {
@@ -128,11 +148,11 @@ export class CocosBoardView {
     this.bindNodeTouch(this.node, -1);
   }
 
-  private uiPos(touch: EventTouch): Vec2 {
+  private uiPos(touch: EventTouch | EventMouse): Vec2 {
     return touch.getUILocation();
   }
 
-  private localPos(touch: EventTouch, target: Node = this.node): Vec3 {
+  private localPos(touch: EventTouch | EventMouse, target: Node = this.node): Vec3 {
     const transform = target.getComponent(UITransform);
     if (!transform) return new Vec3();
     const ui = touch.getUILocation();
@@ -140,11 +160,11 @@ export class CocosBoardView {
     return transform.convertToNodeSpaceAR(world);
   }
 
-  private uiToWorld(ui: Vec2, touch: EventTouch): Vec3 {
+  private uiToWorld(ui: Vec2, touch: EventTouch | EventMouse): Vec3 {
     if (this.camera) {
       const screen = touch.getLocation();
       const world = new Vec3();
-      this.camera.screenToWorld(world, new Vec3(screen.x, screen.y, 0));
+      this.camera.screenToWorld(new Vec3(screen.x, screen.y, 0), world);
       return world;
     }
     return new Vec3(ui.x, ui.y, 0);
@@ -169,7 +189,7 @@ export class CocosBoardView {
     return row * this.columns + c;
   }
 
-  private indexFromHitTest(touch: EventTouch): number | null {
+  private indexFromHitTest(touch: EventTouch | EventMouse): number | null {
     const ui = touch.getUILocation();
     const world = this.uiToWorld(ui, touch);
     for (const cell of this.cells) {
@@ -185,25 +205,25 @@ export class CocosBoardView {
     return null;
   }
 
-  private resolveIndex(touch: EventTouch, hint?: number): number | null {
+  private resolveIndex(touch: EventTouch | EventMouse, hint?: number): number | null {
     if (hint !== undefined && hint >= 0) return hint;
     const local = this.localPos(touch);
     return this.indexFromLocal(local) ?? this.indexFromHitTest(touch);
   }
 
   onTouchStart(e: EventTouch, hintIndex = -1): void {
+    if (this.drag) {
+      this.drag.ghost?.destroy();
+      this.cells[this.drag.fromIndex]?.setSourceDim(false);
+      this.clearHighlights();
+      this.drag = null;
+    }
     const index = this.resolveIndex(e, hintIndex >= 0 ? hintIndex : undefined);
-    console.debug('[INPUT] start', {
-      hintIndex,
-      index,
-      ui: e.getUILocation(),
-    });
     if (index === null || index < 0) return;
     const cell = this.cells[index];
     const item = cell?.itemView;
     if (!cell || !item || !item.node.active || !item.uid) return;
 
-    console.debug('[INPUT] item', { index, uid: item.uid });
     this.drag = {
       fromIndex: index,
       uid: item.uid,
@@ -213,7 +233,7 @@ export class CocosBoardView {
     };
   }
 
-  onTouchMove(e: EventTouch): void {
+  onTouchMove(e: EventTouch | EventMouse): void {
     if (!this.drag) return;
     const ui = this.uiPos(e);
     const dx = ui.x - this.drag.startUI.x;
@@ -221,37 +241,31 @@ export class CocosBoardView {
     if (!this.drag.active) {
       if (Math.hypot(dx, dy) < this.deps.dragThreshold) return;
       this.drag.active = true;
-      console.debug('[INPUT] drag-start', { fromIndex: this.drag.fromIndex });
       this.startGhost();
       this.cells[this.drag.fromIndex]?.setSourceDim(true);
     }
     const to = this.resolveIndex(e);
-    console.debug('[INPUT] drag-move', { toIndex: to });
     this.moveGhost(e);
     this.highlightTarget(e, to);
   }
 
-  onTouchEnd(e: EventTouch): void {
+  onTouchEnd(e: EventTouch | EventMouse): void {
     if (!this.drag) return;
     const drag = this.drag;
-    this.drag = null;
-    this.clearHighlights();
-    this.endGhost();
-    this.cells[drag.fromIndex]?.setSourceDim(false);
-    if (!drag.active) return;
     const to = this.resolveIndex(e);
-    const preview = this.deps.previewDrop(drag.fromIndex, to);
-    console.debug('[INPUT] drop', { from: drag.fromIndex, to, preview });
-    this.deps.onDrop(drag.fromIndex, to);
+    this.drag = null;
+    try {
+      if (drag.active) this.deps.onDrop(drag.fromIndex, to);
+    } finally {
+      drag.ghost?.destroy();
+      this.cells[drag.fromIndex]?.setSourceDim(false);
+      this.clearHighlights();
+    }
   }
 
   onTouchCancel(): void {
-    if (!this.drag) return;
-    const from = this.drag.fromIndex;
-    this.drag = null;
-    this.clearHighlights();
-    this.endGhost();
-    this.cells[from]?.setSourceDim(false);
+    // A Cocos node-level cancel can mean the pointer left this item while the
+    // mouse button is still held. Wait for the global up event to resolve it.
   }
 
   private startGhost(): void {
@@ -272,7 +286,7 @@ export class CocosBoardView {
     source?.setSourceDim(true);
   }
 
-  private moveGhost(e: EventTouch): void {
+  private moveGhost(e: EventTouch | EventMouse): void {
     if (!this.drag?.ghost) return;
     const layer = this.dragLayer ?? this.node;
     const transform = layer.getComponent(UITransform);
@@ -282,7 +296,7 @@ export class CocosBoardView {
     this.drag.ghost.setPosition(local);
   }
 
-  private highlightTarget(e: EventTouch, to: number | null): void {
+  private highlightTarget(e: EventTouch | EventMouse, to: number | null): void {
     if (!this.drag) return;
     this.clearHighlights();
     const index = to ?? this.resolveIndex(e);
@@ -316,9 +330,10 @@ export class CocosBoardView {
     for (const cell of this.cells) {
       const item = byCell.get(cell.index) ?? null;
       cell.setItem(item);
-      if (item && cell.itemView) {
+      if (item && cell.itemView && !this.boundItemNodes.has(cell.itemView.node)) {
         // Item sits above cell — bind full gesture on the item node too
         this.bindNodeTouch(cell.itemView.node, cell.index);
+        this.boundItemNodes.add(cell.itemView.node);
       }
     }
   }
@@ -332,6 +347,10 @@ export class CocosBoardView {
   }
 
   dispose(): void {
+    input.off(Input.EventType.MOUSE_MOVE, this.onTouchMove, this);
+    input.off(Input.EventType.MOUSE_UP, this.onTouchEnd, this);
+    input.off(Input.EventType.TOUCH_MOVE, this.onTouchMove, this);
+    input.off(Input.EventType.TOUCH_END, this.onTouchEnd, this);
     for (const cell of this.cells) {
       cell.node.off(Node.EventType.TOUCH_START);
       cell.node.off(Node.EventType.TOUCH_MOVE);

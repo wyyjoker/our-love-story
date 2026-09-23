@@ -1,4 +1,4 @@
-import type { GameConfig, PlayerState, SaveData, TutorialState } from '../core/types';
+import type { GameConfig, LifeState, PlayerState, SaveData, TutorialState } from '../core/types';
 import { cloneBoard } from '../core/board/board';
 import type { ConfigBundle } from '../config/ConfigRepository';
 import { loadConfigBundle, assertConfigValid } from '../config/ConfigRepository';
@@ -22,6 +22,7 @@ import { EnergyService } from './EnergyService';
 import { GeneratorService } from './GeneratorService';
 import { OrderService } from './OrderService';
 import { ProgressionService } from './ProgressionService';
+import { LifeService, type LifeResult } from './LifeService';
 
 export type GameContextOptions = {
   config?: ConfigBundle;
@@ -61,12 +62,14 @@ export class GameContext {
 
   private playerRef!: PlayerState;
   private tutorialRef!: TutorialState;
+  private lifeRef!: LifeState;
 
   board!: BoardService;
   energy!: EnergyService;
   generators!: GeneratorService;
   orders!: OrderService;
   progression!: ProgressionService;
+  life!: LifeService;
 
   bootState: BootState = 'BOOT';
   bootError: string | null = null;
@@ -100,6 +103,7 @@ export class GameContext {
       createDefault: () => createDefaultSaveData(this.config, this.clock.now()),
       debounceMs: options.saveDebounceMs ?? 200,
       logger: (m) => this.logger.debug('SAVE', m),
+      legacyStarterFurnitureId: this.bundle.furniture[0]?.id,
     });
   }
 
@@ -139,6 +143,16 @@ export class GameContext {
         unlockedChainIds: [...data.player.unlockedChainIds],
       };
       this.tutorialRef = { ...data.tutorial };
+      this.lifeRef = {
+        ...data.life,
+        unlockedMemoryIds: [...data.life.unlockedMemoryIds],
+        ownedFurnitureIds: [...data.life.ownedFurnitureIds],
+        placedFurnitureIds: [...data.life.placedFurnitureIds],
+        claimedWishIds: [...data.life.claimedWishIds],
+        claimedLevelRewards: [...data.life.claimedLevelRewards],
+        photoPaths: [...data.life.photoPaths],
+        stats: { ...data.life.stats },
+      };
 
       this.board = new BoardService(
         this.bundle.catalog,
@@ -164,6 +178,17 @@ export class GameContext {
         this.playerRef,
         this.bundle.progression,
         this.bundle.generators,
+        this.bus,
+      );
+
+      this.life = new LifeService(
+        this.lifeRef,
+        this.bundle.memories,
+        this.bundle.furniture,
+        this.bundle.wishes,
+        this.bundle.levelRewards,
+        this.playerRef,
+        this.progression,
         this.bus,
       );
 
@@ -213,6 +238,7 @@ export class GameContext {
   spawnFromGenerator(generatorId: string): ReturnType<GeneratorService['spawn']> {
     const result = this.generators.spawn(generatorId);
     if (result.ok) {
+      this.life.record('spawns');
       if (!this.tutorialRef.generatorClicked) {
         this.tutorialRef.generatorClicked = true;
         this.bus.emit('TUTORIAL_UPDATED', { ...this.tutorialRef });
@@ -226,6 +252,7 @@ export class GameContext {
   dropItem(from: number, to: number | null): ReturnType<BoardService['tryDrop']> {
     const result = this.board.tryDrop(from, to);
     if (result.ok && result.kind === 'MERGE') {
+      this.life.record('merges');
       if (!this.tutorialRef.firstMergeCompleted) {
         this.tutorialRef.firstMergeCompleted = true;
         this.bus.emit('TUTORIAL_UPDATED', { ...this.tutorialRef });
@@ -238,9 +265,50 @@ export class GameContext {
     return result;
   }
 
+  unlockMemory(id: string): LifeResult {
+    const result = this.life.unlockMemory(id);
+    if (result.ok) this.save();
+    return result;
+  }
+
+  buyFurniture(id: string): LifeResult {
+    const result = this.life.buyFurniture(id);
+    if (result.ok) this.save();
+    return result;
+  }
+
+  placeFurniture(id: string): LifeResult {
+    const result = this.life.placeFurniture(id);
+    if (result.ok) this.save();
+    return result;
+  }
+
+  claimWish(id: string): LifeResult {
+    const result = this.life.claimWish(id);
+    if (result.ok) this.save();
+    return result;
+  }
+
+  claimLevelReward(level: number): LifeResult {
+    const result = this.life.claimLevelReward(level);
+    if (result.ok) this.save();
+    return result;
+  }
+
+  addPhoto(path: string): LifeResult {
+    const result = this.life.addPhoto(path);
+    if (result.ok) this.save();
+    return result;
+  }
+
+  tick(): void {
+    if (this.energy.tick().recovered > 0) this.scheduleSave();
+  }
+
   claimOrder(orderUid: string): ReturnType<OrderService['claim']> {
     const result = this.orders.claim(orderUid);
     if (result.ok) {
+      this.life.record('orders');
       if (!this.tutorialRef.firstOrderCompleted) {
         this.tutorialRef.firstOrderCompleted = true;
         this.bus.emit('TUTORIAL_UPDATED', { ...this.tutorialRef });
@@ -296,6 +364,16 @@ export class GameContext {
       activeOrders: this.orders.getOrders(),
       tutorial: { ...this.tutorialRef },
       recentOrderIds: this.orders.getRecentIds(),
+      life: {
+        ...this.lifeRef,
+        unlockedMemoryIds: [...this.lifeRef.unlockedMemoryIds],
+        ownedFurnitureIds: [...this.lifeRef.ownedFurnitureIds],
+        placedFurnitureIds: [...this.lifeRef.placedFurnitureIds],
+        claimedWishIds: [...this.lifeRef.claimedWishIds],
+        claimedLevelRewards: [...this.lifeRef.claimedLevelRewards],
+        photoPaths: [...this.lifeRef.photoPaths],
+        stats: { ...this.lifeRef.stats },
+      },
     };
   }
 

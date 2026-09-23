@@ -21,6 +21,9 @@ import { CocosToastView, ToastMessages } from './CocosToastView';
 import { CocosTutorialView } from './CocosTutorialView';
 import { CocosLevelUpView } from './CocosLevelUpView';
 import { CocosDebugPanel } from './CocosDebugPanel';
+import { CocosLifePages } from './CocosLifePages';
+import { applyArt } from './CocosArt';
+import { captureHomePhoto } from '../../platform/cocos/CocosPhotoService';
 import {
   CocosTheme,
   createUiNode,
@@ -39,6 +42,7 @@ export class CocosGameView {
   private tutorial: CocosTutorialView;
   private levelUp: CocosLevelUpView;
   private debug: CocosDebugPanel;
+  private lifePages: CocosLifePages;
   private unsubs: Array<() => void> = [];
 
   constructor(
@@ -57,6 +61,9 @@ export class CocosGameView {
     ensureTransform(bg, dw, dh);
     const bgG = bg.addComponent(Graphics);
     paintRoundRect(bgG, dw, dh, 0, CocosTheme.background());
+    const bgArt = createUiNode('MergeBackgroundArt');
+    roots.background.addChild(bgArt);
+    applyArt(bgArt, { sheet: 'merge_background' }, dw, dh);
 
     const statusSize = sizeOf(roots.statusSlot, dw, Math.round(dh * 0.09));
     const ordersSize = sizeOf(roots.ordersSlot, dw, Math.round(dh * 0.16));
@@ -67,6 +74,7 @@ export class CocosGameView {
       roots.statusSlot,
       statusSize.width,
       statusSize.height,
+      (kind) => this.toast.show(kind === 'energy' ? '每 4 分钟恢复 1 点体力' : kind === 'coins' ? '完成订单和心愿可获得金币' : '完成订单、心愿和升级礼包可获得爱心'),
     );
     this.orders = new CocosOrderPanel(
       roots.ordersSlot,
@@ -124,6 +132,10 @@ export class CocosGameView {
       },
     });
 
+    this.lifePages = new CocosLifePages(game, roots, (message) => this.toast.show(message), () => {
+      void this.capturePhoto();
+    }, () => this.renderTutorial());
+
     this.orders.bind((uid) => {
       const msg = this.controller.onClaim(uid);
       if (msg.toast) this.toast.show(msg.toast, msg.tone ?? 'info');
@@ -139,6 +151,30 @@ export class CocosGameView {
 
     this.subscribe(game.bus);
     this.renderAll();
+    this.showNextReward();
+  }
+
+  private async capturePhoto(): Promise<void> {
+    const result = await captureHomePhoto();
+    if (!result.ok) {
+      this.toast.show(result.reason, 'warn');
+      return;
+    }
+    this.game.addPhoto(result.path);
+    this.toast.show(result.albumSaved ? '照片已保存到相册 ♥' : '照片已保存在本机，系统相册权限未开启', 'success');
+    this.lifePages.render();
+  }
+
+  private showNextReward(): void {
+    if (this.levelUp.isShowing) return;
+    const level = this.game.life.pendingLevelRewards()[0];
+    if (!level) return;
+    const chains = this.game.bundle.progression.levels.find((entry) => entry.level === level)?.unlockChains ?? [];
+    this.levelUp.show(level, chains, this.game.life.rewardForLevel(level), () => {
+      this.game.claimLevelReward(level);
+      this.renderAll();
+      this.showNextReward();
+    });
   }
 
   private handleDrop(from: number, to: number | null): void {
@@ -188,11 +224,16 @@ export class CocosGameView {
     );
     this.unsubs.push(
       bus.on('LEVEL_UP', (p) => {
-        this.levelUp.show(p.level, p.unlockedChains);
+        void p;
         this.renderAll();
+        this.showNextReward();
       }),
     );
     this.unsubs.push(bus.on('TUTORIAL_UPDATED', () => this.renderTutorial()));
+    this.unsubs.push(bus.on('LIFE_CHANGED', () => {
+      this.renderStatus();
+      this.lifePages.render();
+    }));
   }
 
   private statusVm(): StatusVm {
@@ -216,6 +257,11 @@ export class CocosGameView {
     this.renderOrders();
     this.renderDock();
     this.renderTutorial();
+    this.lifePages.render();
+  }
+
+  renderClock(): void {
+    this.renderStatus();
   }
 
   private renderStatus(): void {
@@ -237,12 +283,17 @@ export class CocosGameView {
   }
 
   private renderTutorial(): void {
+    if (this.lifePages.currentPage !== 'merge') {
+      this.tutorial.hide();
+      return;
+    }
     const t = this.game.tutorial;
-    if (!t.generatorClicked) {
+    const stats = this.game.life.state.stats;
+    if (!t.generatorClicked && stats.spawns === 0 && !t.firstMergeCompleted && stats.merges === 0) {
       this.tutorial.show('点一下咖啡机吧～');
       return;
     }
-    if (!t.firstMergeCompleted) {
+    if (!t.firstMergeCompleted && stats.merges === 0) {
       this.tutorial.show('把两个一样的东西拖到一起');
       return;
     }

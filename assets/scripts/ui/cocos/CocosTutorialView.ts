@@ -1,7 +1,7 @@
 /**
  * CocosTutorialView — hint bubble (never blocks board input).
  */
-import { Node, Label, Graphics } from 'cc';
+import { Button, Node, Label, Graphics } from 'cc';
 import {
   CocosTheme,
   createUiNode,
@@ -14,6 +14,7 @@ export class CocosTutorialView {
   readonly node: Node;
   private bubble: Node;
   private label: Label;
+  private dismissedText = '';
 
   constructor(parent: Node, width: number, height: number) {
     this.node = createUiNode('TutorialView');
@@ -28,12 +29,23 @@ export class CocosTutorialView {
     paintRoundRect(g, bw, 64, 18, CocosTheme.surface(), CocosTheme.primary(), 2);
     this.label = makeLabel('', 16, CocosTheme.textPrimary(), true);
     this.bubble.addChild(this.label.node);
+    const close = createUiNode('DismissHint');
+    this.bubble.addChild(close);
+    ensureTransform(close, 44, 44);
+    close.setPosition(bw / 2 - 22, 0, 0);
+    const closeLabel = makeLabel('×', 25, CocosTheme.textSecondary(), true);
+    close.addChild(closeLabel.node);
+    close.addComponent(Button);
+    close.on(Button.EventType.CLICK, () => {
+      this.dismissedText = this.label.string;
+      this.bubble.active = false;
+    });
     this.bubble.active = false;
   }
 
   show(text: string): void {
     this.label.string = text;
-    this.bubble.active = true;
+    this.bubble.active = text !== this.dismissedText;
   }
 
   hide(): void {

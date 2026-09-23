@@ -49,7 +49,7 @@ describe('SaveService', () => {
     expect(loaded.ok).toBe(true);
     if (loaded.ok) {
       expect(loaded.data.player.coins).toBe(42);
-      expect(loaded.data.version).toBe(1);
+      expect(loaded.data.version).toBe(2);
     }
   });
 
@@ -60,7 +60,7 @@ describe('SaveService', () => {
     if (!loaded.ok) {
       expect(loaded.reason).toBe('EMPTY');
       expect(loaded.defaultData.player.level).toBe(1);
-      expect(loaded.defaultData.board).toHaveLength(63);
+      expect(loaded.defaultData.board).toHaveLength(81);
     }
   });
 
@@ -85,7 +85,7 @@ describe('SaveService', () => {
     const { save } = makeService(storage);
     const loaded = save.load();
     expect(loaded.ok).toBe(false);
-    if (!loaded.ok) expect(loaded.defaultData.board).toHaveLength(63);
+    if (!loaded.ok) expect(loaded.defaultData.board).toHaveLength(81);
   });
 
   it('old version migrates / future version rejected', () => {

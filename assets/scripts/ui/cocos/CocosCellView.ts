@@ -6,6 +6,7 @@ import {
   CocosTheme,
   createUiNode,
   ensureTransform,
+  hexColor,
   paintRoundRect,
 } from './CocosTheme';
 import { CocosItemView } from './CocosItemView';
@@ -39,8 +40,8 @@ export class CocosCellView {
       this.size - 4,
       this.size - 4,
       10,
-      alpha(CocosTheme.surface(), 190),
-      CocosTheme.border(),
+      alpha(hexColor('#F2E6DE'), 225),
+      hexColor('#FFFFFF'),
     );
   }
 
