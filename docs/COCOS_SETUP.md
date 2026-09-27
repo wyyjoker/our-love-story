@@ -69,9 +69,21 @@ Web 构建通过后再做：
 1. Platform: `WeChat Mini Game`
 2. AppID 可留空 / 使用测试号（不要求正式 AppID）
 3. 构建目录：`build/wechatgame`
-4. 校验产物大致包含：`game.js`、`game.json`、`project.config.json`、`src/`、`assets/`
-5. 记录主包体积并检查微信包体限制；当前 12 张原创 PNG 运行时素材总量约 26MB，需要在正式上传前优化资源分包与压缩
-6. 用微信开发者工具导入 `build/wechatgame`；测试触摸、安全区、拍照权限与重启恢复
+4. 校验产物包含：`game.js`、`game.json`、`project.config.json`、`src/`、`subpackages/`
+5. 使用 `tools/wechat-build.json` 构建，`game_art` 是独立 Asset Bundle，并在微信端设为分包。资源包从原始 PNG 的 26,384,613 字节压至 4,660,495 字节（透明图保留调色板 PNG，背景用 JPEG）；原始 PNG 目录可用 `node tools/optimize-art.mjs <原图目录>` 重做压缩，输出到 `temp/art-optimized`
+6. 运行 `npm run verify:wechat-package`：读取 `game.json` 的分包目录，统计主包全部文件，必须小于 4,000,000 字节。2026-09-27 构建主包为 3,917,042 字节；每次改动后都要重新构建并复测
+7. 用微信开发者工具导入 `build/wechatgame`；测试触摸、安全区、拍照权限与重启恢复
+
+本机 Creator 3.8.8 CLI 构建命令（Windows）：
+
+```powershell
+& 'C:\ProgramData\cocos\editors\Creator\3.8.8\CocosCreator.exe' --project 'E:\A-game' --build 'configPath=E:/A-game/tools/wechat-build.json'
+npm run verify:wechat-package
+```
+
+正式数值配置仍在 `assets/resources/config/`，运行时插画位于 `assets/game_art/`。`CocosArt` 通过 `assetManager.loadBundle('game_art')` 按需加载；Creator 管理图片的 `*.meta` UUID。
+
+故事和照片的替换入口见 [PERSONAL_CONTENT.md](PERSONAL_CONTENT.md)。
 
 ## 常见问题
 

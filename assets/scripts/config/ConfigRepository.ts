@@ -195,6 +195,9 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
   }
   for (const memory of memories) {
     if (memory.heartCost <= 0) issues.push({ level: 'error', message: `Memory ${memory.id} cost invalid` });
+    if (typeof memory.art !== 'string' || !/^[a-z][a-z0-9_]*(?:#[0-4])?$/.test(memory.art)) {
+      issues.push({ level: 'error', message: `Memory ${memory.id} art invalid` });
+    }
   }
   for (const item of furniture) {
     if (item.coinCost < 0 || item.unlockLevel < 1 || item.decorPoints <= 0) {

@@ -101,7 +101,7 @@ our-love-story/
 
 ## 已完成功能
 
-见 [CHANGELOG.md](CHANGELOG.md)。存档 v2 支持旧档迁移，原创美术位于 `assets/resources/art/`，玩法数据位于 `assets/resources/config/`。
+见 [CHANGELOG.md](CHANGELOG.md)。存档 v2 支持旧档迁移，原创美术位于 `assets/game_art/`（微信独立分包），玩法数据位于 `assets/resources/config/`。
 
 ## 未完成功能
 

@@ -1,0 +1,21 @@
+{
+  "platform": "wechatgame",
+  "taskName": "wechatgame",
+  "outputName": "wechatgame",
+  "mainBundleCompressionType": "subpackage",
+  "bundleConfigs": [
+    {
+      "root": "db://assets/game_art",
+      "name": "game_art",
+      "compressionType": "subpackage",
+      "isRemote": false,
+      "output": true
+    }
+  ],
+  "packages": {
+    "wechatgame": {
+      "orientation": "portrait",
+      "appid": "wx6ac3f5090a6b99c5"
+    }
+  }
+}

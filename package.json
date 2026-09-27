@@ -12,10 +12,12 @@
     "build:web": "esbuild src/web/main.ts --bundle --outfile=game.js --format=iife --target=es2020 --sourcemap",
     "build:web:watch": "esbuild src/web/main.ts --bundle --outfile=game.js --format=iife --target=es2020 --sourcemap --watch",
     "verify:cocos": "node tools/verify-cocos-project.mjs",
+    "verify:wechat-package": "node tools/check-wechat-package.mjs",
     "verify": "node tools/verify-all.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.25.0",
+    "sharp": "^0.34.4",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"
   },

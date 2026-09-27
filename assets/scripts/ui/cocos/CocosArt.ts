@@ -1,4 +1,4 @@
-import { assetManager, ImageAsset, Node, Rect, resources, Size, Sprite, SpriteFrame, Texture2D } from 'cc';
+import { assetManager, AssetManager, ImageAsset, Node, Rect, Size, Sprite, SpriteFrame, Texture2D } from 'cc';
 import { ensureTransform } from './CocosTheme';
 
 export type ArtCell = { sheet: string; index?: number; columns?: number; rows?: number };
@@ -6,19 +6,36 @@ export type ArtCell = { sheet: string; index?: number; columns?: number; rows?: 
 const sheets = new Map<string, Promise<Texture2D | null>>();
 const frames = new Map<string, SpriteFrame>();
 const requests = new WeakMap<Node, string>();
+let artBundle: Promise<AssetManager.Bundle | null> | undefined;
+
+function loadArtBundle(): Promise<AssetManager.Bundle | null> {
+  if (artBundle) return artBundle;
+  artBundle = new Promise((resolve) => {
+    assetManager.loadBundle('game_art', (error, bundle) => {
+      if (error || !bundle) {
+        console.warn('[ART] game_art bundle unavailable', error);
+        artBundle = undefined;
+        resolve(null);
+      } else resolve(bundle);
+    });
+  });
+  return artBundle;
+}
 
 function loadSheet(name: string): Promise<Texture2D | null> {
   const existing = sheets.get(name);
   if (existing) return existing;
-  const promise = new Promise<Texture2D | null>((resolve) => {
-    resources.load(`art/${name}/texture`, Texture2D, (error, texture) => {
+  const promise = loadArtBundle().then((bundle) => new Promise<Texture2D | null>((resolve) => {
+    if (!bundle) { resolve(null); return; }
+    bundle.load(`${name}/texture`, Texture2D, (error, texture) => {
       if (error || !texture) {
         console.warn(`[ART] ${name} unavailable`, error);
         resolve(null);
       } else resolve(texture);
     });
-  });
+  }));
   sheets.set(name, promise);
+  void promise.then((texture) => { if (!texture) sheets.delete(name); });
   return promise;
 }
 

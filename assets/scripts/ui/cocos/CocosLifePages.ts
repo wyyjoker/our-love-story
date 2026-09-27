@@ -48,6 +48,7 @@ export class CocosLifePages {
   private readonly homeBackdrops: Record<HomeRoom, Node>;
   private readonly pageRoot: Node;
   private readonly navRoot: Node;
+  private readonly roomTabsRoot: Node;
   private readonly taskRoot: Node;
 
   constructor(
@@ -86,6 +87,12 @@ export class CocosLifePages {
     ensureTransform(this.navRoot, 720, 82);
     this.navRoot.setPosition(0, -roots.designHeight / 2 + 62, 0);
 
+    this.roomTabsRoot = createUiNode('HomeRoomTabs');
+    roots.canvas.addChild(this.roomTabsRoot);
+    ensureTransform(this.roomTabsRoot, 380, 56);
+    this.roomTabsRoot.setPosition(0, 202, 0);
+    this.roomTabsRoot.active = false;
+
     this.taskRoot = createUiNode('Wishes');
     roots.modalLayer.addChild(this.taskRoot);
     ensureTransform(this.taskRoot, 710, 980);
@@ -109,6 +116,7 @@ export class CocosLifePages {
     this.roots.boardSlot.active = merge;
     this.roots.dockSlot.active = merge;
     this.pageRoot.active = !merge;
+    this.roomTabsRoot.active = page === 'home';
     this.render();
     this.onPageChanged();
   }
@@ -172,7 +180,8 @@ export class CocosLifePages {
     const picture = createUiNode('Illustration');
     card.addChild(picture);
     picture.setPosition(-176, 0, 0);
-    applyArt(picture, { sheet: index < 5 ? 'memory_sheet_a' : 'memory_sheet_b', index: index % 5, columns: 5 }, 280, 266);
+    const [sheet, cell] = memory.art.split('#');
+    applyArt(picture, cell === undefined ? { sheet } : { sheet, index: Number(cell), columns: 5 }, 280, 266);
     if (!unlocked) {
       const opacity = picture.addComponent(UIOpacity);
       opacity.opacity = 170;
@@ -252,11 +261,6 @@ export class CocosLifePages {
       label(hint, '从下方选择家具，装点小屋 ♥', 0, 0, 18, 342, hexColor('#8B5358'));
     }
 
-    const rooms: Array<[HomeRoom, string]> = [['living', '客厅'], ['bedroom', '卧室'], ['garden', '花园']];
-    rooms.forEach(([room, title], index) => button(this.pageRoot, title, -118 + index * 118, 272, 105, 44, () => {
-      this.homeRoom = room;
-      this.render();
-    }, this.homeRoom === room ? 'pink' : 'cream'));
     button(this.pageRoot, '拍照', 295, 28, 86, 54, this.takePhoto, 'pink');
     button(this.pageRoot, '拜访', 295, -42, 86, 54, () => this.toast('目前是单机小屋，拜访功能将来开放'), 'cream');
     button(this.pageRoot, '换装', 295, -112, 86, 54, () => this.toast('下方家具可购买、摆放或收起'), 'cream');
@@ -298,6 +302,16 @@ export class CocosLifePages {
       this.furnitureCard(item, index, -264 + offset * 132);
     });
     this.pager(pages, () => this.furniturePage, (page) => { this.furniturePage = page; this.render(); });
+    this.renderRoomTabs();
+  }
+
+  private renderRoomTabs(): void {
+    clear(this.roomTabsRoot);
+    const rooms: Array<[HomeRoom, string]> = [['living', '客厅'], ['bedroom', '卧室'], ['garden', '花园']];
+    rooms.forEach(([room, title], index) => button(this.roomTabsRoot, title, -118 + index * 118, 0, 105, 44, () => {
+      this.homeRoom = room;
+      this.render();
+    }, this.homeRoom === room ? 'pink' : 'cream'));
   }
 
   private syncHomeBackdrop(): void {
