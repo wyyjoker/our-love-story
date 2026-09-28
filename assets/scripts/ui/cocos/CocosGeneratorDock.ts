@@ -77,6 +77,10 @@ class GenButton {
       .start();
   }
 
+  matches(id: string): boolean {
+    return this.id === id;
+  }
+
   destroy(): void {
     this.node.off(Button.EventType.CLICK, this.handle, this);
     this.node.destroy();
@@ -113,8 +117,6 @@ export class CocosGeneratorDock {
   }
 
   popMatching(id: string): void {
-    // pop the matching button after spawn
-    void id;
-    for (const b of this.buttons) b.pop();
+    this.buttons.find((button) => button.matches(id))?.pop();
   }
 }

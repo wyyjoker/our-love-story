@@ -4,7 +4,7 @@
  * dispatches the gesture to the hit target, not the parent). Bind all 4 events
  * on every cell + board fallback.
  */
-import { EventMouse, EventTouch, Input, input, Vec2, Vec3, UITransform, Node, Graphics, Camera } from 'cc';
+import { EventMouse, EventTouch, Input, input, Vec2, Vec3, UITransform, Node, Graphics, Camera, Label } from 'cc';
 import type { BoardVm, ItemVm } from '../../presentation/GameViewMapper';
 import type { DropResolve } from '../../core/types';
 import { CocosCellView } from './CocosCellView';
@@ -15,6 +15,7 @@ import {
   ensureOpacity,
   ensureTransform,
   hexColor,
+  makeLabel,
   paintRoundRect,
 } from './CocosTheme';
 
@@ -35,6 +36,7 @@ export class CocosBoardView {
   private boardH = 0;
   private deps: BoardDeps;
   private camera: Camera | null = null;
+  private occupancyLabel: Label | null = null;
 
   private drag: {
     fromIndex: number;
@@ -65,16 +67,6 @@ export class CocosBoardView {
     parent.addChild(this.node);
     ensureTransform(this.node, this.boardW, this.boardH);
 
-    const g = this.node.addComponent(Graphics);
-    paintRoundRect(
-      g,
-      this.boardW,
-      this.boardH,
-      20,
-      hexColor('#FFF4E9', 244),
-      hexColor('#FFFFFF'),
-    );
-
     this.layoutCells();
     this.bindBoardTouch();
     // Desktop browsers may cancel a node touch as the pointer leaves the source
@@ -83,6 +75,7 @@ export class CocosBoardView {
     input.on(Input.EventType.MOUSE_UP, this.onTouchEnd, this);
     input.on(Input.EventType.TOUCH_MOVE, this.onTouchMove, this);
     input.on(Input.EventType.TOUCH_END, this.onTouchEnd, this);
+    input.on(Input.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
   }
 
   setDragLayer(layer: Node): void {
@@ -96,12 +89,18 @@ export class CocosBoardView {
   private layoutCells(): void {
     this.cellSize = Math.floor(
       Math.min(
-        (this.boardW - (this.columns - 1) * this.gap) / this.columns,
-        (this.boardH - (this.rows - 1) * this.gap) / this.rows,
+        (this.boardW - 22 - (this.columns - 1) * this.gap) / this.columns,
+        (this.boardH - 32 - (this.rows - 1) * this.gap) / this.rows,
       ),
     );
     const totalW = this.columns * this.cellSize + (this.columns - 1) * this.gap;
     const totalH = this.rows * this.cellSize + (this.rows - 1) * this.gap;
+    const paperH = totalH + 32;
+    const paper = createUiNode('BoardPaper');
+    this.node.addChild(paper);
+    ensureTransform(paper, this.boardW, paperH);
+    paintRoundRect(paper.addComponent(Graphics), this.boardW, paperH, 22, hexColor('#FFF4E9', 244), hexColor('#FFFFFF'), 2);
+    this.addBoardNotes(paperH);
     const originX = -totalW / 2 + this.cellSize / 2;
     const originY = totalH / 2 - this.cellSize / 2;
 
@@ -117,6 +116,28 @@ export class CocosBoardView {
         this.bindNodeTouch(cell.node, index);
       }
     }
+  }
+
+  private addBoardNotes(paperH: number): void {
+    const freeHalf = (this.boardH - paperH) / 2;
+    if (freeHalf < 64) return;
+    const noteY = paperH / 2 + freeHalf / 2;
+    const top = createUiNode('BoardSummary');
+    this.node.addChild(top);
+    top.setPosition(0, noteY, 0);
+    paintRoundRect(top.addComponent(Graphics), 496, 58, 28, hexColor('#FFF9F3', 235), hexColor('#F5D7CD'), 1);
+    const count = makeLabel('', 24, hexColor('#825A54'), true);
+    top.addChild(count.node);
+    ensureTransform(count.node, 470, 48);
+    this.occupancyLabel = count;
+
+    const bottom = createUiNode('BoardHint');
+    this.node.addChild(bottom);
+    bottom.setPosition(0, -noteY, 0);
+    paintRoundRect(bottom.addComponent(Graphics), 496, 58, 28, hexColor('#FFF9F3', 235), hexColor('#F5D7CD'), 1);
+    const hint = makeLabel('♡  拖动相同物品，合成更高等级', 22, hexColor('#966C66'));
+    bottom.addChild(hint.node);
+    ensureTransform(hint.node, 470, 48);
   }
 
   /** Bind the full gesture on one node so MOVE/END arrive at the same target as START. */
@@ -139,7 +160,10 @@ export class CocosBoardView {
     }, this);
     node.on(Node.EventType.TOUCH_CANCEL, (e: EventTouch) => {
       e.propagationStopped = true;
-      this.onTouchCancel();
+      // Cocos turns a release outside the pickup node into a node-level cancel.
+      // The original input type still distinguishes that release from a real cancel.
+      if (e.getEventCode() === Input.EventType.TOUCH_END) this.onTouchEnd(e);
+      else this.onTouchCancel();
     }, this);
   }
 
@@ -212,12 +236,7 @@ export class CocosBoardView {
   }
 
   onTouchStart(e: EventTouch, hintIndex = -1): void {
-    if (this.drag) {
-      this.drag.ghost?.destroy();
-      this.cells[this.drag.fromIndex]?.setSourceDim(false);
-      this.clearHighlights();
-      this.drag = null;
-    }
+    this.onTouchCancel();
     const index = this.resolveIndex(e, hintIndex >= 0 ? hintIndex : undefined);
     if (index === null || index < 0) return;
     const cell = this.cells[index];
@@ -264,8 +283,12 @@ export class CocosBoardView {
   }
 
   onTouchCancel(): void {
-    // A Cocos node-level cancel can mean the pointer left this item while the
-    // mouse button is still held. Wait for the global up event to resolve it.
+    if (!this.drag) return;
+    const drag = this.drag;
+    this.drag = null;
+    drag.ghost?.destroy();
+    this.cells[drag.fromIndex]?.setSourceDim(false);
+    this.clearHighlights();
   }
 
   private startGhost(): void {
@@ -282,6 +305,8 @@ export class CocosBoardView {
     const uid = source?.itemView?.uid;
     const vm = uid ? this.pendingVm?.get(uid) : undefined;
     if (vm) item.render(vm);
+    // The floating image follows the pointer but must not become its hit target.
+    ghost.pauseSystemEvents(true);
     this.drag.ghost = ghost;
     source?.setSourceDim(true);
   }
@@ -320,6 +345,7 @@ export class CocosBoardView {
   }
 
   render(vm: BoardVm): void {
+    if (this.occupancyLabel) this.occupancyLabel.string = '棋盘物品  ' + vm.items.length + ' / ' + this.rows * this.columns;
     const byCell = new Map<number, ItemVm>();
     const byUid = new Map<string, ItemVm>();
     for (const item of vm.items) {
@@ -351,6 +377,7 @@ export class CocosBoardView {
     input.off(Input.EventType.MOUSE_UP, this.onTouchEnd, this);
     input.off(Input.EventType.TOUCH_MOVE, this.onTouchMove, this);
     input.off(Input.EventType.TOUCH_END, this.onTouchEnd, this);
+    input.off(Input.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
     for (const cell of this.cells) {
       cell.node.off(Node.EventType.TOUCH_START);
       cell.node.off(Node.EventType.TOUCH_MOVE);

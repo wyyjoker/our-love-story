@@ -12,6 +12,7 @@ import {
   view,
   Canvas,
   Camera,
+  ResolutionPolicy,
 } from 'cc';
 import { createUiNode, ensureTransform, setLayerTree } from './CocosTheme';
 import type { SafeInsets } from '../../platform/cocos/CocosSafeArea';
@@ -21,15 +22,19 @@ export type UiRoots = {
   canvas: Node;
   safeArea: Node;
   background: Node;
+  contentLayer: Node;
   statusSlot: Node;
   ordersSlot: Node;
   boardSlot: Node;
   dockSlot: Node;
+  navLayer: Node;
   dragLayer: Node;
   toastLayer: Node;
   tutorialLayer: Node;
   modalLayer: Node;
+  rewardLayer: Node;
   debugLayer: Node;
+  coverLayer: Node;
   designWidth: number;
   designHeight: number;
 };
@@ -45,7 +50,7 @@ const EDGE = 12;
 const GAP = 8;
 
 export function applyDesignResolution(): void {
-  view.setDesignResolutionSize(DESIGN_W, DESIGN_H, 2); // FIXED_WIDTH
+  view.setDesignResolutionSize(DESIGN_W, DESIGN_H, ResolutionPolicy.FIXED_WIDTH);
   const d = view.getDesignResolutionSize();
   const v = view.getVisibleSize();
   console.log('[UI] design', d.width, d.height, 'visible', v.width, v.height);
@@ -102,19 +107,22 @@ function pinFill(
 
 export function buildUiTree(insets: SafeInsets): UiRoots {
   applyDesignResolution();
+  const visible = view.getVisibleSize();
+  const layoutW = visible.width;
+  const layoutH = visible.height;
 
   const cameraNode = new Node('UICamera');
   cameraNode.layer = Layers.Enum.UI_2D;
   const cam = cameraNode.addComponent(Camera);
   cam.projection = Camera.ProjectionType.ORTHO;
-  cam.orthoHeight = DESIGN_H / 2;
+  cam.orthoHeight = layoutH / 2;
   cam.clearFlags = Camera.ClearFlag.SOLID_COLOR;
   cam.visibility = Layers.Enum.UI_2D;
   cam.priority = 10;
 
   const canvas = new Node('Canvas');
   canvas.layer = Layers.Enum.UI_2D;
-  ensureTransform(canvas, DESIGN_W, DESIGN_H, 0.5, 0.5);
+  ensureTransform(canvas, layoutW, layoutH, 0.5, 0.5);
   const canvasComp = canvas.addComponent(Canvas);
   canvasComp.cameraComponent = cam;
 
@@ -141,17 +149,21 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
   canvas.addChild(ordersSlot);
   pinBox(ordersSlot, ORDERS_H, { top: insetTop + TOP_BAR_H + GAP });
 
+  const contentLayer = createUiNode('PageContentLayer');
+  canvas.addChild(contentLayer);
+  makePassThrough(contentLayer);
+
   const statusSlot = createUiNode('StatusBar');
   canvas.addChild(statusSlot);
   pinBox(statusSlot, TOP_BAR_H, { top: insetTop });
 
+  const navLayer = createUiNode('NavigationLayer');
+  canvas.addChild(navLayer);
+  makePassThrough(navLayer);
+
   const dragLayer = createUiNode('DragLayer');
   canvas.addChild(dragLayer);
   makePassThrough(dragLayer);
-
-  const toastLayer = createUiNode('ToastLayer');
-  canvas.addChild(toastLayer);
-  makePassThrough(toastLayer);
 
   const tutorialLayer = createUiNode('TutorialLayer');
   canvas.addChild(tutorialLayer);
@@ -161,9 +173,22 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
   canvas.addChild(modalLayer);
   makePassThrough(modalLayer);
 
+  const rewardLayer = createUiNode('RewardLayer');
+  canvas.addChild(rewardLayer);
+  makePassThrough(rewardLayer);
+
+  // Feedback from modal actions must remain visible above the modal scrim.
+  const toastLayer = createUiNode('ToastLayer');
+  canvas.addChild(toastLayer);
+  makePassThrough(toastLayer);
+
   const debugLayer = createUiNode('DebugLayer');
   canvas.addChild(debugLayer);
   makePassThrough(debugLayer);
+
+  const coverLayer = createUiNode('CoverLayer');
+  canvas.addChild(coverLayer);
+  makePassThrough(coverLayer);
 
   setLayerTree(cameraNode, Layers.Enum.UI_2D);
   setLayerTree(canvas, Layers.Enum.UI_2D);
@@ -187,17 +212,21 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
     canvas,
     safeArea: canvas,
     background,
+    contentLayer,
     statusSlot,
     ordersSlot,
     boardSlot,
     dockSlot,
+    navLayer,
     dragLayer,
     toastLayer,
     tutorialLayer,
     modalLayer,
+    rewardLayer,
     debugLayer,
-    designWidth: DESIGN_W,
-    designHeight: DESIGN_H,
+    coverLayer,
+    designWidth: layoutW,
+    designHeight: layoutH,
   };
 }
 

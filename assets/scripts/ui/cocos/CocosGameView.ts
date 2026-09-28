@@ -20,8 +20,8 @@ import { CocosGeneratorDock } from './CocosGeneratorDock';
 import { CocosToastView, ToastMessages } from './CocosToastView';
 import { CocosTutorialView } from './CocosTutorialView';
 import { CocosLevelUpView } from './CocosLevelUpView';
-import { CocosDebugPanel } from './CocosDebugPanel';
 import { CocosLifePages } from './CocosLifePages';
+import { CocosCoverView } from './CocosCoverView';
 import { applyArt } from './CocosArt';
 import { captureHomePhoto } from '../../platform/cocos/CocosPhotoService';
 import {
@@ -41,7 +41,6 @@ export class CocosGameView {
   private toast: CocosToastView;
   private tutorial: CocosTutorialView;
   private levelUp: CocosLevelUpView;
-  private debug: CocosDebugPanel;
   private lifePages: CocosLifePages;
   private unsubs: Array<() => void> = [];
 
@@ -103,38 +102,14 @@ export class CocosGameView {
     );
     this.toast = new CocosToastView(roots.toastLayer, dw, dh);
     this.tutorial = new CocosTutorialView(roots.tutorialLayer, dw, dh);
-    this.levelUp = new CocosLevelUpView(roots.modalLayer, dw, dh);
-    this.debug = new CocosDebugPanel(roots.debugLayer, dw, dh, {
-      addEnergy: () => {
-        game.debugAddEnergy(50);
-        this.renderAll();
-      },
-      addXp: () => {
-        game.debugAddXp(100);
-        this.renderAll();
-      },
-      addCoins: () => {
-        game.debugAddCoins(1000);
-        this.renderAll();
-      },
-      clearBoard: () => {
-        game.debugClearBoard();
-        this.renderAll();
-      },
-      resetSave: () => {
-        game.debugResetSave();
-        this.renderAll();
-        this.toast.show('存档已重置');
-      },
-      spawnItem: () => {
-        game.debugSpawn('coffee_03');
-        this.renderAll();
-      },
-    });
+    this.levelUp = new CocosLevelUpView(roots.rewardLayer, dw, dh);
 
     this.lifePages = new CocosLifePages(game, roots, (message) => this.toast.show(message), () => {
       void this.capturePhoto();
-    }, () => this.renderTutorial());
+    }, () => {
+      this.status.setSectionTitle(this.lifePages.currentPage === 'merge' ? '合成小屋' : this.lifePages.currentPage === 'home' ? '我的家园' : '回忆相册');
+      this.renderTutorial();
+    });
 
     this.orders.bind((uid) => {
       const msg = this.controller.onClaim(uid);
@@ -152,6 +127,8 @@ export class CocosGameView {
     this.subscribe(game.bus);
     this.renderAll();
     this.showNextReward();
+    const hasProgress = game.player.level > 1 || game.life.state.stats.spawns > 0 || game.life.state.stats.merges > 0;
+    new CocosCoverView(roots.coverLayer, dw, dh, hasProgress, () => this.renderTutorial());
   }
 
   private async capturePhoto(): Promise<void> {

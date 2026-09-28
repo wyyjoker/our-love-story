@@ -20,6 +20,7 @@ export class CocosStatusBar {
   private energyCdLabel!: Label;
   private coinsLabel!: Label;
   private heartsLabel!: Label;
+  private sectionLabel!: Label;
   private readonly xpWidth = 146;
 
   constructor(parent: Node, width: number, height: number, onResourceTip?: (kind: 'energy' | 'coins' | 'hearts') => void) {
@@ -53,9 +54,8 @@ export class CocosStatusBar {
     const title = createUiNode('Title');
     this.node.addChild(title);
     ensureTransform(title, 310, 110);
-    text(title, '我们的浪漫小屋', 0, 24, 37, 310, hexColor('#68423A'), true);
-    text(title, 'Our Love Story  ♡', 0, -12, 23, 300, hexColor('#D68B91'));
-    text(title, '把每一个平凡的日子 · 拼成浪漫的家', 0, -43, 15, 310, hexColor('#A6756E'));
+    this.sectionLabel = text(title, '合成小屋', 0, 19, 31, 280, hexColor('#68423A'), true);
+    text(title, '我们的浪漫小屋  ♡', 0, -22, 18, 290, hexColor('#B37678'));
 
     const right = createUiNode('Resources');
     this.node.addChild(right);
@@ -86,6 +86,10 @@ export class CocosStatusBar {
     this.coinsLabel = text(right, '0', 8, 0, 20, 118, hexColor('#60423D'), true);
     this.heartsLabel = text(right, '0', 8, -39, 20, 118, hexColor('#60423D'), true);
     this.energyCdLabel = text(right, '', 6, 23, 11, 90, hexColor('#977A71'));
+  }
+
+  setSectionTitle(title: string): void {
+    this.sectionLabel.string = title;
   }
 
   render(vm: StatusVm): void {
