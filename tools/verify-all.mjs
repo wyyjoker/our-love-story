@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Cross-platform verify orchestration: test:core → lint:core → build:web → verify:cocos
+ * Cross-platform verify orchestration: test:tools → test:core → lint:core → build:web → verify:cocos
  */
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
@@ -11,6 +11,7 @@ const isWin = process.platform === 'win32';
 const npm = isWin ? 'npm.cmd' : 'npm';
 
 const steps = [
+  ['run', 'test:tools'],
   ['run', 'test:core'],
   ['run', 'lint:core'],
   ['run', 'build:web'],

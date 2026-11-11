@@ -55,6 +55,7 @@ export type GameEventMap = {
   GAME_SAVED: {
     savedAt: number;
   };
+  SAVE_STATUS_CHANGED: { ok: boolean };
   TUTORIAL_UPDATED: {
     generatorClicked: boolean;
     firstMergeCompleted: boolean;

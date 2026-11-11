@@ -45,9 +45,11 @@ export class CocosItemView {
     paintRoundRect(this.g, this.size, this.size, 12, CocosTheme.surface());
     const art = itemArt(vm.definitionId);
     this.artNode.active = !!art;
-    if (art) applyArt(this.artNode, art, this.size * 0.9, this.size * 0.9);
-    this.codeLabel.node.active = !art;
+    this.codeLabel.node.active = true;
+    this.codeLabel.color = CocosTheme.chain(vm.chainId);
     this.codeLabel.string = `${vm.code}`;
+    if (art) applyArt(this.artNode, art, this.size * 0.9, this.size * 0.9,
+      (ready) => { this.codeLabel.node.active = !ready; });
     this.node.active = true;
   }
 

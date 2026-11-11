@@ -15,7 +15,7 @@ import {
 } from '../infrastructure/RandomService';
 import { IdService, SequentialIdService, type IdGenerator } from '../infrastructure/IdService';
 import { PlatformService, type StorageAdapter } from '../infrastructure/PlatformService';
-import { SaveService, createDefaultSaveData } from '../infrastructure/SaveService';
+import { SaveService, createDefaultSaveData, type SaveWriteResult } from '../infrastructure/SaveService';
 import { GameLogger } from '../infrastructure/GameLogger';
 import { BoardService } from './BoardService';
 import { EnergyService } from './EnergyService';
@@ -73,6 +73,8 @@ export class GameContext {
 
   bootState: BootState = 'BOOT';
   bootError: string | null = null;
+  saveFailed = false;
+  loadNotice: string | null = null;
 
   constructor(options: GameContextOptions = {}) {
     this.logger = options.logger ?? new GameLogger(true);
@@ -104,6 +106,11 @@ export class GameContext {
       debounceMs: options.saveDebounceMs ?? 200,
       logger: (m) => this.logger.debug('SAVE', m),
       legacyStarterFurnitureId: this.bundle.furniture[0]?.id,
+      onWrite: (result) => {
+        this.saveFailed = !result.ok;
+        if (result.ok) this.bus.emit('GAME_SAVED', { savedAt: result.savedAt });
+        this.bus.emit('SAVE_STATUS_CHANGED', { ok: result.ok });
+      },
     });
   }
 
@@ -129,6 +136,17 @@ export class GameContext {
 
       this.bootState = 'LOAD_SAVE';
       const loaded = this.saveService.load();
+      this.loadNotice = null;
+      if (!loaded.ok && (loaded.reason === 'UNAVAILABLE' || (loaded.reason === 'CORRUPT' && !loaded.backupPreserved))) {
+        throw new Error('暂时无法安全读取或备份存档，原进度未覆盖。请稍后点击重试。');
+      }
+      if (loaded.ok && loaded.notice) {
+        this.loadNotice = loaded.notice === 'MIGRATED' ? '旧存档已升级，已有物品和资产已保留。'
+          : loaded.notice === 'BACKUP_RESTORED' ? '当前存档异常，已从可用备份恢复进度。'
+          : '存档中的异常数据已修复，请检查当前进度。';
+      } else if (!loaded.ok && loaded.reason === 'CORRUPT') {
+        this.loadNotice = '存档已损坏，原始数据已备份。未找到可用进度，已创建新的小屋。';
+      }
       let data: SaveData;
       if (loaded.ok) {
         data = loaded.data;
@@ -265,6 +283,10 @@ export class GameContext {
     return result;
   }
 
+  getMergeHint(): ReturnType<BoardService['getMergeHint']> {
+    return this.board.getMergeHint();
+  }
+
   unlockMemory(id: string): LifeResult {
     const result = this.life.unlockMemory(id);
     if (result.ok) this.save();
@@ -377,10 +399,9 @@ export class GameContext {
     };
   }
 
-  save(): void {
+  save(): SaveWriteResult {
     const data = this.buildSaveData();
-    this.saveService.save(data);
-    this.bus.emit('GAME_SAVED', { savedAt: data.savedAt });
+    return this.saveService.save(data);
   }
 
   scheduleSave(): void {

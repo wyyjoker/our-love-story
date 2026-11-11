@@ -11,8 +11,10 @@ import type { StorageAdapter } from './PlatformService';
 import type { ClockService } from './ClockService';
 
 export type SaveLoadResult =
-  | { ok: true; data: SaveData; repaired: boolean }
-  | { ok: false; reason: 'EMPTY' | 'CORRUPT'; defaultData: SaveData };
+  | { ok: true; data: SaveData; repaired: boolean; notice?: 'MIGRATED' | 'REPAIRED' | 'BACKUP_RESTORED' }
+  | { ok: false; reason: 'EMPTY' | 'CORRUPT' | 'UNAVAILABLE'; defaultData: SaveData; backupPreserved?: boolean };
+
+export type SaveWriteResult = { ok: true; savedAt: number } | { ok: false; reason: 'STORAGE_UNAVAILABLE' };
 
 export type SaveServiceOptions = {
   storage: StorageAdapter;
@@ -23,6 +25,7 @@ export type SaveServiceOptions = {
   /** Debounce ms for scheduleSave; 0 = immediate */
   debounceMs?: number;
   logger?: (message: string) => void;
+  onWrite?: (result: SaveWriteResult) => void;
   /** First starter furniture, used only to repair the former Creator Set-serialization bug. */
   legacyStarterFurnitureId?: string;
 };
@@ -37,47 +40,59 @@ export class SaveService {
   }
 
   load(): SaveLoadResult {
-    const raw = this.options.storage.getItem(this.options.saveKey);
+    let raw: string | null;
+    try { raw = this.options.storage.getItem(this.options.saveKey); }
+    catch { return { ok: false, reason: 'UNAVAILABLE', defaultData: this.options.createDefault() }; }
     if (raw == null || raw === '') {
       return { ok: false, reason: 'EMPTY', defaultData: this.options.createDefault() };
     }
 
+    const loaded = this.parse(raw);
+    if (loaded) return loaded;
+    // Never overwrite an existing good backup with a corrupt primary save.
+    let backup: string | null;
+    try { backup = this.options.storage.getItem(`${this.options.saveKey}:backup`); }
+    catch { return { ok: false, reason: 'UNAVAILABLE', defaultData: this.options.createDefault() }; }
+    const recovered = backup ? this.parse(backup) : null;
+    if (recovered) return { ...recovered, notice: 'BACKUP_RESTORED' };
+    return {
+      ok: false, reason: 'CORRUPT', defaultData: this.options.createDefault(),
+      backupPreserved: backup === raw || this.backupCorrupt(raw),
+    };
+  }
+
+  private parse(raw: string): Extract<SaveLoadResult, { ok: true }> | null {
     try {
       const parsed = JSON.parse(raw) as Partial<SaveData>;
       const migrated = this.migrate(parsed);
-      if (!migrated) {
-        this.backupCorrupt(raw);
-        this.options.logger?.('[SAVE] corrupt payload, using default');
-        return {
-          ok: false,
-          reason: 'CORRUPT',
-          defaultData: this.options.createDefault(),
-        };
-      }
-      return { ok: true, data: migrated.data, repaired: migrated.repaired };
-    } catch {
-      this.backupCorrupt(raw);
-      this.options.logger?.('[SAVE] JSON parse failed, using default');
-      return {
-        ok: false,
-        reason: 'CORRUPT',
-        defaultData: this.options.createDefault(),
-      };
-    }
+      if (!migrated) return null;
+      const notice = parsed.version !== this.options.version ? 'MIGRATED'
+        : migrated.repaired ? 'REPAIRED' : undefined;
+      return { ok: true, ...migrated, notice };
+    } catch { return null; }
   }
 
-  save(data: SaveData): void {
+  save(data: SaveData): SaveWriteResult {
+    this.pending = data;
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
     const payload: SaveData = {
       ...data,
       version: this.options.version,
       savedAt: this.options.clock.now(),
     };
-    this.options.storage.setItem(this.options.saveKey, JSON.stringify(payload));
-    this.pending = null;
-    if (this.timer) {
-      clearTimeout(this.timer);
-      this.timer = null;
+    try { this.options.storage.setItem(this.options.saveKey, JSON.stringify(payload)); }
+    catch {
+      const failed: SaveWriteResult = { ok: false, reason: 'STORAGE_UNAVAILABLE' };
+      this.options.onWrite?.(failed);
+      return failed;
     }
+    this.pending = null;
+    const result: SaveWriteResult = { ok: true, savedAt: payload.savedAt };
+    this.options.onWrite?.(result);
+    return result;
   }
 
   scheduleSave(data: SaveData): void {
@@ -121,8 +136,9 @@ export class SaveService {
     | null {
     if (!parsed || typeof parsed !== 'object') return null;
 
-    let repaired = false;
+    let repaired = parsed.version !== this.options.version;
     const defaults = this.options.createDefault();
+    if (Object.keys(defaults).some((key) => !(key in parsed))) repaired = true;
     const version = typeof parsed.version === 'number' ? parsed.version : 0;
 
     if (version < 1) {
@@ -295,11 +311,12 @@ export class SaveService {
     };
   }
 
-  private backupCorrupt(raw: string): void {
+  private backupCorrupt(raw: string): boolean {
     try {
       this.options.storage.setItem(`${this.options.saveKey}:backup`, raw);
+      return true;
     } catch {
-      // ignore
+      return false;
     }
   }
 }

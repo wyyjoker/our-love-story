@@ -7,7 +7,9 @@ export class CocosCoverView {
   readonly node: Node;
   private entering = false;
 
-  constructor(parent: Node, width: number, height: number, hasProgress: boolean, onEnter: () => void) {
+  constructor(parent: Node, width: number, height: number, hasProgress: boolean, onEnter: () => void,
+    bleed?: { width: number; height: number; x: number; y: number },
+    subtitleText = '把每一个平凡的日子，拼成浪漫的家') {
     this.node = createUiNode('EntryCover');
     parent.addChild(this.node);
     ensureTransform(this.node, width, height);
@@ -16,7 +18,10 @@ export class CocosCoverView {
 
     const illustration = createUiNode('CoverIllustration');
     this.node.addChild(illustration);
-    applyArt(illustration, { sheet: 'cover_background' }, Math.max(width, height * 750 / 1334), height);
+    const artWidth = bleed?.width ?? width;
+    const artHeight = bleed?.height ?? height;
+    illustration.setPosition(bleed?.x ?? 0, bleed?.y ?? 0, 0);
+    applyArt(illustration, { sheet: 'cover_background' }, Math.max(artWidth, artHeight * 750 / 1334), artHeight);
     illustration.pauseSystemEvents(true);
 
     const titlePanel = createUiNode('CoverTitlePanel');
@@ -36,7 +41,7 @@ export class CocosCoverView {
     ensureTransform(english.node, 570, 43);
     english.node.setPosition(0, -22, 0);
 
-    const subtitle = makeLabel('把每一个平凡的日子，拼成浪漫的家', 20, hexColor('#936E65'));
+    const subtitle = makeLabel(subtitleText, 20, hexColor('#936E65'));
     titlePanel.addChild(subtitle.node);
     ensureTransform(subtitle.node, 590, 36);
     subtitle.overflow = Label.Overflow.SHRINK;

@@ -195,8 +195,15 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
   }
   for (const memory of memories) {
     if (memory.heartCost <= 0) issues.push({ level: 'error', message: `Memory ${memory.id} cost invalid` });
-    if (typeof memory.art !== 'string' || !/^[a-z][a-z0-9_]*(?:#[0-4])?$/.test(memory.art)) {
+    if (typeof memory.art !== 'string' || !/^[a-z][a-z0-9_]*(?:#\d{1,2})?$/.test(memory.art)) {
       issues.push({ level: 'error', message: `Memory ${memory.id} art invalid` });
+      continue;
+    }
+    const columns = memory.artColumns ?? 5;
+    const rows = memory.artRows ?? 1;
+    const frame = Number(memory.art.split('#')[1] ?? 0);
+    if (!Number.isInteger(columns) || !Number.isInteger(rows) || columns < 1 || rows < 1 || frame >= columns * rows) {
+      issues.push({ level: 'error', message: `Memory ${memory.id} atlas bounds invalid` });
     }
   }
   for (const item of furniture) {

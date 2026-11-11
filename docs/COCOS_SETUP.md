@@ -67,19 +67,25 @@ CocosCreator.exe --project <repo> --build "platform=web-mobile;debug=true"
 Web 构建通过后再做：
 
 1. Platform: `WeChat Mini Game`
-2. AppID 可留空 / 使用测试号（不要求正式 AppID）
+2. 本机调试可使用自己的小游戏测试号；给其他微信用户体验时使用已注册小游戏账号的 AppID，并在微信后台配置体验成员。不要使用 Cocos 示例 AppID
 3. 构建目录：`build/wechatgame`
 4. 校验产物包含：`game.js`、`game.json`、`project.config.json`、`src/`、`subpackages/`
-5. 使用 `tools/wechat-build.json` 构建，`game_art` 是独立 Asset Bundle，并在微信端设为分包。资源包从原始 PNG 的 26,384,613 字节压至 4,660,495 字节（透明图保留调色板 PNG，背景用 JPEG）；原始 PNG 目录可用 `node tools/optimize-art.mjs <原图目录>` 重做压缩，输出到 `temp/art-optimized`
+5. 运行下方 `npm run build:wechat`，根据 `tools/wechat-build.json` 模板生成本机配置并构建。`game_art` 是独立 Asset Bundle，并在微信端设为分包。资源包从原始 PNG 的 26,384,613 字节压至 4,660,495 字节（透明图保留调色板 PNG，背景用 JPEG）；原始 PNG 目录可用 `node tools/optimize-art.mjs <原图目录>` 重做压缩，输出到 `temp/art-optimized`
 6. 运行 `npm run verify:wechat-package`：读取 `game.json` 的分包目录，统计主包全部文件，必须小于 4,000,000 字节。2026-09-27 构建主包为 3,917,042 字节；每次改动后都要重新构建并复测
 7. 用微信开发者工具导入 `build/wechatgame`；测试触摸、安全区、拍照权限与重启恢复
 
 本机 Creator 3.8.8 CLI 构建命令（Windows）：
 
 ```powershell
-& 'C:\ProgramData\cocos\editors\Creator\3.8.8\CocosCreator.exe' --project 'E:\A-game' --build 'configPath=E:/A-game/tools/wechat-build.json'
-npm run verify:wechat-package
+# 首次指定自己的 AppID；测试号仅供开发调试
+npm run build:wechat -- --appid wx你的小游戏AppID
+# 后续沿用同一 AppID，构建完成后自动核对 AppID 和主包体积
+npm run build:wechat
+# 只保存本机配置，不调用 Creator
+npm run build:wechat -- --appid wx你的小游戏AppID --prepare-only
 ```
+
+AppID 保存在 Git 忽略的 `local/wechat-build.json`。优先级为命令行 `--appid`、本机配置、现有构建包中的 AppID；首次接管现有包后，之后即使构建目录被覆盖也会沿用本机配置。模板不再携带 Cocos 示例 AppID。切换账号时显式传入新 AppID；不需要提供 AppSecret。其他机器可通过 `--creator <可执行文件路径>` 或 `COCOS_CREATOR` 指定 Creator 3.8.8。脚本会保存 `temp/wechat-build.log`，验证本次产物的 AppID、小游戏类型及包体；不会上传游戏。格式校验通过不表示该账号具备上传或体验版权限。
 
 正式数值配置仍在 `assets/resources/config/`，运行时插画位于 `assets/game_art/`。`CocosArt` 通过 `assetManager.loadBundle('game_art')` 按需加载；Creator 管理图片的 `*.meta` UUID。
 

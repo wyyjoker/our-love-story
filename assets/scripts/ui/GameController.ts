@@ -40,12 +40,20 @@ export class GameController {
     ok: boolean;
     kind?: 'MOVE' | 'MERGE' | 'SWAP';
   } {
+    const cells = this.game.board.getBoard().cells;
+    const source = cells[from]?.item;
+    const target = to === null ? undefined : cells[to]?.item;
+    const definition = source && this.game.bundle.catalog.get(source.definitionId);
+    const maxPair = definition && !definition.nextItemId && source.definitionId === target?.definitionId;
     const result = this.game.dropItem(from, to);
     if (!result.ok) {
       return { ok: false };
     }
     if (result.kind === 'MERGE') {
       return { ok: true, kind: 'MERGE', toast: '合成成功！', tone: 'success' };
+    }
+    if (result.kind === 'SWAP' && maxPair) {
+      return { ok: true, kind: 'SWAP', toast: '已经是最高等级啦，可以留给订单使用', tone: 'info' };
     }
     return { ok: true, kind: result.kind };
   }

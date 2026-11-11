@@ -9,6 +9,7 @@ import {
   ensureTransform,
   makeLabel,
   paintRoundRect,
+  hexColor,
 } from './CocosTheme';
 import { applyArt, generatorArt } from './CocosArt';
 
@@ -22,10 +23,16 @@ class GenButton {
   private onTap: (id: string) => void = () => {};
   private id = '';
   private artNode: Node;
+  private lock: Node;
+  private readonly palette: { fill: string; edge: string };
 
-  constructor(parent: Node, width: number, height: number) {
+  constructor(parent: Node, width: number, height: number, index: number) {
     this.w = width;
     this.h = height;
+    this.palette = [
+      { fill: '#FFE1DB', edge: '#EFB5AE' }, { fill: '#E6ECD4', edge: '#C9D2B0' },
+      { fill: '#EBDFF5', edge: '#D4BDE8' }, { fill: '#F1E2DA', edge: '#D9C4B6' },
+    ][index % 4];
     this.node = createUiNode('GenBtn');
     parent.addChild(this.node);
     ensureTransform(this.node, width, height);
@@ -33,13 +40,26 @@ class GenButton {
     paintRoundRect(this.g, width, height, 14, CocosTheme.surface(), CocosTheme.border());
     this.artNode = createUiNode('GeneratorArt');
     this.node.addChild(this.artNode);
-    this.artNode.setPosition(0, height * 0.1, 0);
-    this.nameLabel = makeLabel('', 14, CocosTheme.textPrimary(), true);
+    this.artNode.setPosition(0, -5, 0);
+    this.nameLabel = makeLabel('', 20, CocosTheme.textPrimary(), true);
     this.node.addChild(this.nameLabel.node);
-    this.nameLabel.node.setPosition(0, -height * 0.28, 0);
-    this.subLabel = makeLabel('', 12, CocosTheme.textSecondary());
+    ensureTransform(this.nameLabel.node, width - 8, 30);
+    this.nameLabel.overflow = Label.Overflow.SHRINK;
+    this.nameLabel.node.setPosition(0, height / 2 - 22, 0);
+    this.subLabel = makeLabel('', 16, CocosTheme.textSecondary());
     this.node.addChild(this.subLabel.node);
-    this.subLabel.node.setPosition(0, -height * 0.43, 0);
+    ensureTransform(this.subLabel.node, width - 8, 24);
+    this.subLabel.node.setPosition(0, -height / 2 + 14, 0);
+    this.lock = createUiNode('GeneratorLock');
+    this.node.addChild(this.lock);
+    this.lock.setPosition(width / 2 - 23, -height / 2 + 44, 0);
+    const lockGraphics = this.lock.addComponent(Graphics);
+    paintRoundRect(lockGraphics, 34, 34, 17, hexColor('#988C91', 245), hexColor('#FFFFFF'), 2);
+    lockGraphics.strokeColor = hexColor('#FFFFFF');
+    lockGraphics.lineWidth = 2;
+    lockGraphics.roundRect(-6, -1, 12, 11, 5); lockGraphics.stroke();
+    lockGraphics.fillColor = hexColor('#FFFFFF');
+    lockGraphics.roundRect(-8, -10, 16, 13, 3); lockGraphics.fill();
     this.node.addComponent(Button);
     this.node.on(Button.EventType.CLICK, this.handle, this);
     this.node.addComponent(UIOpacity);
@@ -56,17 +76,21 @@ class GenButton {
   render(vm: GeneratorVm): void {
     this.id = vm.id;
     const art = generatorArt(vm.id);
-    if (art) applyArt(this.artNode, art, Math.min(this.w - 8, this.h * 0.85), this.h * 0.65);
+    if (art) applyArt(this.artNode, { ...art, preserveAspect: true }, this.w - 16, this.h - 58);
     this.nameLabel.string = vm.displayName;
     this.subLabel.string = vm.locked ? `Lv${vm.unlockLevel} 解锁` : `体力${vm.energyCost}`;
-    this.node.getComponent(UIOpacity)!.opacity = vm.locked ? 170 : 255;
+    this.node.getComponent(UIOpacity)!.opacity = 255;
+    this.lock.active = vm.locked;
+    const opacity = this.artNode.getComponent(UIOpacity) ?? this.artNode.addComponent(UIOpacity);
+    opacity.opacity = vm.locked ? 195 : 255;
     paintRoundRect(
       this.g,
       this.w,
       this.h,
-      14,
-      vm.locked ? CocosTheme.border() : CocosTheme.surface(),
-      CocosTheme.border(),
+      20,
+      hexColor(this.palette.fill),
+      hexColor(this.palette.edge),
+      2,
     );
   }
 
@@ -80,6 +104,8 @@ class GenButton {
   matches(id: string): boolean {
     return this.id === id;
   }
+
+  worldPosition(): Vec3 { return this.node.worldPosition.clone(); }
 
   destroy(): void {
     this.node.off(Button.EventType.CLICK, this.handle, this);
@@ -99,7 +125,7 @@ export class CocosGeneratorDock {
     const btnW = (width - 24 - gap * 3) / 4;
     const btnH = height - 16;
     for (let i = 0; i < 4; i += 1) {
-      const btn = new GenButton(this.node, btnW, btnH);
+      const btn = new GenButton(this.node, btnW, btnH, i);
       btn.node.setPosition(-width / 2 + 12 + btnW / 2 + i * (btnW + gap), 0, 0);
       this.buttons.push(btn);
     }
@@ -118,5 +144,9 @@ export class CocosGeneratorDock {
 
   popMatching(id: string): void {
     this.buttons.find((button) => button.matches(id))?.pop();
+  }
+
+  hintPosition(id: string): Vec3 | null {
+    return this.buttons.find((button) => button.matches(id))?.worldPosition() ?? null;
   }
 }

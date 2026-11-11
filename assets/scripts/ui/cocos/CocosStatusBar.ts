@@ -1,6 +1,7 @@
 import { Button, Graphics, Label, Node, tween, Vec3 } from 'cc';
 import type { StatusVm } from '../../presentation/GameViewMapper';
 import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect } from './CocosTheme';
+import { applyArt } from './CocosArt';
 
 function text(parent: Node, value: string, x: number, y: number, fontSize: number, width: number, color = CocosTheme.textPrimary(), bold = false): Label {
   const label = makeLabel(value, fontSize, color, bold);
@@ -23,14 +24,14 @@ export class CocosStatusBar {
   private sectionLabel!: Label;
   private readonly xpWidth = 146;
 
-  constructor(parent: Node, width: number, height: number, onResourceTip?: (kind: 'energy' | 'coins' | 'hearts') => void) {
+  constructor(parent: Node, width: number, height: number, onResourceTip?: (kind: 'energy' | 'coins' | 'hearts') => void, demoPreview = false) {
     this.node = createUiNode('StatusBarView');
     parent.addChild(this.node);
     ensureTransform(this.node, width, height);
-    this.build(width, onResourceTip);
+    this.build(width, onResourceTip, demoPreview);
   }
 
-  private build(width: number, onResourceTip?: (kind: 'energy' | 'coins' | 'hearts') => void): void {
+  private build(width: number, onResourceTip?: (kind: 'energy' | 'coins' | 'hearts') => void, demoPreview = false): void {
     const leftX = -width / 2 + 100;
     const rightX = width / 2 - 100;
     const levelCard = createUiNode('LevelCard');
@@ -38,7 +39,10 @@ export class CocosStatusBar {
     ensureTransform(levelCard, 188, 106);
     levelCard.setPosition(leftX, 0, 0);
     paintRoundRect(levelCard.addComponent(Graphics), 188, 106, 25, hexColor('#FFFAF3', 235), hexColor('#F2DCD3'), 2);
-    text(levelCard, '⌂', -69, 20, 32, 34, hexColor('#CE817B'), true);
+    const home = createUiNode('HomeBrandIcon');
+    levelCard.addChild(home);
+    home.setPosition(-66, 20, 0);
+    applyArt(home, { sheet: 'game_icon', preserveAspect: true }, 50, 50);
     this.levelLabel = text(levelCard, 'Lv.1', 5, 19, 29, 100, hexColor('#60423D'), true);
     const bar = createUiNode('XpBar');
     levelCard.addChild(bar);
@@ -55,7 +59,7 @@ export class CocosStatusBar {
     this.node.addChild(title);
     ensureTransform(title, 310, 110);
     this.sectionLabel = text(title, '合成小屋', 0, 19, 31, 280, hexColor('#68423A'), true);
-    text(title, '我们的浪漫小屋  ♡', 0, -22, 18, 290, hexColor('#B37678'));
+    text(title, demoPreview ? '演示存档 · 不保存进度' : '我们的浪漫小屋  ♡', 0, -22, 18, 290, hexColor('#B37678'));
 
     const right = createUiNode('Resources');
     this.node.addChild(right);

@@ -14,27 +14,15 @@ export type StorageAdapter = {
 
 export class CocosStorageAdapter implements StorageAdapter {
   getItem(key: string): string | null {
-    try {
-      const value = sys.localStorage.getItem(key);
-      return value == null ? null : String(value);
-    } catch {
-      return null;
-    }
+    const value = sys.localStorage.getItem(key);
+    return value == null ? null : String(value);
   }
 
   setItem(key: string, value: string): void {
-    try {
-      sys.localStorage.setItem(key, value);
-    } catch {
-      // WeChat storage quota / disabled storage — fail soft
-    }
+    sys.localStorage.setItem(key, value);
   }
 
   removeItem(key: string): void {
-    try {
-      sys.localStorage.removeItem(key);
-    } catch {
-      // ignore
-    }
+    sys.localStorage.removeItem(key);
   }
 }

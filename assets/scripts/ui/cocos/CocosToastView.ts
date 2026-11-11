@@ -1,7 +1,7 @@
 /**
  * CocosToastView — unified toast layer (Chinese copy). Layer is pass-through.
  */
-import { Node, Graphics, Label, tween, Vec3 } from 'cc';
+import { Node, Graphics, Label, Tween, tween, Vec3, UIOpacity } from 'cc';
 import {
   CocosTheme,
   createUiNode,
@@ -26,6 +26,7 @@ export const ToastMessages = {
 export class CocosToastView {
   readonly node: Node;
   private width: number;
+  private current: Node | null = null;
 
   constructor(parent: Node, width: number, height: number) {
     this.width = width;
@@ -36,9 +37,17 @@ export class CocosToastView {
   }
 
   show(message: string, tone: ToastTone = 'info'): void {
+    if (this.current?.isValid) {
+      Tween.stopAllByTarget(this.current);
+      const opacity = this.current.getComponent(UIOpacity);
+      if (opacity) Tween.stopAllByTarget(opacity);
+      this.current.removeFromParent();
+      this.current.destroy();
+    }
     const w = Math.min(520, this.width * 0.78);
     const h = 70;
     const item = createUiNode('Toast');
+    this.current = item;
     this.node.addChild(item);
     ensureTransform(item, w, h);
     item.setPosition(0, 0, 0);

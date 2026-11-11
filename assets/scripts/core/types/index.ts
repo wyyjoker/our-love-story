@@ -78,6 +78,9 @@ export type MemoryDefinition = {
   diary: string;
   heartCost: number;
   art: string;
+  dateLabel?: string;
+  artColumns?: number;
+  artRows?: number;
 };
 
 export type FurnitureDefinition = {
@@ -152,6 +155,8 @@ export type GameConfig = {
     gameTitle: string;
     coupleDisplayName: string;
     anniversary: string;
+    metMonth?: string;
+    weddingDate?: string;
     theme: string;
   };
 };

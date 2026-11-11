@@ -78,6 +78,20 @@ export class BoardService {
     return this.board.columns;
   }
 
+  getMergeHint(): { from: number; to: number; definitionId: string } | null {
+    const occupied = this.board.cells.filter((cell) => cell.item);
+    for (let first = 0; first < occupied.length; first += 1) {
+      for (let second = first + 1; second < occupied.length; second += 1) {
+        const from = occupied[first];
+        const to = occupied[second];
+        if (this.previewDrop(from.index, to.index).kind === 'MERGE' && from.item) {
+          return { from: from.index, to: to.index, definitionId: from.item.definitionId };
+        }
+      }
+    }
+    return null;
+  }
+
   replaceBoard(board: BoardState): void {
     this.board = board;
     this.bus.emit('BOARD_CHANGED', { reason: 'reset' });

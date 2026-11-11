@@ -1,12 +1,112 @@
 [
-  { "id": "letters", "title": "100封情书", "summary": "从第一次心动开始，把想说的话都写给你。", "diary": "那天的阳光很轻。写下第一封信时，我已经开始期待与你的每一个明天。", "heartCost": 50, "art": "memory_sheet_a#0" },
-  { "id": "first_trip", "title": "首尔旅行", "summary": "和你一起去看更大的世界，收集属于我们的风景。", "diary": "地图上又多了一枚小小的标记。陌生的街道因为你在身边，变得像家一样熟悉。", "heartCost": 80, "art": "memory_sheet_a#1" },
-  { "id": "night_view", "title": "南山塔", "summary": "在夜色和星光下，我们靠得更近了。", "diary": "灯光亮起来的时候，我偷偷许了一个愿：往后的每个夜晚都能与你分享。", "heartCost": 100, "art": "memory_sheet_a#2" },
-  { "id": "promise", "title": "求婚时刻", "summary": "那一刻，时间仿佛静止了。", "diary": "答案其实早就藏在一起度过的寻常日子里。谢谢你，也选择了我们的未来。", "heartCost": 120, "art": "memory_sheet_a#3" },
-  { "id": "wedding", "title": "婚礼倒计时", "summary": "从恋爱到婚礼，我们正在走向更幸福的明天。", "diary": "日历翻过一页又一页，准备好的不只是庆典，还有一起生活的勇气。", "heartCost": 150, "art": "memory_sheet_a#4" },
-  { "id": "first_home", "title": "第一把钥匙", "summary": "把两个人的梦想，慢慢装进同一间小屋。", "diary": "钥匙落在掌心时，我们都笑了。这里会装满热饭、鲜花和晚安。", "heartCost": 180, "art": "memory_sheet_b#0" },
-  { "id": "rainy_day", "title": "雨天散步", "summary": "一把伞，两个人，慢慢走过熟悉的街。", "diary": "雨滴打在伞面上的声音，像是只为我们演奏的小曲。", "heartCost": 210, "art": "memory_sheet_b#1" },
-  { "id": "birthday", "title": "生日惊喜", "summary": "蛋糕上的烛光，照亮了你的笑容。", "diary": "闭上眼睛许愿吧。我也有一个愿望：让你每年都这样开心。", "heartCost": 240, "art": "memory_sheet_b#2" },
-  { "id": "garden", "title": "一起种花", "summary": "一朵花开了，我们的日子也更明亮了。", "diary": "你负责浇水，我负责记住每朵花开放的日子。", "heartCost": 270, "art": "memory_sheet_b#3" },
-  { "id": "anniversary", "title": "纪念日", "summary": "把每一个平凡的日子，都拼成浪漫的家。", "diary": "故事还在继续。下一页，仍然想和你一起写。", "heartCost": 300, "art": "memory_sheet_b#4" }
+  {
+    "id": "letters",
+    "title": "舟山，故事的开始",
+    "dateLabel": "2023 年 9 月 · 舟山",
+    "summary": "一场联谊，一次并肩而坐。后来，我们互选了对方。",
+    "diary": "2023 年 9 月，我们在去舟山的联谊活动中认识，坐在了一起。后来互选时，我们都选择了对方。原来，这份好感是双向的。我们的故事，就从这里开始。",
+    "heartCost": 50,
+    "art": "our_story_sheet#0",
+    "artColumns": 5,
+    "artRows": 2
+  },
+  {
+    "id": "first_trip",
+    "title": "100 天，100 封情书",
+    "dateLabel": "相识 100 天后",
+    "summary": "认识 100 天后，我用 100 封情书向你表白。",
+    "diary": "认识 100 天后，我用 100 封情书向你表白。那些想说的话，一封一封写给了你。这是我们故事里，想要好好珍藏的一页。",
+    "heartCost": 80,
+    "art": "our_story_sheet#1",
+    "artColumns": 5,
+    "artRows": 2
+  },
+  {
+    "id": "night_view",
+    "title": "横店，一起跨年",
+    "dateLabel": "一起跨过新的一年 · 横店",
+    "summary": "我们一起去了横店，把跨年的回忆留在那里。",
+    "diary": "我们一起去横店跨年。一起走过的地方，又多了一个值得记住的名字。以后翻到这一页，还想和你慢慢聊起那次旅行。",
+    "heartCost": 100,
+    "art": "our_story_sheet#2",
+    "artColumns": 5,
+    "artRows": 2
+  },
+  {
+    "id": "promise",
+    "title": "山水之间，有你",
+    "dateLabel": "黄山 · 千岛湖",
+    "summary": "一起爬黄山，一起去千岛湖。风景里，也有我们的足迹。",
+    "diary": "我们一起爬过黄山，也一起去过千岛湖。旅途有山，也有湖；这些地方，因为是和你一起去的，成了我们共同的回忆。",
+    "heartCost": 120,
+    "art": "our_story_sheet#3",
+    "artColumns": 5,
+    "artRows": 2
+  },
+  {
+    "id": "wedding",
+    "title": "走进彼此的世界",
+    "dateLabel": "嘉兴 · 上海 · 济州岛",
+    "summary": "带你去嘉兴看我的大学，再一起去上海、济州岛。",
+    "diary": "我带你去嘉兴看了我的大学。我们还一起去了上海、济州岛。曾经属于一个人的地方，和后来一起到过的地方，慢慢连成了我们的故事。",
+    "heartCost": 150,
+    "art": "our_story_sheet#4",
+    "artColumns": 5,
+    "artRows": 2
+  },
+  {
+    "id": "first_home",
+    "title": "5·20，生日这一页",
+    "dateLabel": "5 月 20 日",
+    "summary": "生日落在 5 月 20 日，也留在了我们的共同回忆里。",
+    "diary": "5 月 20 日，是值得记住的日子。把这段生日回忆留在这里，和我们一起走过的旅程，放在同一本相册里。",
+    "heartCost": 180,
+    "art": "our_story_sheet#5",
+    "artColumns": 5,
+    "artRows": 2
+  },
+  {
+    "id": "rainy_day",
+    "title": "南山塔，向你求婚",
+    "dateLabel": "10 月 3 日 · 首尔南山塔",
+    "summary": "一起去首尔，10 月 3 日，我在南山塔向你求婚。",
+    "diary": "我们一起去了首尔。10 月 3 日，我在首尔南山塔向你求婚。这一站，不只是一次旅行，也成为我们走向婚姻的一段重要回忆。",
+    "heartCost": 210,
+    "art": "our_story_sheet#6",
+    "artColumns": 5,
+    "artRows": 2
+  },
+  {
+    "id": "birthday",
+    "title": "雪道与山路",
+    "dateLabel": "一起滑雪 · 一起爬山",
+    "summary": "后来，我们还一起去滑雪、去爬山，继续收集共同的风景。",
+    "diary": "我们一起去滑雪，也一起去爬山。不管是雪道还是山路，和你一起走过的路，都想留在这本相册里。我们的故事，还有许多页可以一起写下去。",
+    "heartCost": 240,
+    "art": "our_story_sheet#7",
+    "artColumns": 5,
+    "artRows": 2
+  },
+  {
+    "id": "garden",
+    "title": "我们订婚了",
+    "dateLabel": "订婚 · 走向共同的家",
+    "summary": "从相识到相爱，再到订婚，我们一步一步走向彼此。",
+    "diary": "后来，我们订婚了。舟山的初见、100 封情书和一起走过的旅途，都成了这段关系的一部分。属于我们的故事，又往前走了一步。",
+    "heartCost": 270,
+    "art": "our_story_sheet#8",
+    "artColumns": 5,
+    "artRows": 2
+  },
+  {
+    "id": "anniversary",
+    "title": "这一站，我们结婚了",
+    "dateLabel": "2026 年 10 月 3 日",
+    "summary": "2026 年 10 月 3 日，我们结婚了。故事还会继续，一起写下去。",
+    "diary": "2026 年 10 月 3 日，我们结婚了。从 2023 年 9 月在舟山相识，到互选彼此、情书表白、共同旅行、求婚和订婚，我们走到了这一天。往后的日子，也想继续和你一起，把平凡的生活过成我们的故事。",
+    "heartCost": 300,
+    "art": "our_story_sheet#9",
+    "artColumns": 5,
+    "artRows": 2
+  }
 ]

@@ -73,44 +73,266 @@
       gameTitle: "\u6211\u4EEC\u7684\u6D6A\u6F2B\u5C0F\u5C4B",
       coupleDisplayName: "",
       anniversary: "",
+      metMonth: "2023-09",
+      weddingDate: "2026-10-03",
       theme: "warm-romantic"
     }
   };
 
   // assets/resources/config/items.json
   var items_default = [
-    { id: "coffee_01", chainId: "coffee", level: 1, displayName: "\u5496\u5561\u8C46", nextItemId: "coffee_02", sellValue: 1 },
-    { id: "coffee_02", chainId: "coffee", level: 2, displayName: "\u5496\u5561\u7C89", nextItemId: "coffee_03", sellValue: 2 },
-    { id: "coffee_03", chainId: "coffee", level: 3, displayName: "\u6D53\u7F29\u5496\u5561", nextItemId: "coffee_04", sellValue: 4 },
-    { id: "coffee_04", chainId: "coffee", level: 4, displayName: "\u7F8E\u5F0F\u5496\u5561", nextItemId: "coffee_05", sellValue: 8 },
-    { id: "coffee_05", chainId: "coffee", level: 5, displayName: "\u62FF\u94C1", nextItemId: "coffee_06", sellValue: 16 },
-    { id: "coffee_06", chainId: "coffee", level: 6, displayName: "\u7231\u5FC3\u62FF\u94C1", nextItemId: "coffee_07", sellValue: 32 },
-    { id: "coffee_07", chainId: "coffee", level: 7, displayName: "\u53CC\u4EBA\u5496\u5561", nextItemId: "coffee_08", sellValue: 64 },
-    { id: "coffee_08", chainId: "coffee", level: 8, displayName: "\u7EAA\u5FF5\u65E5\u5496\u5561", sellValue: 128 },
-    { id: "flower_01", chainId: "flower", level: 1, displayName: "\u82B1\u79CD", nextItemId: "flower_02", sellValue: 1 },
-    { id: "flower_02", chainId: "flower", level: 2, displayName: "\u82B1\u82D7", nextItemId: "flower_03", sellValue: 2 },
-    { id: "flower_03", chainId: "flower", level: 3, displayName: "\u90C1\u91D1\u9999", nextItemId: "flower_04", sellValue: 4 },
-    { id: "flower_04", chainId: "flower", level: 4, displayName: "\u73AB\u7470", nextItemId: "flower_05", sellValue: 8 },
-    { id: "flower_05", chainId: "flower", level: 5, displayName: "\u5C0F\u82B1\u675F", nextItemId: "flower_06", sellValue: 16 },
-    { id: "flower_06", chainId: "flower", level: 6, displayName: "\u7231\u5FC3\u82B1\u675F", nextItemId: "flower_07", sellValue: 32 },
-    { id: "flower_07", chainId: "flower", level: 7, displayName: "\u7EAA\u5FF5\u65E5\u82B1\u675F", nextItemId: "flower_08", sellValue: 64 },
-    { id: "flower_08", chainId: "flower", level: 8, displayName: "\u6D6A\u6F2B\u82B1\u675F", sellValue: 128 },
-    { id: "dessert_01", chainId: "dessert", level: 1, displayName: "\u9762\u7C89", nextItemId: "dessert_02", sellValue: 1 },
-    { id: "dessert_02", chainId: "dessert", level: 2, displayName: "\u9762\u56E2", nextItemId: "dessert_03", sellValue: 2 },
-    { id: "dessert_03", chainId: "dessert", level: 3, displayName: "\u5C0F\u86CB\u7CD5", nextItemId: "dessert_04", sellValue: 4 },
-    { id: "dessert_04", chainId: "dessert", level: 4, displayName: "\u8349\u8393\u86CB\u7CD5", nextItemId: "dessert_05", sellValue: 8 },
-    { id: "dessert_05", chainId: "dessert", level: 5, displayName: "\u53CC\u5C42\u86CB\u7CD5", nextItemId: "dessert_06", sellValue: 16 },
-    { id: "dessert_06", chainId: "dessert", level: 6, displayName: "\u5FC3\u5F62\u86CB\u7CD5", nextItemId: "dessert_07", sellValue: 32 },
-    { id: "dessert_07", chainId: "dessert", level: 7, displayName: "\u7EAA\u5FF5\u65E5\u86CB\u7CD5", nextItemId: "dessert_08", sellValue: 64 },
-    { id: "dessert_08", chainId: "dessert", level: 8, displayName: "\u68A6\u5E7B\u86CB\u7CD5", sellValue: 128 },
-    { id: "gift_01", chainId: "gift", level: 1, displayName: "\u4E1D\u5E26", nextItemId: "gift_02", sellValue: 1 },
-    { id: "gift_02", chainId: "gift", level: 2, displayName: "\u793C\u7269\u888B", nextItemId: "gift_03", sellValue: 2 },
-    { id: "gift_03", chainId: "gift", level: 3, displayName: "\u5C0F\u793C\u76D2", nextItemId: "gift_04", sellValue: 4 },
-    { id: "gift_04", chainId: "gift", level: 4, displayName: "\u7CBE\u81F4\u793C\u76D2", nextItemId: "gift_05", sellValue: 8 },
-    { id: "gift_05", chainId: "gift", level: 5, displayName: "\u60CA\u559C\u793C\u76D2", nextItemId: "gift_06", sellValue: 16 },
-    { id: "gift_06", chainId: "gift", level: 6, displayName: "\u5FC3\u610F\u793C\u7269", nextItemId: "gift_07", sellValue: 32 },
-    { id: "gift_07", chainId: "gift", level: 7, displayName: "\u7EAA\u5FF5\u793C\u7269", nextItemId: "gift_08", sellValue: 64 },
-    { id: "gift_08", chainId: "gift", level: 8, displayName: "\u73CD\u85CF\u793C\u7269", sellValue: 128 }
+    {
+      id: "coffee_01",
+      chainId: "coffee",
+      level: 1,
+      displayName: "\u5496\u5561\u8C46",
+      nextItemId: "coffee_02",
+      sellValue: 1
+    },
+    {
+      id: "coffee_02",
+      chainId: "coffee",
+      level: 2,
+      displayName: "\u7CBE\u9009\u5496\u5561\u8C46",
+      nextItemId: "coffee_03",
+      sellValue: 2
+    },
+    {
+      id: "coffee_03",
+      chainId: "coffee",
+      level: 3,
+      displayName: "\u6D53\u7F29\u5496\u5561",
+      nextItemId: "coffee_04",
+      sellValue: 4
+    },
+    {
+      id: "coffee_04",
+      chainId: "coffee",
+      level: 4,
+      displayName: "\u7231\u5FC3\u62FF\u94C1",
+      nextItemId: "coffee_05",
+      sellValue: 8
+    },
+    {
+      id: "coffee_05",
+      chainId: "coffee",
+      level: 5,
+      displayName: "\u73BB\u7483\u676F\u5496\u5561",
+      nextItemId: "coffee_06",
+      sellValue: 16
+    },
+    {
+      id: "coffee_06",
+      chainId: "coffee",
+      level: 6,
+      displayName: "\u5976\u6CE1\u58F6",
+      nextItemId: "coffee_07",
+      sellValue: 32
+    },
+    {
+      id: "coffee_07",
+      chainId: "coffee",
+      level: 7,
+      displayName: "\u5496\u5561\u7F50",
+      nextItemId: "coffee_08",
+      sellValue: 64
+    },
+    {
+      id: "coffee_08",
+      chainId: "coffee",
+      level: 8,
+      displayName: "\u5496\u5561\u793C\u7BEE",
+      sellValue: 128
+    },
+    {
+      id: "flower_01",
+      chainId: "flower",
+      level: 1,
+      displayName: "\u90C1\u91D1\u9999\u82B1\u82DE",
+      nextItemId: "flower_02",
+      sellValue: 1
+    },
+    {
+      id: "flower_02",
+      chainId: "flower",
+      level: 2,
+      displayName: "\u5E76\u8482\u90C1\u91D1\u9999",
+      nextItemId: "flower_03",
+      sellValue: 2
+    },
+    {
+      id: "flower_03",
+      chainId: "flower",
+      level: 3,
+      displayName: "\u90C1\u91D1\u9999\u82B1\u675F",
+      nextItemId: "flower_04",
+      sellValue: 4
+    },
+    {
+      id: "flower_04",
+      chainId: "flower",
+      level: 4,
+      displayName: "\u73AB\u7470",
+      nextItemId: "flower_05",
+      sellValue: 8
+    },
+    {
+      id: "flower_05",
+      chainId: "flower",
+      level: 5,
+      displayName: "\u73AB\u7470\u82B1\u675F",
+      nextItemId: "flower_06",
+      sellValue: 16
+    },
+    {
+      id: "flower_06",
+      chainId: "flower",
+      level: 6,
+      displayName: "\u5411\u65E5\u8475\u82B1\u675F",
+      nextItemId: "flower_07",
+      sellValue: 32
+    },
+    {
+      id: "flower_07",
+      chainId: "flower",
+      level: 7,
+      displayName: "\u85B0\u8863\u8349",
+      nextItemId: "flower_08",
+      sellValue: 64
+    },
+    {
+      id: "flower_08",
+      chainId: "flower",
+      level: 8,
+      displayName: "\u6D6A\u6F2B\u82B1\u7BEE",
+      sellValue: 128
+    },
+    {
+      id: "dessert_01",
+      chainId: "dessert",
+      level: 1,
+      displayName: "\u725B\u89D2\u5305",
+      nextItemId: "dessert_02",
+      sellValue: 1
+    },
+    {
+      id: "dessert_02",
+      chainId: "dessert",
+      level: 2,
+      displayName: "\u5DE7\u514B\u529B\u9EA6\u82AC",
+      nextItemId: "dessert_03",
+      sellValue: 2
+    },
+    {
+      id: "dessert_03",
+      chainId: "dessert",
+      level: 3,
+      displayName: "\u8349\u8393\u86CB\u7CD5\u7247",
+      nextItemId: "dessert_04",
+      sellValue: 4
+    },
+    {
+      id: "dessert_04",
+      chainId: "dessert",
+      level: 4,
+      displayName: "\u8349\u8393\u5976\u6CB9\u86CB\u7CD5",
+      nextItemId: "dessert_05",
+      sellValue: 8
+    },
+    {
+      id: "dessert_05",
+      chainId: "dessert",
+      level: 5,
+      displayName: "\u7C89\u8272\u9A6C\u5361\u9F99",
+      nextItemId: "dessert_06",
+      sellValue: 16
+    },
+    {
+      id: "dessert_06",
+      chainId: "dessert",
+      level: 6,
+      displayName: "\u7126\u7CD6\u5E03\u4E01",
+      nextItemId: "dessert_07",
+      sellValue: 32
+    },
+    {
+      id: "dessert_07",
+      chainId: "dessert",
+      level: 7,
+      displayName: "\u8393\u679C\u86CB\u7CD5\u5377",
+      nextItemId: "dessert_08",
+      sellValue: 64
+    },
+    {
+      id: "dessert_08",
+      chainId: "dessert",
+      level: 8,
+      displayName: "\u53CC\u5C42\u4E0B\u5348\u8336",
+      sellValue: 128
+    },
+    {
+      id: "gift_01",
+      chainId: "gift",
+      level: 1,
+      displayName: "\u8774\u8776\u7ED3",
+      nextItemId: "gift_02",
+      sellValue: 1
+    },
+    {
+      id: "gift_02",
+      chainId: "gift",
+      level: 2,
+      displayName: "\u60C5\u4E66",
+      nextItemId: "gift_03",
+      sellValue: 2
+    },
+    {
+      id: "gift_03",
+      chainId: "gift",
+      level: 3,
+      displayName: "\u4E1D\u5E26\u793C\u76D2",
+      nextItemId: "gift_04",
+      sellValue: 4
+    },
+    {
+      id: "gift_04",
+      chainId: "gift",
+      level: 4,
+      displayName: "\u5FC3\u610F\u5C0F\u718A",
+      nextItemId: "gift_05",
+      sellValue: 8
+    },
+    {
+      id: "gift_05",
+      chainId: "gift",
+      level: 5,
+      displayName: "\u5FC3\u5F62\u793C\u76D2",
+      nextItemId: "gift_06",
+      sellValue: 16
+    },
+    {
+      id: "gift_06",
+      chainId: "gift",
+      level: 6,
+      displayName: "\u7231\u5FC3\u540A\u5760",
+      nextItemId: "gift_07",
+      sellValue: 32
+    },
+    {
+      id: "gift_07",
+      chainId: "gift",
+      level: 7,
+      displayName: "\u73AB\u7470\u793C\u7BEE",
+      nextItemId: "gift_08",
+      sellValue: 64
+    },
+    {
+      id: "gift_08",
+      chainId: "gift",
+      level: 8,
+      displayName: "\u7EAA\u5FF5\u65E5\u82B1\u793C",
+      sellValue: 128
+    }
   ];
 
   // assets/resources/config/generators.json
@@ -357,30 +579,280 @@
 
   // assets/resources/config/memories.json
   var memories_default = [
-    { id: "letters", title: "100\u5C01\u60C5\u4E66", summary: "\u4ECE\u7B2C\u4E00\u6B21\u5FC3\u52A8\u5F00\u59CB\uFF0C\u628A\u60F3\u8BF4\u7684\u8BDD\u90FD\u5199\u7ED9\u4F60\u3002", diary: "\u90A3\u5929\u7684\u9633\u5149\u5F88\u8F7B\u3002\u5199\u4E0B\u7B2C\u4E00\u5C01\u4FE1\u65F6\uFF0C\u6211\u5DF2\u7ECF\u5F00\u59CB\u671F\u5F85\u4E0E\u4F60\u7684\u6BCF\u4E00\u4E2A\u660E\u5929\u3002", heartCost: 50, art: "memory_sheet_a#0" },
-    { id: "first_trip", title: "\u9996\u5C14\u65C5\u884C", summary: "\u548C\u4F60\u4E00\u8D77\u53BB\u770B\u66F4\u5927\u7684\u4E16\u754C\uFF0C\u6536\u96C6\u5C5E\u4E8E\u6211\u4EEC\u7684\u98CE\u666F\u3002", diary: "\u5730\u56FE\u4E0A\u53C8\u591A\u4E86\u4E00\u679A\u5C0F\u5C0F\u7684\u6807\u8BB0\u3002\u964C\u751F\u7684\u8857\u9053\u56E0\u4E3A\u4F60\u5728\u8EAB\u8FB9\uFF0C\u53D8\u5F97\u50CF\u5BB6\u4E00\u6837\u719F\u6089\u3002", heartCost: 80, art: "memory_sheet_a#1" },
-    { id: "night_view", title: "\u5357\u5C71\u5854", summary: "\u5728\u591C\u8272\u548C\u661F\u5149\u4E0B\uFF0C\u6211\u4EEC\u9760\u5F97\u66F4\u8FD1\u4E86\u3002", diary: "\u706F\u5149\u4EAE\u8D77\u6765\u7684\u65F6\u5019\uFF0C\u6211\u5077\u5077\u8BB8\u4E86\u4E00\u4E2A\u613F\uFF1A\u5F80\u540E\u7684\u6BCF\u4E2A\u591C\u665A\u90FD\u80FD\u4E0E\u4F60\u5206\u4EAB\u3002", heartCost: 100, art: "memory_sheet_a#2" },
-    { id: "promise", title: "\u6C42\u5A5A\u65F6\u523B", summary: "\u90A3\u4E00\u523B\uFF0C\u65F6\u95F4\u4EFF\u4F5B\u9759\u6B62\u4E86\u3002", diary: "\u7B54\u6848\u5176\u5B9E\u65E9\u5C31\u85CF\u5728\u4E00\u8D77\u5EA6\u8FC7\u7684\u5BFB\u5E38\u65E5\u5B50\u91CC\u3002\u8C22\u8C22\u4F60\uFF0C\u4E5F\u9009\u62E9\u4E86\u6211\u4EEC\u7684\u672A\u6765\u3002", heartCost: 120, art: "memory_sheet_a#3" },
-    { id: "wedding", title: "\u5A5A\u793C\u5012\u8BA1\u65F6", summary: "\u4ECE\u604B\u7231\u5230\u5A5A\u793C\uFF0C\u6211\u4EEC\u6B63\u5728\u8D70\u5411\u66F4\u5E78\u798F\u7684\u660E\u5929\u3002", diary: "\u65E5\u5386\u7FFB\u8FC7\u4E00\u9875\u53C8\u4E00\u9875\uFF0C\u51C6\u5907\u597D\u7684\u4E0D\u53EA\u662F\u5E86\u5178\uFF0C\u8FD8\u6709\u4E00\u8D77\u751F\u6D3B\u7684\u52C7\u6C14\u3002", heartCost: 150, art: "memory_sheet_a#4" },
-    { id: "first_home", title: "\u7B2C\u4E00\u628A\u94A5\u5319", summary: "\u628A\u4E24\u4E2A\u4EBA\u7684\u68A6\u60F3\uFF0C\u6162\u6162\u88C5\u8FDB\u540C\u4E00\u95F4\u5C0F\u5C4B\u3002", diary: "\u94A5\u5319\u843D\u5728\u638C\u5FC3\u65F6\uFF0C\u6211\u4EEC\u90FD\u7B11\u4E86\u3002\u8FD9\u91CC\u4F1A\u88C5\u6EE1\u70ED\u996D\u3001\u9C9C\u82B1\u548C\u665A\u5B89\u3002", heartCost: 180, art: "memory_sheet_b#0" },
-    { id: "rainy_day", title: "\u96E8\u5929\u6563\u6B65", summary: "\u4E00\u628A\u4F1E\uFF0C\u4E24\u4E2A\u4EBA\uFF0C\u6162\u6162\u8D70\u8FC7\u719F\u6089\u7684\u8857\u3002", diary: "\u96E8\u6EF4\u6253\u5728\u4F1E\u9762\u4E0A\u7684\u58F0\u97F3\uFF0C\u50CF\u662F\u53EA\u4E3A\u6211\u4EEC\u6F14\u594F\u7684\u5C0F\u66F2\u3002", heartCost: 210, art: "memory_sheet_b#1" },
-    { id: "birthday", title: "\u751F\u65E5\u60CA\u559C", summary: "\u86CB\u7CD5\u4E0A\u7684\u70DB\u5149\uFF0C\u7167\u4EAE\u4E86\u4F60\u7684\u7B11\u5BB9\u3002", diary: "\u95ED\u4E0A\u773C\u775B\u8BB8\u613F\u5427\u3002\u6211\u4E5F\u6709\u4E00\u4E2A\u613F\u671B\uFF1A\u8BA9\u4F60\u6BCF\u5E74\u90FD\u8FD9\u6837\u5F00\u5FC3\u3002", heartCost: 240, art: "memory_sheet_b#2" },
-    { id: "garden", title: "\u4E00\u8D77\u79CD\u82B1", summary: "\u4E00\u6735\u82B1\u5F00\u4E86\uFF0C\u6211\u4EEC\u7684\u65E5\u5B50\u4E5F\u66F4\u660E\u4EAE\u4E86\u3002", diary: "\u4F60\u8D1F\u8D23\u6D47\u6C34\uFF0C\u6211\u8D1F\u8D23\u8BB0\u4F4F\u6BCF\u6735\u82B1\u5F00\u653E\u7684\u65E5\u5B50\u3002", heartCost: 270, art: "memory_sheet_b#3" },
-    { id: "anniversary", title: "\u7EAA\u5FF5\u65E5", summary: "\u628A\u6BCF\u4E00\u4E2A\u5E73\u51E1\u7684\u65E5\u5B50\uFF0C\u90FD\u62FC\u6210\u6D6A\u6F2B\u7684\u5BB6\u3002", diary: "\u6545\u4E8B\u8FD8\u5728\u7EE7\u7EED\u3002\u4E0B\u4E00\u9875\uFF0C\u4ECD\u7136\u60F3\u548C\u4F60\u4E00\u8D77\u5199\u3002", heartCost: 300, art: "memory_sheet_b#4" }
+    {
+      id: "letters",
+      title: "\u821F\u5C71\uFF0C\u6545\u4E8B\u7684\u5F00\u59CB",
+      dateLabel: "2023 \u5E74 9 \u6708 \xB7 \u821F\u5C71",
+      summary: "\u4E00\u573A\u8054\u8C0A\uFF0C\u4E00\u6B21\u5E76\u80A9\u800C\u5750\u3002\u540E\u6765\uFF0C\u6211\u4EEC\u4E92\u9009\u4E86\u5BF9\u65B9\u3002",
+      diary: "2023 \u5E74 9 \u6708\uFF0C\u6211\u4EEC\u5728\u53BB\u821F\u5C71\u7684\u8054\u8C0A\u6D3B\u52A8\u4E2D\u8BA4\u8BC6\uFF0C\u5750\u5728\u4E86\u4E00\u8D77\u3002\u540E\u6765\u4E92\u9009\u65F6\uFF0C\u6211\u4EEC\u90FD\u9009\u62E9\u4E86\u5BF9\u65B9\u3002\u539F\u6765\uFF0C\u8FD9\u4EFD\u597D\u611F\u662F\u53CC\u5411\u7684\u3002\u6211\u4EEC\u7684\u6545\u4E8B\uFF0C\u5C31\u4ECE\u8FD9\u91CC\u5F00\u59CB\u3002",
+      heartCost: 50,
+      art: "our_story_sheet#0",
+      artColumns: 5,
+      artRows: 2
+    },
+    {
+      id: "first_trip",
+      title: "100 \u5929\uFF0C100 \u5C01\u60C5\u4E66",
+      dateLabel: "\u76F8\u8BC6 100 \u5929\u540E",
+      summary: "\u8BA4\u8BC6 100 \u5929\u540E\uFF0C\u6211\u7528 100 \u5C01\u60C5\u4E66\u5411\u4F60\u8868\u767D\u3002",
+      diary: "\u8BA4\u8BC6 100 \u5929\u540E\uFF0C\u6211\u7528 100 \u5C01\u60C5\u4E66\u5411\u4F60\u8868\u767D\u3002\u90A3\u4E9B\u60F3\u8BF4\u7684\u8BDD\uFF0C\u4E00\u5C01\u4E00\u5C01\u5199\u7ED9\u4E86\u4F60\u3002\u8FD9\u662F\u6211\u4EEC\u6545\u4E8B\u91CC\uFF0C\u60F3\u8981\u597D\u597D\u73CD\u85CF\u7684\u4E00\u9875\u3002",
+      heartCost: 80,
+      art: "our_story_sheet#1",
+      artColumns: 5,
+      artRows: 2
+    },
+    {
+      id: "night_view",
+      title: "\u6A2A\u5E97\uFF0C\u4E00\u8D77\u8DE8\u5E74",
+      dateLabel: "\u4E00\u8D77\u8DE8\u8FC7\u65B0\u7684\u4E00\u5E74 \xB7 \u6A2A\u5E97",
+      summary: "\u6211\u4EEC\u4E00\u8D77\u53BB\u4E86\u6A2A\u5E97\uFF0C\u628A\u8DE8\u5E74\u7684\u56DE\u5FC6\u7559\u5728\u90A3\u91CC\u3002",
+      diary: "\u6211\u4EEC\u4E00\u8D77\u53BB\u6A2A\u5E97\u8DE8\u5E74\u3002\u4E00\u8D77\u8D70\u8FC7\u7684\u5730\u65B9\uFF0C\u53C8\u591A\u4E86\u4E00\u4E2A\u503C\u5F97\u8BB0\u4F4F\u7684\u540D\u5B57\u3002\u4EE5\u540E\u7FFB\u5230\u8FD9\u4E00\u9875\uFF0C\u8FD8\u60F3\u548C\u4F60\u6162\u6162\u804A\u8D77\u90A3\u6B21\u65C5\u884C\u3002",
+      heartCost: 100,
+      art: "our_story_sheet#2",
+      artColumns: 5,
+      artRows: 2
+    },
+    {
+      id: "promise",
+      title: "\u5C71\u6C34\u4E4B\u95F4\uFF0C\u6709\u4F60",
+      dateLabel: "\u9EC4\u5C71 \xB7 \u5343\u5C9B\u6E56",
+      summary: "\u4E00\u8D77\u722C\u9EC4\u5C71\uFF0C\u4E00\u8D77\u53BB\u5343\u5C9B\u6E56\u3002\u98CE\u666F\u91CC\uFF0C\u4E5F\u6709\u6211\u4EEC\u7684\u8DB3\u8FF9\u3002",
+      diary: "\u6211\u4EEC\u4E00\u8D77\u722C\u8FC7\u9EC4\u5C71\uFF0C\u4E5F\u4E00\u8D77\u53BB\u8FC7\u5343\u5C9B\u6E56\u3002\u65C5\u9014\u6709\u5C71\uFF0C\u4E5F\u6709\u6E56\uFF1B\u8FD9\u4E9B\u5730\u65B9\uFF0C\u56E0\u4E3A\u662F\u548C\u4F60\u4E00\u8D77\u53BB\u7684\uFF0C\u6210\u4E86\u6211\u4EEC\u5171\u540C\u7684\u56DE\u5FC6\u3002",
+      heartCost: 120,
+      art: "our_story_sheet#3",
+      artColumns: 5,
+      artRows: 2
+    },
+    {
+      id: "wedding",
+      title: "\u8D70\u8FDB\u5F7C\u6B64\u7684\u4E16\u754C",
+      dateLabel: "\u5609\u5174 \xB7 \u4E0A\u6D77 \xB7 \u6D4E\u5DDE\u5C9B",
+      summary: "\u5E26\u4F60\u53BB\u5609\u5174\u770B\u6211\u7684\u5927\u5B66\uFF0C\u518D\u4E00\u8D77\u53BB\u4E0A\u6D77\u3001\u6D4E\u5DDE\u5C9B\u3002",
+      diary: "\u6211\u5E26\u4F60\u53BB\u5609\u5174\u770B\u4E86\u6211\u7684\u5927\u5B66\u3002\u6211\u4EEC\u8FD8\u4E00\u8D77\u53BB\u4E86\u4E0A\u6D77\u3001\u6D4E\u5DDE\u5C9B\u3002\u66FE\u7ECF\u5C5E\u4E8E\u4E00\u4E2A\u4EBA\u7684\u5730\u65B9\uFF0C\u548C\u540E\u6765\u4E00\u8D77\u5230\u8FC7\u7684\u5730\u65B9\uFF0C\u6162\u6162\u8FDE\u6210\u4E86\u6211\u4EEC\u7684\u6545\u4E8B\u3002",
+      heartCost: 150,
+      art: "our_story_sheet#4",
+      artColumns: 5,
+      artRows: 2
+    },
+    {
+      id: "first_home",
+      title: "5\xB720\uFF0C\u751F\u65E5\u8FD9\u4E00\u9875",
+      dateLabel: "5 \u6708 20 \u65E5",
+      summary: "\u751F\u65E5\u843D\u5728 5 \u6708 20 \u65E5\uFF0C\u4E5F\u7559\u5728\u4E86\u6211\u4EEC\u7684\u5171\u540C\u56DE\u5FC6\u91CC\u3002",
+      diary: "5 \u6708 20 \u65E5\uFF0C\u662F\u503C\u5F97\u8BB0\u4F4F\u7684\u65E5\u5B50\u3002\u628A\u8FD9\u6BB5\u751F\u65E5\u56DE\u5FC6\u7559\u5728\u8FD9\u91CC\uFF0C\u548C\u6211\u4EEC\u4E00\u8D77\u8D70\u8FC7\u7684\u65C5\u7A0B\uFF0C\u653E\u5728\u540C\u4E00\u672C\u76F8\u518C\u91CC\u3002",
+      heartCost: 180,
+      art: "our_story_sheet#5",
+      artColumns: 5,
+      artRows: 2
+    },
+    {
+      id: "rainy_day",
+      title: "\u5357\u5C71\u5854\uFF0C\u5411\u4F60\u6C42\u5A5A",
+      dateLabel: "10 \u6708 3 \u65E5 \xB7 \u9996\u5C14\u5357\u5C71\u5854",
+      summary: "\u4E00\u8D77\u53BB\u9996\u5C14\uFF0C10 \u6708 3 \u65E5\uFF0C\u6211\u5728\u5357\u5C71\u5854\u5411\u4F60\u6C42\u5A5A\u3002",
+      diary: "\u6211\u4EEC\u4E00\u8D77\u53BB\u4E86\u9996\u5C14\u300210 \u6708 3 \u65E5\uFF0C\u6211\u5728\u9996\u5C14\u5357\u5C71\u5854\u5411\u4F60\u6C42\u5A5A\u3002\u8FD9\u4E00\u7AD9\uFF0C\u4E0D\u53EA\u662F\u4E00\u6B21\u65C5\u884C\uFF0C\u4E5F\u6210\u4E3A\u6211\u4EEC\u8D70\u5411\u5A5A\u59FB\u7684\u4E00\u6BB5\u91CD\u8981\u56DE\u5FC6\u3002",
+      heartCost: 210,
+      art: "our_story_sheet#6",
+      artColumns: 5,
+      artRows: 2
+    },
+    {
+      id: "birthday",
+      title: "\u96EA\u9053\u4E0E\u5C71\u8DEF",
+      dateLabel: "\u4E00\u8D77\u6ED1\u96EA \xB7 \u4E00\u8D77\u722C\u5C71",
+      summary: "\u540E\u6765\uFF0C\u6211\u4EEC\u8FD8\u4E00\u8D77\u53BB\u6ED1\u96EA\u3001\u53BB\u722C\u5C71\uFF0C\u7EE7\u7EED\u6536\u96C6\u5171\u540C\u7684\u98CE\u666F\u3002",
+      diary: "\u6211\u4EEC\u4E00\u8D77\u53BB\u6ED1\u96EA\uFF0C\u4E5F\u4E00\u8D77\u53BB\u722C\u5C71\u3002\u4E0D\u7BA1\u662F\u96EA\u9053\u8FD8\u662F\u5C71\u8DEF\uFF0C\u548C\u4F60\u4E00\u8D77\u8D70\u8FC7\u7684\u8DEF\uFF0C\u90FD\u60F3\u7559\u5728\u8FD9\u672C\u76F8\u518C\u91CC\u3002\u6211\u4EEC\u7684\u6545\u4E8B\uFF0C\u8FD8\u6709\u8BB8\u591A\u9875\u53EF\u4EE5\u4E00\u8D77\u5199\u4E0B\u53BB\u3002",
+      heartCost: 240,
+      art: "our_story_sheet#7",
+      artColumns: 5,
+      artRows: 2
+    },
+    {
+      id: "garden",
+      title: "\u6211\u4EEC\u8BA2\u5A5A\u4E86",
+      dateLabel: "\u8BA2\u5A5A \xB7 \u8D70\u5411\u5171\u540C\u7684\u5BB6",
+      summary: "\u4ECE\u76F8\u8BC6\u5230\u76F8\u7231\uFF0C\u518D\u5230\u8BA2\u5A5A\uFF0C\u6211\u4EEC\u4E00\u6B65\u4E00\u6B65\u8D70\u5411\u5F7C\u6B64\u3002",
+      diary: "\u540E\u6765\uFF0C\u6211\u4EEC\u8BA2\u5A5A\u4E86\u3002\u821F\u5C71\u7684\u521D\u89C1\u3001100 \u5C01\u60C5\u4E66\u548C\u4E00\u8D77\u8D70\u8FC7\u7684\u65C5\u9014\uFF0C\u90FD\u6210\u4E86\u8FD9\u6BB5\u5173\u7CFB\u7684\u4E00\u90E8\u5206\u3002\u5C5E\u4E8E\u6211\u4EEC\u7684\u6545\u4E8B\uFF0C\u53C8\u5F80\u524D\u8D70\u4E86\u4E00\u6B65\u3002",
+      heartCost: 270,
+      art: "our_story_sheet#8",
+      artColumns: 5,
+      artRows: 2
+    },
+    {
+      id: "anniversary",
+      title: "\u8FD9\u4E00\u7AD9\uFF0C\u6211\u4EEC\u7ED3\u5A5A\u4E86",
+      dateLabel: "2026 \u5E74 10 \u6708 3 \u65E5",
+      summary: "2026 \u5E74 10 \u6708 3 \u65E5\uFF0C\u6211\u4EEC\u7ED3\u5A5A\u4E86\u3002\u6545\u4E8B\u8FD8\u4F1A\u7EE7\u7EED\uFF0C\u4E00\u8D77\u5199\u4E0B\u53BB\u3002",
+      diary: "2026 \u5E74 10 \u6708 3 \u65E5\uFF0C\u6211\u4EEC\u7ED3\u5A5A\u4E86\u3002\u4ECE 2023 \u5E74 9 \u6708\u5728\u821F\u5C71\u76F8\u8BC6\uFF0C\u5230\u4E92\u9009\u5F7C\u6B64\u3001\u60C5\u4E66\u8868\u767D\u3001\u5171\u540C\u65C5\u884C\u3001\u6C42\u5A5A\u548C\u8BA2\u5A5A\uFF0C\u6211\u4EEC\u8D70\u5230\u4E86\u8FD9\u4E00\u5929\u3002\u5F80\u540E\u7684\u65E5\u5B50\uFF0C\u4E5F\u60F3\u7EE7\u7EED\u548C\u4F60\u4E00\u8D77\uFF0C\u628A\u5E73\u51E1\u7684\u751F\u6D3B\u8FC7\u6210\u6211\u4EEC\u7684\u6545\u4E8B\u3002",
+      heartCost: 300,
+      art: "our_story_sheet#9",
+      artColumns: 5,
+      artRows: 2
+    }
   ];
 
   // assets/resources/config/furniture.json
   var furniture_default = [
-    { id: "sofa", title: "\u751C\u871C\u6C99\u53D1", category: "\u5BA2\u5385", room: "living", placement: { x: -185, y: -125, width: 245, height: 185 }, coinCost: 100, unlockLevel: 1, decorPoints: 4, art: "art/furniture_sofa" },
-    { id: "tea_table", title: "\u6696\u5FC3\u8336\u51E0", category: "\u5BA2\u5385", room: "living", placement: { x: -25, y: -148, width: 158, height: 142 }, coinCost: 150, unlockLevel: 1, decorPoints: 4, art: "art/furniture_table" },
-    { id: "rose_arch", title: "\u73AB\u7470\u82B1\u62F1\u95E8", category: "\u82B1\u56ED", room: "garden", placement: { x: -155, y: 10, width: 190, height: 235 }, coinCost: 200, unlockLevel: 1, decorPoints: 5, art: "art/furniture_arch" },
-    { id: "bed", title: "\u6708\u5149\u5C0F\u5E8A", category: "\u5367\u5BA4", room: "bedroom", placement: { x: 82, y: -75, width: 315, height: 230 }, coinCost: 250, unlockLevel: 1, decorPoints: 5, art: "art/furniture_bed" },
-    { id: "lamp", title: "\u6E29\u67D4\u843D\u5730\u706F", category: "\u5BA2\u5385", room: "living", placement: { x: -288, y: -75, width: 86, height: 215 }, coinCost: 300, unlockLevel: 5, decorPoints: 5, art: "art/furniture_lamp" },
-    { id: "bookshelf", title: "\u56DE\u5FC6\u4E66\u67B6", category: "\u88C5\u9970", room: "living", placement: { x: -250, y: 97, width: 135, height: 225 }, coinCost: 350, unlockLevel: 8, decorPoints: 5, art: "art/furniture_bookshelf" },
-    { id: "flower_wall", title: "\u82B1\u8BED\u5899", category: "\u88C5\u9970", room: "living", placement: { x: 240, y: 97, width: 120, height: 215 }, coinCost: 400, unlockLevel: 10, decorPoints: 5, art: "art/furniture_flowers" },
-    { id: "dining_set", title: "\u53CC\u4EBA\u9910\u684C", category: "\u7279\u6B8A", room: "living", placement: { x: 190, y: -125, width: 195, height: 185 }, coinCost: 450, unlockLevel: 12, decorPoints: 5, art: "art/furniture_dining" },
-    { id: "fountain", title: "\u8BB8\u613F\u55B7\u6CC9", category: "\u82B1\u56ED", room: "garden", placement: { x: -42, y: -125, width: 135, height: 175 }, coinCost: 500, unlockLevel: 15, decorPoints: 6, art: "art/furniture_fountain" },
-    { id: "swing", title: "\u82B1\u56ED\u79CB\u5343", category: "\u82B1\u56ED", room: "garden", placement: { x: 145, y: -115, width: 225, height: 195 }, coinCost: 600, unlockLevel: 18, decorPoints: 6, art: "art/furniture_swing" }
+    {
+      id: "sofa",
+      title: "\u751C\u871C\u6C99\u53D1",
+      category: "\u5BA2\u5385",
+      room: "living",
+      placement: {
+        x: -152,
+        y: -106,
+        width: 352,
+        height: 260
+      },
+      coinCost: 100,
+      unlockLevel: 1,
+      decorPoints: 4,
+      art: "art/furniture_sofa"
+    },
+    {
+      id: "tea_table",
+      title: "\u6696\u5FC3\u8336\u51E0",
+      category: "\u5BA2\u5385",
+      room: "living",
+      placement: {
+        x: 16,
+        y: -181,
+        width: 196,
+        height: 188
+      },
+      coinCost: 150,
+      unlockLevel: 1,
+      decorPoints: 4,
+      art: "art/furniture_table"
+    },
+    {
+      id: "rose_arch",
+      title: "\u73AB\u7470\u82B1\u62F1\u95E8",
+      category: "\u82B1\u56ED",
+      room: "garden",
+      placement: {
+        x: -194,
+        y: 20,
+        width: 244,
+        height: 304
+      },
+      coinCost: 200,
+      unlockLevel: 1,
+      decorPoints: 5,
+      art: "art/furniture_arch"
+    },
+    {
+      id: "bed",
+      title: "\u6708\u5149\u5C0F\u5E8A",
+      category: "\u5367\u5BA4",
+      room: "bedroom",
+      placement: {
+        x: 70,
+        y: -105,
+        width: 418,
+        height: 310
+      },
+      coinCost: 250,
+      unlockLevel: 1,
+      decorPoints: 5,
+      art: "art/furniture_bed"
+    },
+    {
+      id: "lamp",
+      title: "\u6E29\u67D4\u843D\u5730\u706F",
+      category: "\u5BA2\u5385",
+      room: "living",
+      placement: {
+        x: -299,
+        y: -29,
+        width: 92,
+        height: 312
+      },
+      coinCost: 300,
+      unlockLevel: 5,
+      decorPoints: 5,
+      art: "art/furniture_lamp"
+    },
+    {
+      id: "bookshelf",
+      title: "\u56DE\u5FC6\u4E66\u67B6",
+      category: "\u88C5\u9970",
+      room: "living",
+      placement: {
+        x: -245,
+        y: 120,
+        width: 152,
+        height: 250
+      },
+      coinCost: 350,
+      unlockLevel: 8,
+      decorPoints: 5,
+      art: "art/furniture_bookshelf"
+    },
+    {
+      id: "flower_wall",
+      title: "\u82B1\u8BED\u5899",
+      category: "\u88C5\u9970",
+      room: "living",
+      placement: {
+        x: 261,
+        y: 143,
+        width: 138,
+        height: 236
+      },
+      coinCost: 400,
+      unlockLevel: 10,
+      decorPoints: 5,
+      art: "art/furniture_flowers"
+    },
+    {
+      id: "dining_set",
+      title: "\u53CC\u4EBA\u9910\u684C",
+      category: "\u7279\u6B8A",
+      room: "living",
+      placement: {
+        x: 221,
+        y: -105,
+        width: 222,
+        height: 213
+      },
+      coinCost: 450,
+      unlockLevel: 12,
+      decorPoints: 5,
+      art: "art/furniture_dining"
+    },
+    {
+      id: "fountain",
+      title: "\u8BB8\u613F\u55B7\u6CC9",
+      category: "\u82B1\u56ED",
+      room: "garden",
+      placement: {
+        x: -38,
+        y: -155,
+        width: 166,
+        height: 206
+      },
+      coinCost: 500,
+      unlockLevel: 15,
+      decorPoints: 6,
+      art: "art/furniture_fountain"
+    },
+    {
+      id: "swing",
+      title: "\u82B1\u56ED\u79CB\u5343",
+      category: "\u82B1\u56ED",
+      room: "garden",
+      placement: {
+        x: 170,
+        y: -100,
+        width: 270,
+        height: 260
+      },
+      coinCost: 600,
+      unlockLevel: 18,
+      decorPoints: 6,
+      art: "art/furniture_swing"
+    }
   ];
 
   // assets/resources/config/wishes.json
@@ -555,8 +1027,15 @@
     }
     for (const memory of memories) {
       if (memory.heartCost <= 0) issues.push({ level: "error", message: `Memory ${memory.id} cost invalid` });
-      if (typeof memory.art !== "string" || !/^[a-z][a-z0-9_]*(?:#[0-4])?$/.test(memory.art)) {
+      if (typeof memory.art !== "string" || !/^[a-z][a-z0-9_]*(?:#\d{1,2})?$/.test(memory.art)) {
         issues.push({ level: "error", message: `Memory ${memory.id} art invalid` });
+        continue;
+      }
+      const columns = memory.artColumns ?? 5;
+      const rows = memory.artRows ?? 1;
+      const frame = Number(memory.art.split("#")[1] ?? 0);
+      if (!Number.isInteger(columns) || !Number.isInteger(rows) || columns < 1 || rows < 1 || frame >= columns * rows) {
+        issues.push({ level: "error", message: `Memory ${memory.id} atlas bounds invalid` });
       }
     }
     for (const item of furniture) {
@@ -777,45 +1256,65 @@
       this.debounceMs = options.debounceMs ?? 200;
     }
     load() {
-      const raw = this.options.storage.getItem(this.options.saveKey);
+      let raw;
+      try {
+        raw = this.options.storage.getItem(this.options.saveKey);
+      } catch {
+        return { ok: false, reason: "UNAVAILABLE", defaultData: this.options.createDefault() };
+      }
       if (raw == null || raw === "") {
         return { ok: false, reason: "EMPTY", defaultData: this.options.createDefault() };
       }
+      const loaded = this.parse(raw);
+      if (loaded) return loaded;
+      let backup;
+      try {
+        backup = this.options.storage.getItem(`${this.options.saveKey}:backup`);
+      } catch {
+        return { ok: false, reason: "UNAVAILABLE", defaultData: this.options.createDefault() };
+      }
+      const recovered = backup ? this.parse(backup) : null;
+      if (recovered) return { ...recovered, notice: "BACKUP_RESTORED" };
+      return {
+        ok: false,
+        reason: "CORRUPT",
+        defaultData: this.options.createDefault(),
+        backupPreserved: backup === raw || this.backupCorrupt(raw)
+      };
+    }
+    parse(raw) {
       try {
         const parsed = JSON.parse(raw);
         const migrated = this.migrate(parsed);
-        if (!migrated) {
-          this.backupCorrupt(raw);
-          this.options.logger?.("[SAVE] corrupt payload, using default");
-          return {
-            ok: false,
-            reason: "CORRUPT",
-            defaultData: this.options.createDefault()
-          };
-        }
-        return { ok: true, data: migrated.data, repaired: migrated.repaired };
+        if (!migrated) return null;
+        const notice = parsed.version !== this.options.version ? "MIGRATED" : migrated.repaired ? "REPAIRED" : void 0;
+        return { ok: true, ...migrated, notice };
       } catch {
-        this.backupCorrupt(raw);
-        this.options.logger?.("[SAVE] JSON parse failed, using default");
-        return {
-          ok: false,
-          reason: "CORRUPT",
-          defaultData: this.options.createDefault()
-        };
+        return null;
       }
     }
     save(data) {
+      this.pending = data;
+      if (this.timer) {
+        clearTimeout(this.timer);
+        this.timer = null;
+      }
       const payload = {
         ...data,
         version: this.options.version,
         savedAt: this.options.clock.now()
       };
-      this.options.storage.setItem(this.options.saveKey, JSON.stringify(payload));
-      this.pending = null;
-      if (this.timer) {
-        clearTimeout(this.timer);
-        this.timer = null;
+      try {
+        this.options.storage.setItem(this.options.saveKey, JSON.stringify(payload));
+      } catch {
+        const failed = { ok: false, reason: "STORAGE_UNAVAILABLE" };
+        this.options.onWrite?.(failed);
+        return failed;
       }
+      this.pending = null;
+      const result = { ok: true, savedAt: payload.savedAt };
+      this.options.onWrite?.(result);
+      return result;
     }
     scheduleSave(data) {
       this.pending = data;
@@ -852,8 +1351,9 @@
     }
     migrate(parsed) {
       if (!parsed || typeof parsed !== "object") return null;
-      let repaired = false;
+      let repaired = parsed.version !== this.options.version;
       const defaults = this.options.createDefault();
+      if (Object.keys(defaults).some((key) => !(key in parsed))) repaired = true;
       const version = typeof parsed.version === "number" ? parsed.version : 0;
       if (version < 1) {
         if (version !== 0) return null;
@@ -981,7 +1481,9 @@
     backupCorrupt(raw) {
       try {
         this.options.storage.setItem(`${this.options.saveKey}:backup`, raw);
+        return true;
       } catch {
+        return false;
       }
     }
   };
@@ -1270,6 +1772,19 @@
     }
     getColumns() {
       return this.board.columns;
+    }
+    getMergeHint() {
+      const occupied = this.board.cells.filter((cell) => cell.item);
+      for (let first = 0; first < occupied.length; first += 1) {
+        for (let second = first + 1; second < occupied.length; second += 1) {
+          const from = occupied[first];
+          const to = occupied[second];
+          if (this.previewDrop(from.index, to.index).kind === "MERGE" && from.item) {
+            return { from: from.index, to: to.index, definitionId: from.item.definitionId };
+          }
+        }
+      }
+      return null;
     }
     replaceBoard(board) {
       this.board = board;
@@ -1988,6 +2503,8 @@
       this.bus = new GameEventBus();
       this.bootState = "BOOT";
       this.bootError = null;
+      this.saveFailed = false;
+      this.loadNotice = null;
       this.logger = options.logger ?? new GameLogger(true);
       this.bundle = options.config ?? loadConfigBundle();
       this.config = this.bundle.game;
@@ -2003,7 +2520,12 @@
         createDefault: () => createDefaultSaveData(this.config, this.clock.now()),
         debounceMs: options.saveDebounceMs ?? 200,
         logger: (m) => this.logger.debug("SAVE", m),
-        legacyStarterFurnitureId: this.bundle.furniture[0]?.id
+        legacyStarterFurnitureId: this.bundle.furniture[0]?.id,
+        onWrite: (result) => {
+          this.saveFailed = !result.ok;
+          if (result.ok) this.bus.emit("GAME_SAVED", { savedAt: result.savedAt });
+          this.bus.emit("SAVE_STATUS_CHANGED", { ok: result.ok });
+        }
       });
     }
     get player() {
@@ -2023,6 +2545,15 @@
         assertConfigValid(this.bundle);
         this.bootState = "LOAD_SAVE";
         const loaded = this.saveService.load();
+        this.loadNotice = null;
+        if (!loaded.ok && (loaded.reason === "UNAVAILABLE" || loaded.reason === "CORRUPT" && !loaded.backupPreserved)) {
+          throw new Error("\u6682\u65F6\u65E0\u6CD5\u5B89\u5168\u8BFB\u53D6\u6216\u5907\u4EFD\u5B58\u6863\uFF0C\u539F\u8FDB\u5EA6\u672A\u8986\u76D6\u3002\u8BF7\u7A0D\u540E\u70B9\u51FB\u91CD\u8BD5\u3002");
+        }
+        if (loaded.ok && loaded.notice) {
+          this.loadNotice = loaded.notice === "MIGRATED" ? "\u65E7\u5B58\u6863\u5DF2\u5347\u7EA7\uFF0C\u5DF2\u6709\u7269\u54C1\u548C\u8D44\u4EA7\u5DF2\u4FDD\u7559\u3002" : loaded.notice === "BACKUP_RESTORED" ? "\u5F53\u524D\u5B58\u6863\u5F02\u5E38\uFF0C\u5DF2\u4ECE\u53EF\u7528\u5907\u4EFD\u6062\u590D\u8FDB\u5EA6\u3002" : "\u5B58\u6863\u4E2D\u7684\u5F02\u5E38\u6570\u636E\u5DF2\u4FEE\u590D\uFF0C\u8BF7\u68C0\u67E5\u5F53\u524D\u8FDB\u5EA6\u3002";
+        } else if (!loaded.ok && loaded.reason === "CORRUPT") {
+          this.loadNotice = "\u5B58\u6863\u5DF2\u635F\u574F\uFF0C\u539F\u59CB\u6570\u636E\u5DF2\u5907\u4EFD\u3002\u672A\u627E\u5230\u53EF\u7528\u8FDB\u5EA6\uFF0C\u5DF2\u521B\u5EFA\u65B0\u7684\u5C0F\u5C4B\u3002";
+        }
         let data;
         if (loaded.ok) {
           data = loaded.data;
@@ -2146,6 +2677,9 @@
       }
       return result;
     }
+    getMergeHint() {
+      return this.board.getMergeHint();
+    }
     unlockMemory(id) {
       const result = this.life.unlockMemory(id);
       if (result.ok) this.save();
@@ -2245,8 +2779,7 @@
     }
     save() {
       const data = this.buildSaveData();
-      this.saveService.save(data);
-      this.bus.emit("GAME_SAVED", { savedAt: data.savedAt });
+      return this.saveService.save(data);
     }
     scheduleSave() {
       this.saveService.scheduleSave(this.buildSaveData());

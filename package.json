@@ -1,8 +1,8 @@
 {
   "name": "our-love-story",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "《我们的浪漫小屋》— 情侣 Merge 小游戏 V0.1B",
+  "description": "《我们的浪漫小屋》— 情侣合成小游戏 1.0 本地交付版",
   "scripts": {
     "test": "vitest run",
     "test:core": "vitest run",
@@ -13,6 +13,9 @@
     "build:web:watch": "esbuild src/web/main.ts --bundle --outfile=game.js --format=iife --target=es2020 --sourcemap --watch",
     "verify:cocos": "node tools/verify-cocos-project.mjs",
     "verify:wechat-package": "node tools/check-wechat-package.mjs",
+    "build:wechat": "node tools/build-wechat.mjs",
+    "qa:cocos-web": "node tools/qa-cocos-web.mjs",
+    "test:tools": "node --test tools/*.test.mjs",
     "verify": "node tools/verify-all.mjs"
   },
   "devDependencies": {

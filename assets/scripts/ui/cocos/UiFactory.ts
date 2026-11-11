@@ -16,6 +16,7 @@ import {
 } from 'cc';
 import { createUiNode, ensureTransform, setLayerTree } from './CocosTheme';
 import type { SafeInsets } from '../../platform/cocos/CocosSafeArea';
+import { safeContentRect } from '../../presentation/UiSafety';
 
 export type UiRoots = {
   camera: Node;
@@ -108,86 +109,96 @@ function pinFill(
 export function buildUiTree(insets: SafeInsets): UiRoots {
   applyDesignResolution();
   const visible = view.getVisibleSize();
-  const layoutW = visible.width;
-  const layoutH = visible.height;
+  const fullW = visible.width;
+  const fullH = visible.height;
+  const safe = safeContentRect(fullW, fullH, insets);
+  const layoutW = safe.width;
+  const layoutH = safe.height;
 
   const cameraNode = new Node('UICamera');
   cameraNode.layer = Layers.Enum.UI_2D;
   const cam = cameraNode.addComponent(Camera);
   cam.projection = Camera.ProjectionType.ORTHO;
-  cam.orthoHeight = layoutH / 2;
+  cam.orthoHeight = fullH / 2;
   cam.clearFlags = Camera.ClearFlag.SOLID_COLOR;
   cam.visibility = Layers.Enum.UI_2D;
   cam.priority = 10;
 
   const canvas = new Node('Canvas');
   canvas.layer = Layers.Enum.UI_2D;
-  ensureTransform(canvas, layoutW, layoutH, 0.5, 0.5);
+  ensureTransform(canvas, fullW, fullH, 0.5, 0.5);
   const canvasComp = canvas.addComponent(Canvas);
   canvasComp.cameraComponent = cam;
 
-  const insetTop = Math.min(56, 12 + Math.round(insets.top * 0.15));
-  const insetBottom = Math.min(40, 8 + Math.round(insets.bottom * 0.15));
+  const insetTop = 12;
+  const insetBottom = 8;
+  const dockHeight = layoutH < 1250 ? DOCK_H : 170;
+  const orderHeight = layoutH < 1250 ? ORDERS_H : 212;
 
   const background = createUiNode('Background');
   canvas.addChild(background);
   pinFill(background, 0, 0);
 
+  const safeArea = createUiNode('SafeArea');
+  canvas.addChild(safeArea);
+  ensureTransform(safeArea, layoutW, layoutH);
+  safeArea.setPosition(safe.x, safe.y, 0);
+
   // Board first (under), then dock, then orders, then status (top chrome)
-  const boardTop = insetTop + TOP_BAR_H + GAP + ORDERS_H + GAP;
-  const boardBottom = insetBottom + DOCK_H + GAP + NAV_H;
+  const boardTop = insetTop + TOP_BAR_H + GAP + orderHeight + GAP;
+  const boardBottom = insetBottom + dockHeight + GAP + NAV_H;
 
   const boardSlot = createUiNode('BoardPanel');
-  canvas.addChild(boardSlot);
+  safeArea.addChild(boardSlot);
   pinFill(boardSlot, boardTop, boardBottom);
 
   const dockSlot = createUiNode('GeneratorDock');
-  canvas.addChild(dockSlot);
-  pinBox(dockSlot, DOCK_H, { bottom: insetBottom + EDGE + NAV_H });
+  safeArea.addChild(dockSlot);
+  pinBox(dockSlot, dockHeight, { bottom: insetBottom + EDGE + NAV_H });
 
   const ordersSlot = createUiNode('OrderPanel');
-  canvas.addChild(ordersSlot);
-  pinBox(ordersSlot, ORDERS_H, { top: insetTop + TOP_BAR_H + GAP });
+  safeArea.addChild(ordersSlot);
+  pinBox(ordersSlot, orderHeight, { top: insetTop + TOP_BAR_H + GAP });
 
   const contentLayer = createUiNode('PageContentLayer');
-  canvas.addChild(contentLayer);
+  safeArea.addChild(contentLayer);
   makePassThrough(contentLayer);
 
   const statusSlot = createUiNode('StatusBar');
-  canvas.addChild(statusSlot);
+  safeArea.addChild(statusSlot);
   pinBox(statusSlot, TOP_BAR_H, { top: insetTop });
 
   const navLayer = createUiNode('NavigationLayer');
-  canvas.addChild(navLayer);
+  safeArea.addChild(navLayer);
   makePassThrough(navLayer);
 
   const dragLayer = createUiNode('DragLayer');
-  canvas.addChild(dragLayer);
+  safeArea.addChild(dragLayer);
   makePassThrough(dragLayer);
 
   const tutorialLayer = createUiNode('TutorialLayer');
-  canvas.addChild(tutorialLayer);
+  safeArea.addChild(tutorialLayer);
   makePassThrough(tutorialLayer);
 
   const modalLayer = createUiNode('ModalLayer');
-  canvas.addChild(modalLayer);
+  safeArea.addChild(modalLayer);
   makePassThrough(modalLayer);
 
   const rewardLayer = createUiNode('RewardLayer');
-  canvas.addChild(rewardLayer);
+  safeArea.addChild(rewardLayer);
   makePassThrough(rewardLayer);
 
   // Feedback from modal actions must remain visible above the modal scrim.
   const toastLayer = createUiNode('ToastLayer');
-  canvas.addChild(toastLayer);
+  safeArea.addChild(toastLayer);
   makePassThrough(toastLayer);
 
   const debugLayer = createUiNode('DebugLayer');
-  canvas.addChild(debugLayer);
+  safeArea.addChild(debugLayer);
   makePassThrough(debugLayer);
 
   const coverLayer = createUiNode('CoverLayer');
-  canvas.addChild(coverLayer);
+  safeArea.addChild(coverLayer);
   makePassThrough(coverLayer);
 
   setLayerTree(cameraNode, Layers.Enum.UI_2D);
@@ -210,7 +221,7 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
   return {
     camera: cameraNode,
     canvas,
-    safeArea: canvas,
+    safeArea,
     background,
     contentLayer,
     statusSlot,

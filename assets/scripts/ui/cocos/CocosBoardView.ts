@@ -23,6 +23,8 @@ export type BoardDeps = {
   previewDrop: (from: number, to: number | null) => DropResolve;
   onDrop: (from: number, to: number | null) => void;
   dragThreshold: number;
+  onDragStart?: () => void;
+  onDragFinished?: () => void;
 };
 
 export class CocosBoardView {
@@ -84,6 +86,11 @@ export class CocosBoardView {
 
   setCamera(camera: Camera | null): void {
     this.camera = camera;
+  }
+
+  hintAnchor(index: number): { position: Vec3; size: number } | null {
+    const cell = this.cells[index];
+    return cell ? { position: cell.node.worldPosition.clone(), size: this.cellSize } : null;
   }
 
   private layoutCells(): void {
@@ -260,6 +267,7 @@ export class CocosBoardView {
     if (!this.drag.active) {
       if (Math.hypot(dx, dy) < this.deps.dragThreshold) return;
       this.drag.active = true;
+      this.deps.onDragStart?.();
       this.startGhost();
       this.cells[this.drag.fromIndex]?.setSourceDim(true);
     }
@@ -279,6 +287,7 @@ export class CocosBoardView {
       drag.ghost?.destroy();
       this.cells[drag.fromIndex]?.setSourceDim(false);
       this.clearHighlights();
+      this.deps.onDragFinished?.();
     }
   }
 
@@ -289,6 +298,7 @@ export class CocosBoardView {
     drag.ghost?.destroy();
     this.cells[drag.fromIndex]?.setSourceDim(false);
     this.clearHighlights();
+    this.deps.onDragFinished?.();
   }
 
   private startGhost(): void {
