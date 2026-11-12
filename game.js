@@ -50,7 +50,8 @@
   var game_default = {
     gameTitle: "\u6211\u4EEC\u7684\u6D6A\u6F2B\u5C0F\u5C4B",
     saveKey: "our-love-story-save",
-    saveVersion: 2,
+    saveVersion: 3,
+    toolbox: { warehouseSlots: 6, startingScissors: 2 },
     board: {
       rows: 9,
       columns: 9
@@ -74,6 +75,7 @@
       coupleDisplayName: "",
       anniversary: "",
       metMonth: "2023-09",
+      metDate: "2023-09-08",
       weddingDate: "2026-10-03",
       theme: "warm-romantic"
     }
@@ -432,6 +434,27 @@
       rewardHearts: 5
     },
     {
+      id: "order_coffee_02_cup",
+      minLevel: 1,
+      maxLevel: 99,
+      requirements: [
+        { itemId: "coffee_02", count: 1 },
+        { itemId: "coffee_03", count: 1 }
+      ],
+      rewardCoins: 34,
+      rewardXp: 15,
+      rewardHearts: 4
+    },
+    {
+      id: "order_coffee_03_pair",
+      minLevel: 1,
+      maxLevel: 99,
+      requirements: [{ itemId: "coffee_03", count: 2 }],
+      rewardCoins: 42,
+      rewardXp: 18,
+      rewardHearts: 6
+    },
+    {
       id: "order_flower_seed",
       minLevel: 1,
       maxLevel: 99,
@@ -450,6 +473,27 @@
       rewardHearts: 1
     },
     {
+      id: "order_flower_sprout_pair",
+      minLevel: 3,
+      maxLevel: 99,
+      requirements: [{ itemId: "flower_02", count: 2 }],
+      rewardCoins: 30,
+      rewardXp: 14,
+      rewardHearts: 3
+    },
+    {
+      id: "order_flower_coffee",
+      minLevel: 3,
+      maxLevel: 99,
+      requirements: [
+        { itemId: "flower_02", count: 1 },
+        { itemId: "coffee_03", count: 1 }
+      ],
+      rewardCoins: 34,
+      rewardXp: 16,
+      rewardHearts: 3
+    },
+    {
       id: "order_morning_set",
       minLevel: 1,
       maxLevel: 99,
@@ -463,7 +507,7 @@
     },
     {
       id: "order_latte_date",
-      minLevel: 2,
+      minLevel: 5,
       maxLevel: 99,
       requirements: [{ itemId: "coffee_05", count: 1 }],
       rewardCoins: 45,
@@ -501,6 +545,27 @@
       rewardHearts: 2
     },
     {
+      id: "order_dessert_muffin_pair",
+      minLevel: 5,
+      maxLevel: 99,
+      requirements: [{ itemId: "dessert_02", count: 2 }],
+      rewardCoins: 32,
+      rewardXp: 16,
+      rewardHearts: 3
+    },
+    {
+      id: "order_dessert_coffee",
+      minLevel: 5,
+      maxLevel: 99,
+      requirements: [
+        { itemId: "dessert_02", count: 1 },
+        { itemId: "coffee_02", count: 1 }
+      ],
+      rewardCoins: 30,
+      rewardXp: 15,
+      rewardHearts: 3
+    },
+    {
       id: "order_strawberry_cake",
       minLevel: 3,
       maxLevel: 99,
@@ -526,6 +591,18 @@
       rewardCoins: 55,
       rewardXp: 28,
       rewardHearts: 2
+    },
+    {
+      id: "order_gift_note",
+      minLevel: 8,
+      maxLevel: 99,
+      requirements: [
+        { itemId: "gift_02", count: 1 },
+        { itemId: "flower_02", count: 1 }
+      ],
+      rewardCoins: 36,
+      rewardXp: 18,
+      rewardHearts: 3
     },
     {
       id: "order_romantic_combo",
@@ -582,112 +659,338 @@
     {
       id: "letters",
       title: "\u821F\u5C71\uFF0C\u6545\u4E8B\u7684\u5F00\u59CB",
-      dateLabel: "2023 \u5E74 9 \u6708 \xB7 \u821F\u5C71",
-      summary: "\u4E00\u573A\u8054\u8C0A\uFF0C\u4E00\u6B21\u5E76\u80A9\u800C\u5750\u3002\u540E\u6765\uFF0C\u6211\u4EEC\u4E92\u9009\u4E86\u5BF9\u65B9\u3002",
-      diary: "2023 \u5E74 9 \u6708\uFF0C\u6211\u4EEC\u5728\u53BB\u821F\u5C71\u7684\u8054\u8C0A\u6D3B\u52A8\u4E2D\u8BA4\u8BC6\uFF0C\u5750\u5728\u4E86\u4E00\u8D77\u3002\u540E\u6765\u4E92\u9009\u65F6\uFF0C\u6211\u4EEC\u90FD\u9009\u62E9\u4E86\u5BF9\u65B9\u3002\u539F\u6765\uFF0C\u8FD9\u4EFD\u597D\u611F\u662F\u53CC\u5411\u7684\u3002\u6211\u4EEC\u7684\u6545\u4E8B\uFF0C\u5C31\u4ECE\u8FD9\u91CC\u5F00\u59CB\u3002",
+      dateLabel: "2023 \u5E74 9 \u6708 8 \u65E5 \xB7 \u821F\u5C71",
+      summary: "\u821F\u5C71\u7597\u4F11\u517B\uFF0C\u6D77\u8FB9\u3001\u6C99\u6EE9\u3001\u7BDD\u706B\uFF0C\u8FD8\u6709\u7B2C\u4E00\u6B21\u7275\u624B\u3002",
+      diary: "2023 \u5E74 9 \u6708 8 \u65E5\uFF0C\u6211\u4EEC\u5728\u821F\u5C71\u7597\u4F11\u517B\u7684\u8054\u8C0A\u6D3B\u52A8\u4E2D\u8BA4\u8BC6\uFF0C\u5750\u5728\u4E86\u4E00\u8D77\u3002\u4E92\u9009\u7684\u65F6\u5019\uFF0C\u6211\u4EEC\u4E5F\u90FD\u9009\u62E9\u4E86\u5BF9\u65B9\u3002\n\n\u90A3\u8D9F\u884C\u7A0B\u91CC\u6709\u6D77\u8FB9\u3001\u6709\u6C99\u6EE9\uFF0C\u4E5F\u6709\u665A\u4E0A\u7684\u7BDD\u706B\u3002\u6211\u4EEC\u7684\u7B2C\u4E00\u6B21\u7275\u624B\uFF0C\u4E5F\u7559\u5728\u4E86\u821F\u5C71\u3002\u6BCF\u6B21\u60F3\u8D77\u6545\u4E8B\u7684\u5F00\u59CB\uFF0C\u90FD\u4F1A\u60F3\u8D77\u90A3\u6B21\u76F8\u9047\u3002",
       heartCost: 50,
-      art: "our_story_sheet#0",
-      artColumns: 5,
-      artRows: 2
+      art: "story_01_letters",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.22
+    },
+    {
+      id: "shenxianju",
+      title: "\u521D\u8BC6\u540E\u7684\u7B2C\u4E00\u5EA7\u5C71",
+      dateLabel: "2023 \u5E74\u56FD\u5E86 \xB7 \u795E\u4ED9\u5C45",
+      summary: "\u8BA4\u8BC6\u8FD8\u4E0D\u5230\u4E00\u4E2A\u6708\uFF0C\u6211\u4EEC\u5C31\u4E00\u8D77\u53BB\u722C\u795E\u4ED9\u5C45\u3002",
+      diary: "\u521A\u8BA4\u8BC6\u8FD8\u4E0D\u5230\u4E00\u4E2A\u6708\uFF0C\u5C31\u5230\u4E86\u56FD\u5E86\u30022023 \u5E74 10 \u6708\u521D\uFF0C\u6211\u4EEC\u4E00\u8D77\u53BB\u4E86\u795E\u4ED9\u5C45\u722C\u5C71\u3002\n\n\u4ECE\u821F\u5C71\u7684\u76F8\u9047\uFF0C\u5230\u7B2C\u4E00\u6B21\u4E00\u8D77\u8D70\u5C71\u8DEF\uFF0C\u5C5E\u4E8E\u4E24\u4E2A\u4EBA\u7684\u65C5\u9014\u6162\u6162\u5F00\u59CB\u4E86\u3002",
+      heartCost: 40,
+      art: "story_02_shenxianju",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
+      id: "trampoline_park",
+      title: "\u8E66\u5E8A\u516C\u56ED\u7684\u7EA6\u4F1A",
+      dateLabel: "2023 \u5E74 10 \u6708 14 \u65E5",
+      summary: "\u8FD9\u4E00\u5929\uFF0C\u6211\u4EEC\u4E00\u8D77\u53BB\u4E86\u8E66\u5E8A\u516C\u56ED\u3002",
+      diary: "2023 \u5E74 10 \u6708 14 \u65E5\uFF0C\u6211\u4EEC\u4E00\u8D77\u53BB\u4E86\u8E66\u5E8A\u516C\u56ED\u3002\n\n\u9664\u4E86\u6D77\u8FB9\u548C\u5C71\u8DEF\uFF0C\u6211\u4EEC\u53C8\u591A\u4E86\u4E00\u4E2A\u5171\u540C\u53BB\u8FC7\u7684\u5730\u65B9\u3002\u60F3\u628A\u8FD9\u6B21\u7EA6\u4F1A\uFF0C\u4E5F\u8BB0\u8FDB\u6211\u4EEC\u7684\u76F8\u518C\u3002",
+      heartCost: 50,
+      art: "story_03_trampoline_park",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.1
     },
     {
       id: "first_trip",
       title: "100 \u5929\uFF0C100 \u5C01\u60C5\u4E66",
       dateLabel: "\u76F8\u8BC6 100 \u5929\u540E",
       summary: "\u8BA4\u8BC6 100 \u5929\u540E\uFF0C\u6211\u7528 100 \u5C01\u60C5\u4E66\u5411\u4F60\u8868\u767D\u3002",
-      diary: "\u8BA4\u8BC6 100 \u5929\u540E\uFF0C\u6211\u7528 100 \u5C01\u60C5\u4E66\u5411\u4F60\u8868\u767D\u3002\u90A3\u4E9B\u60F3\u8BF4\u7684\u8BDD\uFF0C\u4E00\u5C01\u4E00\u5C01\u5199\u7ED9\u4E86\u4F60\u3002\u8FD9\u662F\u6211\u4EEC\u6545\u4E8B\u91CC\uFF0C\u60F3\u8981\u597D\u597D\u73CD\u85CF\u7684\u4E00\u9875\u3002",
+      diary: "\u8BA4\u8BC6 100 \u5929\u540E\uFF0C\u6211\u7528 100 \u5C01\u60C5\u4E66\u5411\u4F60\u8868\u767D\u3002\n\n\u4ECE\u821F\u5C71\u8BA4\u8BC6\uFF0C\u5230\u4E00\u8D77\u722C\u5C71\u3001\u4E00\u8D77\u53BB\u8E66\u5E8A\u516C\u56ED\uFF0C\u60F3\u548C\u4F60\u8BF4\u7684\u8BDD\uFF0C\u4E00\u5C01\u4E00\u5C01\u5199\u6210\u4E86\u60C5\u4E66\u3002\u8FD9\u4EFD\u559C\u6B22\uFF0C\u60F3\u8BA4\u771F\u5730\u544A\u8BC9\u4F60\u3002",
       heartCost: 80,
-      art: "our_story_sheet#1",
-      artColumns: 5,
-      artRows: 2
+      art: "story_04_first_trip",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
+      id: "christmas_portrait",
+      title: "\u6211\u4EEC\u7684\u7B2C\u4E00\u7EC4\u5723\u8BDE\u5199\u771F",
+      dateLabel: "2023 \u5E74 12 \u6708 22 \u65E5",
+      summary: "\u7B2C\u4E00\u6B21\u5723\u8BDE\u5199\u771F\uFF0C\u4E5F\u662F\u6211\u7B2C\u4E00\u6B21\u62CD\u5199\u771F\u3002",
+      diary: "2023 \u5E74 12 \u6708 22 \u65E5\uFF0C\u6211\u4EEC\u62CD\u4E86\u7B2C\u4E00\u6B21\u5723\u8BDE\u5199\u771F\u3002\u90A3\u4E5F\u662F\u6211\u7B2C\u4E00\u6B21\u62CD\u5199\u771F\u3002\n\n\u7B2C\u4E00\u6B21\u7684\u7EAA\u5FF5\uFF0C\u56E0\u4E3A\u662F\u548C\u4F60\u4E00\u8D77\uFF0C\u6210\u4E86\u76F8\u8BC6\u540E\u7684\u7B2C\u4E00\u4E2A\u51AC\u5929\u91CC\uFF0C\u60F3\u597D\u597D\u7559\u4F4F\u7684\u4E00\u9875\u3002",
+      heartCost: 60,
+      art: "story_05_christmas_portrait",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.12
     },
     {
       id: "night_view",
-      title: "\u6A2A\u5E97\uFF0C\u4E00\u8D77\u8DE8\u5E74",
-      dateLabel: "\u4E00\u8D77\u8DE8\u8FC7\u65B0\u7684\u4E00\u5E74 \xB7 \u6A2A\u5E97",
-      summary: "\u6211\u4EEC\u4E00\u8D77\u53BB\u4E86\u6A2A\u5E97\uFF0C\u628A\u8DE8\u5E74\u7684\u56DE\u5FC6\u7559\u5728\u90A3\u91CC\u3002",
-      diary: "\u6211\u4EEC\u4E00\u8D77\u53BB\u6A2A\u5E97\u8DE8\u5E74\u3002\u4E00\u8D77\u8D70\u8FC7\u7684\u5730\u65B9\uFF0C\u53C8\u591A\u4E86\u4E00\u4E2A\u503C\u5F97\u8BB0\u4F4F\u7684\u540D\u5B57\u3002\u4EE5\u540E\u7FFB\u5230\u8FD9\u4E00\u9875\uFF0C\u8FD8\u60F3\u548C\u4F60\u6162\u6162\u804A\u8D77\u90A3\u6B21\u65C5\u884C\u3002",
+      title: "\u6A2A\u5E97\u8DE8\u5E74\uFF0C\u518D\u4E00\u8D77\u56DE\u6E29\u5DDE",
+      dateLabel: "2023 \u5E74\u672B\u20142024 \u5E74\u521D",
+      summary: "\u79E6\u738B\u5BAB\u3001\u6E38\u4E50\u56ED\u3001\u6E29\u6CC9\uFF0C\u518D\u4E00\u8D77\u56DE\u6E29\u5DDE\u3002",
+      diary: "2023 \u5E74 12 \u6708 30 \u65E5\uFF0C\u6211\u4EEC\u53BB\u4E86\u6A2A\u5E97\u8DE8\u5E74\u3002\u4E00\u8D77\u53BB\u4E86\u79E6\u738B\u5BAB\u3001\u6E38\u4E50\u56ED\uFF0C\u4E5F\u6CE1\u4E86\u6E29\u6CC9\u3002\n\n2024 \u5E74 1 \u6708\uFF0C\u6211\u5E26\u4F60\u56DE\u4E86\u6E29\u5DDE\u3002\u76F8\u8BC6\u540E\u7684\u7B2C\u4E00\u4E2A\u8DE8\u5E74\uFF0C\u5C31\u8FD9\u6837\u8FDE\u7740\u65C5\u884C\u548C\u56DE\u5BB6\u7684\u56DE\u5FC6\u3002",
       heartCost: 100,
-      art: "our_story_sheet#2",
-      artColumns: 5,
-      artRows: 2
+      art: "story_06_night_view",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
     },
     {
       id: "promise",
       title: "\u5C71\u6C34\u4E4B\u95F4\uFF0C\u6709\u4F60",
-      dateLabel: "\u9EC4\u5C71 \xB7 \u5343\u5C9B\u6E56",
-      summary: "\u4E00\u8D77\u722C\u9EC4\u5C71\uFF0C\u4E00\u8D77\u53BB\u5343\u5C9B\u6E56\u3002\u98CE\u666F\u91CC\uFF0C\u4E5F\u6709\u6211\u4EEC\u7684\u8DB3\u8FF9\u3002",
-      diary: "\u6211\u4EEC\u4E00\u8D77\u722C\u8FC7\u9EC4\u5C71\uFF0C\u4E5F\u4E00\u8D77\u53BB\u8FC7\u5343\u5C9B\u6E56\u3002\u65C5\u9014\u6709\u5C71\uFF0C\u4E5F\u6709\u6E56\uFF1B\u8FD9\u4E9B\u5730\u65B9\uFF0C\u56E0\u4E3A\u662F\u548C\u4F60\u4E00\u8D77\u53BB\u7684\uFF0C\u6210\u4E86\u6211\u4EEC\u5171\u540C\u7684\u56DE\u5FC6\u3002",
+      dateLabel: "\u9EC4\u5C71 \xB7 \u5343\u5C9B\u6E56 \xB7 \u671B\u5BB8\u9601",
+      summary: "\u722C\u8FC7\u9EC4\u5C71\uFF0C\u518D\u901B\u5343\u5C9B\u6E56\uFF0C\u4E5F\u4E00\u8D77\u8D70\u5411\u676D\u5DDE\u671B\u5BB8\u9601\u3002",
+      diary: "\u90A3\u4E00\u5E74\uFF0C\u6211\u4EEC\u4E00\u8D77\u722C\u4E86\u9EC4\u5C71\uFF0C\u722C\u5B8C\u4E4B\u540E\u53C8\u53BB\u4E86\u5343\u5C9B\u6E56\u901B\u3002\u540E\u6765\uFF0C\u8FD8\u4E00\u8D77\u53BB\u676D\u5DDE\u671B\u5BB8\u9601\u722C\u5C71\u3002\n\n\u4E00\u6BB5\u5C71\u8DEF\uFF0C\u4E00\u7247\u6E56\u666F\uFF0C\u90FD\u662F\u4E00\u8D77\u8D70\u8FC7\u7684\u5730\u65B9\u3002\u56E0\u4E3A\u8EAB\u8FB9\u662F\u4F60\uFF0C\u8FD9\u4E9B\u5730\u540D\u4E5F\u6210\u4E86\u6211\u4EEC\u6545\u4E8B\u7684\u4E00\u90E8\u5206\u3002",
       heartCost: 120,
-      art: "our_story_sheet#3",
-      artColumns: 5,
-      artRows: 2
+      art: "story_07_promise",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
     },
     {
       id: "wedding",
-      title: "\u8D70\u8FDB\u5F7C\u6B64\u7684\u4E16\u754C",
-      dateLabel: "\u5609\u5174 \xB7 \u4E0A\u6D77 \xB7 \u6D4E\u5DDE\u5C9B",
-      summary: "\u5E26\u4F60\u53BB\u5609\u5174\u770B\u6211\u7684\u5927\u5B66\uFF0C\u518D\u4E00\u8D77\u53BB\u4E0A\u6D77\u3001\u6D4E\u5DDE\u5C9B\u3002",
-      diary: "\u6211\u5E26\u4F60\u53BB\u5609\u5174\u770B\u4E86\u6211\u7684\u5927\u5B66\u3002\u6211\u4EEC\u8FD8\u4E00\u8D77\u53BB\u4E86\u4E0A\u6D77\u3001\u6D4E\u5DDE\u5C9B\u3002\u66FE\u7ECF\u5C5E\u4E8E\u4E00\u4E2A\u4EBA\u7684\u5730\u65B9\uFF0C\u548C\u540E\u6765\u4E00\u8D77\u5230\u8FC7\u7684\u5730\u65B9\uFF0C\u6162\u6162\u8FDE\u6210\u4E86\u6211\u4EEC\u7684\u6545\u4E8B\u3002",
+      title: "\u5E26\u4F60\u770B\u770B\uFF0C\u6211\u7684\u5927\u5B66",
+      dateLabel: "2024 \u5E74 3 \u6708 30 \u65E5 \xB7 \u5609\u5174",
+      summary: "\u5E26\u4F60\u53BB\u5609\u5174\uFF0C\u770B\u770B\u6211\u8BFB\u8FC7\u4E66\u7684\u5730\u65B9\u3002",
+      diary: "2024 \u5E74 3 \u6708 30 \u65E5\uFF0C\u6211\u5E26\u4F60\u53BB\u4E86\u5609\u5174\uFF0C\u770B\u770B\u6211\u7684\u5927\u5B66\u2014\u2014\u540C\u6D4E\u5927\u5B66\u6D59\u6C5F\u5B66\u9662\u3002\n\n\u66FE\u7ECF\u5C5E\u4E8E\u4E00\u4E2A\u4EBA\u7684\u6821\u56ED\uFF0C\u4E5F\u6709\u4E86\u548C\u4F60\u4E00\u8D77\u5230\u8FC7\u7684\u56DE\u5FC6\u3002\u60F3\u5E26\u4F60\u770B\u770B\uFF0C\u6211\u66FE\u7ECF\u751F\u6D3B\u8FC7\u7684\u4E00\u90E8\u5206\u3002",
       heartCost: 150,
-      art: "our_story_sheet#4",
-      artColumns: 5,
-      artRows: 2
+      art: "story_08_wedding",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
+      id: "jeju_first",
+      title: "\u7B2C\u4E00\u6B21\u4E00\u8D77\u53BB\u97E9\u56FD",
+      dateLabel: "2024 \u5E74 5 \u6708 1 \u65E5 \xB7 \u6D4E\u5DDE\u5C9B",
+      summary: "\u4ECE\u4E0A\u6D77\u51FA\u53D1\uFF0C\u5750\u98DE\u673A\u53BB\u97E9\u56FD\u6D4E\u5DDE\u5C9B\u3002",
+      diary: "2024 \u5E74 5 \u6708 1 \u65E5\uFF0C\u6211\u4EEC\u5148\u53BB\u4E0A\u6D77\uFF0C\u518D\u5750\u98DE\u673A\u98DE\u5F80\u97E9\u56FD\u6D4E\u5DDE\u5C9B\u3002\u8FD9\u662F\u6211\u4EEC\u7B2C\u4E00\u6B21\u4E00\u8D77\u53BB\u6D4E\u5DDE\u5C9B\u3002\n\n\u7B2C\u4E00\u6B21\u4E00\u8D77\u53BB\u97E9\u56FD\u7684\u65C5\u7A0B\uFF0C\u60F3\u597D\u597D\u7559\u5728\u8FD9\u672C\u76F8\u518C\u91CC\u3002",
+      heartCost: 60,
+      art: "story_09_jeju_first",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
     },
     {
       id: "first_home",
-      title: "5\xB720\uFF0C\u751F\u65E5\u8FD9\u4E00\u9875",
-      dateLabel: "5 \u6708 20 \u65E5",
-      summary: "\u751F\u65E5\u843D\u5728 5 \u6708 20 \u65E5\uFF0C\u4E5F\u7559\u5728\u4E86\u6211\u4EEC\u7684\u5171\u540C\u56DE\u5FC6\u91CC\u3002",
-      diary: "5 \u6708 20 \u65E5\uFF0C\u662F\u503C\u5F97\u8BB0\u4F4F\u7684\u65E5\u5B50\u3002\u628A\u8FD9\u6BB5\u751F\u65E5\u56DE\u5FC6\u7559\u5728\u8FD9\u91CC\uFF0C\u548C\u6211\u4EEC\u4E00\u8D77\u8D70\u8FC7\u7684\u65C5\u7A0B\uFF0C\u653E\u5728\u540C\u4E00\u672C\u76F8\u518C\u91CC\u3002",
+      title: "\u7B2C\u4E00\u6B21\u966A\u4F60\u8FC75\xB720\u751F\u65E5",
+      dateLabel: "2024 \u5E74 5 \u6708 20 \u65E5",
+      summary: "\u8FD9\u4E00\u5E74\u76845\xB720\uFF0C\u6211\u7B2C\u4E00\u6B21\u966A\u4F60\u8FC7\u751F\u65E5\u3002",
+      diary: "2024 \u5E74 5 \u6708 20 \u65E5\uFF0C\u6211\u7B2C\u4E00\u6B21\u966A\u4F60\u8FC7\u751F\u65E5\u3002\n\n5\xB720 \u4E0D\u53EA\u662F\u4E00\u4E2A\u5199\u8D77\u6765\u7279\u522B\u7684\u65E5\u671F\uFF0C\u4E5F\u6210\u4E86\u6211\u4EEC\u4E00\u8D77\u8FC7\u751F\u65E5\u7684\u7B2C\u4E00\u4EFD\u7EAA\u5FF5\u3002\u4EE5\u540E\uFF0C\u8FD8\u60F3\u966A\u4F60\u8FC7\u8BB8\u591A\u4E2A\u751F\u65E5\u3002",
       heartCost: 180,
-      art: "our_story_sheet#5",
-      artColumns: 5,
-      artRows: 2
+      art: "story_10_first_home",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.23
+    },
+    {
+      id: "barbie_summer",
+      title: "\u82AD\u6BD4\u5199\u771F\u4E0E\u5357\u6E56\u6E38\u8239",
+      dateLabel: "2024 \u5E74 6 \u6708\u20147 \u6708",
+      summary: "\u966A\u4F60\u62CD\u82AD\u6BD4\u5199\u771F\uFF0C\u518D\u5E26\u4F60\u5750\u5357\u6E56\u6E38\u8239\u3002",
+      diary: "2024 \u5E74 6 \u6708 15 \u65E5\uFF0C\u966A\u4F60\u53BB\u62CD\u4E86\u82AD\u6BD4\u5199\u771F\u3002\n\n7 \u6708 7 \u65E5\uFF0C\u6211\u4EEC\u53C8\u53BB\u4E86\u5609\u5174\u5357\u6E56\uFF0C\u6211\u5E26\u4F60\u5750\u4E86\u5357\u6E56\u6E38\u8239\u3002\u5199\u771F\u548C\u6E38\u8239\uFF0C\u90FD\u662F\u90A3\u6BB5\u65E5\u5B50\u91CC\u60F3\u548C\u4F60\u4E00\u8D77\u73CD\u85CF\u7684\u5C0F\u4E8B\u3002",
+      heartCost: 60,
+      art: "story_11_barbie_summer",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.12
+    },
+    {
+      id: "linan_rafting",
+      title: "\u5C0F\u7EC4\u51FA\u6E38\uFF0C\u4E00\u8D77\u6F02\u6D41",
+      dateLabel: "2024 \u5E74 7 \u6708 20 \u65E5 \xB7 \u4E34\u5B89",
+      summary: "\u548C\u5C0F\u7EC4\u4E00\u8D77\uFF0C\u5728\u4E34\u5B89\u7559\u4E0B\u6F02\u6D41\u7684\u56DE\u5FC6\u3002",
+      diary: "2024 \u5E74 7 \u6708 20 \u65E5\uFF0C\u6211\u4EEC\u548C\u5C0F\u7EC4\u4E00\u8D77\u53BB\u4E86\u4E34\u5B89\u6F02\u6D41\u3002\n\n\u9664\u4E86\u4E24\u4E2A\u4EBA\u7684\u65C5\u884C\uFF0C\u4E5F\u6709\u548C\u5927\u5BB6\u4E00\u8D77\u51FA\u6E38\u7684\u65E5\u5B50\u3002\u8FD9\u6B21\u6F02\u6D41\uFF0C\u4E5F\u60F3\u8BB0\u8FDB\u5C5E\u4E8E\u6211\u4EEC\u7684\u6545\u4E8B\u3002",
+      heartCost: 60,
+      art: "story_12_linan_rafting",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
     },
     {
       id: "rainy_day",
       title: "\u5357\u5C71\u5854\uFF0C\u5411\u4F60\u6C42\u5A5A",
-      dateLabel: "10 \u6708 3 \u65E5 \xB7 \u9996\u5C14\u5357\u5C71\u5854",
-      summary: "\u4E00\u8D77\u53BB\u9996\u5C14\uFF0C10 \u6708 3 \u65E5\uFF0C\u6211\u5728\u5357\u5C71\u5854\u5411\u4F60\u6C42\u5A5A\u3002",
-      diary: "\u6211\u4EEC\u4E00\u8D77\u53BB\u4E86\u9996\u5C14\u300210 \u6708 3 \u65E5\uFF0C\u6211\u5728\u9996\u5C14\u5357\u5C71\u5854\u5411\u4F60\u6C42\u5A5A\u3002\u8FD9\u4E00\u7AD9\uFF0C\u4E0D\u53EA\u662F\u4E00\u6B21\u65C5\u884C\uFF0C\u4E5F\u6210\u4E3A\u6211\u4EEC\u8D70\u5411\u5A5A\u59FB\u7684\u4E00\u6BB5\u91CD\u8981\u56DE\u5FC6\u3002",
+      dateLabel: "2024 \u5E74 10 \u6708 1\u20143 \u65E5 \xB7 \u9996\u5C14",
+      summary: "\u56FD\u5E86\u53BB\u9996\u5C14\uFF0C\u4F53\u9A8C\u5C04\u51FB\uFF0C\u4E5F\u5728\u5357\u5C71\u5854\u5411\u4F60\u6C42\u5A5A\u3002",
+      diary: "2024 \u5E74 10 \u6708 1 \u65E5\uFF0C\u6211\u4EEC\u53BB\u4E86\u97E9\u56FD\u9996\u5C14\u65C5\u884C\uFF0C\u8FD8\u5728\u90A3\u91CC\u4F53\u9A8C\u4E86\u5C04\u51FB\u3002\n\n10 \u6708 3 \u65E5\uFF0C\u6211\u5728\u9996\u5C14\u5357\u5C71\u5854\u5411\u4F60\u6C42\u5A5A\u3002\u8FD9\u4E00\u7AD9\uFF0C\u4E0D\u53EA\u662F\u4E00\u6B21\u65C5\u884C\uFF0C\u4E5F\u6210\u4E3A\u6211\u4EEC\u8D70\u5411\u5A5A\u59FB\u7684\u4E00\u6BB5\u91CD\u8981\u56DE\u5FC6\u3002",
       heartCost: 210,
-      art: "our_story_sheet#6",
-      artColumns: 5,
-      artRows: 2
+      art: "story_13_rainy_day",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.26
     },
     {
-      id: "birthday",
-      title: "\u96EA\u9053\u4E0E\u5C71\u8DEF",
-      dateLabel: "\u4E00\u8D77\u6ED1\u96EA \xB7 \u4E00\u8D77\u722C\u5C71",
-      summary: "\u540E\u6765\uFF0C\u6211\u4EEC\u8FD8\u4E00\u8D77\u53BB\u6ED1\u96EA\u3001\u53BB\u722C\u5C71\uFF0C\u7EE7\u7EED\u6536\u96C6\u5171\u540C\u7684\u98CE\u666F\u3002",
-      diary: "\u6211\u4EEC\u4E00\u8D77\u53BB\u6ED1\u96EA\uFF0C\u4E5F\u4E00\u8D77\u53BB\u722C\u5C71\u3002\u4E0D\u7BA1\u662F\u96EA\u9053\u8FD8\u662F\u5C71\u8DEF\uFF0C\u548C\u4F60\u4E00\u8D77\u8D70\u8FC7\u7684\u8DEF\uFF0C\u90FD\u60F3\u7559\u5728\u8FD9\u672C\u76F8\u518C\u91CC\u3002\u6211\u4EEC\u7684\u6545\u4E8B\uFF0C\u8FD8\u6709\u8BB8\u591A\u9875\u53EF\u4EE5\u4E00\u8D77\u5199\u4E0B\u53BB\u3002",
-      heartCost: 240,
-      art: "our_story_sheet#7",
-      artColumns: 5,
-      artRows: 2
+      id: "winter_portraits",
+      title: "\u8FD9\u4E00\u5E74\u7684\u51AC\u65E5\u7EAA\u5FF5",
+      dateLabel: "2024 \u5E74\u672B \xB7 \u5199\u771F\u4E0E\u5723\u8BDE",
+      summary: "\u8FD0\u52A8\u4F1A\u3001\u7EA2\u5E95\u5199\u771F\u3001\u96EA\u4E61\u4E3B\u9898\uFF0C\u8FD8\u6709\u6559\u4F1A\u5723\u8BDE\u3002",
+      diary: "11 \u6708 16 \u65E5\uFF0C\u4F60\u4EEC\u516C\u53F8\u7EC4\u7EC7\u7684\u56E2\u5EFA\u8FD0\u52A8\u4F1A\uFF0C\u4E5F\u6210\u4E86\u8FD9\u4E00\u5E74\u91CC\u60F3\u8BB0\u4F4F\u7684\u7247\u6BB5\u3002\n\n12 \u6708 9 \u65E5\uFF0C\u6211\u4EEC\u62CD\u4E86\u4E2D\u5F0F\u5199\u771F\u3002\u6211\u7A7F\u9ED1\u8272\u7684\u4E2D\u5F0F\u8863\u670D\uFF0C\u4F60\u7A7F\u65D7\u888D\uFF0C\u80CC\u666F\u662F\u7EA2\u8272\u300212 \u6708 23 \u65E5\uFF0C\u53C8\u62CD\u4E86\u5929\u771F\u84DD\u7684\u96EA\u4E61\u4E3B\u9898\u5199\u771F\u3002\n\n\u6211\u4EEC\u4E5F\u4E00\u8D77\u53C2\u52A0\u4E86\u6559\u4F1A\u7684\u5723\u8BDE\u8282\u6D3B\u52A8\u3002\u4E00\u5E74\u5FEB\u8FC7\u53BB\u4E86\uFF0C\u60F3\u7559\u4E0B\u7684\u7EAA\u5FF5\u5374\u53C8\u591A\u4E86\u8BB8\u591A\u3002",
+      heartCost: 80,
+      art: "story_14_winter_portraits",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.07
+    },
+    {
+      id: "new_year_balloons",
+      title: "\u4E00\u8D77\u5012\u6570\uFF0C\u65B0\u5E74\u5FEB\u4E50",
+      dateLabel: "2024 \u5E74 12 \u6708 31 \u65E5 \xB7 \u4E07\u8FBE\u5E7F\u573A",
+      summary: "\u4E00\u8D77\u5012\u8BA1\u65F6\uFF0C\u8FD8\u6709\u5199\u7740\u201C\u65B0\u5E74\u5FEB\u4E50\u201D\u7684\u6C14\u7403\u3002",
+      diary: "12 \u6708 31 \u65E5\uFF0C\u6211\u4EEC\u5728\u4E07\u8FBE\u5E7F\u573A\u8DE8\u5E74\uFF0C\u4E00\u8D77\u5012\u8BA1\u65F6\u3002\u8FD8\u4E70\u4E86\u6C14\u7403\uFF0C\u4E0A\u9762\u5199\u7740\u201C\u65B0\u5E74\u5FEB\u4E50\u201D\u3002\n\n\u53C8\u4E00\u8D77\u8DE8\u8FC7\u4E86\u4E00\u4E2A\u5E74\u4EFD\u3002\u90A3\u53E5\u65B0\u5E74\u5FEB\u4E50\uFF0C\u4E5F\u60F3\u4E00\u76F4\u548C\u4F60\u8BF4\u4E0B\u53BB\u3002",
+      heartCost: 80,
+      art: "story_15_new_year_balloons",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
     },
     {
       id: "garden",
       title: "\u6211\u4EEC\u8BA2\u5A5A\u4E86",
-      dateLabel: "\u8BA2\u5A5A \xB7 \u8D70\u5411\u5171\u540C\u7684\u5BB6",
-      summary: "\u4ECE\u76F8\u8BC6\u5230\u76F8\u7231\uFF0C\u518D\u5230\u8BA2\u5A5A\uFF0C\u6211\u4EEC\u4E00\u6B65\u4E00\u6B65\u8D70\u5411\u5F7C\u6B64\u3002",
-      diary: "\u540E\u6765\uFF0C\u6211\u4EEC\u8BA2\u5A5A\u4E86\u3002\u821F\u5C71\u7684\u521D\u89C1\u3001100 \u5C01\u60C5\u4E66\u548C\u4E00\u8D77\u8D70\u8FC7\u7684\u65C5\u9014\uFF0C\u90FD\u6210\u4E86\u8FD9\u6BB5\u5173\u7CFB\u7684\u4E00\u90E8\u5206\u3002\u5C5E\u4E8E\u6211\u4EEC\u7684\u6545\u4E8B\uFF0C\u53C8\u5F80\u524D\u8D70\u4E86\u4E00\u6B65\u3002",
+      dateLabel: "2025 \u5E74 1 \u6708 18 \u65E5",
+      summary: "\u8FD9\u4E00\u5929\uFF0C\u6211\u4EEC\u8BA2\u5A5A\u4E86\uFF0C\u4E00\u8D77\u8D70\u5411\u5171\u540C\u7684\u5BB6\u3002",
+      diary: "2025 \u5E74 1 \u6708 18 \u65E5\uFF0C\u6211\u4EEC\u8BA2\u5A5A\u4E86\u3002\n\n\u821F\u5C71\u7684\u521D\u89C1\u3001\u7B2C\u4E00\u6B21\u7275\u624B\u3001100 \u5C01\u60C5\u4E66\u548C\u4E00\u8D77\u8D70\u8FC7\u7684\u65C5\u9014\uFF0C\u90FD\u6210\u4E86\u8FD9\u6BB5\u5173\u7CFB\u7684\u4E00\u90E8\u5206\u3002\u5C5E\u4E8E\u6211\u4EEC\u7684\u6545\u4E8B\uFF0C\u53C8\u5F80\u524D\u8D70\u4E86\u4E00\u6B65\u3002",
       heartCost: 270,
-      art: "our_story_sheet#8",
-      artColumns: 5,
-      artRows: 2
+      art: "story_16_garden",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.15
+    },
+    {
+      id: "birthday",
+      title: "\u5BA4\u5185\u6ED1\u96EA\u4E0E\u5BB6\u4EBA\u5408\u5F71",
+      dateLabel: "2025 \u5E74 2 \u6708",
+      summary: "\u4E00\u8D77\u53BB\u5BA4\u5185\u6ED1\u96EA\uFF0C\u4E5F\u7559\u4E0B\u56DB\u4EBA\u5199\u771F\u7684\u7EAA\u5FF5\u3002",
+      diary: "2025 \u5E74 2 \u6708 1 \u65E5\uFF0C\u6211\u4EEC\u53BB\u4E86\u5BA4\u5185\u6ED1\u96EA\u573A\u6ED1\u96EA\u3002\n\n2 \u6708 16 \u65E5\uFF0C\u53C8\u548C\u5BB6\u4EBA\u62CD\u4E86\u56DB\u4EBA\u7684\u5199\u771F\u3002\u96EA\u9053\u4E0A\u7684\u65F6\u5149\uFF0C\u548C\u5BB6\u4EBA\u4E00\u8D77\u7559\u4E0B\u7684\u5408\u5F71\uFF0C\u90FD\u662F\u8FD9\u6BB5\u65E5\u5B50\u91CC\u7684\u7EAA\u5FF5\u3002",
+      heartCost: 240,
+      art: "story_17_birthday",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.07
+    },
+    {
+      id: "quanzhou_birthday",
+      title: "\u6CC9\u5DDE\u65C5\u884C\u4E0E\u4F60\u768427\u5C81",
+      dateLabel: "2025 \u5E74\u4E94\u4E00 \xB7 5 \u6708 20 \u65E5",
+      summary: "\u4E00\u8D77\u53BB\u798F\u5EFA\u6CC9\u5DDE\uFF0C\u7B2C\u4E8C\u6B21\u966A\u4F60\u8FC7\u751F\u65E5\u3002",
+      diary: "2025 \u5E74\u4E94\u4E00\u52B3\u52A8\u8282\uFF0C\u6211\u4EEC\u53BB\u4E86\u798F\u5EFA\u6CC9\u5DDE\u65C5\u884C\u3002\n\n5 \u6708 20 \u65E5\uFF0C\u6211\u7B2C\u4E8C\u6B21\u966A\u4F60\u8FC7\u751F\u65E5\u3002\u8FD9\u4E00\u5E74\uFF0C\u4F60 27 \u5C81\u4E86\u3002\u60F3\u7EE7\u7EED\u966A\u4F60\u4E00\u8D77\u65C5\u884C\uFF0C\u4E5F\u4E00\u8D77\u8BB0\u4E0B\u6BCF\u4E00\u5E74\u7684\u751F\u65E5\u3002",
+      heartCost: 80,
+      art: "story_18_quanzhou_birthday",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
+      id: "rafting_again",
+      title: "\u518D\u4E00\u6B21\uFF0C\u548C\u5C0F\u7EC4\u53BB\u6F02\u6D41",
+      dateLabel: "2025 \u5E74 7 \u6708 5 \u65E5",
+      summary: "\u53C8\u4E00\u6B21\u53C2\u52A0\u5C0F\u7EC4\u51FA\u6E38\uFF0C\u7EE7\u7EED\u6536\u96C6\u6F02\u6D41\u7684\u56DE\u5FC6\u3002",
+      diary: "2025 \u5E74 7 \u6708 5 \u65E5\uFF0C\u6211\u4EEC\u53C8\u4E00\u8D77\u53C2\u52A0\u4E86\u5C0F\u7EC4\u51FA\u6E38\uFF0C\u53BB\u4F53\u9A8C\u6F02\u6D41\u3002\n\n\u4ECE\u4E0A\u4E00\u6B21\u7684\u4E34\u5B89\u6F02\u6D41\uFF0C\u5230\u8FD9\u4E00\u6B21\u7684\u51FA\u6E38\uFF0C\u548C\u4F60\u4E00\u8D77\u7559\u4E0B\u7684\u56DE\u5FC6\uFF0C\u53C8\u591A\u4E86\u4E00\u6BB5\u3002",
+      heartCost: 80,
+      art: "story_19_rafting_again",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.16
+    },
+    {
+      id: "first_car",
+      title: "\u751F\u65E5\uFF0C\u7B2C\u4E00\u8F86\u7231\u8F66",
+      dateLabel: "2025 \u5E74 8 \u6708 27 \u65E5",
+      summary: "\u6211\u7684\u751F\u65E5\uFF0C\u4E5F\u662F\u63D0\u5230\u7B2C\u4E00\u8F86\u957F\u5B89UNI-V\u7684\u65E5\u5B50\u3002",
+      diary: "2025 \u5E74 8 \u6708 27 \u65E5\uFF0C\u662F\u6211\u7684\u751F\u65E5\uFF0C\u4E5F\u662F\u6211\u4EEC\u63D0\u5230\u7B2C\u4E00\u8F86\u7231\u8F66\u7684\u65E5\u5B50\u3002\u5B83\u662F\u4E00\u8F86\u957F\u5B89 UNI-V\u3002\n\n\u751F\u65E5\u548C\u7B2C\u4E00\u8F86\u8F66\uFF0C\u7559\u5728\u4E86\u540C\u4E00\u5929\u3002\u4EE5\u540E\u4E00\u8D77\u51FA\u53D1\u7684\u8DEF\uFF0C\u4E5F\u6709\u4E86\u65B0\u7684\u7EAA\u5FF5\u3002",
+      heartCost: 90,
+      art: "story_20_first_car",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.23
+    },
+    {
+      id: "chengdu_jiuzhaigou",
+      title: "\u5927\u718A\u732B\u4E0E\u4E5D\u5BE8\u6C9F",
+      dateLabel: "2025 \u5E74\u56FD\u5E86",
+      summary: "\u53BB\u6210\u90FD\u770B\u5927\u718A\u732B\uFF0C\u4E5F\u4E00\u8D77\u53BB\u4E86\u4E5D\u5BE8\u6C9F\u3002",
+      diary: "2025 \u5E74\u56FD\u5E86\uFF0C\u6211\u4EEC\u53BB\u4E86\u6210\u90FD\u73A9\uFF0C\u770B\u4E86\u5927\u718A\u732B\uFF0C\u4E5F\u4E00\u8D77\u53BB\u4E86\u4E5D\u5BE8\u6C9F\u3002\n\n\u4E00\u8D77\u53BB\u8FC7\u7684\u57CE\u5E02\u548C\u98CE\u666F\uFF0C\u53C8\u591A\u4E86\u4E24\u4E2A\u60F3\u8981\u8BB0\u4F4F\u7684\u540D\u5B57\u3002\u548C\u4F60\u540C\u884C\u7684\u65C5\u7A0B\uFF0C\u8FD8\u5728\u7EE7\u7EED\u3002",
+      heartCost: 90,
+      art: "story_21_chengdu_jiuzhaigou",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.22
+    },
+    {
+      id: "suzhou_portrait",
+      title: "\u82CF\u5DDE\uFF0C\u6211\u4EEC\u7684\u53E4\u88C5\u5199\u771F",
+      dateLabel: "2025 \u5E74 12 \u6708 14 \u65E5",
+      summary: "\u6211\u62FF\u7740\u5251\uFF0C\u4F60\u662F\u5510\u98CE\u9020\u578B\uFF0C\u4E00\u8D77\u7559\u4E0B\u53E4\u88C5\u5199\u771F\u3002",
+      diary: "2025 \u5E74 12 \u6708 14 \u65E5\uFF0C\u6211\u4EEC\u53BB\u4E86\u82CF\u5DDE\u62CD\u53E4\u88C5\u5199\u771F\u3002\u6211\u62FF\u7740\u5251\uFF0C\u4F60\u662F\u5510\u98CE\u7684\u9020\u578B\u3002\n\n\u6362\u4E00\u79CD\u9020\u578B\uFF0C\u7559\u4E0B\u7684\u8FD8\u662F\u6211\u4EEC\u4E24\u4E2A\u4EBA\u7684\u7EAA\u5FF5\u3002\u8FD9\u6B21\u53E4\u88C5\u5199\u771F\uFF0C\u4E5F\u60F3\u597D\u597D\u73CD\u85CF\u3002",
+      heartCost: 90,
+      art: "story_22_suzhou_portrait",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.12
+    },
+    {
+      id: "snow_and_family",
+      title: "\u5C71\u4E0A\u7684\u96EA\uFF0C\u540C\u884C\u7684\u5BB6\u4EBA",
+      dateLabel: "2026 \u5E74 2 \u6708 \xB7 \u4E34\u5B89\u4E0E\u6A2A\u5E97",
+      summary: "\u53BB\u4E34\u5B89\u6237\u5916\u6ED1\u96EA\uFF0C\u518D\u5E26\u7236\u6BCD\u4E00\u8D77\u53BB\u6A2A\u5E97\u3002",
+      diary: "2026 \u5E74 2 \u6708 7 \u65E5\uFF0C\u6211\u4EEC\u53BB\u4E86\u4E34\u5B89\u5C71\u4E0A\u7684\u5BA4\u5916\u6ED1\u96EA\u573A\u6ED1\u96EA\u3002\n\n2 \u6708 22 \u65E5\uFF0C\u53C8\u5E26\u7236\u6BCD\u4E00\u8D77\u53BB\u4E86\u6A2A\u5E97\u3002\u4ECE\u6211\u4EEC\u4E24\u4E2A\u4EBA\u7684\u8DE8\u5E74\u65C5\u884C\uFF0C\u5230\u8FD9\u6B21\u548C\u7236\u6BCD\u540C\u884C\uFF0C\u6A2A\u5E97\u53C8\u591A\u4E86\u4E00\u4EFD\u4E0D\u540C\u7684\u56DE\u5FC6\u3002",
+      heartCost: 90,
+      art: "story_23_snow_and_family",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.2
+    },
+    {
+      id: "wedding_preparations",
+      title: "\u4E3A\u6211\u4EEC\u7684\u5A5A\u793C\u505A\u51C6\u5907",
+      dateLabel: "2026 \u5E74\u4E94\u4E00",
+      summary: "\u6311\u9009\u8349\u576A\u573A\u5730\u3001\u8BD5\u5A5A\u7EB1\uFF0C\u4E5F\u53C2\u52A0\u670B\u53CB\u7684\u5A5A\u793C\u3002",
+      diary: "2026 \u5E74\u4E94\u4E00\uFF0C\u6211\u4EEC\u5F00\u59CB\u6311\u9009\u8349\u576A\u5A5A\u793C\u7684\u573A\u5730\uFF0C\u4E5F\u53BB\u8BD5\u4E86\u5A5A\u7EB1\u3002\u8FD8\u4E00\u8D77\u53C2\u52A0\u4E86\u670B\u53CB\u7684\u5A5A\u793C\u3002\n\n\u5173\u4E8E\u6211\u4EEC\u5A5A\u793C\u7684\u51C6\u5907\uFF0C\u5C31\u8FD9\u6837\u4E00\u4EF6\u4E00\u4EF6\u53D8\u5F97\u5177\u4F53\u3002\u60F3\u4E00\u8D77\u628A\u8FD9\u4EFD\u7EAA\u5FF5\uFF0C\u597D\u597D\u51C6\u5907\u3002",
+      heartCost: 100,
+      art: "story_24_wedding_preparations",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
+      id: "lijiang_wedding",
+      title: "\u4E3D\u6C5F\uFF0C\u7B2C\u4E00\u5957\u5A5A\u7EB1\u7167",
+      dateLabel: "2026 \u5E74 5 \u6708 22 \u65E5\u8D77",
+      summary: "Hello Kitty\u57CE\u5821\u3001\u59CA\u59B9\u6E56\u98CE\u683C\uFF0C\u8FD8\u6709\u96EA\u5C71\u516C\u8DEF\u3002",
+      diary: "2026 \u5E74 5 \u6708 22 \u65E5\uFF0C\u6211\u4EEC\u53BB\u4E86\u4E91\u5357\u4E3D\u6C5F\u62CD\u5A5A\u7EB1\u7167\u3002\n\n\u6709 Hello Kitty \u57CE\u5821\u98CE\u683C\u3001\u201C\u59CA\u59B9\u6E56\u201D\u98CE\u683C\uFF0C\u4E5F\u6709\u516C\u8DEF\u98CE\u683C\u3002\u516C\u8DEF\u90A3\u4E00\u7EC4\uFF0C\u80CC\u666F\u662F\u96EA\u5C71\uFF0C\u8EAB\u8FB9\u662F\u4E00\u8F86\u655E\u7BF7 MINI\u3002\n\n\u62CD\u5B8C\u5A5A\u7EB1\u7167\uFF0C\u6211\u4EEC\u8FD8\u5728\u4E3D\u6C5F\u73A9\u4E86\u4E24\u4E09\u5929\uFF0C\u624D\u4E00\u8D77\u56DE\u53BB\u3002",
+      heartCost: 100,
+      art: "story_25_lijiang_wedding",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.14
+    },
+    {
+      id: "hangzhou_wedding",
+      title: "\u5728\u676D\u5DDE\uFF0C\u7559\u4E0B\u6211\u4EEC\u7684\u6A21\u6837",
+      dateLabel: "2026 \u5E74 6 \u6708 6 \u65E5 \xB7 8 \u6708 8 \u65E5",
+      summary: "\u5A5A\u793CMV\uFF0C\u518D\u5230\u8239\u4E0A\u6C49\u670D\u3001\u7ECF\u5178\u9ED1\u767D\u4E0E\u6696\u8272\u5149\u5F71\u3002",
+      diary: "2026 \u5E74 6 \u6708 6 \u65E5\uFF0C\u6211\u4EEC\u5728\u676D\u5DDE\u62CD\u4E86\u5A5A\u793C MV\u3002\n\n8 \u6708 8 \u65E5\uFF0C\u53C8\u5728\u676D\u5DDE\u62CD\u4E86\u7B2C\u4E8C\u5957\u5A5A\u7EB1\u7167\u3002\u6709\u8239\u4E0A\u7684\u7EA2\u8272\u4E2D\u5F0F\u6C49\u670D\uFF0C\u6211\u7A7F\u72B6\u5143\u670D\uFF1B\u4E5F\u6709\u7ECF\u5178\u7684\u9ED1\u767D\u897F\u88C5\u9020\u578B\uFF0C\u8FD8\u6709\u504F\u6696\u9EC4\u8272\u7684\u5149\u5F71\u3002\n\n\u4E0D\u540C\u7684\u753B\u9762\uFF0C\u90FD\u662F\u6211\u4EEC\u60F3\u7559\u4F4F\u7684\u6A21\u6837\u3002",
+      heartCost: 110,
+      art: "story_26_hangzhou_wedding",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.15
+    },
+    {
+      id: "summer_before_wedding",
+      title: "\u5A5A\u793C\u524D\uFF0C\u6700\u540E\u4E00\u4E2A\u590F\u5929",
+      dateLabel: "2026 \u5E74 8 \u6708",
+      summary: "\u6F14\u5531\u4F1A\u3001\u6C34\u4E0A\u4E50\u56ED\uFF0C\u518D\u4E00\u8D77\u53BB\u897F\u5B89\u9001\u59B9\u59B9\u4E0A\u5927\u5B66\u3002",
+      diary: "2026 \u5E74 8 \u6708 16 \u65E5\uFF0C\u6211\u4EEC\u53BB\u770B\u4E86\u859B\u4E4B\u8C26\u201C\u4E07\u517D\u4E4B\u738B\u201D\u4E3B\u9898\u7684\u6F14\u5531\u4F1A\u30028 \u6708 22 \u65E5\uFF0C\u53C8\u4E00\u8D77\u53BB\u4E86\u6C34\u4E0A\u4E50\u56ED\u3002\n\n8 \u6708 27 \u65E5\uFF0C\u6211\u4EEC\u4E00\u8D77\u53BB\u897F\u5B89\u9001\u59B9\u59B9\u4E0A\u5927\u5B66\uFF0C\u5979\u5C31\u8BFB\u7684\u662F\u897F\u5317\u5927\u5B66\u3002\u8FD8\u987A\u9053\u770B\u4E86\u79E6\u59CB\u7687\u9675\u548C\u5175\u9A6C\u4FD1\u3002\n\n\u5A5A\u793C\u4E4B\u524D\u7684\u8FD9\u4E2A\u590F\u5929\uFF0C\u4E5F\u7559\u4E0B\u4E86\u8BB8\u591A\u60F3\u548C\u4F60\u4E00\u8D77\u8BB0\u4F4F\u7684\u7247\u6BB5\u3002",
+      heartCost: 110,
+      art: "story_27_summer_before_wedding",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.12
     },
     {
       id: "anniversary",
-      title: "\u8FD9\u4E00\u7AD9\uFF0C\u6211\u4EEC\u7ED3\u5A5A\u4E86",
+      title: "\u5A5A\u793C\u3001\u9886\u8BC1\u4E0E\u7B54\u8C22\u5BB4",
       dateLabel: "2026 \u5E74 10 \u6708 3 \u65E5",
-      summary: "2026 \u5E74 10 \u6708 3 \u65E5\uFF0C\u6211\u4EEC\u7ED3\u5A5A\u4E86\u3002\u6545\u4E8B\u8FD8\u4F1A\u7EE7\u7EED\uFF0C\u4E00\u8D77\u5199\u4E0B\u53BB\u3002",
-      diary: "2026 \u5E74 10 \u6708 3 \u65E5\uFF0C\u6211\u4EEC\u7ED3\u5A5A\u4E86\u3002\u4ECE 2023 \u5E74 9 \u6708\u5728\u821F\u5C71\u76F8\u8BC6\uFF0C\u5230\u4E92\u9009\u5F7C\u6B64\u3001\u60C5\u4E66\u8868\u767D\u3001\u5171\u540C\u65C5\u884C\u3001\u6C42\u5A5A\u548C\u8BA2\u5A5A\uFF0C\u6211\u4EEC\u8D70\u5230\u4E86\u8FD9\u4E00\u5929\u3002\u5F80\u540E\u7684\u65E5\u5B50\uFF0C\u4E5F\u60F3\u7EE7\u7EED\u548C\u4F60\u4E00\u8D77\uFF0C\u628A\u5E73\u51E1\u7684\u751F\u6D3B\u8FC7\u6210\u6211\u4EEC\u7684\u6545\u4E8B\u3002",
+      summary: "\u4E50\u6E05\u8349\u576A\u5A5A\u793C\u3001\u9886\u8BC1\uFF0C\u518D\u5230\u4ED9\u5C45\u7684\u9152\u5E97\u7B54\u8C22\u5BB4\u3002",
+      diary: "2026 \u5E74 10 \u6708 3 \u65E5\uFF0C\u6211\u4EEC\u5728\u4E50\u6E05\u529E\u4E86\u8349\u576A\u5A5A\u793C\u3002\n\n10 \u6708 20 \u65E5\uFF0C\u6211\u4EEC\u9886\u4E86\u8BC1\u300210 \u6708 31 \u65E5\uFF0C\u53C8\u5728\u4ED9\u5C45\u7684\u9152\u5E97\u529E\u4E86\u7B54\u8C22\u5BB4\u3002\u5A5A\u793C\u3001\u9886\u8BC1\u548C\u7B54\u8C22\u5BB4\uFF0C\u662F\u8FD9\u4E2A\u5341\u6708\u91CC\u4E09\u4EFD\u4E0D\u540C\u7684\u7EAA\u5FF5\u3002\n\n\u4ECE 2023 \u5E74 9 \u6708 8 \u65E5\u5728\u821F\u5C71\u76F8\u8BC6\uFF0C\u5230\u7B2C\u4E00\u6B21\u7275\u624B\u3001100 \u5C01\u60C5\u4E66\uFF0C\u518D\u5230\u65C5\u884C\u3001\u6C42\u5A5A\u3001\u8BA2\u5A5A\u548C\u6210\u5BB6\uFF0C\u6211\u4EEC\u4E00\u8D77\u8D70\u5230\u4E86\u8FD9\u91CC\u3002\u5F80\u540E\u7684\u6545\u4E8B\uFF0C\u4E5F\u60F3\u7EE7\u7EED\u548C\u4F60\u5199\u4E0B\u53BB\u3002",
       heartCost: 300,
-      art: "our_story_sheet#9",
-      artColumns: 5,
-      artRows: 2
+      art: "story_28_anniversary",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
     }
   ];
 
@@ -881,6 +1184,705 @@
     ]
   };
 
+  // assets/resources/config/adventures.json
+  var adventures_default = [
+    {
+      id: "zhoushan",
+      memoryId: "letters",
+      title: "\u821F\u5C71 \xB7 \u76F8\u9047\u7684\u7EBF\u7D22",
+      unlockLevel: 1,
+      intro: "\u4E00\u8D77\u6574\u7406\u56DE\u5FC6\u518C\u5427\u3002\u5148\u51C6\u5907\u4E24\u4EFD\u65C5\u9014\u5FC3\u610F\uFF0C\u518D\u5728\u6D77\u8FB9\u63D2\u753B\u91CC\u5BFB\u627E\u4E09\u5F20\u7EBF\u7D22\u5361\u3002",
+      steps: [
+        {
+          title: "\u51C6\u5907\u65C5\u9014\u5496\u5561",
+          requirements: [
+            {
+              itemId: "coffee_02",
+              count: 1
+            }
+          ],
+          note: "\u7B2C\u4E00\u4EFD\u5FC3\u610F\u5DF2\u88C5\u597D\uFF0C\u518D\u51C6\u5907\u4E00\u676F\u5496\u5561\uFF0C\u5C31\u80FD\u6253\u5F00\u6D77\u8FB9\u56DE\u5FC6\u518C\u3002"
+        },
+        {
+          title: "\u628A\u5FC3\u610F\u88C5\u8FDB\u80CC\u5305",
+          requirements: [
+            {
+              itemId: "coffee_03",
+              count: 1
+            }
+          ],
+          note: "\u80CC\u5305\u51C6\u5907\u597D\u4E86\u3002\u70B9\u51FB\u6D77\u8FB9\u753B\u9762\u4E2D\u7684\u4E09\u4E2A\u6807\u8BB0\uFF0C\u6536\u96C6\u9080\u8BF7\u5361\u3001\u65E5\u5386\u548C\u4FBF\u7B7E\u3002"
+        }
+      ],
+      instruction: "\u627E\u9F50\u4E09\u5F20\u7EBF\u7D22\u5361\uFF0C\u518D\u6839\u636E\u5361\u7247\u8F93\u5165\u56DB\u4F4D\u5BC6\u7801\uFF0C\u6253\u5F00\u56DE\u5FC6\u62BD\u5C49\u3002",
+      hints: [
+        "\u5148\u70B9\u51FB\u63D2\u753B\u4E2D\u7684\u4E09\u4E2A\u5706\u5F62\u6807\u8BB0\uFF0C\u7EBF\u7D22\u4F1A\u4FDD\u5B58\u5728\u4E0B\u65B9\u7B14\u8BB0\u91CC\u3002",
+        "\u9080\u8BF7\u5361\u5199\u7740\u4E5D\u6708\uFF0C\u65E5\u5386\u5708\u51FA\u4E86\u516B\u65E5\uFF1B\u4FBF\u7B7E\u63D0\u793A\u6309\u6708\u4EFD\u3001\u65E5\u671F\u5404\u4E24\u4F4D\u6392\u5217\u3002",
+        "\u62BD\u5C49\u5BC6\u7801\u662F 0908\u3002\u4E5F\u53EF\u4EE5\u70B9\u51FB\u8DF3\u8FC7\u8C1C\u9898\uFF0C\u7EE7\u7EED\u73CD\u85CF\u8FD9\u6BB5\u56DE\u5FC6\u3002"
+      ],
+      puzzle: {
+        kind: "find",
+        solution: "0908",
+        hotspots: [
+          {
+            id: "invitation",
+            label: "\u9080\u8BF7\u5361",
+            x: -190,
+            y: 95,
+            clue: "\u9080\u8BF7\u5361\uFF1A\u4E5D\u6708\u7684\u821F\u5C71\uFF0C\u6B22\u8FCE\u4E00\u8D77\u53C2\u52A0\u6D3B\u52A8\u3002"
+          },
+          {
+            id: "calendar",
+            label: "\u65E5\u5386",
+            x: 175,
+            y: 5,
+            clue: "\u5C0F\u65E5\u5386\uFF1A\u516B\u65E5\u88AB\u8F7B\u8F7B\u753B\u4E0A\u4E86\u4E00\u4E2A\u5708\u3002"
+          },
+          {
+            id: "note",
+            label: "\u4FBF\u7B7E",
+            x: -60,
+            y: -110,
+            clue: "\u62BD\u5C49\u4FBF\u7B7E\uFF1A\u6708\u4EFD\u5728\u524D\u3001\u65E5\u671F\u5728\u540E\uFF0C\u5404\u5199\u4E24\u4F4D\u3002"
+          }
+        ]
+      },
+      reward: {
+        coins: 120,
+        hearts: 50,
+        energy: 20,
+        scissors: 1
+      },
+      souvenir: {
+        title: "\u521D\u8BC6\u7684\u5FC3\u610F\u793C\u76D2",
+        artItemId: "gift_03",
+        room: "living",
+        x: 155,
+        y: -6
+      }
+    },
+    {
+      id: "love_letters",
+      memoryId: "first_trip",
+      title: "\u60C5\u4E66 \xB7 \u628A\u5FC3\u610F\u6392\u6210\u4E00\u53E5\u8BDD",
+      unlockLevel: 3,
+      intro: "\u628A\u82B1\u548C\u5496\u5561\u51C6\u5907\u597D\uFF0C\u518D\u4ECE\u56DB\u5C01\u4EE3\u8868\u6027\u7684\u4FE1\u91CC\uFF0C\u627E\u51FA\u8FD9\u4EFD\u5FC3\u610F\u7684\u987A\u5E8F\u3002",
+      steps: [
+        {
+          title: "\u4E3A\u4FE1\u4EF6\u6311\u4E00\u6735\u82B1",
+          requirements: [
+            {
+              itemId: "flower_02",
+              count: 1
+            }
+          ],
+          note: "\u82B1\u51C6\u5907\u597D\u4E86\u3002\u518D\u6DFB\u4E00\u676F\u5496\u5561\uFF0C\u4E00\u8D77\u7FFB\u5F00\u4FE1\u4EF6\u3002"
+        },
+        {
+          title: "\u5750\u4E0B\u6765\u6162\u6162\u8BFB\u4FE1",
+          requirements: [
+            {
+              itemId: "coffee_04",
+              count: 1
+            }
+          ],
+          note: "\u56DB\u5C01\u4FE1\u5DF2\u7ECF\u653E\u5728\u684C\u4E0A\u3002\u6839\u636E\u4FE1\u5C01\u4FBF\u7B7E\uFF0C\u628A\u5B83\u4EEC\u6392\u6210\u4E00\u53E5\u544A\u767D\u3002"
+        }
+      ],
+      instruction: "\u4F9D\u6B21\u70B9\u51FB\u56DB\u5C01\u4FE1\uFF0C\u6392\u51FA\u5B8C\u6574\u544A\u767D\uFF1B\u70B9\u5DF2\u9009\u62E9\u7684\u4FE1\u53EF\u64A4\u56DE\u5B83\u53CA\u540E\u9762\u7684\u4FE1\u3002",
+      hints: [
+        "\u8BFB\u4E00\u8BFB\u56DB\u5F20\u4FE1\u5C01\u4E0A\u7684\u4FBF\u7B7E\uFF0C\u5B83\u4EEC\u4F1A\u544A\u8BC9\u4F60\u524D\u540E\u4F4D\u7F6E\u3002",
+        "\u201C\u6211\u201D\u5F00\u5934\uFF0C\u201C\u4F60\u201D\u7ED3\u5C3E\uFF1B\u201C\u559C\u6B22\u201D\u7D27\u8DDF\u7740\u201C\u60F3\u544A\u8BC9\u4F60\uFF1A\u201D\u3002",
+        "\u987A\u5E8F\u662F\uFF1A\u6211 \u2192 \u60F3\u544A\u8BC9\u4F60\uFF1A \u2192 \u559C\u6B22 \u2192 \u4F60\u3002"
+      ],
+      puzzle: {
+        kind: "sequence",
+        tiles: [
+          {
+            id: "you",
+            label: "\u4F60",
+            clue: "\u6211\u5728\u6700\u540E\uFF0C\u7B49\u4F60\u628A\u8BDD\u8BF4\u5B8C\u3002"
+          },
+          {
+            id: "like",
+            label: "\u559C\u6B22",
+            clue: "\u6211\u7D27\u8DDF\u7740\u201C\u60F3\u544A\u8BC9\u4F60\uFF1A\u201D\u3002"
+          },
+          {
+            id: "me",
+            label: "\u6211",
+            clue: "\u8BA9\u6211\u5148\u5F00\u53E3\u5427\u3002"
+          },
+          {
+            id: "tell",
+            label: "\u60F3\u544A\u8BC9\u4F60\uFF1A",
+            clue: "\u6211\u5728\u201C\u6211\u201D\u7684\u540E\u9762\u3002"
+          }
+        ],
+        solution: [
+          "me",
+          "tell",
+          "like",
+          "you"
+        ]
+      },
+      reward: {
+        coins: 180,
+        hearts: 80,
+        energy: 25,
+        scissors: 2
+      },
+      souvenir: {
+        title: "\u73CD\u85CF\u7684\u60C5\u4E66",
+        artItemId: "gift_02",
+        room: "bedroom",
+        x: 0,
+        y: -6
+      }
+    },
+    {
+      id: "namsan",
+      memoryId: "rainy_day",
+      title: "\u5357\u5C71\u5854 \xB7 \u70B9\u4EAE\u5FC3\u610F",
+      unlockLevel: 5,
+      intro: "\u51C6\u5907\u597D\u751C\u70B9\u548C\u82B1\u675F\uFF0C\u518D\u70B9\u4EAE\u8FD9\u5F20\u4E3A\u56DE\u5FC6\u518C\u8BBE\u8BA1\u7684\u706F\u5149\u5361\u3002",
+      steps: [
+        {
+          title: "\u51C6\u5907\u65C5\u884C\u751C\u70B9",
+          requirements: [
+            {
+              itemId: "dessert_03",
+              count: 1
+            }
+          ],
+          note: "\u751C\u70B9\u51C6\u5907\u597D\u4E86\u3002\u518D\u5E26\u4E0A\u82B1\u675F\uFF0C\u5C31\u53EF\u4EE5\u70B9\u4EAE\u706F\u5149\u5361\u3002"
+        },
+        {
+          title: "\u5E26\u4E0A\u6D6A\u6F2B\u82B1\u675F",
+          requirements: [
+            {
+              itemId: "flower_04",
+              count: 1
+            }
+          ],
+          note: "\u70B9\u51FB\u706F\u5149\u5361\u7247\u65CB\u8F6C\u7EBF\u8DEF\uFF0C\u8BA9\u5DE6\u4FA7\u5165\u53E3\u4E00\u8DEF\u8FDE\u63A5\u5230\u53F3\u4FA7\u7231\u5FC3\u3002"
+        }
+      ],
+      instruction: "\u70B9\u4E00\u4E0B\u65CB\u8F6C\u4E00\u683C\uFF0C\u91D1\u8272\u8868\u793A\u5DF2\u901A\u7535\uFF1B\u628A\u5DE6\u4E0A\u5165\u53E3\u63A5\u5230\u53F3\u4E0B\u7231\u5FC3\u3002\u5B8C\u6210\u540E\u70B9\u51FB\u68C0\u67E5\u7EBF\u8DEF\u3002",
+      hints: [
+        "\u7EBF\u8DEF\u5FC5\u987B\u4E24\u7AEF\u76F8\u5BF9\u624D\u80FD\u8FDE\u901A\u3002\u5148\u4ECE\u5DE6\u4E0A\u5165\u53E3\u5411\u53F3\u63A5\u3002",
+        "\u8DEF\u7EBF\u6CBF\u7B2C\u4E00\u6392\u5411\u53F3\uFF0C\u518D\u5230\u7B2C\u4E8C\u6392\u5411\u5DE6\uFF0C\u6700\u540E\u6CBF\u7B2C\u4E09\u6392\u5411\u53F3\u3002",
+        "\u5148\u70B9\u91CD\u7F6E\u673A\u5173\uFF0C\u518D\u628A\u6BCF\u4E2A\u683C\u5B50\u70B9\u4E09\u6B21\uFF0C\u6700\u540E\u68C0\u67E5\u7EBF\u8DEF\u3002\u4E5F\u53EF\u4EE5\u8DF3\u8FC7\uFF0C\u7EE7\u7EED\u73CD\u85CF\u8FD9\u6BB5\u56DE\u5FC6\u3002"
+      ],
+      puzzle: {
+        kind: "circuit",
+        columns: 3,
+        rows: 3,
+        start: 0,
+        end: 8,
+        ports: [
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        initial: [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        solution: [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      reward: {
+        coins: 240,
+        hearts: 120,
+        energy: 30,
+        scissors: 2
+      },
+      souvenir: {
+        title: "\u5357\u5C71\u5854\u7684\u5FC3\u610F\u540A\u5760",
+        artItemId: "gift_06",
+        room: "living",
+        x: -155,
+        y: -6
+      }
+    },
+    {
+      id: "hengdian_newyear",
+      memoryId: "night_view",
+      title: "\u6A2A\u5E97 \xB7 \u4E00\u8D77\u8DE8\u5E74",
+      unlockLevel: 6,
+      intro: "2023 \u5E74 12 \u6708 30 \u65E5\uFF0C\u6211\u4EEC\u53BB\u6A2A\u5E97\u8DE8\u5E74\u3002\u5148\u51C6\u5907\u4E24\u4EF6\u65C5\u9014\u5FC3\u610F\uFF0C\u518D\u628A\u56DE\u5FC6\u518C\u8FD9\u4E00\u9875\u7684\u7167\u7247\u6392\u6210\u4E00\u6BB5\u6545\u4E8B\u3002",
+      steps: [
+        {
+          title: "\u51FA\u53D1\u524D\u7684\u4E00\u676F\u70ED\u5496\u5561",
+          requirements: [
+            {
+              itemId: "coffee_03",
+              count: 1
+            },
+            {
+              itemId: "dessert_02",
+              count: 1
+            }
+          ],
+          note: "\u70ED\u5496\u5561\u548C\u751C\u70B9\u88C5\u597D\u4E86\u3002\u518D\u5E26\u4E0A\u82B1\u548C\u86CB\u7CD5\uFF0C\u5C31\u80FD\u6253\u5F00\u8DE8\u5E74\u7684\u884C\u7A0B\u5361\u3002"
+        },
+        {
+          title: "\u79E6\u738B\u5BAB\u4E0E\u6E29\u6CC9",
+          requirements: [
+            {
+              itemId: "flower_03",
+              count: 1
+            },
+            {
+              itemId: "dessert_03",
+              count: 1
+            }
+          ],
+          note: "\u95E8\u7968\u548C\u6E29\u6CC9\u724C\u90FD\u6536\u597D\u4E86\u3002\u6309\u56DE\u5FC6\u518C\u8FD9\u4E00\u9875\u7684\u6392\u7248\uFF0C\u628A\u56DB\u5F20\u7167\u7247\u6392\u6210\u4E00\u6761\u7EBF\u3002"
+        }
+      ],
+      instruction: "\u8FD9\u662F\u56DE\u5FC6\u518C\u7684\u4E00\u9875\u6392\u7248\uFF0C\u4E0D\u662F\u884C\u7A0B\u65F6\u95F4\u8868\uFF1B\u6309\u9875\u7801\u4F9D\u6B21\u70B9\u9009\u56DB\u5F20\u7167\u7247\u3002",
+      hints: [
+        "\u5148\u770B\u56DB\u5F20\u5361\u5DE6\u4E0A\u89D2\u7684\u9875\u7801\uFF0C\u5B83\u4EEC\u8868\u793A\u8FD9\u4E00\u9875\u7684\u6392\u7248\u4F4D\u7F6E\u3002",
+        "\u9875\u7801 1 \u662F\u79E6\u738B\u5BAB\uFF0C\u9875\u7801 2 \u662F\u6E38\u4E50\u56ED\uFF1B\u9875\u7801 3 \u662F\u6E29\u6CC9\uFF0C\u9875\u7801 4 \u662F\u56DE\u6E29\u5DDE\u3002",
+        "\u6309\u9875\u7801\u4F9D\u6B21\u70B9\u9009\uFF1A\u79E6\u738B\u5BAB \u2192 \u6E38\u4E50\u56ED \u2192 \u6E29\u6CC9 \u2192 \u56DE\u6E29\u5DDE\u3002"
+      ],
+      puzzle: {
+        kind: "sequence",
+        tiles: [
+          {
+            id: "qinwang",
+            label: "\u79E6\u738B\u5BAB",
+            clue: "\u9875\u7801 1 \xB7 \u7EA2\u5899\u7167\u7247\u6392\u5728\u8FD9\u4E00\u9875\u6700\u4E0A\u9762\u3002"
+          },
+          {
+            id: "park",
+            label: "\u6E38\u4E50\u56ED",
+            clue: "\u9875\u7801 2 \xB7 \u63A5\u5728\u7EA2\u5899\u7167\u7247\u540E\u9762\u7684\u6E38\u4E50\u56ED\u5F69\u706F\u3002"
+          },
+          {
+            id: "hotspring",
+            label: "\u6E29\u6CC9",
+            clue: "\u9875\u7801 3 \xB7 \u6E29\u6CC9\u7167\u7247\u6392\u5728\u8FD9\u4E00\u9875\u7684\u4E0B\u65B9\u3002"
+          },
+          {
+            id: "back_wenzhou",
+            label: "\u56DE\u6E29\u5DDE",
+            clue: "\u9875\u7801 4 \xB7 \u8F66\u7968\u548C\u56DE\u6E29\u5DDE\u7684\u7167\u7247\u6536\u5728\u9875\u5C3E\u3002"
+          }
+        ],
+        solution: [
+          "qinwang",
+          "park",
+          "hotspring",
+          "back_wenzhou"
+        ]
+      },
+      reward: {
+        coins: 300,
+        hearts: 150,
+        energy: 30,
+        scissors: 2
+      },
+      souvenir: {
+        title: "\u8DE8\u5E74\u884C\u7A0B\u7EAA\u5FF5\u7968",
+        artItemId: "gift_05",
+        room: "living",
+        x: 0,
+        y: 26
+      }
+    },
+    {
+      id: "lijiang_photos",
+      memoryId: "lijiang_wedding",
+      title: "\u4E3D\u6C5F \xB7 \u7B2C\u4E00\u5957\u5A5A\u7EB1\u7167",
+      unlockLevel: 8,
+      intro: "2026 \u5E74 5 \u6708 22 \u65E5\uFF0C\u6211\u4EEC\u53BB\u4E3D\u6C5F\u62CD\u5A5A\u7EB1\u7167\u3002\u51C6\u5907\u597D\u51FA\u53D1\u7684\u5FC3\u610F\uFF0C\u518D\u5728\u753B\u9762\u91CC\u627E\u56DE\u90A3\u5929\u7684\u65E5\u671F\u5BC6\u7801\u3002",
+      steps: [
+        {
+          title: "\u6E05\u6668\u7684\u62FF\u94C1",
+          requirements: [
+            {
+              itemId: "coffee_03",
+              count: 1
+            },
+            {
+              itemId: "flower_02",
+              count: 1
+            }
+          ],
+          note: "\u6E05\u6668\u7684\u5496\u5561\u548C\u82B1\u51C6\u5907\u597D\u4E86\u3002\u518D\u5E26\u4E0A\u793C\u7269\u4E0E\u751C\u70B9\uFF0C\u5C31\u80FD\u7FFB\u5F00\u4E3D\u6C5F\u7684\u62CD\u6444\u624B\u8BB0\u3002"
+        },
+        {
+          title: "\u57CE\u5821\u4E0E\u96EA\u5C71\u516C\u8DEF",
+          requirements: [
+            {
+              itemId: "gift_02",
+              count: 1
+            },
+            {
+              itemId: "dessert_04",
+              count: 1
+            }
+          ],
+          note: "\u62CD\u6444\u624B\u8BB0\u91CC\u5939\u7740\u57CE\u5821\u9884\u7EA6\u5355\u3001\u59CA\u59B9\u6E56\u4FBF\u7B7E\u548C\u4E00\u628A MINI \u8F66\u94A5\u5319\u3002\u627E\u5230\u4E09\u5904\u7EBF\u7D22\uFF0C\u518D\u8F93\u5165\u65E5\u671F\u5BC6\u7801\u3002"
+        }
+      ],
+      instruction: "\u627E\u5230\u57CE\u5821\u3001\u59CA\u59B9\u6E56\u548C\u96EA\u5C71\u516C\u8DEF\u7684\u4E09\u5904\u6807\u8BB0\uFF0C\u518D\u8F93\u5165\u56DB\u4F4D\u65E5\u671F\u5BC6\u7801\u3002",
+      hints: [
+        "\u5148\u70B9\u753B\u9762\u91CC\u7684\u4E09\u5904\u6807\u8BB0\uFF0C\u7EBF\u7D22\u4F1A\u6536\u8FDB\u4E0B\u65B9\u7B14\u8BB0\u3002",
+        "\u57CE\u5821\u9884\u7EA6\u5355\u5199\u7740 5 \u6708\uFF0C\u96EA\u5C71\u516C\u8DEF\u7684\u8F66\u94A5\u5319\u724C\u6807\u7740 22 \u65E5\u3002",
+        "\u6708\u4EFD\u5728\u524D\u3001\u65E5\u671F\u5728\u540E\uFF0C\u5404\u5199\u4E24\u4F4D\uFF0C\u5BC6\u7801\u662F 0522\u3002\u4E5F\u53EF\u4EE5\u8DF3\u8FC7\u8C1C\u9898\uFF0C\u7EE7\u7EED\u73CD\u85CF\u8FD9\u6BB5\u56DE\u5FC6\u3002"
+      ],
+      puzzle: {
+        kind: "find",
+        solution: "0522",
+        hotspots: [
+          {
+            id: "castle",
+            label: "\u57CE\u5821\u9884\u7EA6\u5355",
+            x: -180,
+            y: 80,
+            clue: "\u57CE\u5821\u9884\u7EA6\u5355\uFF1A5 \u6708 22 \u65E5\uFF0C\u7B2C\u4E00\u7AD9\u3002"
+          },
+          {
+            id: "sister_lake",
+            label: "\u59CA\u59B9\u6E56\u4FBF\u7B7E",
+            x: 160,
+            y: 20,
+            clue: "\u59CA\u59B9\u6E56\u7684\u4FBF\u7B7E\uFF1A\u6708\u4EFD\u548C\u65E5\u671F\u90FD\u5199\u4E24\u4F4D\u3002"
+          },
+          {
+            id: "mini",
+            label: "MINI \u8F66\u94A5\u5319",
+            x: -50,
+            y: -110,
+            clue: "\u96EA\u5C71\u516C\u8DEF\u7684\u8F66\u94A5\u5319\u724C\uFF1A\u65E5\u671F\u662F 22 \u65E5\uFF0C\u8EAB\u8FB9\u505C\u7740\u4E00\u8F86\u655E\u7BF7 MINI\u3002"
+          }
+        ]
+      },
+      reward: {
+        coins: 360,
+        hearts: 180,
+        energy: 35,
+        scissors: 2
+      },
+      souvenir: {
+        title: "\u4E3D\u6C5F\u65C5\u62CD\u82B1\u675F",
+        artItemId: "flower_06",
+        room: "bedroom",
+        x: 160,
+        y: -6
+      }
+    },
+    {
+      id: "leqing_wedding",
+      memoryId: "anniversary",
+      title: "\u4E50\u6E05 \xB7 \u8349\u576A\u5A5A\u793C",
+      unlockLevel: 10,
+      intro: "2026 \u5E74 10 \u6708 3 \u65E5\uFF0C\u6211\u4EEC\u5728\u4E50\u6E05\u529E\u8349\u576A\u5A5A\u793C\u3002\u51C6\u5907\u597D\u82B1\u95E8\u4E0E\u8A93\u8A00\uFF0C\u518D\u628A\u8349\u576A\u4E0A\u7684\u706F\u4E32\u70B9\u4EAE\u3002",
+      steps: [
+        {
+          title: "\u8349\u576A\u4E0A\u7684\u82B1\u95E8",
+          requirements: [
+            {
+              itemId: "flower_04",
+              count: 1
+            },
+            {
+              itemId: "coffee_03",
+              count: 1
+            }
+          ],
+          note: "\u82B1\u95E8\u548C\u5496\u5561\u51C6\u5907\u597D\u4E86\u3002\u518D\u5E26\u4E0A\u793C\u7269\u4E0E\u751C\u70B9\uFF0C\u5C31\u80FD\u8D70\u8FDB\u8349\u576A\u5A5A\u793C\u8FD9\u4E00\u9875\u3002"
+        },
+        {
+          title: "\u4EA4\u6362\u5FC3\u610F",
+          requirements: [
+            {
+              itemId: "gift_04",
+              count: 1
+            },
+            {
+              itemId: "dessert_04",
+              count: 1
+            }
+          ],
+          note: "\u793C\u7269\u548C\u751C\u70B9\u6446\u4E0A\u4E86\u684C\u3002\u65CB\u8F6C\u706F\u4E32\uFF0C\u8BA9\u5DE6\u4FA7\u5165\u53E3\u4E00\u8DEF\u4EAE\u5230\u53F3\u4E0B\u89D2\u7684\u82B1\u95E8\u3002"
+        }
+      ],
+      instruction: "\u70B9\u4E00\u4E0B\u65CB\u8F6C\u4E00\u683C\uFF0C\u91D1\u8272\u8868\u793A\u5DF2\u901A\u7535\uFF1B\u628A\u8349\u576A\u5DE6\u4FA7\u5165\u53E3\u63A5\u5230\u53F3\u4E0B\u89D2\u7684\u82B1\u95E8\u3002",
+      hints: [
+        "\u706F\u4E32\u4ECE\u8349\u576A\u5DE6\u4FA7\u5165\u53E3\u8FDB\u5165\uFF0C\u5148\u6CBF\u7B2C\u4E00\u6392\u5411\u53F3\u3002",
+        "\u5230\u53F3\u4E0A\u89D2\u540E\u5F80\u4E0B\u62D0\uFF0C\u7ECF\u8FC7\u7B2C\u4E8C\u6392\u53F3\u4FA7\uFF0C\u6700\u540E\u843D\u5230\u53F3\u4E0B\u89D2\u7684\u82B1\u95E8\u3002",
+        "\u5148\u70B9\u91CD\u7F6E\u673A\u5173\uFF0C\u518D\u628A\u6BCF\u4E2A\u683C\u5B50\u70B9\u4E09\u6B21\uFF0C\u6700\u540E\u68C0\u67E5\u7EBF\u8DEF\u3002\u4E5F\u53EF\u4EE5\u8DF3\u8FC7\u8C1C\u9898\u3002"
+      ],
+      puzzle: {
+        kind: "circuit",
+        columns: 3,
+        rows: 3,
+        start: 0,
+        end: 8,
+        ports: [
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        initial: [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        solution: [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      reward: {
+        coins: 450,
+        hearts: 220,
+        energy: 40,
+        scissors: 3
+      },
+      souvenir: {
+        title: "\u8349\u576A\u5A5A\u793C\u7684\u8A93\u8A00\u5361",
+        artItemId: "gift_07",
+        room: "garden",
+        x: 0,
+        y: -6
+      }
+    }
+  ];
+
+  // assets/resources/config/small_dates.json
+  var small_dates_default = [
+    {
+      id: "small_date_morning_coffee",
+      title: "\u6668\u95F4\u5496\u5561",
+      description: "\u4E0D\u7528\u7B49\u7279\u522B\u7684\u65E5\u5B50\uFF0C\u65E9\u8D77\u78E8\u4E00\u676F\u5496\u5561\uFF0C\u628A\u6E05\u6668\u7559\u7ED9\u5F7C\u6B64\u3002",
+      memoryId: "letters",
+      minLevel: 1,
+      requirements: [
+        { itemId: "coffee_02", count: 1 },
+        { itemId: "coffee_01", count: 1 }
+      ],
+      rewardCoins: 16,
+      rewardXp: 8,
+      rewardHearts: 2
+    },
+    {
+      id: "small_date_window_tea",
+      title: "\u7A97\u8FB9\u4E0B\u5348\u8336",
+      description: "\u628A\u751C\u70B9\u548C\u5496\u5561\u642C\u5230\u7A97\u8FB9\uFF0C\u770B\u4E00\u4F1A\u513F\u4E91\uFF0C\u4E5F\u8BF4\u4E00\u4F1A\u513F\u8BDD\u3002",
+      memoryId: "first_trip",
+      minLevel: 5,
+      requirements: [
+        { itemId: "coffee_03", count: 1 },
+        { itemId: "dessert_02", count: 1 }
+      ],
+      rewardCoins: 20,
+      rewardXp: 10,
+      rewardHearts: 3
+    },
+    {
+      id: "small_date_walk_flowers",
+      title: "\u6563\u6B65\u5E26\u82B1",
+      description: "\u6CBF\u7740\u719F\u6089\u7684\u5C0F\u8DEF\u6162\u6162\u8D70\uFF0C\u987A\u624B\u5E26\u4E00\u679D\u82B1\u56DE\u5BB6\u3002",
+      memoryId: "shenxianju",
+      minLevel: 3,
+      requirements: [
+        { itemId: "flower_02", count: 1 },
+        { itemId: "coffee_02", count: 1 }
+      ],
+      rewardCoins: 18,
+      rewardXp: 9,
+      rewardHearts: 2
+    },
+    {
+      id: "small_date_movie_night",
+      title: "\u7535\u5F71\u5C0F\u591C\u665A",
+      description: "\u6311\u4E00\u90E8\u8001\u7535\u5F71\uFF0C\u51C6\u5907\u4E00\u70B9\u751C\u70B9\uFF0C\u5173\u6389\u706F\u5C31\u662F\u4E00\u4E2A\u665A\u4E0A\u3002",
+      memoryId: "new_year_balloons",
+      minLevel: 5,
+      requirements: [
+        { itemId: "dessert_02", count: 1 },
+        { itemId: "coffee_01", count: 1 }
+      ],
+      rewardCoins: 19,
+      rewardXp: 9,
+      rewardHearts: 3
+    }
+  ];
+
+  // assets/scripts/core/play/types.ts
+  function createChapterProgress() {
+    return { step: 0, found: [], selected: [], rotations: [], code: "", hints: 0, outcome: "playing", claimed: false };
+  }
+  function createReplayProgress() {
+    return { found: [], selected: [], rotations: [], code: "", hints: 0, outcome: "playing" };
+  }
+  function createSmallDateProgress() {
+    return { currentId: "", rotation: 0, completed: 0 };
+  }
+  function itemBaseCost(level) {
+    return level <= 1 ? 1 : 2 ** (level - 1);
+  }
+  function requirementsBaseCost(requirements, levelOf) {
+    let total = 0;
+    for (const req of requirements) {
+      const level = levelOf(req.itemId);
+      if (!level) return Number.POSITIVE_INFINITY;
+      total += itemBaseCost(level) * req.count;
+    }
+    return total;
+  }
+  function circuitState(puzzle, rotations) {
+    const ports = puzzle.ports.map((cell, i) => cell.map((p) => (p + (rotations[i] ?? puzzle.initial[i])) % 4));
+    const lit = [];
+    const queue = ports[puzzle.start]?.includes(3) ? [puzzle.start] : [];
+    while (queue.length) {
+      const index = queue.shift();
+      if (lit.includes(index)) continue;
+      lit.push(index);
+      const row = Math.floor(index / puzzle.columns), column = index % puzzle.columns;
+      for (const port of ports[index]) {
+        const nr = row + [-1, 0, 1, 0][port], nc = column + [0, 1, 0, -1][port];
+        if (nr < 0 || nc < 0 || nr >= puzzle.rows || nc >= puzzle.columns) continue;
+        const next = nr * puzzle.columns + nc;
+        if (ports[next].includes((port + 2) % 4) && !lit.includes(next)) queue.push(next);
+      }
+    }
+    return { ports, lit, solved: lit.includes(puzzle.end) && ports[puzzle.end].includes(1) };
+  }
+
+  // assets/scripts/core/progression/progression.ts
+  function getLevelForXp(progression, xp) {
+    let level = 1;
+    for (const entry of progression.levels) {
+      if (xp >= entry.xpRequired) {
+        level = entry.level;
+      }
+    }
+    return level;
+  }
+  function getXpToNext(progression, xp) {
+    const current = getLevelForXp(progression, xp);
+    const next = progression.levels.find((l) => l.level === current + 1);
+    if (!next) {
+      return { need: 0, nextThreshold: null, current };
+    }
+    return {
+      need: Math.max(0, next.xpRequired - xp),
+      nextThreshold: next.xpRequired,
+      current
+    };
+  }
+  function collectUnlockChains(progression, upToLevel) {
+    const chains = /* @__PURE__ */ new Set();
+    for (const entry of progression.levels) {
+      if (entry.level <= upToLevel) {
+        for (const c of entry.unlockChains) chains.add(c);
+      }
+    }
+    return Array.from(chains);
+  }
+
   // assets/scripts/config/ConfigRepository.ts
   function loadConfigBundle() {
     const game = game_default;
@@ -893,7 +1895,20 @@
     const furniture = furniture_default;
     const wishes = wishes_default;
     const levelRewards = level_rewards_default;
-    return { game, items, catalog, generators, orders, progression, memories, furniture, wishes, levelRewards };
+    return {
+      game,
+      items,
+      catalog,
+      generators,
+      orders,
+      progression,
+      memories,
+      furniture,
+      wishes,
+      levelRewards,
+      adventures: adventures_default,
+      smallDates: small_dates_default
+    };
   }
   function validateConfig(bundle) {
     const issues = [];
@@ -1019,13 +2034,22 @@
         ids.add(entry.id);
       }
     }
-    if (memories.length !== 10 || furniture.length !== 10 || wishes.length !== 10) {
-      issues.push({ level: "error", message: "Life content must have 10 memories, furniture, and wishes" });
+    if (memories.length === 0) {
+      issues.push({ level: "error", message: "Memory content must not be empty" });
+    }
+    if (furniture.length !== 10 || wishes.length !== 10) {
+      issues.push({ level: "error", message: "Life content must have 10 furniture items and wishes" });
     }
     if (furniture.reduce((n, f) => n + f.decorPoints, 0) !== 50) {
       issues.push({ level: "error", message: "Furniture decor points must total 50" });
     }
     for (const memory of memories) {
+      if (memory.artMode !== void 0 && !["cover", "contain"].includes(memory.artMode)) {
+        issues.push({ level: "error", message: `Memory ${memory.id} art mode invalid` });
+      }
+      if (memory.artFocusY !== void 0 && (!Number.isFinite(memory.artFocusY) || memory.artFocusY < 0 || memory.artFocusY > 1)) {
+        issues.push({ level: "error", message: `Memory ${memory.id} art focus invalid` });
+      }
       if (memory.heartCost <= 0) issues.push({ level: "error", message: `Memory ${memory.id} cost invalid` });
       if (typeof memory.art !== "string" || !/^[a-z][a-z0-9_]*(?:#\d{1,2})?$/.test(memory.art)) {
         issues.push({ level: "error", message: `Memory ${memory.id} art invalid` });
@@ -1061,6 +2085,51 @@
       }
       specialLevels.add(reward.level);
     }
+    if (!Number.isInteger(game.toolbox?.warehouseSlots) || game.toolbox.warehouseSlots < 1 || game.toolbox.warehouseSlots > 6 || !Number.isInteger(game.toolbox.startingScissors) || game.toolbox.startingScissors < 0) issues.push({ level: "error", message: "Toolbox config invalid" });
+    const chapterIds = /* @__PURE__ */ new Set();
+    const chapterMemoryIds = /* @__PURE__ */ new Set();
+    const souvenirKeys = /* @__PURE__ */ new Set();
+    for (const c of bundle.adventures) {
+      const p = c.puzzle;
+      const unlockedAtLevel = new Set(collectUnlockChains(progression, c.unlockLevel));
+      const souvenirKey = `${c.souvenir.room}:${c.souvenir.x}:${c.souvenir.y}`;
+      const baseOk = /^[a-z][a-z0-9_]*$/.test(c.id) && !chapterIds.has(c.id) && memories.some((m) => m.id === c.memoryId) && !chapterMemoryIds.has(c.memoryId) && typeof c.title === "string" && c.title.trim().length > 0 && typeof c.intro === "string" && c.intro.trim().length > 0 && typeof c.instruction === "string" && c.instruction.trim().length > 0 && c.steps.length === 2 && c.hints.length === 3 && c.hints.every((hint) => typeof hint === "string" && hint.trim().length > 0) && Number.isInteger(c.unlockLevel) && c.unlockLevel >= 1 && c.unlockLevel <= 18 && Object.values(c.reward).every((n) => Number.isInteger(n) && n >= 0) && catalog.has(c.souvenir.artItemId) && ["living", "bedroom", "garden"].includes(c.souvenir.room) && typeof c.souvenir.title === "string" && c.souvenir.title.trim().length > 0 && Number.isFinite(c.souvenir.x) && Number.isFinite(c.souvenir.y) && !souvenirKeys.has(souvenirKey) && c.steps.every((s) => typeof s.title === "string" && typeof s.note === "string" && s.requirements.length > 0 && s.requirements.every((r) => {
+        const def = catalog.get(r.itemId);
+        return !!def && unlockedAtLevel.has(def.chainId) && Number.isInteger(r.count) && r.count > 0;
+      }));
+      chapterIds.add(c.id);
+      chapterMemoryIds.add(c.memoryId);
+      souvenirKeys.add(souvenirKey);
+      let puzzleOk = false;
+      if (p.kind === "find") puzzleOk = /^\d{4}$/.test(p.solution) && p.hotspots.length >= 2 && new Set(p.hotspots.map((h) => h.id)).size === p.hotspots.length && p.hotspots.every((h) => typeof h.label === "string" && h.label.trim().length > 0 && typeof h.clue === "string" && h.clue.trim().length > 0 && Number.isFinite(h.x) && Number.isFinite(h.y));
+      if (p.kind === "sequence") puzzleOk = p.tiles.length >= 3 && p.tiles.length <= 6 && new Set(p.solution).size === p.tiles.length && p.solution.length === p.tiles.length && p.tiles.every((t) => p.solution.includes(t.id)) && p.tiles.every((t) => typeof t.label === "string" && t.label.trim().length > 0 && typeof t.clue === "string" && t.clue.trim().length > 0);
+      if (p.kind === "circuit") {
+        puzzleOk = p.columns === 3 && p.rows === 3 && p.ports.length === 9 && p.initial.length === 9 && p.solution.length === 9 && p.ports.every((ports) => ports.length === 2 && new Set(ports).size === 2 && ports.every((n) => Number.isInteger(n) && n >= 0 && n < 4)) && [...p.initial, ...p.solution].every((n) => Number.isInteger(n) && n >= 0 && n < 4) && Number.isInteger(p.start) && p.start >= 0 && p.start < 9 && Number.isInteger(p.end) && p.end >= 0 && p.end < 9;
+        if (puzzleOk) puzzleOk = circuitState(p, p.solution).solved && !circuitState(p, p.initial).solved;
+      }
+      if (!baseOk || !puzzleOk) issues.push({ level: "error", message: `Adventure ${c.id} invalid` });
+    }
+    if (bundle.smallDates.length < 4) {
+      issues.push({ level: "error", message: "Small dates must provide at least 4 themes" });
+    }
+    const smallDateIds = /* @__PURE__ */ new Set();
+    const levelOneChains = new Set(collectUnlockChains(progression, 1));
+    let levelOneDate = false;
+    for (const date of bundle.smallDates) {
+      const cost = requirementsBaseCost(date.requirements, (id) => catalog.get(id)?.level);
+      const dateOk = /^[a-z][a-z0-9_]*$/.test(date.id) && !smallDateIds.has(date.id) && typeof date.title === "string" && date.title.trim().length > 0 && typeof date.description === "string" && date.description.trim().length > 0 && typeof date.memoryId === "string" && date.memoryId.length > 0 && Number.isInteger(date.minLevel) && date.minLevel >= 1 && date.minLevel <= 18 && date.requirements.length > 0 && date.requirements.every((r) => {
+        const def = catalog.get(r.itemId);
+        return !!def && def.level <= 3 && Number.isInteger(r.count) && r.count > 0;
+      }) && cost >= 2 && cost <= 8 && [date.rewardCoins, date.rewardXp, date.rewardHearts].every((n) => Number.isInteger(n) && n >= 0);
+      smallDateIds.add(date.id);
+      if (!dateOk) issues.push({ level: "error", message: `Small date ${date.id} invalid` });
+      else if (!memories.some((m) => m.id === date.memoryId)) issues.push({ level: "warn", message: `Small date ${date.id} illustration memory missing` });
+      if (date.minLevel <= 1 && date.requirements.length > 0 && date.requirements.every((r) => {
+        const def = catalog.get(r.itemId);
+        return !!def && levelOneChains.has(def.chainId);
+      })) levelOneDate = true;
+    }
+    if (!levelOneDate) issues.push({ level: "error", message: "Small dates need an entry playable at level 1" });
     return issues;
   }
   function assertConfigValid(bundle) {
@@ -1266,7 +2335,12 @@
         return { ok: false, reason: "EMPTY", defaultData: this.options.createDefault() };
       }
       const loaded = this.parse(raw);
-      if (loaded) return loaded;
+      if (loaded) {
+        if (loaded.notice === "MIGRATED" && !this.backupCorrupt(raw)) {
+          return { ok: false, reason: "UNAVAILABLE", defaultData: this.options.createDefault() };
+        }
+        return loaded;
+      }
       let backup;
       try {
         backup = this.options.storage.getItem(`${this.options.saveKey}:backup`);
@@ -1390,7 +2464,8 @@
         activeOrders: activeOrders.length > 0 ? activeOrders : defaults.activeOrders,
         tutorial,
         recentOrderIds: Array.isArray(parsed.recentOrderIds) ? parsed.recentOrderIds.filter((x) => typeof x === "string") : [],
-        life
+        life,
+        play: this.mergePlay(parsed.play, defaults.play, boardCells)
       };
       return { data, repaired };
     }
@@ -1445,6 +2520,45 @@
         }
       }
       return cells;
+    }
+    mergePlay(raw, fallback, board) {
+      const p = raw && typeof raw === "object" ? raw : {};
+      const used = new Set(board.flatMap((cell) => cell.item ? [cell.item.uid] : []));
+      const warehouse = (Array.isArray(p.warehouse) ? p.warehouse : []).filter((item) => {
+        if (!item || typeof item.uid !== "string" || typeof item.definitionId !== "string" || used.has(item.uid)) return false;
+        used.add(item.uid);
+        return true;
+      }).map((item) => ({ uid: item.uid, definitionId: item.definitionId }));
+      const strings = (value) => Array.isArray(value) ? Array.from(new Set(value.filter((v) => typeof v === "string"))) : [];
+      const puzzle = (value) => ({
+        found: strings(value.found),
+        selected: strings(value.selected),
+        rotations: Array.isArray(value.rotations) && value.rotations.every((r) => Number.isInteger(r) && r >= 0 && r < 4) ? [...value.rotations] : [],
+        code: typeof value.code === "string" && /^\d{0,16}$/.test(value.code) ? value.code : "",
+        hints: Math.max(0, Math.floor(num(value.hints, 0))),
+        outcome: value.outcome === "solved" || value.outcome === "skipped" ? value.outcome : "playing"
+      });
+      const chapters = /* @__PURE__ */ Object.create(null);
+      if (p.chapters && typeof p.chapters === "object") for (const [id, value] of Object.entries(p.chapters)) {
+        if (!value || typeof value !== "object" || !/^[a-z][a-z0-9_]*$/.test(id)) continue;
+        chapters[id] = {
+          ...puzzle(value),
+          step: Math.max(0, Math.floor(num(value.step, 0))),
+          claimed: value.claimed === true
+        };
+      }
+      const replays = /* @__PURE__ */ Object.create(null);
+      if (p.replays && typeof p.replays === "object") for (const [id, value] of Object.entries(p.replays)) {
+        if (!value || typeof value !== "object" || !/^[a-z][a-z0-9_]*$/.test(id)) continue;
+        replays[id] = puzzle(value);
+      }
+      const rawDate = p.smallDate && typeof p.smallDate === "object" ? p.smallDate : {};
+      const smallDate = {
+        currentId: typeof rawDate.currentId === "string" && /^[a-z][a-z0-9_]*$/.test(rawDate.currentId) ? rawDate.currentId : "",
+        rotation: Math.max(0, Math.floor(num(rawDate.rotation, fallback.smallDate?.rotation ?? 0))),
+        completed: Math.max(0, Math.floor(num(rawDate.completed, fallback.smallDate?.completed ?? 0)))
+      };
+      return { warehouse, scissors: Math.max(0, Math.floor(num(p.scissors, fallback.scissors))), chapters, replays, smallDate };
     }
     mergeLife(raw, fallback) {
       if (!raw || typeof raw !== "object") return {
@@ -1522,6 +2636,13 @@
       version: config.saveVersion,
       savedAt,
       player,
+      play: {
+        warehouse: [],
+        scissors: config.toolbox.startingScissors,
+        chapters: {},
+        replays: {},
+        smallDate: { currentId: "", rotation: 0, completed: 0 }
+      },
       board,
       activeOrders: [
         {
@@ -1534,11 +2655,11 @@
         },
         {
           uid: "order_start_2",
-          templateId: "order_coffee_powder",
-          requirements: [{ itemId: "coffee_02", count: 1 }],
-          rewardCoins: 18,
-          rewardXp: 8,
-          rewardHearts: 3
+          templateId: "order_coffee_pair",
+          requirements: [{ itemId: "coffee_02", count: 2 }],
+          rewardCoins: 32,
+          rewardXp: 14,
+          rewardHearts: 5
         },
         {
           uid: "order_start_3",
@@ -1555,7 +2676,7 @@
         firstOrderCompleted: false,
         firstOrderHintShown: false
       },
-      recentOrderIds: ["order_tutorial_coffee", "order_coffee_powder", "order_coffee_cup"],
+      recentOrderIds: ["order_tutorial_coffee", "order_coffee_pair", "order_coffee_cup"],
       life: {
         unlockedMemoryIds: [],
         ownedFurnitureIds: [],
@@ -1786,9 +2907,9 @@
       }
       return null;
     }
-    replaceBoard(board) {
+    replaceBoard(board, reason = "reset") {
       this.board = board;
-      this.bus.emit("BOARD_CHANGED", { reason: "reset" });
+      this.bus.emit("BOARD_CHANGED", { reason });
     }
     previewDrop(from, to) {
       return resolveDrop(this.board, this.catalog, from, to);
@@ -2073,6 +3194,11 @@
   };
 
   // assets/scripts/core/order/orders.ts
+  function requirementSignature(requirements) {
+    const totals = /* @__PURE__ */ new Map();
+    for (const req of requirements) totals.set(req.itemId, (totals.get(req.itemId) ?? 0) + req.count);
+    return Array.from(totals.entries()).sort(([first], [second]) => first.localeCompare(second)).map(([itemId, count]) => `${itemId}x${count}`).join("|");
+  }
   function filterOrderTemplates(templates, playerLevel, catalog, unlockedChainIds, minItemLevel, maxItemLevel) {
     const unlocked = new Set(unlockedChainIds);
     return templates.filter((template) => {
@@ -2104,11 +3230,15 @@
       rewardHearts: template.rewardHearts
     };
   }
-  function pickOrderTemplate(candidates, recentOrderIds, random) {
+  function pickOrderTemplate(candidates, random, context = {}) {
     if (candidates.length === 0) return null;
-    const recentSet = new Set(recentOrderIds.slice(-3));
-    const preferred = candidates.filter((t) => !recentSet.has(t.id));
-    const pool = preferred.length > 0 ? preferred : [...candidates];
+    const activeIds = new Set(context.activeOrderIds ?? []);
+    const activeSignatures = new Set(context.activeOrderSignatures ?? []);
+    const recentIds = new Set((context.recentOrderIds ?? []).slice(-3));
+    const recentSignatures = new Set(context.recentSignatures ?? []);
+    const notActive = candidates.filter((template) => !activeIds.has(template.id) && !activeSignatures.has(requirementSignature(template.requirements)));
+    const preferred = notActive.filter((template) => !recentIds.has(template.id) && !recentSignatures.has(requirementSignature(template.requirements)));
+    const pool = preferred.length > 0 ? preferred : notActive.length > 0 ? notActive : [...candidates];
     const index = random.pickIndex(pool.length);
     return pool[index] ?? pool[0] ?? null;
   }
@@ -2125,7 +3255,15 @@
     const tutorial = candidates.filter((t) => t.tutorialOnly);
     const preferTutorial = tutorial.length > 0 && input.recentOrderIds.length === 0;
     const pool = preferTutorial ? tutorial : nonTutorial.length > 0 ? nonTutorial : candidates;
-    const template = pickOrderTemplate(pool, input.recentOrderIds, input.random);
+    const templateById = new Map(input.templates.map((template2) => [template2.id, template2]));
+    const recentSignatures = input.recentOrderIds.slice(-3).map((id) => templateById.get(id)).filter((template2) => !!template2).map((template2) => requirementSignature(template2.requirements));
+    const activeOrders = input.activeOrders ?? [];
+    const template = pickOrderTemplate(pool, input.random, {
+      recentOrderIds: input.recentOrderIds,
+      recentSignatures,
+      activeOrderIds: activeOrders.map((order) => order.templateId),
+      activeOrderSignatures: activeOrders.map((order) => requirementSignature(order.requirements))
+    });
     if (!template) return null;
     return instantiateOrder(template, input.id);
   }
@@ -2182,6 +3320,7 @@
         templates: this.templates,
         catalog: this.catalog,
         recentOrderIds: this.recentOrderIds,
+        activeOrders: this.orders,
         minItemLevel: this.minItemLevel,
         maxItemLevel: this.maxItemLevel,
         random: this.random,
@@ -2250,38 +3389,6 @@
       }
     }
   };
-
-  // assets/scripts/core/progression/progression.ts
-  function getLevelForXp(progression, xp) {
-    let level = 1;
-    for (const entry of progression.levels) {
-      if (xp >= entry.xpRequired) {
-        level = entry.level;
-      }
-    }
-    return level;
-  }
-  function getXpToNext(progression, xp) {
-    const current = getLevelForXp(progression, xp);
-    const next = progression.levels.find((l) => l.level === current + 1);
-    if (!next) {
-      return { need: 0, nextThreshold: null, current };
-    }
-    return {
-      need: Math.max(0, next.xpRequired - xp),
-      nextThreshold: next.xpRequired,
-      current
-    };
-  }
-  function collectUnlockChains(progression, upToLevel) {
-    const chains = /* @__PURE__ */ new Set();
-    for (const entry of progression.levels) {
-      if (entry.level <= upToLevel) {
-        for (const c of entry.unlockChains) chains.add(c);
-      }
-    }
-    return Array.from(chains);
-  }
 
   // assets/scripts/gameplay/ProgressionService.ts
   var ProgressionService = class {
@@ -2409,6 +3516,13 @@
           return this.getDecorPoints();
       }
     }
+    grantMemory(id) {
+      if (!this.memories.some((memory) => memory.id === id)) return { ok: false, reason: "NOT_FOUND" };
+      if (this.state.unlockedMemoryIds.includes(id)) return { ok: false, reason: "ALREADY_OWNED" };
+      this.state.unlockedMemoryIds.push(id);
+      this.bus.emit("LIFE_CHANGED", { reason: "memory" });
+      return { ok: true };
+    }
     unlockMemory(id) {
       const index = this.memories.findIndex((item) => item.id === id);
       if (index < 0) return { ok: false, reason: "NOT_FOUND" };
@@ -2494,6 +3608,289 @@
       this.state.photoPaths.push(path);
       this.bus.emit("LIFE_CHANGED", { reason: "photo" });
       return { ok: true };
+    }
+  };
+
+  // assets/scripts/gameplay/PlayService.ts
+  var PlayService = class {
+    constructor(state, bundle, board, ids, bus, progression, energy, life) {
+      this.bundle = bundle;
+      this.board = board;
+      this.ids = ids;
+      this.bus = bus;
+      this.progression = progression;
+      this.energy = energy;
+      this.life = life;
+      this.deliveringSmallDate = false;
+      const loaded = JSON.parse(JSON.stringify(state));
+      this.data = {
+        warehouse: Array.isArray(loaded.warehouse) ? loaded.warehouse : [],
+        scissors: typeof loaded.scissors === "number" ? loaded.scissors : bundle.game.toolbox.startingScissors,
+        chapters: loaded.chapters && typeof loaded.chapters === "object" ? loaded.chapters : {},
+        replays: loaded.replays && typeof loaded.replays === "object" ? loaded.replays : {},
+        smallDate: { ...createSmallDateProgress(), ...loaded.smallDate ?? {} }
+      };
+      for (const chapter of bundle.adventures) {
+        const p = this.data.chapters[chapter.id];
+        if (p) {
+          p.step = Math.min(chapter.steps.length, Math.max(0, p.step));
+          p.hints = Math.min(chapter.hints.length, Math.max(0, p.hints));
+          this.normalizePuzzle(chapter, p);
+          if (p.claimed) {
+            p.step = chapter.steps.length;
+            if (p.outcome === "playing") p.outcome = "solved";
+          } else if (p.step < chapter.steps.length) p.outcome = "playing";
+        }
+        const replay = this.data.replays[chapter.id];
+        if (replay && p?.claimed) {
+          replay.hints = Math.max(0, Math.min(chapter.hints.length, replay.hints));
+          this.normalizePuzzle(chapter, replay);
+        } else if (replay) {
+          delete this.data.replays[chapter.id];
+        }
+      }
+      this.ensureSmallDate();
+    }
+    get state() {
+      return JSON.parse(JSON.stringify(this.data));
+    }
+    progress(id) {
+      return { ...createChapterProgress(), ...this.state.chapters[id] };
+    }
+    hasReplay(id) {
+      return !!this.data.replays[id];
+    }
+    replayProgress(id) {
+      const replay = this.data.replays[id];
+      return replay ? JSON.parse(JSON.stringify(replay)) : void 0;
+    }
+    /** Renderers read whichever independent progress is active: practice first, otherwise the chapter. */
+    puzzleProgress(id) {
+      return this.replayProgress(id) ?? this.progress(id);
+    }
+    isAvailable(id) {
+      const i = this.bundle.adventures.findIndex((c) => c.id === id);
+      return i >= 0 && this.progression.level >= this.bundle.adventures[i].unlockLevel && (i === 0 || this.progress(this.bundle.adventures[i - 1].id).claimed);
+    }
+    current(id) {
+      const chapter = this.bundle.adventures.find((c) => c.id === id);
+      if (!chapter || !this.isAvailable(id)) return;
+      const progress = this.data.chapters[id] ?? (this.data.chapters[id] = createChapterProgress());
+      return { chapter, progress };
+    }
+    normalizePuzzle(chapter, progress) {
+      if (chapter.puzzle.kind === "find") {
+        progress.found = progress.found.filter((id) => chapter.puzzle.kind === "find" && chapter.puzzle.hotspots.some((h) => h.id === id));
+      } else if (chapter.puzzle.kind === "sequence") {
+        progress.selected = progress.selected.filter((id) => chapter.puzzle.kind === "sequence" && chapter.puzzle.tiles.some((t) => t.id === id));
+      } else if (progress.rotations.length !== chapter.puzzle.ports.length) {
+        progress.rotations = [];
+      }
+    }
+    changed(reason) {
+      this.bus.emit("PLAY_CHANGED", { reason });
+      return { ok: true };
+    }
+    store(index) {
+      const item = this.board.getBoard().cells[index]?.item;
+      if (!item) return { ok: false, reason: "INVALID" };
+      if (this.data.warehouse.length >= this.bundle.game.toolbox.warehouseSlots) return { ok: false, reason: "WAREHOUSE_FULL" };
+      const next = cloneBoard(this.board.getBoard());
+      next.cells[index].item = void 0;
+      this.data.warehouse.push({ ...item });
+      this.board.replaceBoard(next, "tool");
+      return this.changed("warehouse");
+    }
+    withdraw(uid) {
+      const at = this.data.warehouse.findIndex((item) => item.uid === uid);
+      if (at < 0) return { ok: false, reason: "INVALID" };
+      const next = cloneBoard(this.board.getBoard());
+      const empty = next.cells.find((cell) => !cell.item);
+      if (!empty) return { ok: false, reason: "BOARD_FULL" };
+      empty.item = { ...this.data.warehouse[at] };
+      this.data.warehouse.splice(at, 1);
+      this.board.replaceBoard(next, "tool");
+      return this.changed("warehouse");
+    }
+    split(index) {
+      const item = this.board.getBoard().cells[index]?.item;
+      const previous = item && Array.from(this.bundle.catalog.values()).find((d) => d.nextItemId === item.definitionId);
+      if (!item || !previous) return { ok: false, reason: "CANNOT_SPLIT" };
+      if (this.data.scissors <= 0) return { ok: false, reason: "NO_SCISSORS" };
+      const next = cloneBoard(this.board.getBoard());
+      const empty = next.cells.find((cell) => !cell.item);
+      if (!empty) return { ok: false, reason: "BOARD_FULL" };
+      const used = /* @__PURE__ */ new Set([...next.cells.flatMap((c) => c.item ? [c.item.uid] : []), ...this.data.warehouse.map((i) => i.uid)]);
+      let uid = this.ids.next();
+      while (used.has(uid)) uid = this.ids.next();
+      next.cells[index].item = { ...item, definitionId: previous.id };
+      empty.item = { uid, definitionId: previous.id };
+      this.data.scissors -= 1;
+      this.board.replaceBoard(next, "tool");
+      return this.changed("scissors");
+    }
+    deliver(id) {
+      const current = this.current(id);
+      if (!current) return { ok: false, reason: "LOCKED" };
+      const { chapter, progress } = current;
+      if (progress.step >= chapter.steps.length) return { ok: false, reason: "NOT_READY" };
+      const locations = this.board.findItemsForRequirements(chapter.steps[progress.step].requirements);
+      if (!locations) return { ok: false, reason: "NOT_READY" };
+      progress.step += 1;
+      this.board.consumeItems(locations);
+      this.life.record("orders");
+      return this.changed("chapter");
+    }
+    applyPuzzle(chapter, progress, action, value) {
+      const puzzle = chapter.puzzle;
+      if (action === "find" && puzzle.kind === "find" && puzzle.hotspots.some((h) => h.id === value)) {
+        if (!progress.found.includes(value)) progress.found.push(value);
+      } else if (action === "select" && puzzle.kind === "sequence" && puzzle.tiles.some((t) => t.id === value)) {
+        const index = progress.selected.indexOf(value);
+        if (index < 0) progress.selected.push(value);
+        else progress.selected.splice(index);
+      } else if (action === "rotate" && puzzle.kind === "circuit" && /^\d+$/.test(value) && Number(value) < puzzle.ports.length) {
+        if (!progress.rotations.length) progress.rotations = [...puzzle.initial];
+        const index = Number(value);
+        progress.rotations[index] = (progress.rotations[index] + 1) % 4;
+      } else if (action === "digit" && puzzle.kind === "find" && /^\d$/.test(value)) {
+        if (progress.code.length < puzzle.solution.length) progress.code += value;
+      } else if (action === "erase") progress.code = progress.code.slice(0, -1);
+      else if (action === "reset") {
+        progress.selected = [];
+        progress.code = "";
+        progress.rotations = [];
+      } else return false;
+      return true;
+    }
+    act(id, action, value = "") {
+      const current = this.current(id);
+      if (!current) return { ok: false, reason: "LOCKED" };
+      const replay = this.data.replays[id];
+      const progress = replay ?? current.progress;
+      if (!replay && current.progress.step < current.chapter.steps.length) return { ok: false, reason: "NOT_READY" };
+      if (progress.outcome !== "playing") return { ok: false, reason: "NOT_READY" };
+      if (!this.applyPuzzle(current.chapter, progress, action, value)) return { ok: false, reason: "INVALID" };
+      return this.changed("chapter");
+    }
+    hint(id) {
+      const current = this.current(id);
+      if (!current) return { ok: false, reason: "LOCKED" };
+      const replay = this.data.replays[id];
+      const progress = replay ?? current.progress;
+      if (!replay && current.progress.step < current.chapter.steps.length) return { ok: false, reason: "LOCKED" };
+      if (progress.outcome !== "playing") return { ok: false, reason: "NOT_READY" };
+      progress.hints = Math.min(current.chapter.hints.length, progress.hints + 1);
+      return this.changed("chapter");
+    }
+    solve(id, skip = false) {
+      const current = this.current(id);
+      if (!current) return { ok: false, reason: "LOCKED" };
+      const replay = this.data.replays[id];
+      const progress = replay ?? current.progress;
+      const { chapter } = current;
+      if (!replay && current.progress.step < chapter.steps.length) return { ok: false, reason: "NOT_READY" };
+      if (progress.outcome !== "playing") return { ok: false, reason: "NOT_READY" };
+      const puzzle = chapter.puzzle;
+      const correct = puzzle.kind === "find" ? progress.found.length === puzzle.hotspots.length && progress.code === puzzle.solution : puzzle.kind === "sequence" ? JSON.stringify(progress.selected) === JSON.stringify(puzzle.solution) : circuitState(puzzle, progress.rotations).solved;
+      if (!skip && !correct) return { ok: false, reason: "WRONG_ANSWER" };
+      progress.outcome = skip ? "skipped" : "solved";
+      return this.changed("chapter");
+    }
+    circuit(id) {
+      const chapter = this.bundle.adventures.find((c) => c.id === id);
+      return chapter?.puzzle.kind === "circuit" ? circuitState(chapter.puzzle, this.puzzleProgress(id).rotations) : void 0;
+    }
+    /** Start a free practice run, or resume the one already in progress. */
+    startReplay(id) {
+      const chapter = this.bundle.adventures.find((c) => c.id === id);
+      if (!chapter) return { ok: false, reason: "LOCKED" };
+      if (!this.progress(id).claimed) return { ok: false, reason: "NOT_CLAIMED" };
+      const existing = this.data.replays[id];
+      if (!existing || existing.outcome !== "playing") this.data.replays[id] = createReplayProgress();
+      return this.changed("chapter");
+    }
+    /** Explicitly discard practice progress and begin the same chapter again. */
+    restartReplay(id) {
+      const chapter = this.bundle.adventures.find((c) => c.id === id);
+      if (!chapter) return { ok: false, reason: "LOCKED" };
+      if (!this.progress(id).claimed) return { ok: false, reason: "NOT_CLAIMED" };
+      this.data.replays[id] = createReplayProgress();
+      return this.changed("chapter");
+    }
+    claim(id) {
+      const current = this.current(id);
+      if (!current) return { ok: false, reason: "LOCKED" };
+      const { chapter, progress } = current;
+      if (progress.claimed) return { ok: false, reason: "ALREADY_CLAIMED" };
+      if (progress.outcome === "playing" || progress.step < chapter.steps.length) return { ok: false, reason: "NOT_READY" };
+      progress.claimed = true;
+      this.data.scissors += chapter.reward.scissors;
+      this.progression.addCoins(chapter.reward.coins);
+      this.progression.addHearts(chapter.reward.hearts);
+      this.energy.add(chapter.reward.energy);
+      this.life.grantMemory(chapter.memoryId);
+      return this.changed("reward");
+    }
+    smallDatePool() {
+      const unlocked = new Set(this.progression.unlockedChains());
+      return this.bundle.smallDates.filter((date) => this.progression.level >= date.minLevel && date.requirements.every((req) => {
+        const definition = this.bundle.catalog.get(req.itemId);
+        return !!definition && definition.level <= 3 && unlocked.has(definition.chainId);
+      }));
+    }
+    /** Deterministic rotation that skips the theme just completed when another is available. */
+    nextSmallDateId(pool, rotation, avoidId) {
+      if (!pool.length) return "";
+      const start = (rotation % pool.length + pool.length) % pool.length;
+      for (let offset = 0; offset < pool.length; offset += 1) {
+        const candidate = pool[(start + offset) % pool.length];
+        if (pool.length === 1 || candidate.id !== avoidId) return candidate.id;
+      }
+      return pool[start].id;
+    }
+    ensureSmallDate() {
+      const pool = this.smallDatePool();
+      if (!pool.some((date) => date.id === this.data.smallDate.currentId)) {
+        this.data.smallDate.currentId = this.nextSmallDateId(pool, this.data.smallDate.rotation, "");
+      }
+    }
+    smallDateOrder() {
+      const template = this.bundle.smallDates.find((date) => date.id === this.data.smallDate.currentId);
+      if (!template || !this.smallDatePool().some((date) => date.id === template.id)) return void 0;
+      const progress = this.board.getOrderProgress(template);
+      return {
+        template,
+        token: `${this.data.smallDate.currentId}:${this.data.smallDate.rotation}`,
+        rotation: this.data.smallDate.rotation,
+        completed: this.data.smallDate.completed,
+        requirements: progress.requirements,
+        ready: progress.ready
+      };
+    }
+    /** Bind delivery to the rendered order; a stale token never consumes, pays or rotates. */
+    deliverSmallDate(expectedToken) {
+      if (this.deliveringSmallDate) return { ok: false, reason: "STALE_DATE" };
+      const order = this.smallDateOrder();
+      if (!order) return { ok: false, reason: "NO_DATE" };
+      if (expectedToken !== order.token) return { ok: false, reason: "STALE_DATE" };
+      const locations = this.board.findItemsForRequirements(order.template.requirements);
+      if (!locations) return { ok: false, reason: "NOT_READY" };
+      this.deliveringSmallDate = true;
+      try {
+        this.board.consumeItems(locations);
+        this.progression.addCoins(order.template.rewardCoins);
+        this.progression.addHearts(order.template.rewardHearts);
+        this.progression.addXp(order.template.rewardXp);
+        this.life.record("orders");
+        this.data.smallDate.rotation += 1;
+        this.data.smallDate.completed += 1;
+        const pool = this.smallDatePool();
+        this.data.smallDate.currentId = this.nextSmallDateId(pool, this.data.smallDate.rotation, order.template.id);
+      } finally {
+        this.deliveringSmallDate = false;
+      }
+      return this.changed("reward");
     }
   };
 
@@ -2635,6 +4032,7 @@
         );
         this.orders.hydrate(data.activeOrders, data.recentOrderIds ?? []);
         this.orders.ensureFilled();
+        this.play = new PlayService(data.play, this.bundle, this.board, this.ids, this.bus, this.progression, this.energy, this.life);
         this.bootState = "RECOVER_ENERGY";
         this.energy.tick();
         this.bootState = "INIT_GAME";
@@ -2675,6 +4073,19 @@
         this.orders.refreshProgressHints();
         this.save();
       }
+      return result;
+    }
+    playAction(action, value) {
+      const result = action === "store" ? this.play.store(Number(value)) : action === "withdraw" ? this.play.withdraw(value) : action === "split" ? this.play.split(Number(value)) : action === "deliver" ? this.play.deliver(value) : action === "hint" ? this.play.hint(value) : action === "claim" ? this.play.claim(value) : action === "replay" ? this.play.startReplay(value) : action === "replay_reset" ? this.play.restartReplay(value) : action === "small_date" ? this.play.deliverSmallDate(value) : this.play.solve(value, action === "skip");
+      if (result.ok) {
+        this.orders.refreshProgressHints();
+        this.save();
+      }
+      return result;
+    }
+    puzzleAction(id, action, value = "") {
+      const result = this.play.act(id, action, value);
+      if (result.ok) this.save();
       return result;
     }
     getMergeHint() {
@@ -2764,6 +4175,7 @@
         })),
         activeOrders: this.orders.getOrders(),
         tutorial: { ...this.tutorialRef },
+        play: this.play.state,
         recentOrderIds: this.orders.getRecentIds(),
         life: {
           ...this.lifeRef,

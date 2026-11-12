@@ -1,0 +1,564 @@
+[
+  {
+    "id": "zhoushan",
+    "memoryId": "letters",
+    "title": "舟山 · 相遇的线索",
+    "unlockLevel": 1,
+    "intro": "一起整理回忆册吧。先准备两份旅途心意，再在海边插画里寻找三张线索卡。",
+    "steps": [
+      {
+        "title": "准备旅途咖啡",
+        "requirements": [
+          {
+            "itemId": "coffee_02",
+            "count": 1
+          }
+        ],
+        "note": "第一份心意已装好，再准备一杯咖啡，就能打开海边回忆册。"
+      },
+      {
+        "title": "把心意装进背包",
+        "requirements": [
+          {
+            "itemId": "coffee_03",
+            "count": 1
+          }
+        ],
+        "note": "背包准备好了。点击海边画面中的三个标记，收集邀请卡、日历和便签。"
+      }
+    ],
+    "instruction": "找齐三张线索卡，再根据卡片输入四位密码，打开回忆抽屉。",
+    "hints": [
+      "先点击插画中的三个圆形标记，线索会保存在下方笔记里。",
+      "邀请卡写着九月，日历圈出了八日；便签提示按月份、日期各两位排列。",
+      "抽屉密码是 0908。也可以点击跳过谜题，继续珍藏这段回忆。"
+    ],
+    "puzzle": {
+      "kind": "find",
+      "solution": "0908",
+      "hotspots": [
+        {
+          "id": "invitation",
+          "label": "邀请卡",
+          "x": -190,
+          "y": 95,
+          "clue": "邀请卡：九月的舟山，欢迎一起参加活动。"
+        },
+        {
+          "id": "calendar",
+          "label": "日历",
+          "x": 175,
+          "y": 5,
+          "clue": "小日历：八日被轻轻画上了一个圈。"
+        },
+        {
+          "id": "note",
+          "label": "便签",
+          "x": -60,
+          "y": -110,
+          "clue": "抽屉便签：月份在前、日期在后，各写两位。"
+        }
+      ]
+    },
+    "reward": {
+      "coins": 120,
+      "hearts": 50,
+      "energy": 20,
+      "scissors": 1
+    },
+    "souvenir": {
+      "title": "初识的心意礼盒",
+      "artItemId": "gift_03",
+      "room": "living",
+      "x": 155,
+      "y": -6
+    }
+  },
+  {
+    "id": "love_letters",
+    "memoryId": "first_trip",
+    "title": "情书 · 把心意排成一句话",
+    "unlockLevel": 3,
+    "intro": "把花和咖啡准备好，再从四封代表性的信里，找出这份心意的顺序。",
+    "steps": [
+      {
+        "title": "为信件挑一朵花",
+        "requirements": [
+          {
+            "itemId": "flower_02",
+            "count": 1
+          }
+        ],
+        "note": "花准备好了。再添一杯咖啡，一起翻开信件。"
+      },
+      {
+        "title": "坐下来慢慢读信",
+        "requirements": [
+          {
+            "itemId": "coffee_04",
+            "count": 1
+          }
+        ],
+        "note": "四封信已经放在桌上。根据信封便签，把它们排成一句告白。"
+      }
+    ],
+    "instruction": "依次点击四封信，排出完整告白；点已选择的信可撤回它及后面的信。",
+    "hints": [
+      "读一读四张信封上的便签，它们会告诉你前后位置。",
+      "“我”开头，“你”结尾；“喜欢”紧跟着“想告诉你：”。",
+      "顺序是：我 → 想告诉你： → 喜欢 → 你。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {
+          "id": "you",
+          "label": "你",
+          "clue": "我在最后，等你把话说完。"
+        },
+        {
+          "id": "like",
+          "label": "喜欢",
+          "clue": "我紧跟着“想告诉你：”。"
+        },
+        {
+          "id": "me",
+          "label": "我",
+          "clue": "让我先开口吧。"
+        },
+        {
+          "id": "tell",
+          "label": "想告诉你：",
+          "clue": "我在“我”的后面。"
+        }
+      ],
+      "solution": [
+        "me",
+        "tell",
+        "like",
+        "you"
+      ]
+    },
+    "reward": {
+      "coins": 180,
+      "hearts": 80,
+      "energy": 25,
+      "scissors": 2
+    },
+    "souvenir": {
+      "title": "珍藏的情书",
+      "artItemId": "gift_02",
+      "room": "bedroom",
+      "x": 0,
+      "y": -6
+    }
+  },
+  {
+    "id": "namsan",
+    "memoryId": "rainy_day",
+    "title": "南山塔 · 点亮心意",
+    "unlockLevel": 5,
+    "intro": "准备好甜点和花束，再点亮这张为回忆册设计的灯光卡。",
+    "steps": [
+      {
+        "title": "准备旅行甜点",
+        "requirements": [
+          {
+            "itemId": "dessert_03",
+            "count": 1
+          }
+        ],
+        "note": "甜点准备好了。再带上花束，就可以点亮灯光卡。"
+      },
+      {
+        "title": "带上浪漫花束",
+        "requirements": [
+          {
+            "itemId": "flower_04",
+            "count": 1
+          }
+        ],
+        "note": "点击灯光卡片旋转线路，让左侧入口一路连接到右侧爱心。"
+      }
+    ],
+    "instruction": "点一下旋转一格，金色表示已通电；把左上入口接到右下爱心。完成后点击检查线路。",
+    "hints": [
+      "线路必须两端相对才能连通。先从左上入口向右接。",
+      "路线沿第一排向右，再到第二排向左，最后沿第三排向右。",
+      "先点重置机关，再把每个格子点三次，最后检查线路。也可以跳过，继续珍藏这段回忆。"
+    ],
+    "puzzle": {
+      "kind": "circuit",
+      "columns": 3,
+      "rows": 3,
+      "start": 0,
+      "end": 8,
+      "ports": [
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "initial": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "solution": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "reward": {
+      "coins": 240,
+      "hearts": 120,
+      "energy": 30,
+      "scissors": 2
+    },
+    "souvenir": {
+      "title": "南山塔的心意吊坠",
+      "artItemId": "gift_06",
+      "room": "living",
+      "x": -155,
+      "y": -6
+    }
+  },
+  {
+    "id": "hengdian_newyear",
+    "memoryId": "night_view",
+    "title": "横店 · 一起跨年",
+    "unlockLevel": 6,
+    "intro": "2023 年 12 月 30 日，我们去横店跨年。先准备两件旅途心意，再把回忆册这一页的照片排成一段故事。",
+    "steps": [
+      {
+        "title": "出发前的一杯热咖啡",
+        "requirements": [
+          {
+            "itemId": "coffee_03",
+            "count": 1
+          },
+          {
+            "itemId": "dessert_02",
+            "count": 1
+          }
+        ],
+        "note": "热咖啡和甜点装好了。再带上花和蛋糕，就能打开跨年的行程卡。"
+      },
+      {
+        "title": "秦王宫与温泉",
+        "requirements": [
+          {
+            "itemId": "flower_03",
+            "count": 1
+          },
+          {
+            "itemId": "dessert_03",
+            "count": 1
+          }
+        ],
+        "note": "门票和温泉牌都收好了。按回忆册这一页的排版，把四张照片排成一条线。"
+      }
+    ],
+    "instruction": "这是回忆册的一页排版，不是行程时间表；按页码依次点选四张照片。",
+    "hints": [
+      "先看四张卡左上角的页码，它们表示这一页的排版位置。",
+      "页码 1 是秦王宫，页码 2 是游乐园；页码 3 是温泉，页码 4 是回温州。",
+      "按页码依次点选：秦王宫 → 游乐园 → 温泉 → 回温州。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {
+          "id": "qinwang",
+          "label": "秦王宫",
+          "clue": "页码 1 · 红墙照片排在这一页最上面。"
+        },
+        {
+          "id": "park",
+          "label": "游乐园",
+          "clue": "页码 2 · 接在红墙照片后面的游乐园彩灯。"
+        },
+        {
+          "id": "hotspring",
+          "label": "温泉",
+          "clue": "页码 3 · 温泉照片排在这一页的下方。"
+        },
+        {
+          "id": "back_wenzhou",
+          "label": "回温州",
+          "clue": "页码 4 · 车票和回温州的照片收在页尾。"
+        }
+      ],
+      "solution": [
+        "qinwang",
+        "park",
+        "hotspring",
+        "back_wenzhou"
+      ]
+    },
+    "reward": {
+      "coins": 300,
+      "hearts": 150,
+      "energy": 30,
+      "scissors": 2
+    },
+    "souvenir": {
+      "title": "跨年行程纪念票",
+      "artItemId": "gift_05",
+      "room": "living",
+      "x": 0,
+      "y": 26
+    }
+  },
+  {
+    "id": "lijiang_photos",
+    "memoryId": "lijiang_wedding",
+    "title": "丽江 · 第一套婚纱照",
+    "unlockLevel": 8,
+    "intro": "2026 年 5 月 22 日，我们去丽江拍婚纱照。准备好出发的心意，再在画面里找回那天的日期密码。",
+    "steps": [
+      {
+        "title": "清晨的拿铁",
+        "requirements": [
+          {
+            "itemId": "coffee_03",
+            "count": 1
+          },
+          {
+            "itemId": "flower_02",
+            "count": 1
+          }
+        ],
+        "note": "清晨的咖啡和花准备好了。再带上礼物与甜点，就能翻开丽江的拍摄手记。"
+      },
+      {
+        "title": "城堡与雪山公路",
+        "requirements": [
+          {
+            "itemId": "gift_02",
+            "count": 1
+          },
+          {
+            "itemId": "dessert_04",
+            "count": 1
+          }
+        ],
+        "note": "拍摄手记里夹着城堡预约单、姊妹湖便签和一把 MINI 车钥匙。找到三处线索，再输入日期密码。"
+      }
+    ],
+    "instruction": "找到城堡、姊妹湖和雪山公路的三处标记，再输入四位日期密码。",
+    "hints": [
+      "先点画面里的三处标记，线索会收进下方笔记。",
+      "城堡预约单写着 5 月，雪山公路的车钥匙牌标着 22 日。",
+      "月份在前、日期在后，各写两位，密码是 0522。也可以跳过谜题，继续珍藏这段回忆。"
+    ],
+    "puzzle": {
+      "kind": "find",
+      "solution": "0522",
+      "hotspots": [
+        {
+          "id": "castle",
+          "label": "城堡预约单",
+          "x": -180,
+          "y": 80,
+          "clue": "城堡预约单：5 月 22 日，第一站。"
+        },
+        {
+          "id": "sister_lake",
+          "label": "姊妹湖便签",
+          "x": 160,
+          "y": 20,
+          "clue": "姊妹湖的便签：月份和日期都写两位。"
+        },
+        {
+          "id": "mini",
+          "label": "MINI 车钥匙",
+          "x": -50,
+          "y": -110,
+          "clue": "雪山公路的车钥匙牌：日期是 22 日，身边停着一辆敞篷 MINI。"
+        }
+      ]
+    },
+    "reward": {
+      "coins": 360,
+      "hearts": 180,
+      "energy": 35,
+      "scissors": 2
+    },
+    "souvenir": {
+      "title": "丽江旅拍花束",
+      "artItemId": "flower_06",
+      "room": "bedroom",
+      "x": 160,
+      "y": -6
+    }
+  },
+  {
+    "id": "leqing_wedding",
+    "memoryId": "anniversary",
+    "title": "乐清 · 草坪婚礼",
+    "unlockLevel": 10,
+    "intro": "2026 年 10 月 3 日，我们在乐清办草坪婚礼。准备好花门与誓言，再把草坪上的灯串点亮。",
+    "steps": [
+      {
+        "title": "草坪上的花门",
+        "requirements": [
+          {
+            "itemId": "flower_04",
+            "count": 1
+          },
+          {
+            "itemId": "coffee_03",
+            "count": 1
+          }
+        ],
+        "note": "花门和咖啡准备好了。再带上礼物与甜点，就能走进草坪婚礼这一页。"
+      },
+      {
+        "title": "交换心意",
+        "requirements": [
+          {
+            "itemId": "gift_04",
+            "count": 1
+          },
+          {
+            "itemId": "dessert_04",
+            "count": 1
+          }
+        ],
+        "note": "礼物和甜点摆上了桌。旋转灯串，让左侧入口一路亮到右下角的花门。"
+      }
+    ],
+    "instruction": "点一下旋转一格，金色表示已通电；把草坪左侧入口接到右下角的花门。",
+    "hints": [
+      "灯串从草坪左侧入口进入，先沿第一排向右。",
+      "到右上角后往下拐，经过第二排右侧，最后落到右下角的花门。",
+      "先点重置机关，再把每个格子点三次，最后检查线路。也可以跳过谜题。"
+    ],
+    "puzzle": {
+      "kind": "circuit",
+      "columns": 3,
+      "rows": 3,
+      "start": 0,
+      "end": 8,
+      "ports": [
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "initial": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "solution": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "reward": {
+      "coins": 450,
+      "hearts": 220,
+      "energy": 40,
+      "scissors": 3
+    },
+    "souvenir": {
+      "title": "草坪婚礼的誓言卡",
+      "artItemId": "gift_07",
+      "room": "garden",
+      "x": 0,
+      "y": -6
+    }
+  }
+]

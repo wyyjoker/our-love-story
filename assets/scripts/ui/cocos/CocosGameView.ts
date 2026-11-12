@@ -21,6 +21,7 @@ import { CocosToastView, ToastMessages } from './CocosToastView';
 import { CocosTutorialView } from './CocosTutorialView';
 import { CocosLevelUpView } from './CocosLevelUpView';
 import { CocosLifePages } from './CocosLifePages';
+import { CocosPlayPages } from './CocosPlayPages';
 import { CocosCoverView } from './CocosCoverView';
 import { applyArt } from './CocosArt';
 import { captureHomePhoto } from '../../platform/cocos/CocosPhotoService';
@@ -44,6 +45,7 @@ export class CocosGameView {
   private tutorial: CocosTutorialView;
   private levelUp: CocosLevelUpView;
   private lifePages: CocosLifePages;
+  private playPages: CocosPlayPages;
   private unsubs: Array<() => void> = [];
   private storagePanel: Node;
   private entered = false;
@@ -101,6 +103,9 @@ export class CocosGameView {
         onDrop: (from, to) => this.handleDrop(from, to),
         onDragStart: () => this.tutorial?.hide(),
         onDragFinished: () => this.renderTutorial(),
+        onOpenAdventure: () => this.playPages.openHub(),
+        onOpenTools: () => this.playPages.openTools(),
+        onItemTap: (index) => this.playPages.openTools(index),
       },
     );
     this.board.setDragLayer(roots.dragLayer);
@@ -118,9 +123,13 @@ export class CocosGameView {
     this.lifePages = new CocosLifePages(game, roots, (message) => this.toast.show(message), () => {
       void this.capturePhoto();
     }, () => {
+      this.playPages?.close();
       this.status.setSectionTitle(this.lifePages.currentPage === 'merge' ? '合成小屋' : this.lifePages.currentPage === 'home' ? '我的家园' : '回忆相册');
       this.renderTutorial();
-    });
+    }, (id) => { if (id) this.playPages.openChapter(id); else this.playPages.openHub(); });
+
+    this.playPages = new CocosPlayPages(game, roots, (message) => this.toast.show(message),
+      () => this.renderTutorial(), (id) => this.lifePages.openMemory(id), () => this.toast.clear(), () => this.lifePages.setPage('merge'));
 
     this.orders.bind((uid) => {
       const msg = this.controller.onClaim(uid);
@@ -145,6 +154,7 @@ export class CocosGameView {
     this.renderAll();
     this.showNextReward();
     const hasProgress = game.player.level > 1 || game.life.state.stats.spawns > 0 || game.life.state.stats.merges > 0;
+    const metDate = game.config.couple.metDate ?? game.config.couple.metMonth;
     new CocosCoverView(roots.coverLayer, dw, dh, hasProgress, () => {
       this.entered = true;
       this.renderTutorial();
@@ -154,8 +164,8 @@ export class CocosGameView {
       height: roots.canvas.getComponent(UITransform)?.height ?? dh,
       x: -roots.safeArea.position.x,
       y: -roots.safeArea.position.y,
-    }, demoPreview ? 'Lv12 演示存档 · 刷新重置 · 不影响正式进度' : game.config.couple.metMonth && game.config.couple.weddingDate
-      ? `${game.config.couple.metMonth.replace('-', '.')} 相遇  ·  ${game.config.couple.weddingDate.replace(/-/g, '.')} 成家`
+    }, demoPreview ? 'Lv12 演示存档 · 刷新重置 · 不影响正式进度' : metDate && game.config.couple.weddingDate
+      ? `${metDate.replace(/-/g, '.')} 相遇  ·  ${game.config.couple.weddingDate.replace(/-/g, '.')} 成家`
       : undefined);
   }
 
@@ -232,6 +242,7 @@ export class CocosGameView {
   }
 
   private subscribe(bus: GameEventBus): void {
+    this.unsubs.push(bus.on('PLAY_CHANGED', () => { this.playPages.render(); this.renderTutorial(); }));
     this.unsubs.push(bus.on('SAVE_STATUS_CHANGED', () => this.renderStorageNotice()));
     this.unsubs.push(
       bus.on('BOARD_CHANGED', () => {
@@ -329,7 +340,7 @@ export class CocosGameView {
   }
 
   private renderTutorial(): void {
-    if (this.lifePages.currentPage !== 'merge') {
+    if (this.lifePages.currentPage !== 'merge' || this.playPages?.isOpen) {
       this.tutorial.hide();
       return;
     }

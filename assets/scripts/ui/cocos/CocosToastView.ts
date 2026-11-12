@@ -36,7 +36,7 @@ export class CocosToastView {
     this.node.setPosition(0, -height * 0.18, 0);
   }
 
-  show(message: string, tone: ToastTone = 'info'): void {
+  clear(): void {
     if (this.current?.isValid) {
       Tween.stopAllByTarget(this.current);
       const opacity = this.current.getComponent(UIOpacity);
@@ -44,6 +44,11 @@ export class CocosToastView {
       this.current.removeFromParent();
       this.current.destroy();
     }
+    this.current = null;
+  }
+
+  show(message: string, tone: ToastTone = 'info'): void {
+    this.clear();
     const w = Math.min(520, this.width * 0.78);
     const h = 70;
     const item = createUiNode('Toast');

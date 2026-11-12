@@ -1,7 +1,8 @@
 {
   "gameTitle": "我们的浪漫小屋",
   "saveKey": "our-love-story-save",
-  "saveVersion": 2,
+  "saveVersion": 3,
+  "toolbox": { "warehouseSlots": 6, "startingScissors": 2 },
   "board": {
     "rows": 9,
     "columns": 9
@@ -25,6 +26,7 @@
     "coupleDisplayName": "",
     "anniversary": "",
     "metMonth": "2023-09",
+    "metDate": "2023-09-08",
     "weddingDate": "2026-10-03",
     "theme": "warm-romantic"
   }

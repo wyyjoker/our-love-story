@@ -18,16 +18,17 @@ describe('life content loop', () => {
     const clock = new FakeClockService(1000);
     const game = createGameContext({ storage: saved, clock });
     expect(game.unlockMemory('first_trip')).toEqual({ ok: false, reason: 'LOCKED' });
-    game.progression.addHearts(130);
+    const second = game.bundle.memories[1];
+    game.progression.addHearts(50 + second.heartCost);
     expect(game.unlockMemory('letters').ok).toBe(true);
-    expect(game.player.hearts).toBe(80);
+    expect(game.player.hearts).toBe(second.heartCost);
     expect(game.unlockMemory('letters')).toEqual({ ok: false, reason: 'ALREADY_OWNED' });
-    expect(game.unlockMemory('first_trip').ok).toBe(true);
+    expect(game.unlockMemory(second.id).ok).toBe(true);
     expect(game.player.hearts).toBe(0);
     expect(game.addPhoto('wxfile://memory-1.png').ok).toBe(true);
 
     const again = createGameContext({ storage: saved, clock });
-    expect(again.life.state.unlockedMemoryIds).toEqual(['letters', 'first_trip']);
+    expect(again.life.state.unlockedMemoryIds).toEqual(['letters', second.id]);
     expect(again.life.state.photoPaths).toEqual(['wxfile://memory-1.png']);
   });
 

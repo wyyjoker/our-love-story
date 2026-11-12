@@ -63,7 +63,7 @@ describe('v1 to v2 migration', () => {
       life: { ...data.life, ownedFurnitureIds: [{}], placedFurnitureIds: [{}] },
     }));
     const save = new SaveService({
-      storage, clock, saveKey: bundle.game.saveKey, version: 2,
+      storage, clock, saveKey: bundle.game.saveKey, version: bundle.game.saveVersion,
       createDefault: () => createDefaultSaveData(bundle.game, clock.now()),
       legacyStarterFurnitureId: bundle.furniture[0].id,
     });

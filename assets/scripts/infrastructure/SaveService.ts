@@ -9,6 +9,7 @@ import type {
 } from '../core/types';
 import type { StorageAdapter } from './PlatformService';
 import type { ClockService } from './ClockService';
+import type { ChapterProgress, PlayState, ReplayProgress, SmallDateProgress } from '../core/play/types';
 
 export type SaveLoadResult =
   | { ok: true; data: SaveData; repaired: boolean; notice?: 'MIGRATED' | 'REPAIRED' | 'BACKUP_RESTORED' }
@@ -48,7 +49,13 @@ export class SaveService {
     }
 
     const loaded = this.parse(raw);
-    if (loaded) return loaded;
+    if (loaded) {
+      // Preserve the exact previous schema before the first successful upgraded write.
+      if (loaded.notice === 'MIGRATED' && !this.backupCorrupt(raw)) {
+        return { ok: false, reason: 'UNAVAILABLE', defaultData: this.options.createDefault() };
+      }
+      return loaded;
+    }
     // Never overwrite an existing good backup with a corrupt primary save.
     let backup: string | null;
     try { backup = this.options.storage.getItem(`${this.options.saveKey}:backup`); }
@@ -198,6 +205,7 @@ export class SaveService {
         ? parsed.recentOrderIds.filter((x): x is string => typeof x === 'string')
         : [],
       life,
+      play: this.mergePlay(parsed.play, defaults.play, boardCells),
     };
 
     return { data, repaired };
@@ -269,6 +277,49 @@ export class SaveService {
       }
     }
     return cells;
+  }
+
+  private mergePlay(raw: unknown, fallback: PlayState, board: BoardCellState[]): PlayState {
+    const p = raw && typeof raw === 'object' ? raw as Partial<PlayState> : {};
+    const used = new Set(board.flatMap((cell) => cell.item ? [cell.item.uid] : []));
+    const warehouse = (Array.isArray(p.warehouse) ? p.warehouse : []).filter((item) => {
+      if (!item || typeof item.uid !== 'string' || typeof item.definitionId !== 'string' || used.has(item.uid)) return false;
+      used.add(item.uid); return true;
+    }).map((item) => ({ uid: item.uid, definitionId: item.definitionId }));
+    const strings = (value: unknown): string[] => Array.isArray(value)
+      ? Array.from(new Set(value.filter((v): v is string => typeof v === 'string'))) : [];
+    const puzzle = (value: Partial<ChapterProgress>): ReplayProgress => ({
+      found: strings(value.found),
+      selected: strings(value.selected),
+      rotations: Array.isArray(value.rotations) && value.rotations.every((r) => Number.isInteger(r) && r >= 0 && r < 4) ? [...value.rotations] : [],
+      code: typeof value.code === 'string' && /^\d{0,16}$/.test(value.code) ? value.code : '',
+      hints: Math.max(0, Math.floor(num(value.hints, 0))),
+      outcome: value.outcome === 'solved' || value.outcome === 'skipped' ? value.outcome : 'playing',
+    });
+    const chapters: Record<string, ChapterProgress> = Object.create(null) as Record<string, ChapterProgress>;
+    if (p.chapters && typeof p.chapters === 'object') for (const [id, value] of Object.entries(p.chapters)) {
+      if (!value || typeof value !== 'object' || !/^[a-z][a-z0-9_]*$/.test(id)) continue;
+      chapters[id] = {
+        ...puzzle(value),
+        step: Math.max(0, Math.floor(num(value.step, 0))),
+        claimed: value.claimed === true,
+      };
+    }
+    // Optional v3 field: old saves simply start without any practice progress.
+    const replays: Record<string, ReplayProgress> = Object.create(null) as Record<string, ReplayProgress>;
+    if (p.replays && typeof p.replays === 'object') for (const [id, value] of Object.entries(p.replays)) {
+      if (!value || typeof value !== 'object' || !/^[a-z][a-z0-9_]*$/.test(id)) continue;
+      replays[id] = puzzle(value);
+    }
+    const rawDate = p.smallDate && typeof p.smallDate === 'object'
+      ? p.smallDate as Partial<SmallDateProgress>
+      : {};
+    const smallDate: SmallDateProgress = {
+      currentId: typeof rawDate.currentId === 'string' && /^[a-z][a-z0-9_]*$/.test(rawDate.currentId) ? rawDate.currentId : '',
+      rotation: Math.max(0, Math.floor(num(rawDate.rotation, fallback.smallDate?.rotation ?? 0))),
+      completed: Math.max(0, Math.floor(num(rawDate.completed, fallback.smallDate?.completed ?? 0))),
+    };
+    return { warehouse, scissors: Math.max(0, Math.floor(num(p.scissors, fallback.scissors))), chapters, replays, smallDate };
   }
 
   private mergeLife(raw: unknown, fallback: LifeState): LifeState {
@@ -366,6 +417,13 @@ export function createDefaultSaveData(config: GameConfig, savedAt: number): Save
     version: config.saveVersion,
     savedAt,
     player,
+    play: {
+      warehouse: [],
+      scissors: config.toolbox.startingScissors,
+      chapters: {},
+      replays: {},
+      smallDate: { currentId: '', rotation: 0, completed: 0 },
+    },
     board,
     activeOrders: [
       {
@@ -378,11 +436,11 @@ export function createDefaultSaveData(config: GameConfig, savedAt: number): Save
       },
       {
         uid: 'order_start_2',
-        templateId: 'order_coffee_powder',
-        requirements: [{ itemId: 'coffee_02', count: 1 }],
-        rewardCoins: 18,
-        rewardXp: 8,
-        rewardHearts: 3,
+        templateId: 'order_coffee_pair',
+        requirements: [{ itemId: 'coffee_02', count: 2 }],
+        rewardCoins: 32,
+        rewardXp: 14,
+        rewardHearts: 5,
       },
       {
         uid: 'order_start_3',
@@ -399,7 +457,7 @@ export function createDefaultSaveData(config: GameConfig, savedAt: number): Save
       firstOrderCompleted: false,
       firstOrderHintShown: false,
     },
-    recentOrderIds: ['order_tutorial_coffee', 'order_coffee_powder', 'order_coffee_cup'],
+    recentOrderIds: ['order_tutorial_coffee', 'order_coffee_pair', 'order_coffee_cup'],
     life: {
       unlockedMemoryIds: [],
       ownedFurnitureIds: [],

@@ -92,9 +92,9 @@ export class BoardService {
     return null;
   }
 
-  replaceBoard(board: BoardState): void {
+  replaceBoard(board: BoardState, reason: 'reset' | 'tool' = 'reset'): void {
     this.board = board;
-    this.bus.emit('BOARD_CHANGED', { reason: 'reset' });
+    this.bus.emit('BOARD_CHANGED', { reason });
   }
 
   previewDrop(from: number, to: number | null): DropResolve {

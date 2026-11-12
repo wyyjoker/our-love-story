@@ -20,8 +20,14 @@ import memoriesJson from '../../resources/config/memories.json';
 import furnitureJson from '../../resources/config/furniture.json';
 import wishesJson from '../../resources/config/wishes.json';
 import levelRewardsJson from '../../resources/config/level_rewards.json';
+import adventuresJson from '../../resources/config/adventures.json';
+import smallDatesJson from '../../resources/config/small_dates.json';
+import { circuitState, requirementsBaseCost, type AdventureChapter, type SmallDateDefinition } from '../core/play/types';
+import { collectUnlockChains } from '../core/progression/progression';
 
 export type ConfigBundle = {
+  adventures: readonly AdventureChapter[];
+  smallDates: readonly SmallDateDefinition[];
   game: GameConfig;
   items: readonly ItemDefinition[];
   catalog: ItemCatalog;
@@ -50,7 +56,11 @@ export function loadConfigBundle(): ConfigBundle {
   const furniture = furnitureJson as FurnitureDefinition[];
   const wishes = wishesJson as WishDefinition[];
   const levelRewards = levelRewardsJson as LevelRewardConfig;
-  return { game, items, catalog, generators, orders, progression, memories, furniture, wishes, levelRewards };
+  return {
+    game, items, catalog, generators, orders, progression, memories, furniture, wishes, levelRewards,
+    adventures: adventuresJson as AdventureChapter[],
+    smallDates: smallDatesJson as SmallDateDefinition[],
+  };
 }
 
 export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
@@ -187,13 +197,22 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
       ids.add(entry.id);
     }
   }
-  if (memories.length !== 10 || furniture.length !== 10 || wishes.length !== 10) {
-    issues.push({ level: 'error', message: 'Life content must have 10 memories, furniture, and wishes' });
+  if (memories.length === 0) {
+    issues.push({ level: 'error', message: 'Memory content must not be empty' });
+  }
+  if (furniture.length !== 10 || wishes.length !== 10) {
+    issues.push({ level: 'error', message: 'Life content must have 10 furniture items and wishes' });
   }
   if (furniture.reduce((n, f) => n + f.decorPoints, 0) !== 50) {
     issues.push({ level: 'error', message: 'Furniture decor points must total 50' });
   }
   for (const memory of memories) {
+    if (memory.artMode !== undefined && !['cover', 'contain'].includes(memory.artMode)) {
+      issues.push({ level: 'error', message: `Memory ${memory.id} art mode invalid` });
+    }
+    if (memory.artFocusY !== undefined && (!Number.isFinite(memory.artFocusY) || memory.artFocusY < 0 || memory.artFocusY > 1)) {
+      issues.push({ level: 'error', message: `Memory ${memory.id} art focus invalid` });
+    }
     if (memory.heartCost <= 0) issues.push({ level: 'error', message: `Memory ${memory.id} cost invalid` });
     if (typeof memory.art !== 'string' || !/^[a-z][a-z0-9_]*(?:#\d{1,2})?$/.test(memory.art)) {
       issues.push({ level: 'error', message: `Memory ${memory.id} art invalid` });
@@ -233,6 +252,83 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
     specialLevels.add(reward.level);
   }
 
+  if (!Number.isInteger(game.toolbox?.warehouseSlots) || game.toolbox.warehouseSlots < 1 || game.toolbox.warehouseSlots > 6
+    || !Number.isInteger(game.toolbox.startingScissors) || game.toolbox.startingScissors < 0) issues.push({ level: 'error', message: 'Toolbox config invalid' });
+  const chapterIds = new Set<string>();
+  const chapterMemoryIds = new Set<string>();
+  const souvenirKeys = new Set<string>();
+  for (const c of bundle.adventures) {
+    const p = c.puzzle;
+    const unlockedAtLevel = new Set(collectUnlockChains(progression, c.unlockLevel));
+    const souvenirKey = `${c.souvenir.room}:${c.souvenir.x}:${c.souvenir.y}`;
+    const baseOk = /^[a-z][a-z0-9_]*$/.test(c.id) && !chapterIds.has(c.id) && memories.some((m) => m.id === c.memoryId)
+      && !chapterMemoryIds.has(c.memoryId)
+      && typeof c.title === 'string' && c.title.trim().length > 0
+      && typeof c.intro === 'string' && c.intro.trim().length > 0
+      && typeof c.instruction === 'string' && c.instruction.trim().length > 0
+      && c.steps.length === 2 && c.hints.length === 3
+      && c.hints.every((hint) => typeof hint === 'string' && hint.trim().length > 0)
+      && Number.isInteger(c.unlockLevel) && c.unlockLevel >= 1 && c.unlockLevel <= 18
+      && Object.values(c.reward).every((n) => Number.isInteger(n) && n >= 0) && catalog.has(c.souvenir.artItemId)
+      && ['living', 'bedroom', 'garden'].includes(c.souvenir.room)
+      && typeof c.souvenir.title === 'string' && c.souvenir.title.trim().length > 0
+      && Number.isFinite(c.souvenir.x) && Number.isFinite(c.souvenir.y) && !souvenirKeys.has(souvenirKey)
+      && c.steps.every((s) => typeof s.title === 'string' && typeof s.note === 'string'
+        && s.requirements.length > 0 && s.requirements.every((r) => {
+          const def = catalog.get(r.itemId);
+          return !!def && unlockedAtLevel.has(def.chainId) && Number.isInteger(r.count) && r.count > 0;
+        }));
+    chapterIds.add(c.id);
+    chapterMemoryIds.add(c.memoryId);
+    souvenirKeys.add(souvenirKey);
+    let puzzleOk = false;
+    if (p.kind === 'find') puzzleOk = /^\d{4}$/.test(p.solution) && p.hotspots.length >= 2
+      && new Set(p.hotspots.map((h) => h.id)).size === p.hotspots.length
+      && p.hotspots.every((h) => typeof h.label === 'string' && h.label.trim().length > 0
+        && typeof h.clue === 'string' && h.clue.trim().length > 0 && Number.isFinite(h.x) && Number.isFinite(h.y));
+    if (p.kind === 'sequence') puzzleOk = p.tiles.length >= 3 && p.tiles.length <= 6 && new Set(p.solution).size === p.tiles.length
+      && p.solution.length === p.tiles.length && p.tiles.every((t) => p.solution.includes(t.id))
+      && p.tiles.every((t) => typeof t.label === 'string' && t.label.trim().length > 0
+        && typeof t.clue === 'string' && t.clue.trim().length > 0);
+    if (p.kind === 'circuit') {
+      puzzleOk = p.columns === 3 && p.rows === 3 && p.ports.length === 9 && p.initial.length === 9 && p.solution.length === 9
+        && p.ports.every((ports) => ports.length === 2 && new Set(ports).size === 2 && ports.every((n) => Number.isInteger(n) && n >= 0 && n < 4))
+        && [...p.initial, ...p.solution].every((n) => Number.isInteger(n) && n >= 0 && n < 4)
+        && Number.isInteger(p.start) && p.start >= 0 && p.start < 9 && Number.isInteger(p.end) && p.end >= 0 && p.end < 9;
+      if (puzzleOk) puzzleOk = circuitState(p, p.solution).solved && !circuitState(p, p.initial).solved;
+    }
+    if (!baseOk || !puzzleOk) issues.push({ level: 'error', message: `Adventure ${c.id} invalid` });
+  }
+
+  if (bundle.smallDates.length < 4) {
+    issues.push({ level: 'error', message: 'Small dates must provide at least 4 themes' });
+  }
+  const smallDateIds = new Set<string>();
+  const levelOneChains = new Set(collectUnlockChains(progression, 1));
+  let levelOneDate = false;
+  for (const date of bundle.smallDates) {
+    const cost = requirementsBaseCost(date.requirements, (id) => catalog.get(id)?.level);
+    const dateOk = /^[a-z][a-z0-9_]*$/.test(date.id) && !smallDateIds.has(date.id)
+      && typeof date.title === 'string' && date.title.trim().length > 0
+      && typeof date.description === 'string' && date.description.trim().length > 0
+      && typeof date.memoryId === 'string' && date.memoryId.length > 0
+      && Number.isInteger(date.minLevel) && date.minLevel >= 1 && date.minLevel <= 18
+      && date.requirements.length > 0
+      && date.requirements.every((r) => {
+        const def = catalog.get(r.itemId);
+        return !!def && def.level <= 3 && Number.isInteger(r.count) && r.count > 0;
+      })
+      && cost >= 2 && cost <= 8
+      && [date.rewardCoins, date.rewardXp, date.rewardHearts].every((n) => Number.isInteger(n) && n >= 0);
+    smallDateIds.add(date.id);
+    if (!dateOk) issues.push({ level: 'error', message: `Small date ${date.id} invalid` });
+    else if (!memories.some((m) => m.id === date.memoryId)) issues.push({ level: 'warn', message: `Small date ${date.id} illustration memory missing` });
+    if (date.minLevel <= 1 && date.requirements.length > 0 && date.requirements.every((r) => {
+      const def = catalog.get(r.itemId);
+      return !!def && levelOneChains.has(def.chainId);
+    })) levelOneDate = true;
+  }
+  if (!levelOneDate) issues.push({ level: 'error', message: 'Small dates need an entry playable at level 1' });
   return issues;
 }
 

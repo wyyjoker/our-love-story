@@ -1,4 +1,5 @@
 export type GameEventMap = {
+  PLAY_CHANGED: { reason: 'warehouse' | 'scissors' | 'chapter' | 'reward' };
   ITEM_SPAWNED: {
     uid: string;
     definitionId: string;
@@ -66,7 +67,7 @@ export type GameEventMap = {
     tone?: 'info' | 'success' | 'warn';
   };
   BOARD_CHANGED: {
-    reason: 'spawn' | 'move' | 'swap' | 'merge' | 'claim' | 'reset' | 'debug';
+    reason: 'spawn' | 'move' | 'swap' | 'merge' | 'claim' | 'reset' | 'debug' | 'tool';
   };
   LIFE_CHANGED: {
     reason: 'memory' | 'furniture' | 'wish' | 'level-reward' | 'photo' | 'progress';

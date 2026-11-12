@@ -1,0 +1,58 @@
+[
+  {
+    "id": "small_date_morning_coffee",
+    "title": "晨间咖啡",
+    "description": "不用等特别的日子，早起磨一杯咖啡，把清晨留给彼此。",
+    "memoryId": "letters",
+    "minLevel": 1,
+    "requirements": [
+      { "itemId": "coffee_02", "count": 1 },
+      { "itemId": "coffee_01", "count": 1 }
+    ],
+    "rewardCoins": 16,
+    "rewardXp": 8,
+    "rewardHearts": 2
+  },
+  {
+    "id": "small_date_window_tea",
+    "title": "窗边下午茶",
+    "description": "把甜点和咖啡搬到窗边，看一会儿云，也说一会儿话。",
+    "memoryId": "first_trip",
+    "minLevel": 5,
+    "requirements": [
+      { "itemId": "coffee_03", "count": 1 },
+      { "itemId": "dessert_02", "count": 1 }
+    ],
+    "rewardCoins": 20,
+    "rewardXp": 10,
+    "rewardHearts": 3
+  },
+  {
+    "id": "small_date_walk_flowers",
+    "title": "散步带花",
+    "description": "沿着熟悉的小路慢慢走，顺手带一枝花回家。",
+    "memoryId": "shenxianju",
+    "minLevel": 3,
+    "requirements": [
+      { "itemId": "flower_02", "count": 1 },
+      { "itemId": "coffee_02", "count": 1 }
+    ],
+    "rewardCoins": 18,
+    "rewardXp": 9,
+    "rewardHearts": 2
+  },
+  {
+    "id": "small_date_movie_night",
+    "title": "电影小夜晚",
+    "description": "挑一部老电影，准备一点甜点，关掉灯就是一个晚上。",
+    "memoryId": "new_year_balloons",
+    "minLevel": 5,
+    "requirements": [
+      { "itemId": "dessert_02", "count": 1 },
+      { "itemId": "coffee_01", "count": 1 }
+    ],
+    "rewardCoins": 19,
+    "rewardXp": 9,
+    "rewardHearts": 3
+  }
+]

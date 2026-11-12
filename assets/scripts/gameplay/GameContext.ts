@@ -23,6 +23,7 @@ import { GeneratorService } from './GeneratorService';
 import { OrderService } from './OrderService';
 import { ProgressionService } from './ProgressionService';
 import { LifeService, type LifeResult } from './LifeService';
+import { PlayService } from './PlayService';
 
 export type GameContextOptions = {
   config?: ConfigBundle;
@@ -70,6 +71,7 @@ export class GameContext {
   orders!: OrderService;
   progression!: ProgressionService;
   life!: LifeService;
+  play!: PlayService;
 
   bootState: BootState = 'BOOT';
   bootError: string | null = null;
@@ -235,6 +237,7 @@ export class GameContext {
       );
       this.orders.hydrate(data.activeOrders, data.recentOrderIds ?? []);
       this.orders.ensureFilled();
+      this.play = new PlayService(data.play, this.bundle, this.board, this.ids, this.bus, this.progression, this.energy, this.life);
 
       this.bootState = 'RECOVER_ENERGY';
       this.energy.tick();
@@ -280,6 +283,24 @@ export class GameContext {
       this.orders.refreshProgressHints();
       this.save();
     }
+    return result;
+  }
+
+  playAction(action: 'store' | 'withdraw' | 'split' | 'deliver' | 'hint' | 'solve' | 'skip' | 'claim'
+    | 'replay' | 'replay_reset' | 'small_date', value: string): ReturnType<PlayService['store']> {
+    const result = action === 'store' ? this.play.store(Number(value)) : action === 'withdraw' ? this.play.withdraw(value)
+      : action === 'split' ? this.play.split(Number(value)) : action === 'deliver' ? this.play.deliver(value)
+        : action === 'hint' ? this.play.hint(value) : action === 'claim' ? this.play.claim(value)
+          : action === 'replay' ? this.play.startReplay(value) : action === 'replay_reset' ? this.play.restartReplay(value)
+            : action === 'small_date' ? this.play.deliverSmallDate(value)
+              : this.play.solve(value, action === 'skip');
+    if (result.ok) { this.orders.refreshProgressHints(); this.save(); }
+    return result;
+  }
+
+  puzzleAction(id: string, action: Parameters<PlayService['act']>[1], value = ''): ReturnType<PlayService['act']> {
+    const result = this.play.act(id, action, value);
+    if (result.ok) this.save();
     return result;
   }
 
@@ -385,6 +406,7 @@ export class GameContext {
       })),
       activeOrders: this.orders.getOrders(),
       tutorial: { ...this.tutorialRef },
+      play: this.play.state,
       recentOrderIds: this.orders.getRecentIds(),
       life: {
         ...this.lifeRef,

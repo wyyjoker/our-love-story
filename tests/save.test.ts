@@ -49,7 +49,7 @@ describe('SaveService', () => {
     expect(loaded.ok).toBe(true);
     if (loaded.ok) {
       expect(loaded.data.player.coins).toBe(42);
-      expect(loaded.data.version).toBe(2);
+      expect(loaded.data.version).toBe(config.saveVersion);
     }
   });
 

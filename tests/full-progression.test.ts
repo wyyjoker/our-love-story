@@ -68,7 +68,8 @@ describe('full progression with production configuration', () => {
         }
       }
       for (const memory of game.bundle.memories) {
-        if (!game.life.state.unlockedMemoryIds.includes(memory.id) && game.player.hearts >= memory.heartCost) {
+        if (!game.life.state.unlockedMemoryIds.includes(memory.id)) {
+          if (game.player.hearts < memory.heartCost) break;
           const before = game.player.hearts;
           expect(game.unlockMemory(memory.id)).toEqual({ ok: true });
           expect(game.player.hearts).toBe(before - memory.heartCost);
@@ -82,7 +83,7 @@ describe('full progression with production configuration', () => {
     }
 
     const complete = () => game.player.level === 18
-      && game.life.state.unlockedMemoryIds.length === 10
+      && game.life.state.unlockedMemoryIds.length === game.bundle.memories.length
       && game.life.state.ownedFurnitureIds.length === 10
       && game.life.state.claimedWishIds.length === 10;
     for (let count = 0; count < 1500 && !complete(); count += 1) {

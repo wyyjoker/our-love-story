@@ -81,6 +81,9 @@ export type MemoryDefinition = {
   dateLabel?: string;
   artColumns?: number;
   artRows?: number;
+  artMode?: 'cover' | 'contain';
+  artFocusY?: number;
+  artLabel?: string;
 };
 
 export type FurnitureDefinition = {
@@ -130,12 +133,14 @@ export type SaveData = {
   tutorial: TutorialState;
   recentOrderIds?: string[];
   life: LifeState;
+  play: import('../play/types').PlayState;
 };
 
 export type GameConfig = {
   gameTitle: string;
   saveKey: string;
   saveVersion: number;
+  toolbox: { warehouseSlots: number; startingScissors: number };
   board: { rows: number; columns: number };
   energy: {
     maxEnergy: number;
@@ -156,6 +161,7 @@ export type GameConfig = {
     coupleDisplayName: string;
     anniversary: string;
     metMonth?: string;
+    metDate?: string;
     weddingDate?: string;
     theme: string;
   };

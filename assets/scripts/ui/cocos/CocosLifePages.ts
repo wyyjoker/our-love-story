@@ -1,8 +1,8 @@
-import { BlockInputEvents, Button, Graphics, Label, Node, UIOpacity } from 'cc';
+import { BlockInputEvents, Button, Graphics, Label, Mask, Node, ScrollView, UIOpacity } from 'cc';
 import type { GameContext } from '../../gameplay/GameContext';
 import type { FurnitureDefinition, MemoryDefinition, WishDefinition } from '../../core/types';
 import type { UiRoots } from './UiFactory';
-import { applyArt, applyLocalPhoto, furnitureArt } from './CocosArt';
+import { applyArt, applyLocalPhoto, furnitureArt, itemArt } from './CocosArt';
 import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect } from './CocosTheme';
 import { sizeOf } from './UiFactory';
 import { fitPhoto, journalLayout, lifePageLayout, photoPage } from '../../presentation/UiSafety';
@@ -30,6 +30,40 @@ function paragraph(parent: Node, text: string, x: number, y: number, size: numbe
   result.horizontalAlign = Label.HorizontalAlign.LEFT;
   result.node.setPosition(x, y, 0);
   return result;
+}
+
+/** Measure the wrapped text once; long personal diaries scroll inside the page. */
+function diaryBody(parent: Node, text: string, extra: number): boolean {
+  const height = 138 + extra;
+  const viewport = createUiNode('DiaryTextViewport');
+  parent.addChild(viewport);
+  ensureTransform(viewport, 560, height);
+  viewport.setPosition(0, -189 - extra / 2, 0);
+  viewport.addComponent(Mask);
+  const content = createUiNode('DiaryTextContent');
+  viewport.addChild(content);
+  const contentTransform = ensureTransform(content, 560, height, 0.5, 1);
+  content.setPosition(0, height / 2, 0);
+  const body = makeLabel(text, 21, CocosTheme.textPrimary());
+  body.node.name = 'DiaryText';
+  content.addChild(body.node);
+  const textTransform = ensureTransform(body.node, 560, height, 0.5, 1);
+  body.node.setPosition(0, -4, 0);
+  body.enableWrapText = true;
+  body.horizontalAlign = Label.HorizontalAlign.LEFT;
+  body.verticalAlign = Label.VerticalAlign.TOP;
+  body.lineHeight = 31;
+  body.overflow = Label.Overflow.RESIZE_HEIGHT;
+  body.updateRenderData(true);
+  contentTransform.setContentSize(560, Math.max(height, textTransform.height + 8));
+  const scroll = viewport.addComponent(ScrollView);
+  scroll.horizontal = false;
+  scroll.vertical = true;
+  scroll.elastic = false;
+  scroll.cancelInnerEvents = true;
+  scroll.content = content;
+  scroll.scrollToTop(0);
+  return contentTransform.height > height;
 }
 
 function button(parent: Node, text: string, x: number, y: number, width: number, height: number, onTap: () => void, tone: 'pink' | 'cream' | 'sage' = 'cream'): Node {
@@ -97,6 +131,7 @@ export class CocosLifePages {
     private readonly toast: (message: string) => void,
     private readonly takePhoto: () => void,
     private readonly onPageChanged: () => void,
+    private readonly openAdventure?: (id?: string) => void,
   ) {
     const backdropSize = sizeOf(roots.background, roots.designWidth, roots.designHeight);
     this.homeBackdrops = {
@@ -169,6 +204,12 @@ export class CocosLifePages {
     return this.page;
   }
 
+  openMemory(id: string): void {
+    const index = this.game.bundle.memories.findIndex((m) => m.id === id);
+    if (index < 0) return;
+    this.memoryTab = 'diary'; this.memoryPage = index; this.setPage('memories');
+  }
+
   render(): void {
     this.renderNav();
     if (this.page !== 'merge') {
@@ -230,6 +271,8 @@ export class CocosLifePages {
   }
 
   private renderMemories(): void {
+    const memories = this.game.bundle.memories;
+    const total = memories.length;
     const { compact, perPage, extra } = journalLayout(this.roots.designWidth, this.roots.designHeight);
     paper(this.pageRoot, 'AlbumPaper', 0, 0, 704, 1000 + 2 * extra, '#FFF7EC');
     const banner = paper(this.pageRoot, 'AlbumTitlePaper', -145, 433 + extra, 414, 112, '#FFE6E4');
@@ -240,9 +283,9 @@ export class CocosLifePages {
     this.pageRoot.addChild(flowers);
     flowers.setPosition(-318, 430 + extra, 0);
     applyArt(flowers, { sheet: 'flower_sheet', index: 4, columns: 4, rows: 2, preserveAspect: true }, 78, 98);
-    const unlocked = this.game.life.state.unlockedMemoryIds.length;
+    const unlocked = memories.filter((memory) => this.game.life.state.unlockedMemoryIds.includes(memory.id)).length;
     const progress = paper(this.pageRoot, 'AlbumProgress', 209, 433 + extra, 244, 100, '#FFFCF7');
-    label(progress, `已珍藏 ${unlocked}/10`, 0, 19, 24, 222, hexColor('#8B5358'), true);
+    label(progress, `已珍藏 ${unlocked}/${total}`, 0, 19, 24, 222, hexColor('#8B5358'), true);
     const track = createUiNode('AlbumProgressTrack');
     progress.addChild(track);
     track.setPosition(0, -21, 0);
@@ -267,7 +310,8 @@ export class CocosLifePages {
       return;
     }
     if (this.memoryTab === 'diary') {
-      const memory = this.game.bundle.memories[Math.min(this.memoryPage, 9)];
+      this.memoryPage = Math.max(0, Math.min(this.memoryPage, total - 1));
+      const memory = memories[this.memoryPage];
       const unlocked = this.game.life.state.unlockedMemoryIds.includes(memory.id);
       const card = paper(this.pageRoot, 'DiaryCard', 0, -50, 660, 650 + 2 * extra);
       tape(card, -208, 310 + extra, -9);
@@ -277,12 +321,21 @@ export class CocosLifePages {
       card.addChild(illustration);
       illustration.setPosition(0, 62 + extra / 2, 0);
       const [sheet, cell] = memory.art.split('#');
-      applyArt(illustration, { sheet, index: Number(cell ?? 0), columns: cell === undefined ? 1 : memory.artColumns ?? 5, rows: memory.artRows ?? 1, cropToFill: true, cropFocusY: 0.2 }, 590, 270 + extra);
+      applyArt(illustration, { sheet, index: Number(cell ?? 0), columns: cell === undefined ? 1 : memory.artColumns ?? 5, rows: memory.artRows ?? 1,
+        cropToFill: memory.artMode !== 'contain', preserveAspect: memory.artMode === 'contain', cropFocusY: memory.artFocusY ?? 0.2 }, 590, 270 + extra);
       if (!unlocked) illustration.addComponent(UIOpacity).opacity = 150;
-      label(card, '故事插画', 0, -94, 16, 180, CocosTheme.textSecondary());
-      paragraph(card, unlocked ? memory.diary : '解锁这段回忆后，日记会在这里展开。', 0, -189 - extra / 2, 21, 560, 138 + extra);
-      label(card, `第 ${this.memoryPage + 1} / 10 页`, 0, -292 - extra, 17, 300, CocosTheme.textSecondary());
-      this.pager(10, () => this.memoryPage, (page) => { this.memoryPage = page; this.render(); });
+      illustration.addComponent(Button);
+      illustration.on(Button.EventType.CLICK, () => {
+        if (unlocked) this.previewMemory(memory);
+        else this.toast('先解锁这段回忆，再查看完整插画吧');
+      });
+      const scrollable = diaryBody(card, unlocked ? memory.diary : '解锁这段回忆后，日记会在这里展开。', extra);
+      const artLabel = memory.artLabel ?? '故事插画';
+      label(card, `${artLabel} · 点击看大图${scrollable ? ' · 正文可滑动' : ''}`, 0, -94, 16, 560, CocosTheme.textSecondary());
+      const adventure = this.game.bundle.adventures.find((c) => c.memoryId === memory.id);
+      label(card, `第 ${this.memoryPage + 1} / ${total} 页`, adventure ? -177 : 0, -292 - extra, 17, 260, CocosTheme.textSecondary());
+      if (adventure) button(card, '回忆探索 ›', 150, -292 - extra, 264, 40, () => this.openAdventure?.(adventure.id), 'pink');
+      this.pager(total, () => this.memoryPage, (page) => { this.memoryPage = page; this.render(); });
       return;
     }
     const pages = Math.ceil(this.game.bundle.memories.length / perPage);
@@ -305,7 +358,8 @@ export class CocosLifePages {
     card.addChild(picture);
     picture.setPosition(0, compact ? 142 : 83, 0);
     const [sheet, cell] = memory.art.split('#');
-    applyArt(picture, { sheet, index: Number(cell ?? 0), columns: cell === undefined ? 1 : memory.artColumns ?? 5, rows: memory.artRows ?? 1, cropToFill: true, cropFocusY: 0.2 }, compact ? 602 : 294, compact ? 320 : 158 + extra);
+    applyArt(picture, { sheet, index: Number(cell ?? 0), columns: cell === undefined ? 1 : memory.artColumns ?? 5, rows: memory.artRows ?? 1,
+      cropToFill: memory.artMode !== 'contain', preserveAspect: memory.artMode === 'contain', cropFocusY: memory.artFocusY ?? 0.2 }, compact ? 602 : 294, compact ? 320 : 158 + extra);
     if (!unlocked) {
       const opacity = picture.addComponent(UIOpacity);
       opacity.opacity = 170;
@@ -370,6 +424,23 @@ export class CocosLifePages {
       message.string = status === 'failed' ? '照片暂时无法读取\n点击照片重试' : '';
     });
     photo.pauseSystemEvents(true);
+  }
+
+  private previewMemory(memory: MemoryDefinition): void {
+    this.photoRoot.active = true;
+    const panel = this.modalPanel(this.photoRoot, 'StoryArtDetail');
+    label(panel, memory.title, -40, 392, 28, 490, CocosTheme.textPrimary(), true);
+    button(panel, '关闭', 275, 395, 88, 46, () => { this.photoRoot.active = false; });
+    const illustration = createUiNode('StoryArtFull');
+    panel.addChild(illustration);
+    illustration.setPosition(0, 28, 0);
+    const [sheet, cell] = memory.art.split('#');
+    const status = label(panel, '插画加载中…', 0, -330, 21, 600, CocosTheme.textSecondary());
+    applyArt(illustration, { sheet, index: Number(cell ?? 0), columns: cell === undefined ? 1 : memory.artColumns ?? 5,
+      rows: memory.artRows ?? 1, preserveAspect: true }, 610, 610, (ok) => {
+      if (status.node.isValid) status.string = ok ? (memory.dateLabel ?? '') : '插画暂时无法读取，请关闭后重试';
+    });
+    label(panel, '根据我们的故事绘制的插画', 0, -395, 20, 620, CocosTheme.textSecondary());
   }
 
   private previewPhoto(index: number): void {
@@ -438,7 +509,29 @@ export class CocosLifePages {
       sprite.setPosition(x, y, 0);
       applyArt(sprite, art, width, height);
     }
-    if (placed.length === 0) {
+    const souvenirs = this.game.bundle.adventures.filter((chapter) => this.game.play.progress(chapter.id).claimed && chapter.souvenir.room === this.homeRoom);
+    const hasSouvenir = souvenirs.length > 0;
+    const shelf = createUiNode('MemoryShelf'); scene.addChild(shelf);
+    shelf.setPosition(0, -218, 0);
+    if (hasSouvenir) {
+      paintRoundRect(shelf.addComponent(Graphics), 638, 134, 22, hexColor('#FFF8EF', 242), hexColor('#DDBFA8'), 2);
+      label(shelf, '回忆纪念架 · 点击重读故事', 0, 45, 18, 600, hexColor('#9A7163'));
+    }
+    const spacing = Math.max(96, 600 / Math.max(1, souvenirs.length));
+    souvenirs.forEach((chapter, index) => {
+      const x = souvenirs.length === 1 ? 0 : -((souvenirs.length - 1) / 2) * spacing + index * spacing;
+      const titleWidth = Math.max(80, Math.min(244, spacing - 12));
+      const gift = createUiNode('Souvenir_' + chapter.id); shelf.addChild(gift);
+      ensureTransform(gift, Math.max(96, titleWidth), 126);
+      gift.setPosition(x, 0, 0);
+      const icon = createUiNode('SouvenirIcon'); gift.addChild(icon); icon.setPosition(0, 0, 0);
+      const art = itemArt(chapter.souvenir.artItemId); if (art) applyArt(icon, art, 64, 64);
+      gift.addComponent(Button); gift.on(Button.EventType.CLICK, () => this.openMemory(chapter.memoryId));
+      const title = makeLabel(chapter.souvenir.title, 16, hexColor('#8B5358'));
+      gift.addChild(title.node); ensureTransform(title.node, titleWidth, 42); title.node.setPosition(0, -42, 0);
+      title.enableWrapText = true; title.overflow = Label.Overflow.SHRINK; title.lineHeight = 19;
+    });
+    if (placed.length === 0 && !hasSouvenir) {
       const hint = createUiNode('EmptyRoomHint');
       scene.addChild(hint);
       hint.setPosition(0, -184, 0);
@@ -523,7 +616,7 @@ export class CocosLifePages {
     const panel = this.modalPanel(this.taskRoot, 'WishesPanel');
     const claimed = this.game.life.state.claimedWishIds.length;
     label(panel, '小屋心愿  ' + claimed + '/10', -52, 392, 31, 490, hexColor('#8B5358'), true);
-    label(panel, '把日常的小惊喜，一点一点装进家里', 0, 342, 22, 590, CocosTheme.textSecondary());
+    button(panel, '今日约会 · 剧情与解谜 ›', 0, 342, 530, 44, () => this.openAdventure?.(), 'pink');
     button(panel, '关闭', 275, 395, 88, 46, () => {
       this.taskRoot.active = false;
       this.renderNav();

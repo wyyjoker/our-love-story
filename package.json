@@ -1,8 +1,8 @@
 {
   "name": "our-love-story",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "private": true,
-  "description": "《我们的浪漫小屋》— 情侣合成小游戏 1.0 本地交付版",
+  "description": "《我们的浪漫小屋》— 六章探索、谜题重玩与小约会循环",
   "scripts": {
     "test": "vitest run",
     "test:core": "vitest run",

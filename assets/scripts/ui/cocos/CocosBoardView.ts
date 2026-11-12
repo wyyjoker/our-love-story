@@ -4,7 +4,7 @@
  * dispatches the gesture to the hit target, not the parent). Bind all 4 events
  * on every cell + board fallback.
  */
-import { EventMouse, EventTouch, Input, input, Vec2, Vec3, UITransform, Node, Graphics, Camera, Label } from 'cc';
+import { BlockInputEvents, Button, EventMouse, EventTouch, Input, input, Vec2, Vec3, UITransform, Node, Graphics, Camera, Label } from 'cc';
 import type { BoardVm, ItemVm } from '../../presentation/GameViewMapper';
 import type { DropResolve } from '../../core/types';
 import { CocosCellView } from './CocosCellView';
@@ -25,6 +25,9 @@ export type BoardDeps = {
   dragThreshold: number;
   onDragStart?: () => void;
   onDragFinished?: () => void;
+  onOpenAdventure?: () => void;
+  onOpenTools?: () => void;
+  onItemTap?: (index: number) => void;
 };
 
 export class CocosBoardView {
@@ -68,6 +71,13 @@ export class CocosBoardView {
     this.node = createUiNode('BoardView');
     parent.addChild(this.node);
     ensureTransform(this.node, this.boardW, this.boardH);
+    [['OpenAdventure', '今日约会', deps.onOpenAdventure], ['OpenTools', '仓库与剪刀', deps.onOpenTools]].forEach(([name, caption, tap], i) => {
+      const n = createUiNode(String(name)); this.node.addChild(n); ensureTransform(n, 286, 48);
+      n.setPosition(i === 0 ? -151 : 151, this.boardH / 2 - 27, 0);
+      paintRoundRect(n.addComponent(Graphics), 286, 48, 22, hexColor(i === 0 ? '#F6CFD5' : '#FFF8EF'), hexColor('#E6CFC2'), 1);
+      const l = makeLabel(String(caption), 23, hexColor('#825A54'), true); n.addChild(l.node);
+      n.addComponent(Button); n.addComponent(BlockInputEvents); n.on(Button.EventType.CLICK, () => { if (typeof tap === 'function') tap(); });
+    });
 
     this.layoutCells();
     this.bindBoardTouch();
@@ -97,7 +107,7 @@ export class CocosBoardView {
     this.cellSize = Math.floor(
       Math.min(
         (this.boardW - 22 - (this.columns - 1) * this.gap) / this.columns,
-        (this.boardH - 32 - (this.rows - 1) * this.gap) / this.rows,
+        (this.boardH - 98 - (this.rows - 1) * this.gap) / this.rows,
       ),
     );
     const totalW = this.columns * this.cellSize + (this.columns - 1) * this.gap;
@@ -106,10 +116,11 @@ export class CocosBoardView {
     const paper = createUiNode('BoardPaper');
     this.node.addChild(paper);
     ensureTransform(paper, this.boardW, paperH);
+    paper.setPosition(0, -33, 0);
     paintRoundRect(paper.addComponent(Graphics), this.boardW, paperH, 22, hexColor('#FFF4E9', 244), hexColor('#FFFFFF'), 2);
     this.addBoardNotes(paperH);
     const originX = -totalW / 2 + this.cellSize / 2;
-    const originY = totalH / 2 - this.cellSize / 2;
+    const originY = totalH / 2 - this.cellSize / 2 - 33;
 
     this.cells = [];
     for (let r = 0; r < this.rows; r += 1) {
@@ -126,12 +137,12 @@ export class CocosBoardView {
   }
 
   private addBoardNotes(paperH: number): void {
-    const freeHalf = (this.boardH - paperH) / 2;
+    const freeHalf = (this.boardH - 66 - paperH) / 2;
     if (freeHalf < 64) return;
     const noteY = paperH / 2 + freeHalf / 2;
     const top = createUiNode('BoardSummary');
     this.node.addChild(top);
-    top.setPosition(0, noteY, 0);
+    top.setPosition(0, noteY - 33, 0);
     paintRoundRect(top.addComponent(Graphics), 496, 58, 28, hexColor('#FFF9F3', 235), hexColor('#F5D7CD'), 1);
     const count = makeLabel('', 24, hexColor('#825A54'), true);
     top.addChild(count.node);
@@ -140,7 +151,7 @@ export class CocosBoardView {
 
     const bottom = createUiNode('BoardHint');
     this.node.addChild(bottom);
-    bottom.setPosition(0, -noteY, 0);
+    bottom.setPosition(0, -noteY - 33, 0);
     paintRoundRect(bottom.addComponent(Graphics), 496, 58, 28, hexColor('#FFF9F3', 235), hexColor('#F5D7CD'), 1);
     const hint = makeLabel('♡  拖动相同物品，合成更高等级', 22, hexColor('#966C66'));
     bottom.addChild(hint.node);
@@ -205,7 +216,7 @@ export class CocosBoardView {
     const totalW = this.columns * this.cellSize + (this.columns - 1) * this.gap;
     const totalH = this.rows * this.cellSize + (this.rows - 1) * this.gap;
     const originX = -totalW / 2;
-    const originY = -totalH / 2;
+    const originY = -totalH / 2 - 33;
     const x = local.x - originX;
     const y = local.y - originY;
     if (x < 0 || y < 0 || x > totalW || y > totalH) return null;
@@ -283,6 +294,7 @@ export class CocosBoardView {
     this.drag = null;
     try {
       if (drag.active) this.deps.onDrop(drag.fromIndex, to);
+      else this.deps.onItemTap?.(drag.fromIndex);
     } finally {
       drag.ghost?.destroy();
       this.cells[drag.fromIndex]?.setSourceDim(false);

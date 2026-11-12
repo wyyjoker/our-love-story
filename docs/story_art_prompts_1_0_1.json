@@ -1,0 +1,292 @@
+{
+  "mode": "built-in image_gen",
+  "prompts": [
+    {
+      "index": 1,
+      "id": "letters",
+      "title": "舟山，故事的开始",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Zhoushan island first meeting: a young adult couple holding hands gently on a sandy beach, a small evening campfire and a few distant social-trip companions, calm sea behind. First hand-holding is the emotional focus. No engagement ring or wedding clothes.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_01_letters.jpg",
+      "cropFocusY": 0.22
+    },
+    {
+      "index": 2,
+      "id": "shenxianju",
+      "title": "初识后的第一座山",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: First autumn mountain date at Shenxianju: the couple in casual hiking jackets on a safe scenic path, dramatic rounded Chinese mountain pillars and misty green valleys behind, sharing a smile. Show a medium view, no dangerous cliff posing.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_02_shenxianju.jpg",
+      "cropFocusY": 0.18
+    },
+    {
+      "index": 3,
+      "id": "trampoline_park",
+      "title": "蹦床公园的约会",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Playful trampoline park date: the same couple on an indoor trampoline area with pastel padded platforms and a few springy trampoline beds visible. Relaxed happy medium shot, simple readable athletic poses, clean correct hands and feet, no brand signage.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_03_trampoline_park.jpg",
+      "cropFocusY": 0.1
+    },
+    {
+      "index": 4,
+      "id": "first_trip",
+      "title": "100 天，100 封情书",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: One hundred love letters: the young man offering his girlfriend a generous stack of cream envelopes tied with a blush ribbon, many neat envelopes and letter pages on a small table. Tender mutual smiles. Blank pages and no written text. The letters are the main prop.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_04_first_trip.jpg",
+      "cropFocusY": 0.18
+    },
+    {
+      "index": 5,
+      "id": "christmas_portrait",
+      "title": "我们的第一组圣诞写真",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Their first Christmas portrait session: the couple posed together in a cozy studio with a small decorated Christmas tree, warm fairy lights, cream and dusty rose outfits, subtle festive ornaments. A portrait sitting, not a wedding. No photographer blocking the couple.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_05_christmas_portrait.jpg",
+      "cropFocusY": 0.12
+    },
+    {
+      "index": 6,
+      "id": "night_view",
+      "title": "横店跨年，再一起回温州",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Hengdian New Year trip: the couple strolling in front of monumental Qin-style palace architecture, distant delicate fireworks, a small playful amusement-park light motif in the background. Winter travel clothes, no historical-costume requirement, no logos or written signs.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_06_night_view.jpg",
+      "cropFocusY": 0.18
+    },
+    {
+      "index": 7,
+      "id": "promise",
+      "title": "山水之间，有你",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Mountains and lakes they climbed together: the couple in hiking clothes overlooking Huangshan-like granite peaks and pines, a soft island-dotted lake in the distance and a small Hangzhou-style pavilion on a ridge. A poetic landscape illustration, no labels or map. Medium couple view with scenery.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_07_promise.jpg",
+      "cropFocusY": 0.18
+    },
+    {
+      "index": 8,
+      "id": "wedding",
+      "title": "带你看看，我的大学",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Showing her his university in Jiaxing: the couple walking side by side on a leafy university campus, warm cream teaching buildings and a calm campus path. He gently points toward a campus building. No school signs, emblems or invented readable institution name.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_08_wedding.jpg",
+      "cropFocusY": 0.18
+    },
+    {
+      "index": 9,
+      "id": "jeju_first",
+      "title": "第一次一起去韩国",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: First Korea trip to Jeju: the couple on a scenic Jeju seaside path with volcanic rocks, blue water, a small friendly dol-hareubang stone statue and distant aircraft contrail as a subtle travel cue. Light spring travel clothes and happy medium view. No passport numbers or flags with text.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_09_jeju_first.jpg",
+      "cropFocusY": 0.18
+    },
+    {
+      "index": 10,
+      "id": "first_home",
+      "title": "第一次陪你过5·20生日",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Her first birthday together on May 20: a warm intimate birthday table, the young man beside his smiling girlfriend, a small strawberry cake with a few simple lit candles and a modest bouquet. No age numerals or written greeting. Tender unhurried medium shot.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_10_first_home.jpg",
+      "cropFocusY": 0.23
+    },
+    {
+      "index": 11,
+      "id": "barbie_summer",
+      "title": "芭比写真与南湖游船",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Summer memories of Barbie-style portraits and Nanhu boating: the couple together on a small scenic sightseeing boat on a green Chinese lake, the woman wearing a soft pink outfit, a small pink portrait photo card resting nearby as a gentle visual reference to the photo session. No branded doll, no writing.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_11_barbie_summer.jpg",
+      "cropFocusY": 0.12
+    },
+    {
+      "index": 12,
+      "id": "linan_rafting",
+      "title": "小组出游，一起漂流",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Linan summer group rafting: the couple seated safely together in a small inflatable river raft, both wearing proper life jackets and helmets, friends visible in another distant raft, green wooded banks and playful shallow whitewater. Happy medium view, no dangerous waterfall.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_12_linan_rafting.jpg",
+      "cropFocusY": 0.18
+    },
+    {
+      "index": 13,
+      "id": "rainy_day",
+      "title": "南山塔，向你求婚",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Marriage proposal at Seoul Namsan Tower: the man kneeling with an open ring box to his delighted girlfriend, recognizable tower rising behind them, soft evening city lights, warm pink and ivory travel coats. Beautiful restrained emotion, no speech text or banners.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_13_rainy_day.jpg",
+      "cropFocusY": 0.26
+    },
+    {
+      "index": 14,
+      "id": "winter_portraits",
+      "title": "这一年的冬日纪念",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: A red-background Chinese-style portrait as the central winter memory: the man in black Chinese-style clothing and the woman in a fitted elegant qipao, posed side by side in front of a deep warm red studio background. Subtle snowy portrait frame and tiny Christmas ornaments near the foreground suggest their other winter memories. No wedding crowns, no words.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_14_winter_portraits.jpg",
+      "cropFocusY": 0.07
+    },
+    {
+      "index": 15,
+      "id": "new_year_balloons",
+      "title": "一起倒数，新年快乐",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: New Year countdown at a city shopping plaza: the couple together holding festive balloons, warm urban plaza lights and celebratory confetti, a simple blank round clock motif in the distance. Balloons are clean pastel pink and gold with no words or numbers. Happy winter clothes, no brand signs.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_15_new_year_balloons.jpg",
+      "cropFocusY": 0.18
+    },
+    {
+      "index": 16,
+      "id": "garden",
+      "title": "我们订婚了",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Engagement day: the couple at a softly decorated intimate engagement table with blush flowers and a ring box, their hands and faces visible together, a gentle close medium shot. Elegant ordinary formal outfits, not a white wedding gown. No calendars, certificates or text.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_16_garden.jpg",
+      "cropFocusY": 0.15
+    },
+    {
+      "index": 17,
+      "id": "birthday",
+      "title": "室内滑雪与家人合影",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: First indoor skiing together: the couple in helmets, goggles and warm ski jackets, standing together inside a clearly indoor snow hall with curved ceiling beams visible, gentle beginner slope and soft artificial snow. Medium safe playful view, no steep mountain outdoors.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_17_birthday.jpg",
+      "cropFocusY": 0.07
+    },
+    {
+      "index": 18,
+      "id": "quanzhou_birthday",
+      "title": "泉州旅行与你的27岁",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Quanzhou trip and her next birthday: the couple on a warm old-town street with southern Fujian red-brick heritage buildings and curved temple roofs, sharing a small birthday treat on a cafe table. No age numbers or written signs, spring light, tender medium shot.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_18_quanzhou_birthday.jpg",
+      "cropFocusY": 0.18
+    },
+    {
+      "index": 19,
+      "id": "rafting_again",
+      "title": "再一次，和小组去漂流",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Another group rafting outing: the couple in bright but soft pastel life jackets and helmets on a forest river raft, nearby friends waving from a second raft, dappled summer greenery and friendly gentle splashes. Distinct composition from the earlier rafting illustration. No invented park logo.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_19_rafting_again.jpg",
+      "cropFocusY": 0.16
+    },
+    {
+      "index": 20,
+      "id": "first_car",
+      "title": "生日，第一辆爱车",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: First car on his birthday: the couple beside a sleek sporty fastback sedan inspired by a Changan UNI-V, elegant neutral silver-gray body, a small blush ribbon on the car and a small birthday gift box held by the man. Faces, their hands and the recognizable car silhouette inside the safe middle band. No license-plate text or large logos.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_20_first_car.jpg",
+      "cropFocusY": 0.23
+    },
+    {
+      "index": 21,
+      "id": "chengdu_jiuzhaigou",
+      "title": "大熊猫与九寨沟",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Chengdu pandas and Jiuzhaigou travel memory: the couple at a scenic viewing spot, a relaxed giant panda among bamboo to one side and vivid turquoise lake with forested Sichuan mountains in the background, a lyrical single travel illustration rather than a map. No panda petting or unsafe contact.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_21_chengdu_jiuzhaigou.jpg",
+      "cropFocusY": 0.22
+    },
+    {
+      "index": 22,
+      "id": "suzhou_portrait",
+      "title": "苏州，我们的古装写真",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Suzhou historical-costume portrait: the young man as a graceful historical swordsman holding a sheathed or peacefully lowered decorative straight sword, his girlfriend in an elegant Tang-inspired outfit, Suzhou garden architecture and pale flowering branches. Calm beautiful portrait, no fighting or blood.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_22_suzhou_portrait.jpg",
+      "cropFocusY": 0.12
+    },
+    {
+      "index": 23,
+      "id": "snow_and_family",
+      "title": "山上的雪，同行的家人",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Outdoor skiing in the Linan mountains and a trip with parents: the same couple in warm ski clothes at a wooded outdoor snowy mountain slope, two older adult family members standing nearby in winter coats as a gentle family-travel motif. Clearly outdoors, friendly safe scene, no ski resort name.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_23_snow_and_family.jpg",
+      "cropFocusY": 0.2
+    },
+    {
+      "index": 24,
+      "id": "wedding_preparations",
+      "title": "为我们的婚礼做准备",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Preparing their lawn wedding: the couple visiting a lovely green outdoor wedding lawn with a simple flower arch and rows of empty white chairs, holding a small swatch of white bridal fabric and looking toward the aisle. Calm shared anticipation, no ceremony yet, no berries or strawberry farm.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_24_wedding_preparations.jpg",
+      "cropFocusY": 0.18
+    },
+    {
+      "index": 25,
+      "id": "lijiang_wedding",
+      "title": "丽江，第一套婚纱照",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Lijiang wedding portrait journey: bride and groom in wedding clothes beside a convertible MINI on a scenic open road with a snow mountain behind; a soft pink-and-white whimsical bow-themed castle and a clear lake subtly echo the other portrait themes in the distance. Medium couple and car shot, elegant and romantic, no printed logos or text.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_25_lijiang_wedding.jpg",
+      "cropFocusY": 0.14
+    },
+    {
+      "index": 26,
+      "id": "hangzhou_wedding",
+      "title": "在杭州，留下我们的模样",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Hangzhou wedding portrait and wedding-film memory: the couple on a traditional small boat, the woman in red Chinese bridal hanfu and the man in a red scholar zhuangyuan robe, soft warm golden reflections on a calm lake, a discreet film camera on the shore as a filming motif. Correct elegant clothing, no written characters on costume.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_26_hangzhou_wedding.jpg",
+      "cropFocusY": 0.15
+    },
+    {
+      "index": 27,
+      "id": "summer_before_wedding",
+      "title": "婚礼前，最后一个夏天",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: The final summer before their wedding: the couple at a warm glowing concert venue, a distant male singer silhouette on stage, cheerful small animal-crown themed stage ornaments and light sticks. Along the lower foreground a subtle travel postcard with a terracotta-warrior silhouette suggests their Xian family trip. No readable performer name, titles, lyrics or numbers.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_27_summer_before_wedding.jpg",
+      "cropFocusY": 0.12
+    },
+    {
+      "index": 28,
+      "id": "anniversary",
+      "title": "婚礼、领证与答谢宴",
+      "prompt": "Create ONE original square illustration for a personal romantic story game. This is a fictional hand-painted concept illustration, not a photograph of real people. The supplied image is STYLE AND FICTIONAL COUPLE CHARACTER REFERENCE ONLY: match its warm watercolor/anime storybook finish and the same adult East Asian couple, a young man with softly tousled chestnut-brown hair and a young woman with long dark chestnut hair. Keep faces and approximate age consistent, both clearly adults. Warm ivory, dusty blush pink, sage green and gentle golden light, refined clean linework, tactile painted detail, natural anatomy, affectionate but unforced expressions. ONE full scene on ONE 1:1 canvas, no grid, no contact sheet, no multiple panels, no UI, no frame, no borders, no watermark, no signatures, no readable text or numbers anywhere. Do not copy the reference's grid or its scenes. Compose this square artwork for a game card that may crop to a wide central band: keep all essential faces, hands and the principal story prop within the upper-middle central area (roughly x 12–88%, y 20–62%), with quiet atmospheric scenery toward the edges and lower foreground. Avoid oversized foreground objects covering the characters. Clothing and colors not specified in the scene are tasteful artistic choices, not documentary facts. Scene: Lawn wedding in Leqing: the bride and groom together under an ivory and pink floral arch on a green lawn, warm sunlight, a few softly rendered family guests and a tasteful distant reception table. Their faces and joined hands are central, intimate medium-wide view. Two small plain red booklets on a side table subtly symbolize later registration, with no writing or official emblem.",
+      "reference_role": "style and fictional couple consistency, not an edit target",
+      "reference_image": "assets/game_art/our_story_sheet.jpg",
+      "filename": "story_28_anniversary.jpg",
+      "cropFocusY": 0.18
+    }
+  ],
+  "selectedEdits": [
+    {
+      "id": "snow_and_family",
+      "prompt": "Edit this original story illustration. Keep the young adult couple at the left/center, their exact faces, hair, clothing, ski gear and expressions, the outdoor snow, mountain background, watercolor texture and warm palette. REMOVE the two older adults on the right completely and fill that area seamlessly with the snowy slope and trees. Final image must show only the young adult couple as the principal characters; tiny distant skiers may remain. Their parents went on a DIFFERENT trip, so must not appear with the couple at this skiing event. Keep the same square canvas, natural composition, no text or logos. Do not add a collage or another scene.",
+      "reason": "移除滑雪场景中的父母，避免把另外的横店家庭旅行当成一起滑雪。"
+    }
+  ]
+}

@@ -46,6 +46,27 @@
     "rewardHearts": 5
   },
   {
+    "id": "order_coffee_02_cup",
+    "minLevel": 1,
+    "maxLevel": 99,
+    "requirements": [
+      { "itemId": "coffee_02", "count": 1 },
+      { "itemId": "coffee_03", "count": 1 }
+    ],
+    "rewardCoins": 34,
+    "rewardXp": 15,
+    "rewardHearts": 4
+  },
+  {
+    "id": "order_coffee_03_pair",
+    "minLevel": 1,
+    "maxLevel": 99,
+    "requirements": [{ "itemId": "coffee_03", "count": 2 }],
+    "rewardCoins": 42,
+    "rewardXp": 18,
+    "rewardHearts": 6
+  },
+  {
     "id": "order_flower_seed",
     "minLevel": 1,
     "maxLevel": 99,
@@ -64,6 +85,27 @@
     "rewardHearts": 1
   },
   {
+    "id": "order_flower_sprout_pair",
+    "minLevel": 3,
+    "maxLevel": 99,
+    "requirements": [{ "itemId": "flower_02", "count": 2 }],
+    "rewardCoins": 30,
+    "rewardXp": 14,
+    "rewardHearts": 3
+  },
+  {
+    "id": "order_flower_coffee",
+    "minLevel": 3,
+    "maxLevel": 99,
+    "requirements": [
+      { "itemId": "flower_02", "count": 1 },
+      { "itemId": "coffee_03", "count": 1 }
+    ],
+    "rewardCoins": 34,
+    "rewardXp": 16,
+    "rewardHearts": 3
+  },
+  {
     "id": "order_morning_set",
     "minLevel": 1,
     "maxLevel": 99,
@@ -77,7 +119,7 @@
   },
   {
     "id": "order_latte_date",
-    "minLevel": 2,
+    "minLevel": 5,
     "maxLevel": 99,
     "requirements": [{ "itemId": "coffee_05", "count": 1 }],
     "rewardCoins": 45,
@@ -115,6 +157,27 @@
     "rewardHearts": 2
   },
   {
+    "id": "order_dessert_muffin_pair",
+    "minLevel": 5,
+    "maxLevel": 99,
+    "requirements": [{ "itemId": "dessert_02", "count": 2 }],
+    "rewardCoins": 32,
+    "rewardXp": 16,
+    "rewardHearts": 3
+  },
+  {
+    "id": "order_dessert_coffee",
+    "minLevel": 5,
+    "maxLevel": 99,
+    "requirements": [
+      { "itemId": "dessert_02", "count": 1 },
+      { "itemId": "coffee_02", "count": 1 }
+    ],
+    "rewardCoins": 30,
+    "rewardXp": 15,
+    "rewardHearts": 3
+  },
+  {
     "id": "order_strawberry_cake",
     "minLevel": 3,
     "maxLevel": 99,
@@ -140,6 +203,18 @@
     "rewardCoins": 55,
     "rewardXp": 28,
     "rewardHearts": 2
+  },
+  {
+    "id": "order_gift_note",
+    "minLevel": 8,
+    "maxLevel": 99,
+    "requirements": [
+      { "itemId": "gift_02", "count": 1 },
+      { "itemId": "flower_02", "count": 1 }
+    ],
+    "rewardCoins": 36,
+    "rewardXp": 18,
+    "rewardHearts": 3
   },
   {
     "id": "order_romantic_combo",

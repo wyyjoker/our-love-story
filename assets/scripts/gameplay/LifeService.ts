@@ -54,6 +54,14 @@ export class LifeService {
     }
   }
 
+  grantMemory(id: string): LifeResult {
+    if (!this.memories.some((memory) => memory.id === id)) return { ok: false, reason: 'NOT_FOUND' };
+    if (this.state.unlockedMemoryIds.includes(id)) return { ok: false, reason: 'ALREADY_OWNED' };
+    this.state.unlockedMemoryIds.push(id);
+    this.bus.emit('LIFE_CHANGED', { reason: 'memory' });
+    return { ok: true };
+  }
+
   unlockMemory(id: string): LifeResult {
     const index = this.memories.findIndex((item) => item.id === id);
     if (index < 0) return { ok: false, reason: 'NOT_FOUND' };

@@ -78,6 +78,7 @@ export class OrderService {
           templates: this.templates,
           catalog: this.catalog,
           recentOrderIds: this.recentOrderIds,
+          activeOrders: this.orders,
           minItemLevel: this.minItemLevel,
           maxItemLevel: this.maxItemLevel,
           random: this.random,
