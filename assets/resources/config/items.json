@@ -5,7 +5,9 @@
     "level": 1,
     "displayName": "咖啡豆",
     "nextItemId": "coffee_02",
-    "sellValue": 1
+    "sellValue": 1,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "coffee_02",
@@ -13,7 +15,9 @@
     "level": 2,
     "displayName": "精选咖啡豆",
     "nextItemId": "coffee_03",
-    "sellValue": 2
+    "sellValue": 2,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "coffee_03",
@@ -21,7 +25,9 @@
     "level": 3,
     "displayName": "浓缩咖啡",
     "nextItemId": "coffee_04",
-    "sellValue": 4
+    "sellValue": 4,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "coffee_04",
@@ -29,7 +35,9 @@
     "level": 4,
     "displayName": "爱心拿铁",
     "nextItemId": "coffee_05",
-    "sellValue": 8
+    "sellValue": 8,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "coffee_05",
@@ -37,7 +45,9 @@
     "level": 5,
     "displayName": "玻璃杯咖啡",
     "nextItemId": "coffee_06",
-    "sellValue": 16
+    "sellValue": 16,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "coffee_06",
@@ -45,7 +55,9 @@
     "level": 6,
     "displayName": "奶泡壶",
     "nextItemId": "coffee_07",
-    "sellValue": 32
+    "sellValue": 32,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "coffee_07",
@@ -53,14 +65,19 @@
     "level": 7,
     "displayName": "咖啡罐",
     "nextItemId": "coffee_08",
-    "sellValue": 64
+    "sellValue": 64,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "coffee_08",
     "chainId": "coffee",
     "level": 8,
     "displayName": "咖啡礼篮",
-    "sellValue": 128
+    "sellValue": 128,
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "coffee_09"
   },
   {
     "id": "flower_01",
@@ -68,7 +85,9 @@
     "level": 1,
     "displayName": "郁金香花苞",
     "nextItemId": "flower_02",
-    "sellValue": 1
+    "sellValue": 1,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "flower_02",
@@ -76,7 +95,9 @@
     "level": 2,
     "displayName": "并蒂郁金香",
     "nextItemId": "flower_03",
-    "sellValue": 2
+    "sellValue": 2,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "flower_03",
@@ -84,7 +105,9 @@
     "level": 3,
     "displayName": "郁金香花束",
     "nextItemId": "flower_04",
-    "sellValue": 4
+    "sellValue": 4,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "flower_04",
@@ -92,7 +115,9 @@
     "level": 4,
     "displayName": "玫瑰",
     "nextItemId": "flower_05",
-    "sellValue": 8
+    "sellValue": 8,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "flower_05",
@@ -100,7 +125,9 @@
     "level": 5,
     "displayName": "玫瑰花束",
     "nextItemId": "flower_06",
-    "sellValue": 16
+    "sellValue": 16,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "flower_06",
@@ -108,7 +135,9 @@
     "level": 6,
     "displayName": "向日葵花束",
     "nextItemId": "flower_07",
-    "sellValue": 32
+    "sellValue": 32,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "flower_07",
@@ -116,14 +145,19 @@
     "level": 7,
     "displayName": "薰衣草",
     "nextItemId": "flower_08",
-    "sellValue": 64
+    "sellValue": 64,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "flower_08",
     "chainId": "flower",
     "level": 8,
     "displayName": "浪漫花篮",
-    "sellValue": 128
+    "sellValue": 128,
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "flower_09"
   },
   {
     "id": "dessert_01",
@@ -131,7 +165,9 @@
     "level": 1,
     "displayName": "牛角包",
     "nextItemId": "dessert_02",
-    "sellValue": 1
+    "sellValue": 1,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "dessert_02",
@@ -139,7 +175,9 @@
     "level": 2,
     "displayName": "巧克力麦芬",
     "nextItemId": "dessert_03",
-    "sellValue": 2
+    "sellValue": 2,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "dessert_03",
@@ -147,7 +185,9 @@
     "level": 3,
     "displayName": "草莓蛋糕片",
     "nextItemId": "dessert_04",
-    "sellValue": 4
+    "sellValue": 4,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "dessert_04",
@@ -155,7 +195,9 @@
     "level": 4,
     "displayName": "草莓奶油蛋糕",
     "nextItemId": "dessert_05",
-    "sellValue": 8
+    "sellValue": 8,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "dessert_05",
@@ -163,7 +205,9 @@
     "level": 5,
     "displayName": "粉色马卡龙",
     "nextItemId": "dessert_06",
-    "sellValue": 16
+    "sellValue": 16,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "dessert_06",
@@ -171,7 +215,9 @@
     "level": 6,
     "displayName": "焦糖布丁",
     "nextItemId": "dessert_07",
-    "sellValue": 32
+    "sellValue": 32,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "dessert_07",
@@ -179,14 +225,19 @@
     "level": 7,
     "displayName": "莓果蛋糕卷",
     "nextItemId": "dessert_08",
-    "sellValue": 64
+    "sellValue": 64,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "dessert_08",
     "chainId": "dessert",
     "level": 8,
     "displayName": "双层下午茶",
-    "sellValue": 128
+    "sellValue": 128,
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "dessert_09"
   },
   {
     "id": "gift_01",
@@ -194,7 +245,9 @@
     "level": 1,
     "displayName": "蝴蝶结",
     "nextItemId": "gift_02",
-    "sellValue": 1
+    "sellValue": 1,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "gift_02",
@@ -202,7 +255,9 @@
     "level": 2,
     "displayName": "情书",
     "nextItemId": "gift_03",
-    "sellValue": 2
+    "sellValue": 2,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "gift_03",
@@ -210,7 +265,9 @@
     "level": 3,
     "displayName": "丝带礼盒",
     "nextItemId": "gift_04",
-    "sellValue": 4
+    "sellValue": 4,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "gift_04",
@@ -218,7 +275,9 @@
     "level": 4,
     "displayName": "心意小熊",
     "nextItemId": "gift_05",
-    "sellValue": 8
+    "sellValue": 8,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "gift_05",
@@ -226,7 +285,9 @@
     "level": 5,
     "displayName": "心形礼盒",
     "nextItemId": "gift_06",
-    "sellValue": 16
+    "sellValue": 16,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "gift_06",
@@ -234,7 +295,9 @@
     "level": 6,
     "displayName": "爱心吊坠",
     "nextItemId": "gift_07",
-    "sellValue": 32
+    "sellValue": 32,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "gift_07",
@@ -242,13 +305,517 @@
     "level": 7,
     "displayName": "玫瑰礼篮",
     "nextItemId": "gift_08",
-    "sellValue": 64
+    "sellValue": 64,
+    "wildcardEligible": true,
+    "maxLevel": false
   },
   {
     "id": "gift_08",
     "chainId": "gift",
     "level": 8,
     "displayName": "纪念日花礼",
-    "sellValue": 128
+    "sellValue": 128,
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "gift_09"
+  },
+  {
+    "id": "coin_01",
+    "chainId": "coin",
+    "level": 1,
+    "displayName": "金币1级",
+    "useValue": 10,
+    "nextItemId": "coin_02"
+  },
+  {
+    "id": "coin_02",
+    "chainId": "coin",
+    "level": 2,
+    "displayName": "金币2级",
+    "useValue": 25,
+    "nextItemId": "coin_03"
+  },
+  {
+    "id": "coin_03",
+    "chainId": "coin",
+    "level": 3,
+    "displayName": "金币3级",
+    "useValue": 60,
+    "maxLevel": false,
+    "nextItemId": "coin_04"
+  },
+  {
+    "id": "coin_04",
+    "chainId": "coin",
+    "level": 4,
+    "displayName": "金币4级",
+    "useValue": 150,
+    "maxLevel": false,
+    "nextItemId": "coin_05"
+  },
+  {
+    "id": "coin_05",
+    "chainId": "coin",
+    "level": 5,
+    "displayName": "金币5级",
+    "useValue": 375,
+    "maxLevel": true
+  },
+  {
+    "id": "energy_01",
+    "chainId": "energy",
+    "level": 1,
+    "displayName": "体力瓶1级",
+    "useValue": 5,
+    "nextItemId": "energy_02"
+  },
+  {
+    "id": "energy_02",
+    "chainId": "energy",
+    "level": 2,
+    "displayName": "体力瓶2级",
+    "useValue": 12,
+    "nextItemId": "energy_03"
+  },
+  {
+    "id": "energy_03",
+    "chainId": "energy",
+    "level": 3,
+    "displayName": "体力瓶3级",
+    "useValue": 30,
+    "maxLevel": false,
+    "nextItemId": "energy_04"
+  },
+  {
+    "id": "energy_04",
+    "chainId": "energy",
+    "level": 4,
+    "displayName": "体力瓶4级",
+    "useValue": 75,
+    "maxLevel": false,
+    "nextItemId": "energy_05"
+  },
+  {
+    "id": "energy_05",
+    "chainId": "energy",
+    "level": 5,
+    "displayName": "体力瓶5级",
+    "useValue": 190,
+    "maxLevel": true
+  },
+  {
+    "id": "diamond_01",
+    "chainId": "diamond",
+    "level": 1,
+    "displayName": "钻石1级",
+    "useValue": 1,
+    "nextItemId": "diamond_02"
+  },
+  {
+    "id": "diamond_02",
+    "chainId": "diamond",
+    "level": 2,
+    "displayName": "钻石2级",
+    "useValue": 3,
+    "nextItemId": "diamond_03"
+  },
+  {
+    "id": "diamond_03",
+    "chainId": "diamond",
+    "level": 3,
+    "displayName": "钻石3级",
+    "useValue": 8,
+    "maxLevel": false,
+    "nextItemId": "diamond_04"
+  },
+  {
+    "id": "diamond_04",
+    "chainId": "diamond",
+    "level": 4,
+    "displayName": "钻石4级",
+    "useValue": 20,
+    "maxLevel": false,
+    "nextItemId": "diamond_05"
+  },
+  {
+    "id": "diamond_05",
+    "chainId": "diamond",
+    "level": 5,
+    "displayName": "钻石5级",
+    "useValue": 50,
+    "maxLevel": true
+  },
+  {
+    "id": "treasure_chest",
+    "chainId": "treasure_chest",
+    "level": 1,
+    "displayName": "宝箱",
+    "nextItemId": "treasure_chest_02",
+    "maxLevel": false
+  },
+  {
+    "id": "fruit_01",
+    "chainId": "fruit",
+    "level": 1,
+    "displayName": "甜橘",
+    "sellValue": 2,
+    "nextItemId": "fruit_02",
+    "wildcardEligible": true,
+    "maxLevel": false
+  },
+  {
+    "id": "fruit_02",
+    "chainId": "fruit",
+    "level": 2,
+    "displayName": "橘瓣果碗",
+    "sellValue": 4,
+    "nextItemId": "fruit_03",
+    "wildcardEligible": true,
+    "maxLevel": false
+  },
+  {
+    "id": "fruit_03",
+    "chainId": "fruit",
+    "level": 3,
+    "displayName": "鲜榨橘汁",
+    "sellValue": 8,
+    "nextItemId": "fruit_04",
+    "wildcardEligible": true,
+    "maxLevel": false
+  },
+  {
+    "id": "fruit_04",
+    "chainId": "fruit",
+    "level": 4,
+    "displayName": "橘香果茶",
+    "sellValue": 16,
+    "nextItemId": "fruit_05",
+    "wildcardEligible": true,
+    "maxLevel": false
+  },
+  {
+    "id": "fruit_05",
+    "chainId": "fruit",
+    "level": 5,
+    "displayName": "橘子果冻",
+    "sellValue": 32,
+    "nextItemId": "fruit_06",
+    "wildcardEligible": true,
+    "maxLevel": false
+  },
+  {
+    "id": "fruit_06",
+    "chainId": "fruit",
+    "level": 6,
+    "displayName": "橘香小蛋糕",
+    "sellValue": 64,
+    "nextItemId": "fruit_07",
+    "wildcardEligible": true,
+    "maxLevel": false
+  },
+  {
+    "id": "fruit_07",
+    "chainId": "fruit",
+    "level": 7,
+    "displayName": "橘子庆祝蛋糕",
+    "sellValue": 128,
+    "nextItemId": "fruit_08",
+    "wildcardEligible": true,
+    "maxLevel": false
+  },
+  {
+    "id": "fruit_08",
+    "chainId": "fruit",
+    "level": 8,
+    "displayName": "阳光甜橘礼篮",
+    "sellValue": 256,
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "fruit_09"
+  },
+  {
+    "id": "sugar_01",
+    "chainId": "sugar",
+    "level": 1,
+    "displayName": "方糖",
+    "wildcardEligible": true,
+    "nextItemId": "sugar_02"
+  },
+  {
+    "id": "sugar_02",
+    "chainId": "sugar",
+    "level": 2,
+    "displayName": "双块方糖",
+    "wildcardEligible": true,
+    "nextItemId": "sugar_03"
+  },
+  {
+    "id": "sugar_03",
+    "chainId": "sugar",
+    "level": 3,
+    "displayName": "甜蜜糖罐",
+    "wildcardEligible": true
+  },
+  {
+    "id": "wildcard",
+    "chainId": "wildcard",
+    "level": 1,
+    "displayName": "万能食材",
+    "wildcard": true
+  },
+  {
+    "id": "treasure_chest_02",
+    "chainId": "treasure_chest",
+    "level": 2,
+    "displayName": "2级宝箱",
+    "maxLevel": false,
+    "nextItemId": "treasure_chest_03"
+  },
+  {
+    "id": "treasure_chest_03",
+    "chainId": "treasure_chest",
+    "level": 3,
+    "displayName": "3级宝箱",
+    "maxLevel": false,
+    "nextItemId": "treasure_chest_04"
+  },
+  {
+    "id": "treasure_chest_04",
+    "chainId": "treasure_chest",
+    "level": 4,
+    "displayName": "4级宝箱",
+    "maxLevel": false,
+    "nextItemId": "treasure_chest_05"
+  },
+  {
+    "id": "treasure_chest_05",
+    "chainId": "treasure_chest",
+    "level": 5,
+    "displayName": "5级宝箱",
+    "maxLevel": true
+  },
+  {
+    "id": "coffee_09",
+    "chainId": "coffee",
+    "level": 9,
+    "displayName": "花语拿铁",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "coffee_10"
+  },
+  {
+    "id": "coffee_10",
+    "chainId": "coffee",
+    "level": 10,
+    "displayName": "双杯午后茶",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "coffee_11"
+  },
+  {
+    "id": "coffee_11",
+    "chainId": "coffee",
+    "level": 11,
+    "displayName": "玫瑰咖啡组",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "coffee_12"
+  },
+  {
+    "id": "coffee_12",
+    "chainId": "coffee",
+    "level": 12,
+    "displayName": "浪漫咖啡宴",
+    "wildcardEligible": true,
+    "maxLevel": true
+  },
+  {
+    "id": "flower_09",
+    "chainId": "flower",
+    "level": 9,
+    "displayName": "玫瑰玻璃罩",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "flower_10"
+  },
+  {
+    "id": "flower_10",
+    "chainId": "flower",
+    "level": 10,
+    "displayName": "心形花环",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "flower_11"
+  },
+  {
+    "id": "flower_11",
+    "chainId": "flower",
+    "level": 11,
+    "displayName": "繁花礼篮",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "flower_12"
+  },
+  {
+    "id": "flower_12",
+    "chainId": "flower",
+    "level": 12,
+    "displayName": "婚礼捧花",
+    "wildcardEligible": true,
+    "maxLevel": true
+  },
+  {
+    "id": "dessert_09",
+    "chainId": "dessert",
+    "level": 9,
+    "displayName": "莓果双层糕",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "dessert_10"
+  },
+  {
+    "id": "dessert_10",
+    "chainId": "dessert",
+    "level": 10,
+    "displayName": "天鹅泡芙塔",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "dessert_11"
+  },
+  {
+    "id": "dessert_11",
+    "chainId": "dessert",
+    "level": 11,
+    "displayName": "玫瑰婚礼糕",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "dessert_12"
+  },
+  {
+    "id": "dessert_12",
+    "chainId": "dessert",
+    "level": 12,
+    "displayName": "梦幻甜品塔",
+    "wildcardEligible": true,
+    "maxLevel": true
+  },
+  {
+    "id": "gift_09",
+    "chainId": "gift",
+    "level": 9,
+    "displayName": "珍珠礼匣",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "gift_10"
+  },
+  {
+    "id": "gift_10",
+    "chainId": "gift",
+    "level": 10,
+    "displayName": "心形音乐盒",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "gift_11"
+  },
+  {
+    "id": "gift_11",
+    "chainId": "gift",
+    "level": 11,
+    "displayName": "求婚戒盒",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "gift_12"
+  },
+  {
+    "id": "gift_12",
+    "chainId": "gift",
+    "level": 12,
+    "displayName": "心意珍藏箱",
+    "wildcardEligible": true,
+    "maxLevel": true
+  },
+  {
+    "id": "fruit_09",
+    "chainId": "fruit",
+    "level": 9,
+    "displayName": "橙花果冻杯",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "fruit_10"
+  },
+  {
+    "id": "fruit_10",
+    "chainId": "fruit",
+    "level": 10,
+    "displayName": "橙香华夫盘",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "fruit_11"
+  },
+  {
+    "id": "fruit_11",
+    "chainId": "fruit",
+    "level": 11,
+    "displayName": "鲜橙庆典糕",
+    "wildcardEligible": true,
+    "maxLevel": false,
+    "nextItemId": "fruit_12"
+  },
+  {
+    "id": "fruit_12",
+    "chainId": "fruit",
+    "level": 12,
+    "displayName": "阳光水果宴",
+    "wildcardEligible": true,
+    "maxLevel": true
+  },
+  {
+    "id": "scissors_01",
+    "chainId": "scissors",
+    "level": 1,
+    "displayName": "1级剪刀",
+    "maxUses": 1,
+    "maxLevel": false,
+    "wildcardEligible": false,
+    "nextItemId": "scissors_02"
+  },
+  {
+    "id": "scissors_02",
+    "chainId": "scissors",
+    "level": 2,
+    "displayName": "2级剪刀",
+    "maxUses": 3,
+    "maxLevel": false,
+    "wildcardEligible": false,
+    "nextItemId": "scissors_03"
+  },
+  {
+    "id": "scissors_03",
+    "chainId": "scissors",
+    "level": 3,
+    "displayName": "3级剪刀",
+    "maxUses": 8,
+    "maxLevel": false,
+    "wildcardEligible": false,
+    "nextItemId": "scissors_04"
+  },
+  {
+    "id": "scissors_04",
+    "chainId": "scissors",
+    "level": 4,
+    "displayName": "4级剪刀",
+    "maxUses": 20,
+    "maxLevel": false,
+    "wildcardEligible": false,
+    "nextItemId": "scissors_05"
+  },
+  {
+    "id": "scissors_05",
+    "chainId": "scissors",
+    "level": 5,
+    "displayName": "5级剪刀",
+    "maxUses": 50,
+    "maxLevel": true,
+    "wildcardEligible": false
   }
 ]

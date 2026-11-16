@@ -43,10 +43,10 @@ export type UiRoots = {
 export const DESIGN_W = 750;
 export const DESIGN_H = 1334;
 
-const TOP_BAR_H = 120;
-const ORDERS_H = 180;
-const DOCK_H = 140;
-const NAV_H = 88;
+const TOP_BAR_H = 124;
+const ORDERS_H = 264;
+const DOCK_H = 104;
+export const NAV_H = 112;
 const EDGE = 12;
 const GAP = 8;
 
@@ -132,8 +132,9 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
 
   const insetTop = 12;
   const insetBottom = 8;
-  const dockHeight = layoutH < 1250 ? DOCK_H : 170;
-  const orderHeight = layoutH < 1250 ? ORDERS_H : 212;
+  const compactChrome = layoutH < 1250;
+  const dockHeight = compactChrome ? DOCK_H : 152;
+  const orderHeight = compactChrome ? 208 : ORDERS_H;
 
   const background = createUiNode('Background');
   canvas.addChild(background);
@@ -146,7 +147,7 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
 
   // Board first (under), then dock, then orders, then status (top chrome)
   const boardTop = insetTop + TOP_BAR_H + GAP + orderHeight + GAP;
-  const boardBottom = insetBottom + dockHeight + GAP + NAV_H;
+  const boardBottom = insetBottom + EDGE + dockHeight + GAP + NAV_H;
 
   const boardSlot = createUiNode('BoardPanel');
   safeArea.addChild(boardSlot);

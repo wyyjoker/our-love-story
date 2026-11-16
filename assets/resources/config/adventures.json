@@ -60,6 +60,26 @@
         }
       ]
     },
+    "replayVariants": [
+      {
+        "id": "practice_card",
+        "instruction": "找到三张练习卡，把两段数字依次拼成四位练习码。",
+        "hints": [
+          "三个标记都要找到，线索会保存在练习笔记里。",
+          "A 卡给出前两位 73，B 卡给出后两位 14。",
+          "按卡片顺序输入 7314；这只是练习码，不对应现实日期或回忆事实。"
+        ],
+        "puzzle": {
+          "kind": "find",
+          "solution": "7314",
+          "hotspots": [
+            { "id": "practice_card_a", "label": "练习卡 A", "x": -190, "y": 95, "clue": "练习卡 A：前两位是 73。" },
+            { "id": "practice_card_b", "label": "练习卡 B", "x": 175, "y": 5, "clue": "练习卡 B：后两位是 14。" },
+            { "id": "practice_card_note", "label": "练习说明", "x": -60, "y": -110, "clue": "卡片数字仅用于本次练习，不代表真实日期或回忆事实。" }
+          ]
+        }
+      }
+    ],
     "reward": {
       "coins": 120,
       "hearts": 50,
@@ -139,6 +159,27 @@
         "you"
       ]
     },
+    "replayVariants": [
+      {
+        "id": "practice_phrase",
+        "instruction": "根据每张练习卡标注的位置，把四个词排成一句中性的心意话。",
+        "hints": [
+          "每张练习卡都独立写明自己应放的位置。",
+          "先放第1格“愿”，再放第2格“每天”。",
+          "最后按位置放“都有”和“小小欢喜”，组成“愿每天都有小小欢喜”。"
+        ],
+        "puzzle": {
+          "kind": "sequence",
+          "tiles": [
+            { "id": "practice_joy", "label": "小小欢喜", "clue": "我是整句话的收尾，留下轻松的心情。" },
+            { "id": "practice_wish", "label": "愿", "clue": "我是这句话的开头，先说出心愿。" },
+            { "id": "practice_daily", "label": "每天", "clue": "我紧跟着“愿”，说明这份心意会发生在每天。" },
+            { "id": "practice_have", "label": "都有", "clue": "我接在“每天”后面，连接时间和结果。" }
+          ],
+          "solution": ["practice_wish", "practice_daily", "practice_have", "practice_joy"]
+        }
+      }
+    ],
     "reward": {
       "coins": 180,
       "hearts": 80,
@@ -254,6 +295,27 @@
         0
       ]
     },
+    "replayVariants": [
+      {
+        "id": "practice_circuit",
+        "instruction": "旋转 3×3 灯光卡片，让左上入口的光沿线路到达右下爱心。",
+        "hints": [
+          "只有相邻两格的端口彼此相对，灯光才会通过。",
+          "路线先沿第一排向右，再沿中间一排返回，最后向右抵达爱心。",
+          "练习初态的旋转次数各不相同；逐格调整后检查连接。"
+        ],
+        "puzzle": {
+          "kind": "circuit",
+          "columns": 3,
+          "rows": 3,
+          "start": 0,
+          "end": 8,
+          "ports": [[1, 3], [1, 3], [2, 3], [1, 2], [1, 3], [0, 3], [0, 1], [1, 3], [1, 3]],
+          "initial": [1, 0, 2, 3, 1, 2, 0, 3, 1],
+          "solution": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        }
+      }
+    ],
     "reward": {
       "coins": 240,
       "hearts": 120,
@@ -341,6 +403,27 @@
         "back_wenzhou"
       ]
     },
+    "replayVariants": [
+      {
+        "id": "practice_phrase",
+        "instruction": "根据练习卡片上的位置提示，把四个词排成一句轻松的心意话。",
+        "hints": [
+          "四张卡各自标注了第几格，按位置排列即可。",
+          "第1格是“一起”，第2格是“慢慢”。",
+          "第3格“收集”后接第4格“快乐”，组成“一起慢慢收集快乐”。"
+        ],
+        "puzzle": {
+          "kind": "sequence",
+          "tiles": [
+            { "id": "practice_joy", "label": "快乐", "clue": "我在句子结尾，表示一起收获的心情。" },
+            { "id": "practice_together", "label": "一起", "clue": "我是这句话的起点，邀请一起行动。" },
+            { "id": "practice_gather", "label": "收集", "clue": "我接在“慢慢”后面，表示要做的动作。" },
+            { "id": "practice_slowly", "label": "慢慢", "clue": "我紧跟“一起”，说明行动的节奏。" }
+          ],
+          "solution": ["practice_together", "practice_slowly", "practice_gather", "practice_joy"]
+        }
+      }
+    ],
     "reward": {
       "coins": 300,
       "hearts": 150,
@@ -424,6 +507,26 @@
         }
       ]
     },
+    "replayVariants": [
+      {
+        "id": "practice_card",
+        "instruction": "找到三张练习卡，按提示组成四位练习码。",
+        "hints": [
+          "标记都要点击，数字线索会记在练习笔记中。",
+          "A 卡给出前两位 24，B 卡给出后两位 68。",
+          "依次输入 2468；这些数字仅供练习，不关联现实日期或回忆事实。"
+        ],
+        "puzzle": {
+          "kind": "find",
+          "solution": "2468",
+          "hotspots": [
+            { "id": "practice_card_a", "label": "练习卡 A", "x": -180, "y": 80, "clue": "练习卡 A：前两位是 24。" },
+            { "id": "practice_card_b", "label": "练习卡 B", "x": 160, "y": 20, "clue": "练习卡 B：后两位是 68。" },
+            { "id": "practice_card_note", "label": "练习说明", "x": -50, "y": -110, "clue": "这组号码只属于练习，不代表日期或真实回忆。" }
+          ]
+        }
+      }
+    ],
     "reward": {
       "coins": 360,
       "hearts": 180,
@@ -547,6 +650,27 @@
         0
       ]
     },
+    "replayVariants": [
+      {
+        "id": "practice_circuit",
+        "instruction": "旋转 3×3 灯光卡片，把左上入口接到右下花门。",
+        "hints": [
+          "相邻格子的端口需要方向相对，灯光才会连通。",
+          "先沿第一排向右，到右上角后向下，再沿右侧一路接到花门。",
+          "这局练习使用独立初态；逐格旋转并检查花门是否亮起。"
+        ],
+        "puzzle": {
+          "kind": "circuit",
+          "columns": 3,
+          "rows": 3,
+          "start": 0,
+          "end": 8,
+          "ports": [[3, 1], [3, 1], [3, 2], [0, 2], [1, 3], [0, 2], [0, 1], [0, 2], [0, 1]],
+          "initial": [1, 2, 0, 3, 1, 2, 0, 3, 1],
+          "solution": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        }
+      }
+    ],
     "reward": {
       "coins": 450,
       "hearts": 220,

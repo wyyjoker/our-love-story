@@ -1,0 +1,12 @@
+[
+  {
+    "key": "orange_tree",
+    "prompt": "Use case: stylized-concept. Asset: one original transparent game sprite for a cozy romantic merge game. A small lush potted orange tree, rounded leafy canopy with many ripe tangerines, terracotta pot with a tiny pale pink ribbon, gentle three-quarter view. Entire object isolated with ample transparent margins, centered, no clipping. Hand-painted polished watercolor gouache, soft warm cream/pastel palette, charming miniature collectible, distinct readable silhouette at small mobile icon size. No lettering, numbers, UI, borders, background scene, watermark or cast rectangle. True transparent background.",
+    "source": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a0ce29-5da7-7433-8169-05b103df7cf8\\exec-81b5cc9c-ce25-46ca-93b0-9991f1b7fcc6.png"
+  },
+  {
+    "key": "fruit_sheet",
+    "prompt": "Use case: stylized-concept. Asset: original game sprite atlas for a warm romantic merge game. EXACTLY EIGHT separate illustrations in a perfectly regular 4 columns by 2 rows grid, landscape 2:1 aspect ratio; each centered inside its equal square cell with at least 15% empty margin; transparent background, no grid lines. Read row-major, row1: 1 a single ripe orange with a small green leaf, 2 a cream bowl of peeled orange segments, 3 a clear glass of fresh orange juice with orange wedge, 4 a delicate glass cup of orange fruit tea with slice. Row2: 5 orange jelly pudding with cream swirl, 6 a small orange cupcake with pink wrapper, 7 a beautiful round orange celebration cake decorated with orange slices and pale pink ribbon, 8 a wicker gift basket filled with ripe oranges and tied with pink ribbon. Consistent 3/4 view, hand painted gouache/watercolor cozy mobile game collectible items, warm pastel cream/orange/pink palette, subtle soft highlights, clear silhouettes, complete uncropped objects, no labels, no text, no numbers, no cell borders, no background or watermark. True transparency.",
+    "source": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a0ce29-5da7-7433-8169-05b103df7cf8\\exec-3f2ee610-5a6b-4fe1-b448-61228e8af743.png"
+  }
+]

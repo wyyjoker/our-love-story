@@ -1,0 +1,18 @@
+{
+  "actualCreatorBuild": true,
+  "creatorVersion": "3.8.8",
+  "exitCode": 36,
+  "path": "E:\\A-game\\build\\wechatgame",
+  "mainBytes": 3987036,
+  "mainLimit": 4000000,
+  "subpackages": {
+    "subpackages/internal": 689471,
+    "subpackages/game_art": 13928221,
+    "subpackages/main": 374599
+  },
+  "totalBytes": 18979327,
+  "sha256": "c7b883aa6594f7818208cce46d3f210e4611aec9bb668426f10ba3529eec7271",
+  "digestAlgorithm": "sha256(relative posix path + file bytes, lexical path order)",
+  "uploaded": false,
+  "phoneTestThisRevision": false
+}

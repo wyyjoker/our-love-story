@@ -1,8 +1,8 @@
 {
   "name": "our-love-story",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
-  "description": "《我们的浪漫小屋》— 六章探索、谜题重玩与小约会循环",
+  "description": "《我们的浪漫小屋》— 合成图鉴、宝箱签到、六场景家园与42段回忆",
   "scripts": {
     "test": "vitest run",
     "test:core": "vitest run",
@@ -14,6 +14,7 @@
     "verify:cocos": "node tools/verify-cocos-project.mjs",
     "verify:wechat-package": "node tools/check-wechat-package.mjs",
     "build:wechat": "node tools/build-wechat.mjs",
+    "build:cocos-web": "node tools/build-cocos-web.mjs",
     "qa:cocos-web": "node tools/qa-cocos-web.mjs",
     "test:tools": "node --test tools/*.test.mjs",
     "verify": "node tools/verify-all.mjs"

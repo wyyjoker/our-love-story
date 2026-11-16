@@ -1,8 +1,27 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { captureHomePhoto } from '../assets/scripts/platform/cocos/CocosPhotoService';
+import { captureHomePhoto, chooseJournalPhoto } from '../assets/scripts/platform/cocos/CocosPhotoService';
 
 afterEach(() => vi.unstubAllGlobals());
 describe('WeChat photo capture', () => {
+  it('persists a picked personal diary photo before returning its path', async () => {
+    const saveFile = vi.fn(({ success }) => success({ savedFilePath: 'wxfile://diary-permanent.jpg' }));
+    vi.stubGlobal('wx', {
+      chooseImage: ({ success }: { success: (value: { tempFilePaths: string[] }) => void }) => success({ tempFilePaths: ['wxfile://picked-temp.jpg'] }),
+      getFileSystemManager: () => ({ saveFile }),
+    });
+    expect(await chooseJournalPhoto()).toEqual({ ok: true, path: 'wxfile://diary-permanent.jpg', albumSaved: false });
+    expect(saveFile).toHaveBeenCalledWith(expect.objectContaining({ tempFilePath: 'wxfile://picked-temp.jpg' }));
+  });
+  it('does not use a cancelled or unsaved temporary diary photo', async () => {
+    const fail = ({ fail }: { fail: (value: { errMsg: string }) => void }) => fail({ errMsg: 'cancel or storage full' });
+    vi.stubGlobal('wx', { chooseImage: fail });
+    expect((await chooseJournalPhoto()).ok).toBe(false);
+    vi.stubGlobal('wx', {
+      chooseImage: ({ success }: { success: (value: { tempFilePaths: string[] }) => void }) => success({ tempFilePaths: ['temp.jpg'] }),
+      getFileSystemManager: () => ({ saveFile: fail }),
+    });
+    expect((await chooseJournalPhoto()).ok).toBe(false);
+  });
   it('explains the unsupported Web action', async () => {
     vi.stubGlobal('wx', undefined);
     expect(await captureHomePhoto()).toEqual({ ok: false, reason: '请在微信小游戏中拍照留念' });

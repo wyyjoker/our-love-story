@@ -37,8 +37,8 @@ describe('v1 to v2 migration', () => {
     const loaded = save.load();
     expect(loaded.ok).toBe(true);
     if (!loaded.ok) return;
-    expect(loaded.data.board).toHaveLength(81);
-    expect(loaded.data.board[10].item?.uid).toBe('old-item');
+    expect(loaded.data.board).toHaveLength(42);
+    expect(loaded.data.board[7].item?.uid).toBe('old-item');
     expect(loaded.data.player.energy).toBe(70);
     expect(loaded.data.player.maxEnergy).toBe(100);
     expect(loaded.data.player.coins).toBe(245);

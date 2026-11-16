@@ -1,0 +1,26 @@
+{
+  "provider": "OpenAI built-in image_gen",
+  "prompts": {
+    "customers": "Original cozy romantic mobile merge game character sprite atlas. Exactly three equal columns in one row, each isolated character fully contained in its own column with wide transparent margins. Left: cheerful young East Asian woman with warm chestnut bob hair, peach cardigan over cream dress, holding her hands politely at waist. Center: friendly young East Asian man with soft dark brown hair, sage shirt and cream apron. Right: elegant young East Asian woman with long dark hair, lavender blouse, gentle smile. Each is a distinct charming waist-up customer portrait including complete head, shoulders, arms, hands, waist, facing three-quarter toward viewer, no cut off anatomy. Delicate polished watercolor illustration with clean detailed contours, soft cream, muted pink, warm sunlight, affectionate storybook game aesthetic, consistent proportions and front camera. Three separate sprites, identical scale. Transparent alpha background, zero opacity outside characters. No circles, frames, scenery, ground shadows, lettering, watermark or speech bubbles. High clarity when scaled down.",
+    "navigation": "Original polished watercolor icon sprite atlas for a cozy romantic mobile merge game. Exactly 2 columns by 2 rows, four separate large objects centered in equal cells with wide transparent padding, no overlap. Top left: a cream journal clipboard with rose ribbon and golden pen, representing tasks. Top right: two lovely cream ceramic coffee cups merging, one small subtle golden sparkle, representing merge play. Bottom left: a pair of overlapping instant photo cards with small pink heart and a tiny rose, representing memories. Bottom right: an inviting cream cottage with rosy terracotta roof, small flowers by doorway and heart detail, representing home. Consistent three-quarter perspective, warm cream, rose pink, muted sage and soft gold, lovingly hand-painted fine watercolor, clear silhouette and rich yet uncluttered detail, premium casual game interface assets. Truly transparent alpha background around objects, no paper haze, no colored square tiles, no frames, no lettering, no numbers, no watermark, no shadows outside objects.",
+    "tools": "Original cozy romantic mobile merge game sprite atlas. Landscape, exactly 3 columns and 2 rows with six equal cells. Five isolated pairs of crafting scissors and one backpack, all complete objects with generous transparent margins and consistent three-quarter viewpoint. Top left level 1: simple copper scissors with peach handles. Top middle level 2: shiny silver scissors with rose pink handles. Top right level 3: elegant silver scissors with sage green handles, small ribbon. Bottom left level 4: ornate silver scissors with lavender handles and delicate filigree. Bottom middle level 5: luxurious gold scissors with blush heart-shaped handles and a small jewel. Bottom right: soft tan leather backpack with rose front pocket, clear straps and a heart clasp. Make all five scissors distinct, legible and charming at small size. Fine polished watercolor illustration, warm cream and romantic muted colors, coherent with an original cozy merge game. No background, genuine transparency everywhere outside objects, no white haze, no ground shadow, no cell borders, no letters, numbers or watermark. No object crosses a cell boundary."
+  },
+  "assets": {
+    "customers": {
+      "source": "C:/Users/Mr.wang/.codex/generated_images/01a0ce29-5da7-7433-8169-05b103df7cf8/exec-bd16ac85-935f-4709-a85d-b72aaaead0f9.png",
+      "destination": "assets/game_art/customer_bust_sheet.png",
+      "finalSizeBytes": 94166
+    },
+    "navigation": {
+      "source": "C:/Users/Mr.wang/.codex/generated_images/01a0ce29-5da7-7433-8169-05b103df7cf8/exec-386f6efd-67c0-4faf-9d20-46034b7fc362.png",
+      "destination": "assets/game_art/navigation_illustrated_sheet.png",
+      "finalSizeBytes": 38668
+    },
+    "tools": {
+      "source": "C:/Users/Mr.wang/.codex/generated_images/01a0ce29-5da7-7433-8169-05b103df7cf8/exec-5af8caa7-c771-47b8-bc05-3aba481469df.png",
+      "destination": "assets/game_art/scissors_backpack_sheet.png",
+      "finalSizeBytes": 74698
+    }
+  },
+  "note": "Transparent source images. Normal asset packing crops each cell to its alpha bounds and resizes without distortion; colors and alpha are preserved. Experimental background-removal variants were not selected."
+}

@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "scope": "boardfill",
+  "checks": [
+    "board fill, adjacent cells, touch/mouse merge, swap, edge and last-cell moves, outside release and locked drop at 320/375/430"
+  ],
+  "exceptions": [],
+  "testedBuildDigest": "7a2a1054698fa0e46cc1d8a247429469d593a4cf64255b69cf7175c72291fc18",
+  "version": "1.3.0",
+  "output": "E:\\A-game\\temp\\cocos-ui-qa-2026-11-14T00-00-48-127Z-fAiD3t"
+}

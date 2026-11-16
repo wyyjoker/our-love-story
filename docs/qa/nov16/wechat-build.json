@@ -1,0 +1,19 @@
+{
+  "platform": "wechatgame",
+  "buildCompleted": "2026-11-16 19:10:20 Asia/Shanghai",
+  "creatorVersion": "3.8.8",
+  "creatorExitCode": 36,
+  "mainBytes": 3986515,
+  "mainLimit": 4000000,
+  "mainHeadroom": 13485,
+  "subpackages": {
+    "subpackages/game_art": 13719913,
+    "subpackages/internal": 689471,
+    "subpackages/main": 369435
+  },
+  "totalBytes": 18765334,
+  "sha256": "7c5230ca195b0b295ab5981f5fdd8a4c53f5e146375e09a05e48d5a4ecf41745",
+  "appId": "wx0304df228ac07eac",
+  "uploaded": false,
+  "phoneVerified": false
+}

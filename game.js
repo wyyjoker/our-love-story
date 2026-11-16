@@ -13,7 +13,7 @@
   }
   function findFirstEmptyIndex(board) {
     for (const cell of board.cells) {
-      if (!cell.item) return cell.index;
+      if (!cell.locked && !cell.item) return cell.index;
     }
     return null;
   }
@@ -29,6 +29,7 @@
       columns: board.columns,
       cells: board.cells.map((cell) => ({
         index: cell.index,
+        locked: cell.locked,
         item: cell.item ? { ...cell.item } : void 0
       }))
     };
@@ -50,25 +51,101 @@
   var game_default = {
     gameTitle: "\u6211\u4EEC\u7684\u6D6A\u6F2B\u5C0F\u5C4B",
     saveKey: "our-love-story-save",
-    saveVersion: 3,
-    toolbox: { warehouseSlots: 6, startingScissors: 2 },
+    saveVersion: 8,
+    toolbox: {
+      warehouseSlots: 6,
+      startingScissors: 2
+    },
     board: {
-      rows: 9,
-      columns: 9
+      rows: 7,
+      columns: 6,
+      unlocks: [
+        {
+          level: 1,
+          columns: 3,
+          rows: 3
+        },
+        {
+          level: 2,
+          columns: 4,
+          rows: 3
+        },
+        {
+          level: 3,
+          columns: 4,
+          rows: 4
+        },
+        {
+          level: 4,
+          columns: 5,
+          rows: 4
+        },
+        {
+          level: 5,
+          columns: 5,
+          rows: 5
+        },
+        {
+          level: 6,
+          columns: 6,
+          rows: 5
+        },
+        {
+          level: 8,
+          columns: 6,
+          rows: 6
+        },
+        {
+          level: 10,
+          columns: 6,
+          rows: 7
+        }
+      ]
     },
     energy: {
       maxEnergy: 100,
       initialEnergy: 100,
       generatorCost: 1,
-      recoverIntervalMs: 24e4
+      recoverIntervalMs: 24e4,
+      maxByLevel: [
+        100,
+        150,
+        200,
+        250,
+        300,
+        350,
+        400,
+        450,
+        500,
+        550,
+        600,
+        650,
+        700,
+        750,
+        800,
+        850,
+        900,
+        1e3
+      ]
     },
     dragThresholdPx: 12,
     orders: {
       activeSlots: 3,
       minRequirements: 1,
-      maxRequirements: 2,
+      maxRequirements: 3,
       minItemLevel: 2,
-      maxItemLevel: 5
+      maxItemLevel: 5,
+      refreshCooldownMs: 9e5,
+      refreshDiamondCost: 2,
+      dynamic: {
+        rareChance: 0.2,
+        urgentChance: 0.1,
+        urgentDurationMs: 18e5,
+        rewardMultiplierMin: 1.2,
+        rewardMultiplierMax: 1.8,
+        rewardMultiplierMaxLevel: 18,
+        twoItemChance: 0.3
+      }
     },
     couple: {
       gameTitle: "\u6211\u4EEC\u7684\u6D6A\u6F2B\u5C0F\u5C4B",
@@ -77,7 +154,306 @@
       metMonth: "2023-09",
       metDate: "2023-09-08",
       weddingDate: "2026-10-03",
-      theme: "warm-romantic"
+      theme: "warm-romantic",
+      gift: {
+        coverMessage: "",
+        title: "",
+        salutation: "",
+        body: "",
+        signoff: "",
+        signature: ""
+      }
+    },
+    rewards: {
+      discoveryCoins: 10,
+      chestDropChance: 0.08,
+      chestLoot: [
+        {
+          itemId: "coin_01",
+          weight: 5
+        },
+        {
+          itemId: "energy_01",
+          weight: 3
+        },
+        {
+          itemId: "diamond_01",
+          weight: 2
+        }
+      ],
+      exchangeOffers: [
+        {
+          id: "small",
+          diamonds: 5,
+          energy: 25
+        },
+        {
+          id: "large",
+          diamonds: 10,
+          energy: 60
+        }
+      ],
+      checkIn: [
+        {
+          coins: 30,
+          energy: 0,
+          diamonds: 0
+        },
+        {
+          coins: 0,
+          energy: 15,
+          diamonds: 0
+        },
+        {
+          coins: 0,
+          energy: 0,
+          diamonds: 2
+        },
+        {
+          coins: 50,
+          energy: 0,
+          diamonds: 0
+        },
+        {
+          coins: 0,
+          energy: 25,
+          diamonds: 0
+        },
+        {
+          coins: 0,
+          energy: 0,
+          diamonds: 3
+        },
+        {
+          coins: 80,
+          energy: 20,
+          diamonds: 5,
+          itemId: "scissors_02"
+        }
+      ],
+      dailyTasks: [
+        {
+          id: "orders_3",
+          kind: "orders",
+          title: "\u5B8C\u62103\u7B14\u8BA2\u5355",
+          target: 3,
+          reward: {
+            coins: 50,
+            xp: 20,
+            energy: 10,
+            diamonds: 1
+          }
+        },
+        {
+          id: "merges_10",
+          kind: "merges",
+          title: "\u5408\u621010\u6B21",
+          target: 10,
+          reward: {
+            coins: 40,
+            xp: 15,
+            energy: 10,
+            diamonds: 1
+          }
+        },
+        {
+          id: "specific_2",
+          kind: "specific",
+          title: "\u5408\u6210\u6307\u5B9A\u7269\u54C12\u6B21",
+          target: 2,
+          reward: {
+            coins: 35,
+            xp: 15,
+            energy: 5,
+            diamonds: 1
+          }
+        }
+      ],
+      chestLevels: [
+        {
+          level: 1,
+          count: 2
+        },
+        {
+          level: 2,
+          count: 4,
+          loot: [
+            {
+              itemId: "coin_01",
+              weight: 8
+            },
+            {
+              itemId: "energy_01",
+              weight: 6
+            },
+            {
+              itemId: "diamond_01",
+              weight: 4
+            },
+            {
+              itemId: "coin_02",
+              weight: 1
+            },
+            {
+              itemId: "energy_02",
+              weight: 1
+            },
+            {
+              itemId: "diamond_02",
+              weight: 1
+            }
+          ]
+        },
+        {
+          level: 3,
+          count: 8,
+          loot: [
+            {
+              itemId: "coin_01",
+              weight: 6
+            },
+            {
+              itemId: "energy_01",
+              weight: 4
+            },
+            {
+              itemId: "diamond_01",
+              weight: 3
+            },
+            {
+              itemId: "coin_02",
+              weight: 3
+            },
+            {
+              itemId: "energy_02",
+              weight: 2
+            },
+            {
+              itemId: "diamond_02",
+              weight: 2
+            },
+            {
+              itemId: "coin_03",
+              weight: 1
+            }
+          ]
+        },
+        {
+          level: 4,
+          count: 16,
+          loot: [
+            {
+              itemId: "coin_01",
+              weight: 3
+            },
+            {
+              itemId: "energy_01",
+              weight: 2
+            },
+            {
+              itemId: "diamond_01",
+              weight: 2
+            },
+            {
+              itemId: "coin_02",
+              weight: 4
+            },
+            {
+              itemId: "energy_02",
+              weight: 3
+            },
+            {
+              itemId: "diamond_02",
+              weight: 3
+            },
+            {
+              itemId: "coin_03",
+              weight: 2
+            },
+            {
+              itemId: "energy_03",
+              weight: 2
+            },
+            {
+              itemId: "diamond_03",
+              weight: 2
+            }
+          ]
+        },
+        {
+          level: 5,
+          count: 32,
+          loot: [
+            {
+              itemId: "coin_01",
+              weight: 2
+            },
+            {
+              itemId: "energy_01",
+              weight: 2
+            },
+            {
+              itemId: "diamond_01",
+              weight: 1
+            },
+            {
+              itemId: "coin_02",
+              weight: 3
+            },
+            {
+              itemId: "energy_02",
+              weight: 3
+            },
+            {
+              itemId: "diamond_02",
+              weight: 3
+            },
+            {
+              itemId: "coin_03",
+              weight: 3
+            },
+            {
+              itemId: "energy_03",
+              weight: 3
+            },
+            {
+              itemId: "diamond_03",
+              weight: 2
+            }
+          ]
+        }
+      ]
+    },
+    collection: {
+      chainIds: [
+        "coffee",
+        "flower",
+        "dessert",
+        "gift",
+        "fruit",
+        "sugar"
+      ],
+      energyPerChain: 3,
+      maxEnergyCap: 1e3
+    },
+    generationBonusDrops: [
+      {
+        generatorId: "coffee_machine",
+        minLevel: 2,
+        chance: 0.1,
+        itemId: "sugar_01"
+      },
+      {
+        generatorId: "*",
+        minLevel: 2,
+        chance: 5e-3,
+        itemId: "wildcard",
+        excludeRecharge: true
+      }
+    ],
+    generatorRestore: {
+      cooldownCost: 2,
+      chargeCost: 5
     }
   };
 
@@ -89,7 +465,9 @@
       level: 1,
       displayName: "\u5496\u5561\u8C46",
       nextItemId: "coffee_02",
-      sellValue: 1
+      sellValue: 1,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "coffee_02",
@@ -97,7 +475,9 @@
       level: 2,
       displayName: "\u7CBE\u9009\u5496\u5561\u8C46",
       nextItemId: "coffee_03",
-      sellValue: 2
+      sellValue: 2,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "coffee_03",
@@ -105,7 +485,9 @@
       level: 3,
       displayName: "\u6D53\u7F29\u5496\u5561",
       nextItemId: "coffee_04",
-      sellValue: 4
+      sellValue: 4,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "coffee_04",
@@ -113,7 +495,9 @@
       level: 4,
       displayName: "\u7231\u5FC3\u62FF\u94C1",
       nextItemId: "coffee_05",
-      sellValue: 8
+      sellValue: 8,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "coffee_05",
@@ -121,7 +505,9 @@
       level: 5,
       displayName: "\u73BB\u7483\u676F\u5496\u5561",
       nextItemId: "coffee_06",
-      sellValue: 16
+      sellValue: 16,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "coffee_06",
@@ -129,7 +515,9 @@
       level: 6,
       displayName: "\u5976\u6CE1\u58F6",
       nextItemId: "coffee_07",
-      sellValue: 32
+      sellValue: 32,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "coffee_07",
@@ -137,14 +525,19 @@
       level: 7,
       displayName: "\u5496\u5561\u7F50",
       nextItemId: "coffee_08",
-      sellValue: 64
+      sellValue: 64,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "coffee_08",
       chainId: "coffee",
       level: 8,
       displayName: "\u5496\u5561\u793C\u7BEE",
-      sellValue: 128
+      sellValue: 128,
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "coffee_09"
     },
     {
       id: "flower_01",
@@ -152,7 +545,9 @@
       level: 1,
       displayName: "\u90C1\u91D1\u9999\u82B1\u82DE",
       nextItemId: "flower_02",
-      sellValue: 1
+      sellValue: 1,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "flower_02",
@@ -160,7 +555,9 @@
       level: 2,
       displayName: "\u5E76\u8482\u90C1\u91D1\u9999",
       nextItemId: "flower_03",
-      sellValue: 2
+      sellValue: 2,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "flower_03",
@@ -168,7 +565,9 @@
       level: 3,
       displayName: "\u90C1\u91D1\u9999\u82B1\u675F",
       nextItemId: "flower_04",
-      sellValue: 4
+      sellValue: 4,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "flower_04",
@@ -176,7 +575,9 @@
       level: 4,
       displayName: "\u73AB\u7470",
       nextItemId: "flower_05",
-      sellValue: 8
+      sellValue: 8,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "flower_05",
@@ -184,7 +585,9 @@
       level: 5,
       displayName: "\u73AB\u7470\u82B1\u675F",
       nextItemId: "flower_06",
-      sellValue: 16
+      sellValue: 16,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "flower_06",
@@ -192,7 +595,9 @@
       level: 6,
       displayName: "\u5411\u65E5\u8475\u82B1\u675F",
       nextItemId: "flower_07",
-      sellValue: 32
+      sellValue: 32,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "flower_07",
@@ -200,14 +605,19 @@
       level: 7,
       displayName: "\u85B0\u8863\u8349",
       nextItemId: "flower_08",
-      sellValue: 64
+      sellValue: 64,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "flower_08",
       chainId: "flower",
       level: 8,
       displayName: "\u6D6A\u6F2B\u82B1\u7BEE",
-      sellValue: 128
+      sellValue: 128,
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "flower_09"
     },
     {
       id: "dessert_01",
@@ -215,7 +625,9 @@
       level: 1,
       displayName: "\u725B\u89D2\u5305",
       nextItemId: "dessert_02",
-      sellValue: 1
+      sellValue: 1,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "dessert_02",
@@ -223,7 +635,9 @@
       level: 2,
       displayName: "\u5DE7\u514B\u529B\u9EA6\u82AC",
       nextItemId: "dessert_03",
-      sellValue: 2
+      sellValue: 2,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "dessert_03",
@@ -231,7 +645,9 @@
       level: 3,
       displayName: "\u8349\u8393\u86CB\u7CD5\u7247",
       nextItemId: "dessert_04",
-      sellValue: 4
+      sellValue: 4,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "dessert_04",
@@ -239,7 +655,9 @@
       level: 4,
       displayName: "\u8349\u8393\u5976\u6CB9\u86CB\u7CD5",
       nextItemId: "dessert_05",
-      sellValue: 8
+      sellValue: 8,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "dessert_05",
@@ -247,7 +665,9 @@
       level: 5,
       displayName: "\u7C89\u8272\u9A6C\u5361\u9F99",
       nextItemId: "dessert_06",
-      sellValue: 16
+      sellValue: 16,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "dessert_06",
@@ -255,7 +675,9 @@
       level: 6,
       displayName: "\u7126\u7CD6\u5E03\u4E01",
       nextItemId: "dessert_07",
-      sellValue: 32
+      sellValue: 32,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "dessert_07",
@@ -263,14 +685,19 @@
       level: 7,
       displayName: "\u8393\u679C\u86CB\u7CD5\u5377",
       nextItemId: "dessert_08",
-      sellValue: 64
+      sellValue: 64,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "dessert_08",
       chainId: "dessert",
       level: 8,
       displayName: "\u53CC\u5C42\u4E0B\u5348\u8336",
-      sellValue: 128
+      sellValue: 128,
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "dessert_09"
     },
     {
       id: "gift_01",
@@ -278,7 +705,9 @@
       level: 1,
       displayName: "\u8774\u8776\u7ED3",
       nextItemId: "gift_02",
-      sellValue: 1
+      sellValue: 1,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "gift_02",
@@ -286,7 +715,9 @@
       level: 2,
       displayName: "\u60C5\u4E66",
       nextItemId: "gift_03",
-      sellValue: 2
+      sellValue: 2,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "gift_03",
@@ -294,7 +725,9 @@
       level: 3,
       displayName: "\u4E1D\u5E26\u793C\u76D2",
       nextItemId: "gift_04",
-      sellValue: 4
+      sellValue: 4,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "gift_04",
@@ -302,7 +735,9 @@
       level: 4,
       displayName: "\u5FC3\u610F\u5C0F\u718A",
       nextItemId: "gift_05",
-      sellValue: 8
+      sellValue: 8,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "gift_05",
@@ -310,7 +745,9 @@
       level: 5,
       displayName: "\u5FC3\u5F62\u793C\u76D2",
       nextItemId: "gift_06",
-      sellValue: 16
+      sellValue: 16,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "gift_06",
@@ -318,7 +755,9 @@
       level: 6,
       displayName: "\u7231\u5FC3\u540A\u5760",
       nextItemId: "gift_07",
-      sellValue: 32
+      sellValue: 32,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "gift_07",
@@ -326,14 +765,518 @@
       level: 7,
       displayName: "\u73AB\u7470\u793C\u7BEE",
       nextItemId: "gift_08",
-      sellValue: 64
+      sellValue: 64,
+      wildcardEligible: true,
+      maxLevel: false
     },
     {
       id: "gift_08",
       chainId: "gift",
       level: 8,
       displayName: "\u7EAA\u5FF5\u65E5\u82B1\u793C",
-      sellValue: 128
+      sellValue: 128,
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "gift_09"
+    },
+    {
+      id: "coin_01",
+      chainId: "coin",
+      level: 1,
+      displayName: "\u91D1\u5E011\u7EA7",
+      useValue: 10,
+      nextItemId: "coin_02"
+    },
+    {
+      id: "coin_02",
+      chainId: "coin",
+      level: 2,
+      displayName: "\u91D1\u5E012\u7EA7",
+      useValue: 25,
+      nextItemId: "coin_03"
+    },
+    {
+      id: "coin_03",
+      chainId: "coin",
+      level: 3,
+      displayName: "\u91D1\u5E013\u7EA7",
+      useValue: 60,
+      maxLevel: false,
+      nextItemId: "coin_04"
+    },
+    {
+      id: "coin_04",
+      chainId: "coin",
+      level: 4,
+      displayName: "\u91D1\u5E014\u7EA7",
+      useValue: 150,
+      maxLevel: false,
+      nextItemId: "coin_05"
+    },
+    {
+      id: "coin_05",
+      chainId: "coin",
+      level: 5,
+      displayName: "\u91D1\u5E015\u7EA7",
+      useValue: 375,
+      maxLevel: true
+    },
+    {
+      id: "energy_01",
+      chainId: "energy",
+      level: 1,
+      displayName: "\u4F53\u529B\u74F61\u7EA7",
+      useValue: 5,
+      nextItemId: "energy_02"
+    },
+    {
+      id: "energy_02",
+      chainId: "energy",
+      level: 2,
+      displayName: "\u4F53\u529B\u74F62\u7EA7",
+      useValue: 12,
+      nextItemId: "energy_03"
+    },
+    {
+      id: "energy_03",
+      chainId: "energy",
+      level: 3,
+      displayName: "\u4F53\u529B\u74F63\u7EA7",
+      useValue: 30,
+      maxLevel: false,
+      nextItemId: "energy_04"
+    },
+    {
+      id: "energy_04",
+      chainId: "energy",
+      level: 4,
+      displayName: "\u4F53\u529B\u74F64\u7EA7",
+      useValue: 75,
+      maxLevel: false,
+      nextItemId: "energy_05"
+    },
+    {
+      id: "energy_05",
+      chainId: "energy",
+      level: 5,
+      displayName: "\u4F53\u529B\u74F65\u7EA7",
+      useValue: 190,
+      maxLevel: true
+    },
+    {
+      id: "diamond_01",
+      chainId: "diamond",
+      level: 1,
+      displayName: "\u94BB\u77F31\u7EA7",
+      useValue: 1,
+      nextItemId: "diamond_02"
+    },
+    {
+      id: "diamond_02",
+      chainId: "diamond",
+      level: 2,
+      displayName: "\u94BB\u77F32\u7EA7",
+      useValue: 3,
+      nextItemId: "diamond_03"
+    },
+    {
+      id: "diamond_03",
+      chainId: "diamond",
+      level: 3,
+      displayName: "\u94BB\u77F33\u7EA7",
+      useValue: 8,
+      maxLevel: false,
+      nextItemId: "diamond_04"
+    },
+    {
+      id: "diamond_04",
+      chainId: "diamond",
+      level: 4,
+      displayName: "\u94BB\u77F34\u7EA7",
+      useValue: 20,
+      maxLevel: false,
+      nextItemId: "diamond_05"
+    },
+    {
+      id: "diamond_05",
+      chainId: "diamond",
+      level: 5,
+      displayName: "\u94BB\u77F35\u7EA7",
+      useValue: 50,
+      maxLevel: true
+    },
+    {
+      id: "treasure_chest",
+      chainId: "treasure_chest",
+      level: 1,
+      displayName: "\u5B9D\u7BB1",
+      nextItemId: "treasure_chest_02",
+      maxLevel: false
+    },
+    {
+      id: "fruit_01",
+      chainId: "fruit",
+      level: 1,
+      displayName: "\u751C\u6A58",
+      sellValue: 2,
+      nextItemId: "fruit_02",
+      wildcardEligible: true,
+      maxLevel: false
+    },
+    {
+      id: "fruit_02",
+      chainId: "fruit",
+      level: 2,
+      displayName: "\u6A58\u74E3\u679C\u7897",
+      sellValue: 4,
+      nextItemId: "fruit_03",
+      wildcardEligible: true,
+      maxLevel: false
+    },
+    {
+      id: "fruit_03",
+      chainId: "fruit",
+      level: 3,
+      displayName: "\u9C9C\u69A8\u6A58\u6C41",
+      sellValue: 8,
+      nextItemId: "fruit_04",
+      wildcardEligible: true,
+      maxLevel: false
+    },
+    {
+      id: "fruit_04",
+      chainId: "fruit",
+      level: 4,
+      displayName: "\u6A58\u9999\u679C\u8336",
+      sellValue: 16,
+      nextItemId: "fruit_05",
+      wildcardEligible: true,
+      maxLevel: false
+    },
+    {
+      id: "fruit_05",
+      chainId: "fruit",
+      level: 5,
+      displayName: "\u6A58\u5B50\u679C\u51BB",
+      sellValue: 32,
+      nextItemId: "fruit_06",
+      wildcardEligible: true,
+      maxLevel: false
+    },
+    {
+      id: "fruit_06",
+      chainId: "fruit",
+      level: 6,
+      displayName: "\u6A58\u9999\u5C0F\u86CB\u7CD5",
+      sellValue: 64,
+      nextItemId: "fruit_07",
+      wildcardEligible: true,
+      maxLevel: false
+    },
+    {
+      id: "fruit_07",
+      chainId: "fruit",
+      level: 7,
+      displayName: "\u6A58\u5B50\u5E86\u795D\u86CB\u7CD5",
+      sellValue: 128,
+      nextItemId: "fruit_08",
+      wildcardEligible: true,
+      maxLevel: false
+    },
+    {
+      id: "fruit_08",
+      chainId: "fruit",
+      level: 8,
+      displayName: "\u9633\u5149\u751C\u6A58\u793C\u7BEE",
+      sellValue: 256,
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "fruit_09"
+    },
+    {
+      id: "sugar_01",
+      chainId: "sugar",
+      level: 1,
+      displayName: "\u65B9\u7CD6",
+      wildcardEligible: true,
+      nextItemId: "sugar_02"
+    },
+    {
+      id: "sugar_02",
+      chainId: "sugar",
+      level: 2,
+      displayName: "\u53CC\u5757\u65B9\u7CD6",
+      wildcardEligible: true,
+      nextItemId: "sugar_03"
+    },
+    {
+      id: "sugar_03",
+      chainId: "sugar",
+      level: 3,
+      displayName: "\u751C\u871C\u7CD6\u7F50",
+      wildcardEligible: true
+    },
+    {
+      id: "wildcard",
+      chainId: "wildcard",
+      level: 1,
+      displayName: "\u4E07\u80FD\u98DF\u6750",
+      wildcard: true
+    },
+    {
+      id: "treasure_chest_02",
+      chainId: "treasure_chest",
+      level: 2,
+      displayName: "2\u7EA7\u5B9D\u7BB1",
+      maxLevel: false,
+      nextItemId: "treasure_chest_03"
+    },
+    {
+      id: "treasure_chest_03",
+      chainId: "treasure_chest",
+      level: 3,
+      displayName: "3\u7EA7\u5B9D\u7BB1",
+      maxLevel: false,
+      nextItemId: "treasure_chest_04"
+    },
+    {
+      id: "treasure_chest_04",
+      chainId: "treasure_chest",
+      level: 4,
+      displayName: "4\u7EA7\u5B9D\u7BB1",
+      maxLevel: false,
+      nextItemId: "treasure_chest_05"
+    },
+    {
+      id: "treasure_chest_05",
+      chainId: "treasure_chest",
+      level: 5,
+      displayName: "5\u7EA7\u5B9D\u7BB1",
+      maxLevel: true
+    },
+    {
+      id: "coffee_09",
+      chainId: "coffee",
+      level: 9,
+      displayName: "\u82B1\u8BED\u62FF\u94C1",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "coffee_10"
+    },
+    {
+      id: "coffee_10",
+      chainId: "coffee",
+      level: 10,
+      displayName: "\u53CC\u676F\u5348\u540E\u8336",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "coffee_11"
+    },
+    {
+      id: "coffee_11",
+      chainId: "coffee",
+      level: 11,
+      displayName: "\u73AB\u7470\u5496\u5561\u7EC4",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "coffee_12"
+    },
+    {
+      id: "coffee_12",
+      chainId: "coffee",
+      level: 12,
+      displayName: "\u6D6A\u6F2B\u5496\u5561\u5BB4",
+      wildcardEligible: true,
+      maxLevel: true
+    },
+    {
+      id: "flower_09",
+      chainId: "flower",
+      level: 9,
+      displayName: "\u73AB\u7470\u73BB\u7483\u7F69",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "flower_10"
+    },
+    {
+      id: "flower_10",
+      chainId: "flower",
+      level: 10,
+      displayName: "\u5FC3\u5F62\u82B1\u73AF",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "flower_11"
+    },
+    {
+      id: "flower_11",
+      chainId: "flower",
+      level: 11,
+      displayName: "\u7E41\u82B1\u793C\u7BEE",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "flower_12"
+    },
+    {
+      id: "flower_12",
+      chainId: "flower",
+      level: 12,
+      displayName: "\u5A5A\u793C\u6367\u82B1",
+      wildcardEligible: true,
+      maxLevel: true
+    },
+    {
+      id: "dessert_09",
+      chainId: "dessert",
+      level: 9,
+      displayName: "\u8393\u679C\u53CC\u5C42\u7CD5",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "dessert_10"
+    },
+    {
+      id: "dessert_10",
+      chainId: "dessert",
+      level: 10,
+      displayName: "\u5929\u9E45\u6CE1\u8299\u5854",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "dessert_11"
+    },
+    {
+      id: "dessert_11",
+      chainId: "dessert",
+      level: 11,
+      displayName: "\u73AB\u7470\u5A5A\u793C\u7CD5",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "dessert_12"
+    },
+    {
+      id: "dessert_12",
+      chainId: "dessert",
+      level: 12,
+      displayName: "\u68A6\u5E7B\u751C\u54C1\u5854",
+      wildcardEligible: true,
+      maxLevel: true
+    },
+    {
+      id: "gift_09",
+      chainId: "gift",
+      level: 9,
+      displayName: "\u73CD\u73E0\u793C\u5323",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "gift_10"
+    },
+    {
+      id: "gift_10",
+      chainId: "gift",
+      level: 10,
+      displayName: "\u5FC3\u5F62\u97F3\u4E50\u76D2",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "gift_11"
+    },
+    {
+      id: "gift_11",
+      chainId: "gift",
+      level: 11,
+      displayName: "\u6C42\u5A5A\u6212\u76D2",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "gift_12"
+    },
+    {
+      id: "gift_12",
+      chainId: "gift",
+      level: 12,
+      displayName: "\u5FC3\u610F\u73CD\u85CF\u7BB1",
+      wildcardEligible: true,
+      maxLevel: true
+    },
+    {
+      id: "fruit_09",
+      chainId: "fruit",
+      level: 9,
+      displayName: "\u6A59\u82B1\u679C\u51BB\u676F",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "fruit_10"
+    },
+    {
+      id: "fruit_10",
+      chainId: "fruit",
+      level: 10,
+      displayName: "\u6A59\u9999\u534E\u592B\u76D8",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "fruit_11"
+    },
+    {
+      id: "fruit_11",
+      chainId: "fruit",
+      level: 11,
+      displayName: "\u9C9C\u6A59\u5E86\u5178\u7CD5",
+      wildcardEligible: true,
+      maxLevel: false,
+      nextItemId: "fruit_12"
+    },
+    {
+      id: "fruit_12",
+      chainId: "fruit",
+      level: 12,
+      displayName: "\u9633\u5149\u6C34\u679C\u5BB4",
+      wildcardEligible: true,
+      maxLevel: true
+    },
+    {
+      id: "scissors_01",
+      chainId: "scissors",
+      level: 1,
+      displayName: "1\u7EA7\u526A\u5200",
+      maxUses: 1,
+      maxLevel: false,
+      wildcardEligible: false,
+      nextItemId: "scissors_02"
+    },
+    {
+      id: "scissors_02",
+      chainId: "scissors",
+      level: 2,
+      displayName: "2\u7EA7\u526A\u5200",
+      maxUses: 3,
+      maxLevel: false,
+      wildcardEligible: false,
+      nextItemId: "scissors_03"
+    },
+    {
+      id: "scissors_03",
+      chainId: "scissors",
+      level: 3,
+      displayName: "3\u7EA7\u526A\u5200",
+      maxUses: 8,
+      maxLevel: false,
+      wildcardEligible: false,
+      nextItemId: "scissors_04"
+    },
+    {
+      id: "scissors_04",
+      chainId: "scissors",
+      level: 4,
+      displayName: "4\u7EA7\u526A\u5200",
+      maxUses: 20,
+      maxLevel: false,
+      wildcardEligible: false,
+      nextItemId: "scissors_05"
+    },
+    {
+      id: "scissors_05",
+      chainId: "scissors",
+      level: 5,
+      displayName: "5\u7EA7\u526A\u5200",
+      maxUses: 50,
+      maxLevel: true,
+      wildcardEligible: false
     }
   ];
 
@@ -346,9 +1289,248 @@
       unlockLevel: 1,
       energyCost: 1,
       outputs: [
-        { itemId: "coffee_01", weight: 85 },
-        { itemId: "coffee_02", weight: 15 }
-      ]
+        {
+          itemId: "coffee_01",
+          weight: 70
+        },
+        {
+          itemId: "coffee_02",
+          weight: 25
+        },
+        {
+          itemId: "coffee_03",
+          weight: 5
+        }
+      ],
+      upgrade: {
+        maxLevel: 8,
+        rechargeFactor: 0.8,
+        boostEnergyMultiplier: 2,
+        levels: [
+          {
+            level: 2,
+            outputs: [
+              {
+                itemId: "coffee_02",
+                weight: 70
+              },
+              {
+                itemId: "coffee_03",
+                weight: 25
+              },
+              {
+                itemId: "coffee_04",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "coffee_02",
+                weight: 25
+              },
+              {
+                itemId: "coffee_03",
+                weight: 50
+              },
+              {
+                itemId: "coffee_04",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 3,
+            outputs: [
+              {
+                itemId: "coffee_03",
+                weight: 70
+              },
+              {
+                itemId: "coffee_04",
+                weight: 25
+              },
+              {
+                itemId: "coffee_05",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "coffee_03",
+                weight: 25
+              },
+              {
+                itemId: "coffee_04",
+                weight: 50
+              },
+              {
+                itemId: "coffee_05",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 4,
+            outputs: [
+              {
+                itemId: "coffee_04",
+                weight: 70
+              },
+              {
+                itemId: "coffee_05",
+                weight: 25
+              },
+              {
+                itemId: "coffee_06",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "coffee_04",
+                weight: 25
+              },
+              {
+                itemId: "coffee_05",
+                weight: 50
+              },
+              {
+                itemId: "coffee_06",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 5,
+            outputs: [
+              {
+                itemId: "coffee_05",
+                weight: 70
+              },
+              {
+                itemId: "coffee_06",
+                weight: 25
+              },
+              {
+                itemId: "coffee_07",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "coffee_05",
+                weight: 25
+              },
+              {
+                itemId: "coffee_06",
+                weight: 50
+              },
+              {
+                itemId: "coffee_07",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 6,
+            outputs: [
+              {
+                itemId: "coffee_06",
+                weight: 70
+              },
+              {
+                itemId: "coffee_07",
+                weight: 25
+              },
+              {
+                itemId: "coffee_08",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "coffee_06",
+                weight: 25
+              },
+              {
+                itemId: "coffee_07",
+                weight: 50
+              },
+              {
+                itemId: "coffee_08",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 7,
+            outputs: [
+              {
+                itemId: "coffee_07",
+                weight: 70
+              },
+              {
+                itemId: "coffee_08",
+                weight: 25
+              },
+              {
+                itemId: "coffee_09",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "coffee_07",
+                weight: 25
+              },
+              {
+                itemId: "coffee_08",
+                weight: 50
+              },
+              {
+                itemId: "coffee_09",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 8,
+            outputs: [
+              {
+                itemId: "coffee_08",
+                weight: 70
+              },
+              {
+                itemId: "coffee_09",
+                weight: 25
+              },
+              {
+                itemId: "coffee_10",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "coffee_08",
+                weight: 25
+              },
+              {
+                itemId: "coffee_09",
+                weight: 50
+              },
+              {
+                itemId: "coffee_10",
+                weight: 25
+              }
+            ]
+          }
+        ]
+      },
+      streakCooldown: {
+        uses: 60,
+        durationMs: 2e4
+      },
+      purchaseCoins: 100
     },
     {
       id: "flower_basket",
@@ -357,9 +1539,248 @@
       unlockLevel: 3,
       energyCost: 1,
       outputs: [
-        { itemId: "flower_01", weight: 85 },
-        { itemId: "flower_02", weight: 15 }
-      ]
+        {
+          itemId: "flower_01",
+          weight: 70
+        },
+        {
+          itemId: "flower_02",
+          weight: 25
+        },
+        {
+          itemId: "flower_03",
+          weight: 5
+        }
+      ],
+      upgrade: {
+        maxLevel: 8,
+        rechargeFactor: 0.8,
+        boostEnergyMultiplier: 2,
+        levels: [
+          {
+            level: 2,
+            outputs: [
+              {
+                itemId: "flower_02",
+                weight: 70
+              },
+              {
+                itemId: "flower_03",
+                weight: 25
+              },
+              {
+                itemId: "flower_04",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "flower_02",
+                weight: 25
+              },
+              {
+                itemId: "flower_03",
+                weight: 50
+              },
+              {
+                itemId: "flower_04",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 3,
+            outputs: [
+              {
+                itemId: "flower_03",
+                weight: 70
+              },
+              {
+                itemId: "flower_04",
+                weight: 25
+              },
+              {
+                itemId: "flower_05",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "flower_03",
+                weight: 25
+              },
+              {
+                itemId: "flower_04",
+                weight: 50
+              },
+              {
+                itemId: "flower_05",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 4,
+            outputs: [
+              {
+                itemId: "flower_04",
+                weight: 70
+              },
+              {
+                itemId: "flower_05",
+                weight: 25
+              },
+              {
+                itemId: "flower_06",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "flower_04",
+                weight: 25
+              },
+              {
+                itemId: "flower_05",
+                weight: 50
+              },
+              {
+                itemId: "flower_06",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 5,
+            outputs: [
+              {
+                itemId: "flower_05",
+                weight: 70
+              },
+              {
+                itemId: "flower_06",
+                weight: 25
+              },
+              {
+                itemId: "flower_07",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "flower_05",
+                weight: 25
+              },
+              {
+                itemId: "flower_06",
+                weight: 50
+              },
+              {
+                itemId: "flower_07",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 6,
+            outputs: [
+              {
+                itemId: "flower_06",
+                weight: 70
+              },
+              {
+                itemId: "flower_07",
+                weight: 25
+              },
+              {
+                itemId: "flower_08",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "flower_06",
+                weight: 25
+              },
+              {
+                itemId: "flower_07",
+                weight: 50
+              },
+              {
+                itemId: "flower_08",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 7,
+            outputs: [
+              {
+                itemId: "flower_07",
+                weight: 70
+              },
+              {
+                itemId: "flower_08",
+                weight: 25
+              },
+              {
+                itemId: "flower_09",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "flower_07",
+                weight: 25
+              },
+              {
+                itemId: "flower_08",
+                weight: 50
+              },
+              {
+                itemId: "flower_09",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 8,
+            outputs: [
+              {
+                itemId: "flower_08",
+                weight: 70
+              },
+              {
+                itemId: "flower_09",
+                weight: 25
+              },
+              {
+                itemId: "flower_10",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "flower_08",
+                weight: 25
+              },
+              {
+                itemId: "flower_09",
+                weight: 50
+              },
+              {
+                itemId: "flower_10",
+                weight: 25
+              }
+            ]
+          }
+        ]
+      },
+      streakCooldown: {
+        uses: 60,
+        durationMs: 2e4
+      },
+      purchaseCoins: 150
     },
     {
       id: "dessert_oven",
@@ -368,9 +1789,248 @@
       unlockLevel: 5,
       energyCost: 1,
       outputs: [
-        { itemId: "dessert_01", weight: 85 },
-        { itemId: "dessert_02", weight: 15 }
-      ]
+        {
+          itemId: "dessert_01",
+          weight: 70
+        },
+        {
+          itemId: "dessert_02",
+          weight: 25
+        },
+        {
+          itemId: "dessert_03",
+          weight: 5
+        }
+      ],
+      upgrade: {
+        maxLevel: 8,
+        rechargeFactor: 0.8,
+        boostEnergyMultiplier: 2,
+        levels: [
+          {
+            level: 2,
+            outputs: [
+              {
+                itemId: "dessert_02",
+                weight: 70
+              },
+              {
+                itemId: "dessert_03",
+                weight: 25
+              },
+              {
+                itemId: "dessert_04",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "dessert_02",
+                weight: 25
+              },
+              {
+                itemId: "dessert_03",
+                weight: 50
+              },
+              {
+                itemId: "dessert_04",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 3,
+            outputs: [
+              {
+                itemId: "dessert_03",
+                weight: 70
+              },
+              {
+                itemId: "dessert_04",
+                weight: 25
+              },
+              {
+                itemId: "dessert_05",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "dessert_03",
+                weight: 25
+              },
+              {
+                itemId: "dessert_04",
+                weight: 50
+              },
+              {
+                itemId: "dessert_05",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 4,
+            outputs: [
+              {
+                itemId: "dessert_04",
+                weight: 70
+              },
+              {
+                itemId: "dessert_05",
+                weight: 25
+              },
+              {
+                itemId: "dessert_06",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "dessert_04",
+                weight: 25
+              },
+              {
+                itemId: "dessert_05",
+                weight: 50
+              },
+              {
+                itemId: "dessert_06",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 5,
+            outputs: [
+              {
+                itemId: "dessert_05",
+                weight: 70
+              },
+              {
+                itemId: "dessert_06",
+                weight: 25
+              },
+              {
+                itemId: "dessert_07",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "dessert_05",
+                weight: 25
+              },
+              {
+                itemId: "dessert_06",
+                weight: 50
+              },
+              {
+                itemId: "dessert_07",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 6,
+            outputs: [
+              {
+                itemId: "dessert_06",
+                weight: 70
+              },
+              {
+                itemId: "dessert_07",
+                weight: 25
+              },
+              {
+                itemId: "dessert_08",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "dessert_06",
+                weight: 25
+              },
+              {
+                itemId: "dessert_07",
+                weight: 50
+              },
+              {
+                itemId: "dessert_08",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 7,
+            outputs: [
+              {
+                itemId: "dessert_07",
+                weight: 70
+              },
+              {
+                itemId: "dessert_08",
+                weight: 25
+              },
+              {
+                itemId: "dessert_09",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "dessert_07",
+                weight: 25
+              },
+              {
+                itemId: "dessert_08",
+                weight: 50
+              },
+              {
+                itemId: "dessert_09",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 8,
+            outputs: [
+              {
+                itemId: "dessert_08",
+                weight: 70
+              },
+              {
+                itemId: "dessert_09",
+                weight: 25
+              },
+              {
+                itemId: "dessert_10",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "dessert_08",
+                weight: 25
+              },
+              {
+                itemId: "dessert_09",
+                weight: 50
+              },
+              {
+                itemId: "dessert_10",
+                weight: 25
+              }
+            ]
+          }
+        ]
+      },
+      streakCooldown: {
+        uses: 60,
+        durationMs: 2e4
+      },
+      purchaseCoins: 200
     },
     {
       id: "gift_box",
@@ -379,9 +2039,401 @@
       unlockLevel: 8,
       energyCost: 1,
       outputs: [
-        { itemId: "gift_01", weight: 85 },
-        { itemId: "gift_02", weight: 15 }
-      ]
+        {
+          itemId: "gift_01",
+          weight: 70
+        },
+        {
+          itemId: "gift_02",
+          weight: 25
+        },
+        {
+          itemId: "gift_03",
+          weight: 5
+        }
+      ],
+      upgrade: {
+        maxLevel: 8,
+        rechargeFactor: 0.8,
+        boostEnergyMultiplier: 2,
+        levels: [
+          {
+            level: 2,
+            outputs: [
+              {
+                itemId: "gift_02",
+                weight: 70
+              },
+              {
+                itemId: "gift_03",
+                weight: 25
+              },
+              {
+                itemId: "gift_04",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "gift_02",
+                weight: 25
+              },
+              {
+                itemId: "gift_03",
+                weight: 50
+              },
+              {
+                itemId: "gift_04",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 3,
+            outputs: [
+              {
+                itemId: "gift_03",
+                weight: 70
+              },
+              {
+                itemId: "gift_04",
+                weight: 25
+              },
+              {
+                itemId: "gift_05",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "gift_03",
+                weight: 25
+              },
+              {
+                itemId: "gift_04",
+                weight: 50
+              },
+              {
+                itemId: "gift_05",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 4,
+            outputs: [
+              {
+                itemId: "gift_04",
+                weight: 70
+              },
+              {
+                itemId: "gift_05",
+                weight: 25
+              },
+              {
+                itemId: "gift_06",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "gift_04",
+                weight: 25
+              },
+              {
+                itemId: "gift_05",
+                weight: 50
+              },
+              {
+                itemId: "gift_06",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 5,
+            outputs: [
+              {
+                itemId: "gift_05",
+                weight: 70
+              },
+              {
+                itemId: "gift_06",
+                weight: 25
+              },
+              {
+                itemId: "gift_07",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "gift_05",
+                weight: 25
+              },
+              {
+                itemId: "gift_06",
+                weight: 50
+              },
+              {
+                itemId: "gift_07",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 6,
+            outputs: [
+              {
+                itemId: "gift_06",
+                weight: 70
+              },
+              {
+                itemId: "gift_07",
+                weight: 25
+              },
+              {
+                itemId: "gift_08",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "gift_06",
+                weight: 25
+              },
+              {
+                itemId: "gift_07",
+                weight: 50
+              },
+              {
+                itemId: "gift_08",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 7,
+            outputs: [
+              {
+                itemId: "gift_07",
+                weight: 70
+              },
+              {
+                itemId: "gift_08",
+                weight: 25
+              },
+              {
+                itemId: "gift_09",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "gift_07",
+                weight: 25
+              },
+              {
+                itemId: "gift_08",
+                weight: 50
+              },
+              {
+                itemId: "gift_09",
+                weight: 25
+              }
+            ]
+          },
+          {
+            level: 8,
+            outputs: [
+              {
+                itemId: "gift_08",
+                weight: 70
+              },
+              {
+                itemId: "gift_09",
+                weight: 25
+              },
+              {
+                itemId: "gift_10",
+                weight: 5
+              }
+            ],
+            boostOutputs: [
+              {
+                itemId: "gift_08",
+                weight: 25
+              },
+              {
+                itemId: "gift_09",
+                weight: 50
+              },
+              {
+                itemId: "gift_10",
+                weight: 25
+              }
+            ]
+          }
+        ]
+      },
+      streakCooldown: {
+        uses: 60,
+        durationMs: 2e4
+      },
+      purchaseCoins: 300
+    },
+    {
+      id: "orange_tree",
+      displayName: "\u9633\u5149\u6A58\u6811",
+      chainId: "fruit",
+      unlockLevel: 2,
+      energyCost: 0,
+      recharge: {
+        capacity: 10,
+        legacyCapacity: 3,
+        intervalMs: 6e5
+      },
+      outputs: [
+        {
+          itemId: "fruit_01",
+          weight: 70
+        },
+        {
+          itemId: "fruit_02",
+          weight: 25
+        },
+        {
+          itemId: "fruit_03",
+          weight: 5
+        }
+      ],
+      upgrade: {
+        maxLevel: 8,
+        rechargeFactor: 0.8,
+        boostEnergyMultiplier: 2,
+        levels: [
+          {
+            level: 2,
+            outputs: [
+              {
+                itemId: "fruit_02",
+                weight: 70
+              },
+              {
+                itemId: "fruit_03",
+                weight: 25
+              },
+              {
+                itemId: "fruit_04",
+                weight: 5
+              }
+            ]
+          },
+          {
+            level: 3,
+            outputs: [
+              {
+                itemId: "fruit_03",
+                weight: 70
+              },
+              {
+                itemId: "fruit_04",
+                weight: 25
+              },
+              {
+                itemId: "fruit_05",
+                weight: 5
+              }
+            ]
+          },
+          {
+            level: 4,
+            outputs: [
+              {
+                itemId: "fruit_04",
+                weight: 70
+              },
+              {
+                itemId: "fruit_05",
+                weight: 25
+              },
+              {
+                itemId: "fruit_06",
+                weight: 5
+              }
+            ]
+          },
+          {
+            level: 5,
+            outputs: [
+              {
+                itemId: "fruit_05",
+                weight: 70
+              },
+              {
+                itemId: "fruit_06",
+                weight: 25
+              },
+              {
+                itemId: "fruit_07",
+                weight: 5
+              }
+            ]
+          },
+          {
+            level: 6,
+            outputs: [
+              {
+                itemId: "fruit_06",
+                weight: 70
+              },
+              {
+                itemId: "fruit_07",
+                weight: 25
+              },
+              {
+                itemId: "fruit_08",
+                weight: 5
+              }
+            ]
+          },
+          {
+            level: 7,
+            outputs: [
+              {
+                itemId: "fruit_07",
+                weight: 70
+              },
+              {
+                itemId: "fruit_08",
+                weight: 25
+              },
+              {
+                itemId: "fruit_09",
+                weight: 5
+              }
+            ]
+          },
+          {
+            level: 8,
+            outputs: [
+              {
+                itemId: "fruit_08",
+                weight: 70
+              },
+              {
+                itemId: "fruit_09",
+                weight: 25
+              },
+              {
+                itemId: "fruit_10",
+                weight: 5
+              }
+            ]
+          }
+        ]
+      },
+      purchaseCoins: 150
     }
   ];
 
@@ -391,7 +2443,12 @@
       id: "order_tutorial_coffee",
       minLevel: 1,
       maxLevel: 99,
-      requirements: [{ itemId: "coffee_02", count: 1 }],
+      requirements: [
+        {
+          itemId: "coffee_02",
+          count: 1
+        }
+      ],
       rewardCoins: 20,
       rewardXp: 10,
       rewardHearts: 1,
@@ -401,7 +2458,12 @@
       id: "order_coffee_bean_bundle",
       minLevel: 1,
       maxLevel: 99,
-      requirements: [{ itemId: "coffee_01", count: 2 }],
+      requirements: [
+        {
+          itemId: "coffee_01",
+          count: 2
+        }
+      ],
       rewardCoins: 12,
       rewardXp: 6,
       rewardHearts: 1
@@ -410,7 +2472,12 @@
       id: "order_coffee_powder",
       minLevel: 1,
       maxLevel: 99,
-      requirements: [{ itemId: "coffee_02", count: 1 }],
+      requirements: [
+        {
+          itemId: "coffee_02",
+          count: 1
+        }
+      ],
       rewardCoins: 18,
       rewardXp: 8,
       rewardHearts: 1
@@ -419,7 +2486,12 @@
       id: "order_coffee_cup",
       minLevel: 1,
       maxLevel: 99,
-      requirements: [{ itemId: "coffee_03", count: 1 }],
+      requirements: [
+        {
+          itemId: "coffee_03",
+          count: 1
+        }
+      ],
       rewardCoins: 30,
       rewardXp: 12,
       rewardHearts: 5
@@ -428,7 +2500,12 @@
       id: "order_coffee_pair",
       minLevel: 1,
       maxLevel: 99,
-      requirements: [{ itemId: "coffee_02", count: 2 }],
+      requirements: [
+        {
+          itemId: "coffee_02",
+          count: 2
+        }
+      ],
       rewardCoins: 32,
       rewardXp: 14,
       rewardHearts: 5
@@ -438,8 +2515,14 @@
       minLevel: 1,
       maxLevel: 99,
       requirements: [
-        { itemId: "coffee_02", count: 1 },
-        { itemId: "coffee_03", count: 1 }
+        {
+          itemId: "coffee_02",
+          count: 1
+        },
+        {
+          itemId: "coffee_03",
+          count: 1
+        }
       ],
       rewardCoins: 34,
       rewardXp: 15,
@@ -449,7 +2532,12 @@
       id: "order_coffee_03_pair",
       minLevel: 1,
       maxLevel: 99,
-      requirements: [{ itemId: "coffee_03", count: 2 }],
+      requirements: [
+        {
+          itemId: "coffee_03",
+          count: 2
+        }
+      ],
       rewardCoins: 42,
       rewardXp: 18,
       rewardHearts: 6
@@ -458,7 +2546,12 @@
       id: "order_flower_seed",
       minLevel: 1,
       maxLevel: 99,
-      requirements: [{ itemId: "flower_01", count: 2 }],
+      requirements: [
+        {
+          itemId: "flower_01",
+          count: 2
+        }
+      ],
       rewardCoins: 12,
       rewardXp: 6,
       rewardHearts: 1
@@ -467,7 +2560,12 @@
       id: "order_flower_sprout",
       minLevel: 1,
       maxLevel: 99,
-      requirements: [{ itemId: "flower_02", count: 1 }],
+      requirements: [
+        {
+          itemId: "flower_02",
+          count: 1
+        }
+      ],
       rewardCoins: 18,
       rewardXp: 8,
       rewardHearts: 1
@@ -476,7 +2574,12 @@
       id: "order_flower_sprout_pair",
       minLevel: 3,
       maxLevel: 99,
-      requirements: [{ itemId: "flower_02", count: 2 }],
+      requirements: [
+        {
+          itemId: "flower_02",
+          count: 2
+        }
+      ],
       rewardCoins: 30,
       rewardXp: 14,
       rewardHearts: 3
@@ -486,8 +2589,14 @@
       minLevel: 3,
       maxLevel: 99,
       requirements: [
-        { itemId: "flower_02", count: 1 },
-        { itemId: "coffee_03", count: 1 }
+        {
+          itemId: "flower_02",
+          count: 1
+        },
+        {
+          itemId: "coffee_03",
+          count: 1
+        }
       ],
       rewardCoins: 34,
       rewardXp: 16,
@@ -498,8 +2607,14 @@
       minLevel: 1,
       maxLevel: 99,
       requirements: [
-        { itemId: "coffee_02", count: 1 },
-        { itemId: "flower_02", count: 1 }
+        {
+          itemId: "coffee_02",
+          count: 1
+        },
+        {
+          itemId: "flower_02",
+          count: 1
+        }
       ],
       rewardCoins: 28,
       rewardXp: 14,
@@ -509,7 +2624,12 @@
       id: "order_latte_date",
       minLevel: 5,
       maxLevel: 99,
-      requirements: [{ itemId: "coffee_05", count: 1 }],
+      requirements: [
+        {
+          itemId: "coffee_05",
+          count: 1
+        }
+      ],
       rewardCoins: 45,
       rewardXp: 22,
       rewardHearts: 2
@@ -518,7 +2638,12 @@
       id: "order_tulip_pair",
       minLevel: 2,
       maxLevel: 99,
-      requirements: [{ itemId: "flower_03", count: 2 }],
+      requirements: [
+        {
+          itemId: "flower_03",
+          count: 2
+        }
+      ],
       rewardCoins: 36,
       rewardXp: 18,
       rewardHearts: 1
@@ -527,7 +2652,12 @@
       id: "order_rose_bouquet",
       minLevel: 3,
       maxLevel: 99,
-      requirements: [{ itemId: "flower_04", count: 1 }],
+      requirements: [
+        {
+          itemId: "flower_04",
+          count: 1
+        }
+      ],
       rewardCoins: 40,
       rewardXp: 20,
       rewardHearts: 2
@@ -537,8 +2667,14 @@
       minLevel: 3,
       maxLevel: 99,
       requirements: [
-        { itemId: "dessert_03", count: 1 },
-        { itemId: "coffee_03", count: 1 }
+        {
+          itemId: "dessert_03",
+          count: 1
+        },
+        {
+          itemId: "coffee_03",
+          count: 1
+        }
       ],
       rewardCoins: 50,
       rewardXp: 26,
@@ -548,7 +2684,12 @@
       id: "order_dessert_muffin_pair",
       minLevel: 5,
       maxLevel: 99,
-      requirements: [{ itemId: "dessert_02", count: 2 }],
+      requirements: [
+        {
+          itemId: "dessert_02",
+          count: 2
+        }
+      ],
       rewardCoins: 32,
       rewardXp: 16,
       rewardHearts: 3
@@ -558,8 +2699,14 @@
       minLevel: 5,
       maxLevel: 99,
       requirements: [
-        { itemId: "dessert_02", count: 1 },
-        { itemId: "coffee_02", count: 1 }
+        {
+          itemId: "dessert_02",
+          count: 1
+        },
+        {
+          itemId: "coffee_02",
+          count: 1
+        }
       ],
       rewardCoins: 30,
       rewardXp: 15,
@@ -569,7 +2716,12 @@
       id: "order_strawberry_cake",
       minLevel: 3,
       maxLevel: 99,
-      requirements: [{ itemId: "dessert_04", count: 1 }],
+      requirements: [
+        {
+          itemId: "dessert_04",
+          count: 1
+        }
+      ],
       rewardCoins: 48,
       rewardXp: 24,
       rewardHearts: 2
@@ -578,7 +2730,12 @@
       id: "order_double_cake",
       minLevel: 4,
       maxLevel: 99,
-      requirements: [{ itemId: "dessert_05", count: 1 }],
+      requirements: [
+        {
+          itemId: "dessert_05",
+          count: 1
+        }
+      ],
       rewardCoins: 60,
       rewardXp: 30,
       rewardHearts: 3
@@ -587,7 +2744,12 @@
       id: "order_gift_small",
       minLevel: 5,
       maxLevel: 99,
-      requirements: [{ itemId: "gift_03", count: 1 }],
+      requirements: [
+        {
+          itemId: "gift_03",
+          count: 1
+        }
+      ],
       rewardCoins: 55,
       rewardXp: 28,
       rewardHearts: 2
@@ -597,8 +2759,14 @@
       minLevel: 8,
       maxLevel: 99,
       requirements: [
-        { itemId: "gift_02", count: 1 },
-        { itemId: "flower_02", count: 1 }
+        {
+          itemId: "gift_02",
+          count: 1
+        },
+        {
+          itemId: "flower_02",
+          count: 1
+        }
       ],
       rewardCoins: 36,
       rewardXp: 18,
@@ -609,8 +2777,14 @@
       minLevel: 4,
       maxLevel: 99,
       requirements: [
-        { itemId: "coffee_05", count: 1 },
-        { itemId: "flower_05", count: 1 }
+        {
+          itemId: "coffee_05",
+          count: 1
+        },
+        {
+          itemId: "flower_05",
+          count: 1
+        }
       ],
       rewardCoins: 80,
       rewardXp: 40,
@@ -621,36 +2795,171 @@
       minLevel: 5,
       maxLevel: 99,
       requirements: [
-        { itemId: "dessert_05", count: 1 },
-        { itemId: "gift_04", count: 1 }
+        {
+          itemId: "dessert_05",
+          count: 1
+        },
+        {
+          itemId: "gift_04",
+          count: 1
+        }
       ],
       rewardCoins: 95,
       rewardXp: 48,
       rewardHearts: 4
+    },
+    {
+      id: "order_orange_cup",
+      minLevel: 5,
+      maxLevel: 18,
+      requirements: [
+        {
+          itemId: "fruit_02",
+          count: 1
+        }
+      ],
+      rewardCoins: 34,
+      rewardXp: 16,
+      rewardHearts: 5
+    },
+    {
+      id: "order_afternoon_together",
+      minLevel: 6,
+      maxLevel: 18,
+      requirements: [
+        {
+          itemId: "coffee_03",
+          count: 1
+        },
+        {
+          itemId: "flower_03",
+          count: 1
+        }
+      ],
+      rewardCoins: 75,
+      rewardXp: 32,
+      rewardHearts: 10
+    },
+    {
+      id: "order_sunshine_longterm",
+      minLevel: 15,
+      maxLevel: 18,
+      requirements: [
+        {
+          itemId: "fruit_04",
+          count: 1
+        }
+      ],
+      rewardCoins: 100,
+      rewardXp: 40,
+      rewardHearts: 12,
+      longTerm: true
     }
   ];
 
   // assets/resources/config/progression.json
   var progression_default = {
     levels: [
-      { level: 1, xpRequired: 0, unlockChains: ["coffee"] },
-      { level: 2, xpRequired: 50, unlockChains: [] },
-      { level: 3, xpRequired: 150, unlockChains: ["flower"] },
-      { level: 4, xpRequired: 300, unlockChains: [] },
-      { level: 5, xpRequired: 500, unlockChains: ["dessert"] },
-      { level: 6, xpRequired: 750, unlockChains: [] },
-      { level: 7, xpRequired: 1050, unlockChains: [] },
-      { level: 8, xpRequired: 1400, unlockChains: ["gift"] },
-      { level: 9, xpRequired: 1800, unlockChains: [] },
-      { level: 10, xpRequired: 2250, unlockChains: [] },
-      { level: 11, xpRequired: 2750, unlockChains: [] },
-      { level: 12, xpRequired: 3300, unlockChains: [] },
-      { level: 13, xpRequired: 3900, unlockChains: [] },
-      { level: 14, xpRequired: 4550, unlockChains: [] },
-      { level: 15, xpRequired: 5250, unlockChains: [] },
-      { level: 16, xpRequired: 6e3, unlockChains: [] },
-      { level: 17, xpRequired: 6800, unlockChains: [] },
-      { level: 18, xpRequired: 7650, unlockChains: [] }
+      {
+        level: 1,
+        xpRequired: 0,
+        unlockChains: [
+          "coffee"
+        ]
+      },
+      {
+        level: 2,
+        xpRequired: 50,
+        unlockChains: [
+          "fruit"
+        ]
+      },
+      {
+        level: 3,
+        xpRequired: 150,
+        unlockChains: [
+          "flower"
+        ]
+      },
+      {
+        level: 4,
+        xpRequired: 300,
+        unlockChains: []
+      },
+      {
+        level: 5,
+        xpRequired: 500,
+        unlockChains: [
+          "dessert"
+        ]
+      },
+      {
+        level: 6,
+        xpRequired: 750,
+        unlockChains: []
+      },
+      {
+        level: 7,
+        xpRequired: 1050,
+        unlockChains: []
+      },
+      {
+        level: 8,
+        xpRequired: 1400,
+        unlockChains: [
+          "gift"
+        ]
+      },
+      {
+        level: 9,
+        xpRequired: 1800,
+        unlockChains: []
+      },
+      {
+        level: 10,
+        xpRequired: 2250,
+        unlockChains: []
+      },
+      {
+        level: 11,
+        xpRequired: 2750,
+        unlockChains: []
+      },
+      {
+        level: 12,
+        xpRequired: 3300,
+        unlockChains: []
+      },
+      {
+        level: 13,
+        xpRequired: 3900,
+        unlockChains: []
+      },
+      {
+        level: 14,
+        xpRequired: 4550,
+        unlockChains: []
+      },
+      {
+        level: 15,
+        xpRequired: 5250,
+        unlockChains: []
+      },
+      {
+        level: 16,
+        xpRequired: 6e3,
+        unlockChains: []
+      },
+      {
+        level: 17,
+        xpRequired: 6800,
+        unlockChains: []
+      },
+      {
+        level: 18,
+        xpRequired: 7650,
+        unlockChains: []
+      }
     ]
   };
 
@@ -667,6 +2976,18 @@
       artMode: "cover",
       artLabel: "\u6545\u4E8B\u63D2\u753B",
       artFocusY: 0.22
+    },
+    {
+      id: "zhoushan_bonfire",
+      title: "\u821F\u5C71\u7BDD\u706B\u4E0E\u7275\u624B",
+      dateLabel: "2023 \u5E74 9 \u6708 \xB7 \u821F\u5C71",
+      summary: "\u7BDD\u706B\u8FB9\u7684\u65F6\u5149\uFF0C\u4E0E\u6211\u4EEC\u7684\u7B2C\u4E00\u6B21\u7275\u624B\u3002",
+      diary: "2023 \u5E74 9 \u6708\uFF0C\u821F\u5C71\u7684\u884C\u7A0B\u91CC\u6709\u665A\u4E0A\u7684\u7BDD\u706B\u3002\n\n\u6211\u4EEC\u7684\u7B2C\u4E00\u6B21\u7275\u624B\uFF0C\u4E5F\u7559\u5728\u4E86\u821F\u5C71\u3002",
+      heartCost: 50,
+      art: "story_31_zhoushan_bonfire",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
     },
     {
       id: "shenxianju",
@@ -729,6 +3050,30 @@
       artFocusY: 0.18
     },
     {
+      id: "qinwang_palace",
+      title: "\u6A2A\u5E97\u7684\u79E6\u738B\u5BAB",
+      dateLabel: "2023 \u5E74\u672B \xB7 \u6A2A\u5E97",
+      summary: "\u8DE8\u5E74\u65C5\u7A0B\u4E2D\uFF0C\u6211\u4EEC\u4E00\u8D77\u53BB\u4E86\u79E6\u738B\u5BAB\u3002",
+      diary: "2023 \u5E74\u672B\uFF0C\u6211\u4EEC\u4E00\u8D77\u53BB\u6A2A\u5E97\u8DE8\u5E74\uFF0C\u4E5F\u53BB\u4E86\u79E6\u738B\u5BAB\u3002\n\n\u8FD9\u6BB5\u65C5\u7A0B\uFF0C\u6210\u4E3A\u6211\u4EEC\u4E00\u8D77\u8FCE\u63A5\u65B0\u5E74\u7684\u56DE\u5FC6\u3002",
+      heartCost: 50,
+      art: "story_32_qinwang_palace",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
+      id: "hengdian_hot_spring",
+      title: "\u6A2A\u5E97\u7684\u6E29\u6CC9\u65F6\u5149",
+      dateLabel: "2023 \u5E74\u672B \xB7 \u6A2A\u5E97",
+      summary: "\u6A2A\u5E97\u8DE8\u5E74\u65F6\uFF0C\u6211\u4EEC\u4E5F\u4E00\u8D77\u6CE1\u4E86\u6E29\u6CC9\u3002",
+      diary: "2023 \u5E74\u672B\u7684\u6A2A\u5E97\u8DE8\u5E74\u65C5\u7A0B\u91CC\uFF0C\u6211\u4EEC\u4E00\u8D77\u6CE1\u4E86\u6E29\u6CC9\u3002\n\n\u8FD9\u4E5F\u662F\u90A3\u6B21\u65C5\u884C\u91CC\u60F3\u7559\u4F4F\u7684\u7247\u6BB5\u3002",
+      heartCost: 50,
+      art: "story_33_hengdian_hot_spring",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
       id: "promise",
       title: "\u5C71\u6C34\u4E4B\u95F4\uFF0C\u6709\u4F60",
       dateLabel: "\u9EC4\u5C71 \xB7 \u5343\u5C9B\u6E56 \xB7 \u671B\u5BB8\u9601",
@@ -736,6 +3081,42 @@
       diary: "\u90A3\u4E00\u5E74\uFF0C\u6211\u4EEC\u4E00\u8D77\u722C\u4E86\u9EC4\u5C71\uFF0C\u722C\u5B8C\u4E4B\u540E\u53C8\u53BB\u4E86\u5343\u5C9B\u6E56\u901B\u3002\u540E\u6765\uFF0C\u8FD8\u4E00\u8D77\u53BB\u676D\u5DDE\u671B\u5BB8\u9601\u722C\u5C71\u3002\n\n\u4E00\u6BB5\u5C71\u8DEF\uFF0C\u4E00\u7247\u6E56\u666F\uFF0C\u90FD\u662F\u4E00\u8D77\u8D70\u8FC7\u7684\u5730\u65B9\u3002\u56E0\u4E3A\u8EAB\u8FB9\u662F\u4F60\uFF0C\u8FD9\u4E9B\u5730\u540D\u4E5F\u6210\u4E86\u6211\u4EEC\u6545\u4E8B\u7684\u4E00\u90E8\u5206\u3002",
       heartCost: 120,
       art: "story_07_promise",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
+      id: "huangshan_trip",
+      title: "\u4E00\u8D77\u722C\u9EC4\u5C71",
+      dateLabel: "2024 \u5E74\u521D",
+      summary: "\u6211\u4EEC\u4E00\u8D77\u722C\u8FC7\u9EC4\u5C71\u3002",
+      diary: "2024 \u5E74\u521D\uFF0C\u6211\u4EEC\u4E00\u8D77\u722C\u4E86\u9EC4\u5C71\u3002\n\n\u8FD9\u5EA7\u5C71\uFF0C\u4E5F\u6210\u4E86\u6211\u4EEC\u5171\u540C\u53BB\u8FC7\u7684\u5730\u65B9\u3002",
+      heartCost: 60,
+      art: "story_34_huangshan_trip",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
+      id: "qiandao_lake",
+      title: "\u5343\u5C9B\u6E56\u7684\u56DE\u5FC6",
+      dateLabel: "2024 \u5E74\u521D",
+      summary: "\u722C\u5B8C\u9EC4\u5C71\uFF0C\u6211\u4EEC\u53C8\u53BB\u4E86\u5343\u5C9B\u6E56\u901B\u3002",
+      diary: "2024 \u5E74\u521D\uFF0C\u722C\u5B8C\u9EC4\u5C71\u4E4B\u540E\uFF0C\u6211\u4EEC\u53C8\u53BB\u4E86\u5343\u5C9B\u6E56\u901B\u3002\n\n\u4E00\u8D77\u53BB\u8FC7\u7684\u98CE\u666F\uFF0C\u53C8\u591A\u4E86\u4E00\u5904\u3002",
+      heartCost: 60,
+      art: "story_35_qiandao_lake",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
+      id: "wangchen_pavilion",
+      title: "\u4E00\u8D77\u53BB\u671B\u5BB8\u9601",
+      dateLabel: "2024 \u5E74\u521D \xB7 \u676D\u5DDE",
+      summary: "\u540E\u6765\uFF0C\u6211\u4EEC\u4E00\u8D77\u53BB\u676D\u5DDE\u671B\u5BB8\u9601\u722C\u5C71\u3002",
+      diary: "2024 \u5E74\u521D\uFF0C\u6211\u4EEC\u4E00\u8D77\u53BB\u676D\u5DDE\u671B\u5BB8\u9601\u722C\u5C71\u3002\n\n\u60F3\u628A\u8FD9\u4E2A\u4E00\u8D77\u5230\u8FC7\u7684\u5730\u65B9\uFF0C\u4E5F\u8BB0\u8FDB\u76F8\u518C\u3002",
+      heartCost: 60,
+      art: "story_36_wangchen_pavilion",
       artMode: "cover",
       artLabel: "\u6545\u4E8B\u63D2\u753B",
       artFocusY: 0.18
@@ -765,6 +3146,18 @@
       artFocusY: 0.18
     },
     {
+      id: "shanghai_departure",
+      title: "\u4ECE\u4E0A\u6D77\u51FA\u53D1",
+      dateLabel: "2024 \u5E74 5 \u6708 1 \u65E5",
+      summary: "\u6211\u4EEC\u4ECE\u4E0A\u6D77\u4E58\u98DE\u673A\uFF0C\u98DE\u5F80\u97E9\u56FD\u6D4E\u5DDE\u5C9B\u3002",
+      diary: "2024 \u5E74 5 \u6708 1 \u65E5\uFF0C\u6211\u4EEC\u5148\u53BB\u4E0A\u6D77\uFF0C\u518D\u5750\u98DE\u673A\u98DE\u5F80\u97E9\u56FD\u6D4E\u5DDE\u5C9B\u3002\n\n\u7B2C\u4E00\u6B21\u4E00\u8D77\u53BB\u97E9\u56FD\u7684\u65C5\u7A0B\uFF0C\u4ECE\u8FD9\u91CC\u51FA\u53D1\u3002",
+      heartCost: 50,
+      art: "story_37_shanghai_departure",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
       id: "first_home",
       title: "\u7B2C\u4E00\u6B21\u966A\u4F60\u8FC75\xB720\u751F\u65E5",
       dateLabel: "2024 \u5E74 5 \u6708 20 \u65E5",
@@ -787,6 +3180,18 @@
       artMode: "cover",
       artLabel: "\u6545\u4E8B\u63D2\u753B",
       artFocusY: 0.12
+    },
+    {
+      id: "nanhu_boat",
+      title: "\u5357\u6E56\u6E38\u8239",
+      dateLabel: "2024 \u5E74 7 \u6708 7 \u65E5 \xB7 \u5609\u5174",
+      summary: "\u5728\u5609\u5174\u5357\u6E56\uFF0C\u6211\u5E26\u4F60\u4E00\u8D77\u5750\u6E38\u8239\u3002",
+      diary: "2024 \u5E74 7 \u6708 7 \u65E5\uFF0C\u6211\u4EEC\u53BB\u4E86\u5609\u5174\u5357\u6E56\u3002\n\n\u6211\u5E26\u4F60\u5750\u4E86\u5357\u6E56\u6E38\u8239\uFF0C\u60F3\u628A\u8FD9\u4E00\u6BB5\u4E5F\u5355\u72EC\u73CD\u85CF\u3002",
+      heartCost: 60,
+      art: "story_38_nanhu_boat",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
     },
     {
       id: "linan_rafting",
@@ -933,6 +3338,18 @@
       artFocusY: 0.2
     },
     {
+      id: "hengdian_family",
+      title: "\u5E26\u7236\u6BCD\u4E00\u8D77\u53BB\u6A2A\u5E97",
+      dateLabel: "2026 \u5E74 2 \u6708 22 \u65E5 \xB7 \u6A2A\u5E97",
+      summary: "\u8FD9\u4E00\u6B21\uFF0C\u6211\u4EEC\u5E26\u7236\u6BCD\u4E00\u8D77\u53BB\u4E86\u6A2A\u5E97\u3002",
+      diary: "2026 \u5E74 2 \u6708 22 \u65E5\uFF0C\u6211\u4EEC\u5E26\u7236\u6BCD\u4E00\u8D77\u53BB\u4E86\u6A2A\u5E97\u3002\n\n\u4ECE\u4E24\u4E2A\u4EBA\u7684\u8DE8\u5E74\u65C5\u884C\uFF0C\u5230\u548C\u7236\u6BCD\u540C\u884C\uFF0C\u6A2A\u5E97\u53C8\u591A\u4E86\u4E00\u4EFD\u56DE\u5FC6\u3002",
+      heartCost: 80,
+      art: "story_39_hengdian_family",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
       id: "wedding_preparations",
       title: "\u4E3A\u6211\u4EEC\u7684\u5A5A\u793C\u505A\u51C6\u5907",
       dateLabel: "2026 \u5E74\u4E94\u4E00",
@@ -969,6 +3386,18 @@
       artFocusY: 0.15
     },
     {
+      id: "wedding_mv",
+      title: "\u676D\u5DDE\u7684\u5A5A\u793C MV",
+      dateLabel: "2026 \u5E74 6 \u6708 6 \u65E5 \xB7 \u676D\u5DDE",
+      summary: "\u6211\u4EEC\u5728\u676D\u5DDE\u62CD\u6444\u4E86\u5A5A\u793C MV\u3002",
+      diary: "2026 \u5E74 6 \u6708 6 \u65E5\uFF0C\u6211\u4EEC\u5728\u676D\u5DDE\u62CD\u4E86\u5A5A\u793C MV\u3002\n\n\u4E3A\u5A5A\u793C\u7559\u4E0B\u7684\u8FD9\u6BB5\u7EAA\u5FF5\uFF0C\u4E5F\u60F3\u8BB0\u8FDB\u76F8\u518C\u3002",
+      heartCost: 80,
+      art: "story_40_wedding_mv",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
       id: "summer_before_wedding",
       title: "\u5A5A\u793C\u524D\uFF0C\u6700\u540E\u4E00\u4E2A\u590F\u5929",
       dateLabel: "2026 \u5E74 8 \u6708",
@@ -981,13 +3410,61 @@
       artFocusY: 0.12
     },
     {
+      id: "concert",
+      title: "\u4E00\u8D77\u53BB\u770B\u6F14\u5531\u4F1A",
+      dateLabel: "2026 \u5E74 8 \u6708 16 \u65E5",
+      summary: "\u6211\u4EEC\u4E00\u8D77\u53BB\u770B\u859B\u4E4B\u8C26\u201C\u4E07\u517D\u4E4B\u738B\u201D\u4E3B\u9898\u6F14\u5531\u4F1A\u3002",
+      diary: "2026 \u5E74 8 \u6708 16 \u65E5\uFF0C\u6211\u4EEC\u4E00\u8D77\u53BB\u770B\u4E86\u859B\u4E4B\u8C26\u201C\u4E07\u517D\u4E4B\u738B\u201D\u4E3B\u9898\u7684\u6F14\u5531\u4F1A\u3002\n\n\u90A3\u662F\u5A5A\u793C\u524D\u7684\u590F\u5929\uFF0C\u60F3\u5355\u72EC\u7559\u4F4F\u7684\u4E00\u6B21\u540C\u884C\u3002",
+      heartCost: 90,
+      art: "story_41_concert",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
+      id: "xian_terracotta",
+      title: "\u897F\u5B89\u7684\u540C\u884C\u4E0E\u5175\u9A6C\u4FD1",
+      dateLabel: "2026 \u5E74 8 \u6708 27 \u65E5\u8D77 \xB7 \u897F\u5B89",
+      summary: "\u4E00\u8D77\u9001\u59B9\u59B9\u53BB\u897F\u5317\u5927\u5B66\uFF0C\u4E5F\u770B\u4E86\u79E6\u59CB\u7687\u9675\u548C\u5175\u9A6C\u4FD1\u3002",
+      diary: "2026 \u5E74 8 \u6708 27 \u65E5\uFF0C\u6211\u4EEC\u4E00\u8D77\u53BB\u897F\u5B89\u9001\u59B9\u59B9\u4E0A\u5927\u5B66\uFF0C\u5979\u5C31\u8BFB\u7684\u662F\u897F\u5317\u5927\u5B66\u3002\n\n\u8FD9\u8D9F\u884C\u7A0B\u4E2D\uFF0C\u6211\u4EEC\u8FD8\u987A\u9053\u770B\u4E86\u79E6\u59CB\u7687\u9675\u548C\u5175\u9A6C\u4FD1\u3002",
+      heartCost: 90,
+      art: "story_42_xian_terracotta",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
       id: "anniversary",
-      title: "\u5A5A\u793C\u3001\u9886\u8BC1\u4E0E\u7B54\u8C22\u5BB4",
+      title: "\u4E50\u6E05\u8349\u576A\u5A5A\u793C",
       dateLabel: "2026 \u5E74 10 \u6708 3 \u65E5",
-      summary: "\u4E50\u6E05\u8349\u576A\u5A5A\u793C\u3001\u9886\u8BC1\uFF0C\u518D\u5230\u4ED9\u5C45\u7684\u9152\u5E97\u7B54\u8C22\u5BB4\u3002",
-      diary: "2026 \u5E74 10 \u6708 3 \u65E5\uFF0C\u6211\u4EEC\u5728\u4E50\u6E05\u529E\u4E86\u8349\u576A\u5A5A\u793C\u3002\n\n10 \u6708 20 \u65E5\uFF0C\u6211\u4EEC\u9886\u4E86\u8BC1\u300210 \u6708 31 \u65E5\uFF0C\u53C8\u5728\u4ED9\u5C45\u7684\u9152\u5E97\u529E\u4E86\u7B54\u8C22\u5BB4\u3002\u5A5A\u793C\u3001\u9886\u8BC1\u548C\u7B54\u8C22\u5BB4\uFF0C\u662F\u8FD9\u4E2A\u5341\u6708\u91CC\u4E09\u4EFD\u4E0D\u540C\u7684\u7EAA\u5FF5\u3002\n\n\u4ECE 2023 \u5E74 9 \u6708 8 \u65E5\u5728\u821F\u5C71\u76F8\u8BC6\uFF0C\u5230\u7B2C\u4E00\u6B21\u7275\u624B\u3001100 \u5C01\u60C5\u4E66\uFF0C\u518D\u5230\u65C5\u884C\u3001\u6C42\u5A5A\u3001\u8BA2\u5A5A\u548C\u6210\u5BB6\uFF0C\u6211\u4EEC\u4E00\u8D77\u8D70\u5230\u4E86\u8FD9\u91CC\u3002\u5F80\u540E\u7684\u6545\u4E8B\uFF0C\u4E5F\u60F3\u7EE7\u7EED\u548C\u4F60\u5199\u4E0B\u53BB\u3002",
+      summary: "2026 \u5E74 10 \u6708 3 \u65E5\uFF0C\u6211\u4EEC\u5728\u4E50\u6E05\u4E3E\u529E\u4E86\u8349\u576A\u5A5A\u793C\u3002",
+      diary: "2026 \u5E74 10 \u6708 3 \u65E5\uFF0C\u6211\u4EEC\u5728\u4E50\u6E05\u529E\u4E86\u8349\u576A\u5A5A\u793C\u3002\n\n\u4ECE\u821F\u5C71\u76F8\u8BC6\uFF0C\u5230\u4E00\u8D77\u8D70\u8FC7\u7684\u65C5\u9014\uFF0C\u6211\u4EEC\u8FCE\u6765\u4E86\u8FD9\u4E00\u5929\u3002\u5F80\u540E\u7684\u6545\u4E8B\uFF0C\u4E5F\u60F3\u7EE7\u7EED\u548C\u4F60\u5199\u4E0B\u53BB\u3002",
       heartCost: 300,
       art: "story_28_anniversary",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
+      id: "marriage_registration",
+      title: "\u6211\u4EEC\u9886\u8BC1\u4E86",
+      dateLabel: "2026 \u5E74 10 \u6708 20 \u65E5",
+      summary: "\u8FD9\u4E00\u5929\uFF0C\u6211\u4EEC\u9886\u4E86\u8BC1\u3002",
+      diary: "2026 \u5E74 10 \u6708 20 \u65E5\uFF0C\u6211\u4EEC\u9886\u4E86\u8BC1\u3002\n\n\u8FD9\u4E00\u5929\uFF0C\u662F\u5C5E\u4E8E\u6211\u4EEC\u7684\u53E6\u4E00\u4EFD\u7EAA\u5FF5\u3002",
+      heartCost: 120,
+      art: "story_29_certificate",
+      artMode: "cover",
+      artLabel: "\u6545\u4E8B\u63D2\u753B",
+      artFocusY: 0.18
+    },
+    {
+      id: "wedding_thanksgiving",
+      title: "\u4ED9\u5C45\u7B54\u8C22\u5BB4",
+      dateLabel: "2026 \u5E74 10 \u6708 31 \u65E5 \xB7 \u4ED9\u5C45",
+      summary: "\u5728\u4ED9\u5C45\u4E3E\u529E\u9152\u5E97\u7B54\u8C22\u5BB4\uFF0C\u73CD\u85CF\u8FD9\u4EFD\u7EAA\u5FF5\u3002",
+      diary: "2026 \u5E74 10 \u6708 31 \u65E5\uFF0C\u6211\u4EEC\u5728\u4ED9\u5C45\u7684\u9152\u5E97\u529E\u4E86\u7B54\u8C22\u5BB4\u3002\n\n\u5A5A\u793C\u3001\u9886\u8BC1\u548C\u7B54\u8C22\u5BB4\uFF0C\u662F\u8FD9\u4E2A\u5341\u6708\u91CC\u4E09\u4EFD\u4E0D\u540C\u7684\u7EAA\u5FF5\u3002",
+      heartCost: 120,
+      art: "story_30_thanksgiving",
       artMode: "cover",
       artLabel: "\u6545\u4E8B\u63D2\u753B",
       artFocusY: 0.18
@@ -1155,6 +3632,326 @@
       unlockLevel: 18,
       decorPoints: 6,
       art: "art/furniture_swing"
+    },
+    {
+      id: "cream_sofa",
+      title: "\u5976\u6CB9\u5F27\u5F62\u6C99\u53D1",
+      category: "\u5BA2\u5385",
+      room: "living",
+      placement: {
+        x: 0,
+        y: 0,
+        width: 320,
+        height: 200
+      },
+      coinCost: 200,
+      unlockLevel: 1,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#0"
+    },
+    {
+      id: "mint_sofa",
+      title: "\u8584\u8377\u53CC\u4EBA\u6C99\u53D1",
+      category: "\u5BA2\u5385",
+      room: "living",
+      placement: {
+        x: 0,
+        y: -45,
+        width: 300,
+        height: 190
+      },
+      coinCost: 225,
+      unlockLevel: 1,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#1"
+    },
+    {
+      id: "rattan_coffee_table",
+      title: "\u5706\u5F62\u85E4\u8336\u51E0",
+      category: "\u5BA2\u5385",
+      room: "living",
+      placement: {
+        x: 0,
+        y: -170,
+        width: 180,
+        height: 150
+      },
+      coinCost: 250,
+      unlockLevel: 1,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#2"
+    },
+    {
+      id: "glass_side_table",
+      title: "\u73BB\u7483\u8FB9\u684C",
+      category: "\u5BA2\u5385",
+      room: "living",
+      placement: {
+        x: 190,
+        y: -150,
+        width: 140,
+        height: 150
+      },
+      coinCost: 275,
+      unlockLevel: 1,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#3"
+    },
+    {
+      id: "blue_bed",
+      title: "\u84DD\u8272\u8F6F\u5305\u5E8A",
+      category: "\u5367\u5BA4",
+      room: "bedroom",
+      placement: {
+        x: 20,
+        y: -80,
+        width: 350,
+        height: 250
+      },
+      coinCost: 300,
+      unlockLevel: 2,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#4"
+    },
+    {
+      id: "wood_bed",
+      title: "\u539F\u6728\u56DB\u67F1\u5E8A",
+      category: "\u5367\u5BA4",
+      room: "bedroom",
+      placement: {
+        x: 30,
+        y: -60,
+        width: 350,
+        height: 280
+      },
+      coinCost: 325,
+      unlockLevel: 2,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#5"
+    },
+    {
+      id: "wood_desk",
+      title: "\u5706\u6728\u4E66\u684C",
+      category: "\u4E66\u623F",
+      room: "study",
+      placement: {
+        x: -100,
+        y: -100,
+        width: 260,
+        height: 210
+      },
+      coinCost: 350,
+      unlockLevel: 2,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#6"
+    },
+    {
+      id: "cream_bookcase",
+      title: "\u5976\u6CB9\u4E66\u67DC",
+      category: "\u4E66\u623F",
+      room: "study",
+      placement: {
+        x: -210,
+        y: 90,
+        width: 160,
+        height: 260
+      },
+      coinCost: 375,
+      unlockLevel: 2,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#7"
+    },
+    {
+      id: "reading_chair",
+      title: "\u9605\u8BFB\u6276\u624B\u6905",
+      category: "\u4E66\u623F",
+      room: "study",
+      placement: {
+        x: 160,
+        y: -100,
+        width: 190,
+        height: 220
+      },
+      coinCost: 400,
+      unlockLevel: 3,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#8"
+    },
+    {
+      id: "record_cabinet",
+      title: "\u5531\u7247\u67DC",
+      category: "\u4E66\u623F",
+      room: "study",
+      placement: {
+        x: 170,
+        y: 60,
+        width: 170,
+        height: 210
+      },
+      coinCost: 425,
+      unlockLevel: 3,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#9"
+    },
+    {
+      id: "terrace_chair",
+      title: "\u9732\u53F0\u85E4\u6905",
+      category: "\u9732\u53F0",
+      room: "terrace",
+      placement: {
+        x: -180,
+        y: -120,
+        width: 190,
+        height: 200
+      },
+      coinCost: 450,
+      unlockLevel: 3,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#10"
+    },
+    {
+      id: "flower_bench",
+      title: "\u82B1\u67B6\u957F\u51F3",
+      category: "\u9732\u53F0",
+      room: "terrace",
+      placement: {
+        x: 120,
+        y: -100,
+        width: 260,
+        height: 220
+      },
+      coinCost: 475,
+      unlockLevel: 3,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#11"
+    },
+    {
+      id: "greenhouse_shelf",
+      title: "\u6E29\u5BA4\u82B1\u67B6",
+      category: "\u9732\u53F0",
+      room: "terrace",
+      placement: {
+        x: -200,
+        y: 70,
+        width: 180,
+        height: 250
+      },
+      coinCost: 500,
+      unlockLevel: 4,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#12"
+    },
+    {
+      id: "outdoor_table",
+      title: "\u6237\u5916\u5C0F\u9910\u684C",
+      category: "\u9732\u53F0",
+      room: "terrace",
+      placement: {
+        x: 20,
+        y: -170,
+        width: 190,
+        height: 180
+      },
+      coinCost: 525,
+      unlockLevel: 4,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#13"
+    },
+    {
+      id: "rattan_light",
+      title: "\u85E4\u7F16\u843D\u5730\u706F",
+      category: "\u9732\u53F0",
+      room: "terrace",
+      placement: {
+        x: 230,
+        y: -45,
+        width: 130,
+        height: 190
+      },
+      coinCost: 550,
+      unlockLevel: 4,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#14"
+    },
+    {
+      id: "round_rug",
+      title: "\u5706\u5F62\u82B1\u7EB9\u5730\u6BEF",
+      category: "\u88C5\u9970",
+      room: "living",
+      placement: {
+        x: 0,
+        y: -200,
+        width: 270,
+        height: 130
+      },
+      coinCost: 575,
+      unlockLevel: 4,
+      decorPoints: 5,
+      art: "furniture_expansion_sheet#15"
+    },
+    {
+      id: "pool_lounger",
+      title: "\u5976\u6CB9\u8EBA\u6905",
+      category: "\u6CF3\u6C60",
+      room: "pool",
+      placement: {
+        x: -65,
+        y: -195,
+        width: 250,
+        height: 180
+      },
+      coinCost: 400,
+      unlockLevel: 5,
+      decorPoints: 5,
+      art: "pool:0"
+    },
+    {
+      id: "pool_umbrella",
+      title: "\u906E\u9633\u4F1E\u4E0E\u5C0F\u8FB9\u684C",
+      category: "\u6CF3\u6C60",
+      room: "pool",
+      placement: {
+        x: 190,
+        y: -150,
+        width: 220,
+        height: 280
+      },
+      coinCost: 425,
+      unlockLevel: 6,
+      decorPoints: 5,
+      art: "pool:1"
+    },
+    {
+      id: "pool_towel_rack",
+      title: "\u6728\u5236\u6BDB\u5DFE\u67B6",
+      category: "\u6CF3\u6C60",
+      room: "pool",
+      placement: {
+        x: -245,
+        y: -160,
+        width: 130,
+        height: 190
+      },
+      coinCost: 450,
+      unlockLevel: 7,
+      decorPoints: 5,
+      art: "pool:2"
+    },
+    {
+      id: "pool_float",
+      title: "\u7C89\u8272\u6CF3\u5708",
+      category: "\u6CF3\u6C60",
+      room: "pool",
+      placement: {
+        x: 60,
+        y: 45,
+        width: 170,
+        height: 130
+      },
+      coinCost: 475,
+      unlockLevel: 8,
+      decorPoints: 5,
+      art: "pool:3"
     }
   ];
 
@@ -1180,7 +3977,19 @@
       xp: 0
     },
     special: [
-      { level: 3, coins: 200, hearts: 50, xp: 300 }
+      {
+        level: 3,
+        coins: 200,
+        hearts: 50,
+        xp: 300
+      }
+    ],
+    generatorRotation: [
+      "coffee_machine",
+      "orange_tree",
+      "flower_basket",
+      "dessert_oven",
+      "gift_box"
     ]
   };
 
@@ -1247,6 +4056,26 @@
           }
         ]
       },
+      replayVariants: [
+        {
+          id: "practice_card",
+          instruction: "\u627E\u5230\u4E09\u5F20\u7EC3\u4E60\u5361\uFF0C\u628A\u4E24\u6BB5\u6570\u5B57\u4F9D\u6B21\u62FC\u6210\u56DB\u4F4D\u7EC3\u4E60\u7801\u3002",
+          hints: [
+            "\u4E09\u4E2A\u6807\u8BB0\u90FD\u8981\u627E\u5230\uFF0C\u7EBF\u7D22\u4F1A\u4FDD\u5B58\u5728\u7EC3\u4E60\u7B14\u8BB0\u91CC\u3002",
+            "A \u5361\u7ED9\u51FA\u524D\u4E24\u4F4D 73\uFF0CB \u5361\u7ED9\u51FA\u540E\u4E24\u4F4D 14\u3002",
+            "\u6309\u5361\u7247\u987A\u5E8F\u8F93\u5165 7314\uFF1B\u8FD9\u53EA\u662F\u7EC3\u4E60\u7801\uFF0C\u4E0D\u5BF9\u5E94\u73B0\u5B9E\u65E5\u671F\u6216\u56DE\u5FC6\u4E8B\u5B9E\u3002"
+          ],
+          puzzle: {
+            kind: "find",
+            solution: "7314",
+            hotspots: [
+              { id: "practice_card_a", label: "\u7EC3\u4E60\u5361 A", x: -190, y: 95, clue: "\u7EC3\u4E60\u5361 A\uFF1A\u524D\u4E24\u4F4D\u662F 73\u3002" },
+              { id: "practice_card_b", label: "\u7EC3\u4E60\u5361 B", x: 175, y: 5, clue: "\u7EC3\u4E60\u5361 B\uFF1A\u540E\u4E24\u4F4D\u662F 14\u3002" },
+              { id: "practice_card_note", label: "\u7EC3\u4E60\u8BF4\u660E", x: -60, y: -110, clue: "\u5361\u7247\u6570\u5B57\u4EC5\u7528\u4E8E\u672C\u6B21\u7EC3\u4E60\uFF0C\u4E0D\u4EE3\u8868\u771F\u5B9E\u65E5\u671F\u6216\u56DE\u5FC6\u4E8B\u5B9E\u3002" }
+            ]
+          }
+        }
+      ],
       reward: {
         coins: 120,
         hearts: 50,
@@ -1326,6 +4155,27 @@
           "you"
         ]
       },
+      replayVariants: [
+        {
+          id: "practice_phrase",
+          instruction: "\u6839\u636E\u6BCF\u5F20\u7EC3\u4E60\u5361\u6807\u6CE8\u7684\u4F4D\u7F6E\uFF0C\u628A\u56DB\u4E2A\u8BCD\u6392\u6210\u4E00\u53E5\u4E2D\u6027\u7684\u5FC3\u610F\u8BDD\u3002",
+          hints: [
+            "\u6BCF\u5F20\u7EC3\u4E60\u5361\u90FD\u72EC\u7ACB\u5199\u660E\u81EA\u5DF1\u5E94\u653E\u7684\u4F4D\u7F6E\u3002",
+            "\u5148\u653E\u7B2C1\u683C\u201C\u613F\u201D\uFF0C\u518D\u653E\u7B2C2\u683C\u201C\u6BCF\u5929\u201D\u3002",
+            "\u6700\u540E\u6309\u4F4D\u7F6E\u653E\u201C\u90FD\u6709\u201D\u548C\u201C\u5C0F\u5C0F\u6B22\u559C\u201D\uFF0C\u7EC4\u6210\u201C\u613F\u6BCF\u5929\u90FD\u6709\u5C0F\u5C0F\u6B22\u559C\u201D\u3002"
+          ],
+          puzzle: {
+            kind: "sequence",
+            tiles: [
+              { id: "practice_joy", label: "\u5C0F\u5C0F\u6B22\u559C", clue: "\u6211\u662F\u6574\u53E5\u8BDD\u7684\u6536\u5C3E\uFF0C\u7559\u4E0B\u8F7B\u677E\u7684\u5FC3\u60C5\u3002" },
+              { id: "practice_wish", label: "\u613F", clue: "\u6211\u662F\u8FD9\u53E5\u8BDD\u7684\u5F00\u5934\uFF0C\u5148\u8BF4\u51FA\u5FC3\u613F\u3002" },
+              { id: "practice_daily", label: "\u6BCF\u5929", clue: "\u6211\u7D27\u8DDF\u7740\u201C\u613F\u201D\uFF0C\u8BF4\u660E\u8FD9\u4EFD\u5FC3\u610F\u4F1A\u53D1\u751F\u5728\u6BCF\u5929\u3002" },
+              { id: "practice_have", label: "\u90FD\u6709", clue: "\u6211\u63A5\u5728\u201C\u6BCF\u5929\u201D\u540E\u9762\uFF0C\u8FDE\u63A5\u65F6\u95F4\u548C\u7ED3\u679C\u3002" }
+            ],
+            solution: ["practice_wish", "practice_daily", "practice_have", "practice_joy"]
+          }
+        }
+      ],
       reward: {
         coins: 180,
         hearts: 80,
@@ -1441,6 +4291,27 @@
           0
         ]
       },
+      replayVariants: [
+        {
+          id: "practice_circuit",
+          instruction: "\u65CB\u8F6C 3\xD73 \u706F\u5149\u5361\u7247\uFF0C\u8BA9\u5DE6\u4E0A\u5165\u53E3\u7684\u5149\u6CBF\u7EBF\u8DEF\u5230\u8FBE\u53F3\u4E0B\u7231\u5FC3\u3002",
+          hints: [
+            "\u53EA\u6709\u76F8\u90BB\u4E24\u683C\u7684\u7AEF\u53E3\u5F7C\u6B64\u76F8\u5BF9\uFF0C\u706F\u5149\u624D\u4F1A\u901A\u8FC7\u3002",
+            "\u8DEF\u7EBF\u5148\u6CBF\u7B2C\u4E00\u6392\u5411\u53F3\uFF0C\u518D\u6CBF\u4E2D\u95F4\u4E00\u6392\u8FD4\u56DE\uFF0C\u6700\u540E\u5411\u53F3\u62B5\u8FBE\u7231\u5FC3\u3002",
+            "\u7EC3\u4E60\u521D\u6001\u7684\u65CB\u8F6C\u6B21\u6570\u5404\u4E0D\u76F8\u540C\uFF1B\u9010\u683C\u8C03\u6574\u540E\u68C0\u67E5\u8FDE\u63A5\u3002"
+          ],
+          puzzle: {
+            kind: "circuit",
+            columns: 3,
+            rows: 3,
+            start: 0,
+            end: 8,
+            ports: [[1, 3], [1, 3], [2, 3], [1, 2], [1, 3], [0, 3], [0, 1], [1, 3], [1, 3]],
+            initial: [1, 0, 2, 3, 1, 2, 0, 3, 1],
+            solution: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+          }
+        }
+      ],
       reward: {
         coins: 240,
         hearts: 120,
@@ -1528,6 +4399,27 @@
           "back_wenzhou"
         ]
       },
+      replayVariants: [
+        {
+          id: "practice_phrase",
+          instruction: "\u6839\u636E\u7EC3\u4E60\u5361\u7247\u4E0A\u7684\u4F4D\u7F6E\u63D0\u793A\uFF0C\u628A\u56DB\u4E2A\u8BCD\u6392\u6210\u4E00\u53E5\u8F7B\u677E\u7684\u5FC3\u610F\u8BDD\u3002",
+          hints: [
+            "\u56DB\u5F20\u5361\u5404\u81EA\u6807\u6CE8\u4E86\u7B2C\u51E0\u683C\uFF0C\u6309\u4F4D\u7F6E\u6392\u5217\u5373\u53EF\u3002",
+            "\u7B2C1\u683C\u662F\u201C\u4E00\u8D77\u201D\uFF0C\u7B2C2\u683C\u662F\u201C\u6162\u6162\u201D\u3002",
+            "\u7B2C3\u683C\u201C\u6536\u96C6\u201D\u540E\u63A5\u7B2C4\u683C\u201C\u5FEB\u4E50\u201D\uFF0C\u7EC4\u6210\u201C\u4E00\u8D77\u6162\u6162\u6536\u96C6\u5FEB\u4E50\u201D\u3002"
+          ],
+          puzzle: {
+            kind: "sequence",
+            tiles: [
+              { id: "practice_joy", label: "\u5FEB\u4E50", clue: "\u6211\u5728\u53E5\u5B50\u7ED3\u5C3E\uFF0C\u8868\u793A\u4E00\u8D77\u6536\u83B7\u7684\u5FC3\u60C5\u3002" },
+              { id: "practice_together", label: "\u4E00\u8D77", clue: "\u6211\u662F\u8FD9\u53E5\u8BDD\u7684\u8D77\u70B9\uFF0C\u9080\u8BF7\u4E00\u8D77\u884C\u52A8\u3002" },
+              { id: "practice_gather", label: "\u6536\u96C6", clue: "\u6211\u63A5\u5728\u201C\u6162\u6162\u201D\u540E\u9762\uFF0C\u8868\u793A\u8981\u505A\u7684\u52A8\u4F5C\u3002" },
+              { id: "practice_slowly", label: "\u6162\u6162", clue: "\u6211\u7D27\u8DDF\u201C\u4E00\u8D77\u201D\uFF0C\u8BF4\u660E\u884C\u52A8\u7684\u8282\u594F\u3002" }
+            ],
+            solution: ["practice_together", "practice_slowly", "practice_gather", "practice_joy"]
+          }
+        }
+      ],
       reward: {
         coins: 300,
         hearts: 150,
@@ -1611,6 +4503,26 @@
           }
         ]
       },
+      replayVariants: [
+        {
+          id: "practice_card",
+          instruction: "\u627E\u5230\u4E09\u5F20\u7EC3\u4E60\u5361\uFF0C\u6309\u63D0\u793A\u7EC4\u6210\u56DB\u4F4D\u7EC3\u4E60\u7801\u3002",
+          hints: [
+            "\u6807\u8BB0\u90FD\u8981\u70B9\u51FB\uFF0C\u6570\u5B57\u7EBF\u7D22\u4F1A\u8BB0\u5728\u7EC3\u4E60\u7B14\u8BB0\u4E2D\u3002",
+            "A \u5361\u7ED9\u51FA\u524D\u4E24\u4F4D 24\uFF0CB \u5361\u7ED9\u51FA\u540E\u4E24\u4F4D 68\u3002",
+            "\u4F9D\u6B21\u8F93\u5165 2468\uFF1B\u8FD9\u4E9B\u6570\u5B57\u4EC5\u4F9B\u7EC3\u4E60\uFF0C\u4E0D\u5173\u8054\u73B0\u5B9E\u65E5\u671F\u6216\u56DE\u5FC6\u4E8B\u5B9E\u3002"
+          ],
+          puzzle: {
+            kind: "find",
+            solution: "2468",
+            hotspots: [
+              { id: "practice_card_a", label: "\u7EC3\u4E60\u5361 A", x: -180, y: 80, clue: "\u7EC3\u4E60\u5361 A\uFF1A\u524D\u4E24\u4F4D\u662F 24\u3002" },
+              { id: "practice_card_b", label: "\u7EC3\u4E60\u5361 B", x: 160, y: 20, clue: "\u7EC3\u4E60\u5361 B\uFF1A\u540E\u4E24\u4F4D\u662F 68\u3002" },
+              { id: "practice_card_note", label: "\u7EC3\u4E60\u8BF4\u660E", x: -50, y: -110, clue: "\u8FD9\u7EC4\u53F7\u7801\u53EA\u5C5E\u4E8E\u7EC3\u4E60\uFF0C\u4E0D\u4EE3\u8868\u65E5\u671F\u6216\u771F\u5B9E\u56DE\u5FC6\u3002" }
+            ]
+          }
+        }
+      ],
       reward: {
         coins: 360,
         hearts: 180,
@@ -1734,6 +4646,27 @@
           0
         ]
       },
+      replayVariants: [
+        {
+          id: "practice_circuit",
+          instruction: "\u65CB\u8F6C 3\xD73 \u706F\u5149\u5361\u7247\uFF0C\u628A\u5DE6\u4E0A\u5165\u53E3\u63A5\u5230\u53F3\u4E0B\u82B1\u95E8\u3002",
+          hints: [
+            "\u76F8\u90BB\u683C\u5B50\u7684\u7AEF\u53E3\u9700\u8981\u65B9\u5411\u76F8\u5BF9\uFF0C\u706F\u5149\u624D\u4F1A\u8FDE\u901A\u3002",
+            "\u5148\u6CBF\u7B2C\u4E00\u6392\u5411\u53F3\uFF0C\u5230\u53F3\u4E0A\u89D2\u540E\u5411\u4E0B\uFF0C\u518D\u6CBF\u53F3\u4FA7\u4E00\u8DEF\u63A5\u5230\u82B1\u95E8\u3002",
+            "\u8FD9\u5C40\u7EC3\u4E60\u4F7F\u7528\u72EC\u7ACB\u521D\u6001\uFF1B\u9010\u683C\u65CB\u8F6C\u5E76\u68C0\u67E5\u82B1\u95E8\u662F\u5426\u4EAE\u8D77\u3002"
+          ],
+          puzzle: {
+            kind: "circuit",
+            columns: 3,
+            rows: 3,
+            start: 0,
+            end: 8,
+            ports: [[3, 1], [3, 1], [3, 2], [0, 2], [1, 3], [0, 2], [0, 1], [0, 2], [0, 1]],
+            initial: [1, 2, 0, 3, 1, 2, 0, 3, 1],
+            solution: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+          }
+        }
+      ],
       reward: {
         coins: 450,
         hearts: 220,
@@ -1759,8 +4692,14 @@
       memoryId: "letters",
       minLevel: 1,
       requirements: [
-        { itemId: "coffee_02", count: 1 },
-        { itemId: "coffee_01", count: 1 }
+        {
+          itemId: "coffee_02",
+          count: 1
+        },
+        {
+          itemId: "coffee_01",
+          count: 1
+        }
       ],
       rewardCoins: 16,
       rewardXp: 8,
@@ -1773,8 +4712,14 @@
       memoryId: "first_trip",
       minLevel: 5,
       requirements: [
-        { itemId: "coffee_03", count: 1 },
-        { itemId: "dessert_02", count: 1 }
+        {
+          itemId: "coffee_03",
+          count: 1
+        },
+        {
+          itemId: "dessert_02",
+          count: 1
+        }
       ],
       rewardCoins: 20,
       rewardXp: 10,
@@ -1787,8 +4732,14 @@
       memoryId: "shenxianju",
       minLevel: 3,
       requirements: [
-        { itemId: "flower_02", count: 1 },
-        { itemId: "coffee_02", count: 1 }
+        {
+          itemId: "flower_02",
+          count: 1
+        },
+        {
+          itemId: "coffee_02",
+          count: 1
+        }
       ],
       rewardCoins: 18,
       rewardXp: 9,
@@ -1801,12 +4752,90 @@
       memoryId: "new_year_balloons",
       minLevel: 5,
       requirements: [
-        { itemId: "dessert_02", count: 1 },
-        { itemId: "coffee_01", count: 1 }
+        {
+          itemId: "dessert_02",
+          count: 1
+        },
+        {
+          itemId: "coffee_01",
+          count: 1
+        }
       ],
       rewardCoins: 19,
       rewardXp: 9,
       rewardHearts: 3
+    },
+    {
+      id: "small_date_shared_coffee",
+      title: "\u4E00\u8D77\u78E8\u5496\u5561\u8C46",
+      description: "\u628A\u5496\u5561\u8C46\u653E\u8FDB\u78E8\u8C46\u673A\uFF0C\u6162\u6162\u51C6\u5907\u4E00\u676F\u6E05\u6668\u5496\u5561\u3002",
+      memoryId: "letters",
+      minLevel: 1,
+      requirements: [
+        {
+          itemId: "coffee_01",
+          count: 2
+        }
+      ],
+      rewardCoins: 16,
+      rewardXp: 8,
+      rewardHearts: 2
+    },
+    {
+      id: "small_date_flower_window",
+      title: "\u7A97\u53F0\u63D2\u82B1",
+      description: "\u6311\u4E24\u679D\u559C\u6B22\u7684\u82B1\uFF0C\u6446\u5728\u7A97\u8FB9\u4E00\u8D77\u6574\u7406\u3002",
+      memoryId: "shenxianju",
+      minLevel: 3,
+      requirements: [
+        {
+          itemId: "flower_02",
+          count: 2
+        }
+      ],
+      rewardCoins: 18,
+      rewardXp: 9,
+      rewardHearts: 2
+    },
+    {
+      id: "small_date_shared_dessert",
+      title: "\u5206\u7740\u5403\u751C\u70B9",
+      description: "\u51C6\u5907\u51E0\u4EFD\u5C0F\u751C\u70B9\u548C\u5496\u5561\uFF0C\u5728\u5BB6\u91CC\u7559\u4E00\u6BB5\u60A0\u95F2\u65F6\u95F4\u3002",
+      memoryId: "first_trip",
+      minLevel: 5,
+      requirements: [
+        {
+          itemId: "dessert_02",
+          count: 1
+        },
+        {
+          itemId: "coffee_02",
+          count: 1
+        }
+      ],
+      rewardCoins: 20,
+      rewardXp: 10,
+      rewardHearts: 3
+    },
+    {
+      id: "small_date_garden_pause",
+      title: "\u82B1\u56ED\u5C0F\u6B47",
+      description: "\u5E26\u4E00\u679D\u82B1\u548C\u4E00\u4EFD\u751C\u70B9\uFF0C\u5728\u82B1\u56ED\u91CC\u5750\u4E00\u4F1A\u513F\u3002",
+      memoryId: "shenxianju",
+      minLevel: 5,
+      requirements: [
+        {
+          itemId: "dessert_02",
+          count: 1
+        },
+        {
+          itemId: "flower_02",
+          count: 1
+        }
+      ],
+      rewardCoins: 18,
+      rewardXp: 9,
+      rewardHearts: 2
     }
   ];
 
@@ -1814,8 +4843,11 @@
   function createChapterProgress() {
     return { step: 0, found: [], selected: [], rotations: [], code: "", hints: 0, outcome: "playing", claimed: false };
   }
-  function createReplayProgress() {
-    return { found: [], selected: [], rotations: [], code: "", hints: 0, outcome: "playing" };
+  function createReplayProgress(variantId = "classic") {
+    return { found: [], selected: [], rotations: [], code: "", hints: 0, outcome: "playing", variantId };
+  }
+  function createReplayStats() {
+    return { started: 0, solved: 0, skipped: 0, totalHints: 0, bestSolvedHints: null, legacyHistoryIncomplete: false };
   }
   function createSmallDateProgress() {
     return { currentId: "", rotation: 0, completed: 0 };
@@ -1884,6 +4916,38 @@
   }
 
   // assets/scripts/config/ConfigRepository.ts
+  function nonEmptyText(value) {
+    return typeof value === "string" && value.trim().length > 0;
+  }
+  function validPuzzleDefinition(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+    const puzzle = value;
+    if (puzzle.kind === "find") {
+      const hotspots = puzzle.hotspots;
+      return typeof puzzle.solution === "string" && puzzle.solution.length === 4 && Array.from(puzzle.solution).every((digit) => digit >= "0" && digit <= "9") && Array.isArray(hotspots) && hotspots.length === 3 && new Set(hotspots.map((hotspot) => hotspot && typeof hotspot === "object" ? hotspot.id : void 0)).size === hotspots.length && hotspots.every((hotspot) => {
+        if (!hotspot || typeof hotspot !== "object" || Array.isArray(hotspot)) return false;
+        const entry = hotspot;
+        return typeof entry.id === "string" && /^[a-z][a-z0-9_]*$/.test(entry.id) && nonEmptyText(entry.label) && nonEmptyText(entry.clue) && Number.isFinite(entry.x) && Number.isFinite(entry.y);
+      });
+    }
+    if (puzzle.kind === "sequence") {
+      const tiles = puzzle.tiles, solution = puzzle.solution;
+      return Array.isArray(tiles) && tiles.length === 4 && Array.isArray(solution) && solution.length === tiles.length && new Set(tiles.map((tile) => tile && typeof tile === "object" ? tile.id : void 0)).size === tiles.length && new Set(solution).size === solution.length && tiles.every((tile) => {
+        if (!tile || typeof tile !== "object" || Array.isArray(tile)) return false;
+        const entry = tile;
+        return typeof entry.id === "string" && /^[a-z][a-z0-9_]*$/.test(entry.id) && nonEmptyText(entry.label) && nonEmptyText(entry.clue) && solution.includes(entry.id);
+      }) && solution.every((id) => tiles.some((tile) => tile.id === id));
+    }
+    if (puzzle.kind === "circuit") {
+      const columns = puzzle.columns, rows = puzzle.rows, ports = puzzle.ports;
+      const initial = puzzle.initial, solution = puzzle.solution;
+      const start = puzzle.start, end = puzzle.end;
+      if (columns !== 3 || rows !== 3 || !Array.isArray(ports) || ports.length !== 9 || !Array.isArray(initial) || initial.length !== 9 || !Array.isArray(solution) || solution.length !== 9 || ![...initial, ...solution].every((rotation) => Number.isInteger(rotation) && rotation >= 0 && rotation < 4) || !ports.every((cell) => Array.isArray(cell) && cell.length === 2 && new Set(cell).size === 2 && cell.every((port) => Number.isInteger(port) && port >= 0 && port < 4)) || !Number.isInteger(start) || start < 0 || start >= 9 || !Number.isInteger(end) || end < 0 || end >= 9) return false;
+      const circuit = value;
+      return circuitState(circuit, circuit.solution).solved && !circuitState(circuit, circuit.initial).solved;
+    }
+    return false;
+  }
   function loadConfigBundle() {
     const game = game_default;
     const items = items_default;
@@ -1913,12 +4977,26 @@
   function validateConfig(bundle) {
     const issues = [];
     const { game, items, catalog, generators, orders, progression, memories, furniture, wishes, levelRewards } = bundle;
+    const couple = game.couple;
+    if (couple && typeof couple === "object" && !Array.isArray(couple) && Object.prototype.hasOwnProperty.call(couple, "gift")) {
+      const gift = couple.gift;
+      if (!gift || typeof gift !== "object" || Array.isArray(gift)) {
+        issues.push({ level: "error", message: "Couple gift must be a non-null object" });
+      } else {
+        for (const field of ["title", "salutation", "body", "signoff", "signature", "coverMessage"]) {
+          if (Object.prototype.hasOwnProperty.call(gift, field) && typeof gift[field] !== "string") {
+            issues.push({ level: "error", message: `Couple gift ${field} must be a string` });
+          }
+        }
+      }
+    }
     const seen = /* @__PURE__ */ new Set();
     for (const item of items) {
       if (seen.has(item.id)) {
         issues.push({ level: "error", message: `Duplicate item id: ${item.id}` });
       }
       seen.add(item.id);
+      if (item.maxUses !== void 0 && (item.chainId !== "scissors" || !Number.isSafeInteger(item.maxUses) || item.maxUses <= 0)) issues.push({ level: "error", message: `Item ${item.id} invalid tool uses` });
       if (item.level < 1) {
         issues.push({ level: "error", message: `Item ${item.id} level < 1` });
       }
@@ -1958,6 +5036,20 @@
       }
     }
     for (const gen of generators) {
+      if (!Number.isSafeInteger(gen.purchaseCoins) || gen.purchaseCoins <= 0) issues.push({ level: "error", message: `Generator ${gen.id} purchase price invalid` });
+      if (gen.recharge && (!Number.isInteger(gen.recharge.capacity) || gen.recharge.capacity < 1 || !Number.isFinite(gen.recharge.intervalMs) || gen.recharge.intervalMs <= 0 || gen.energyCost !== 0)) issues.push({ level: "error", message: `Generator ${gen.id} recharge invalid` });
+      if (gen.recharge?.legacyCapacity !== void 0 && (!Number.isSafeInteger(gen.recharge.legacyCapacity) || gen.recharge.legacyCapacity < 1 || gen.recharge.legacyCapacity > gen.recharge.capacity)) issues.push({ level: "error", message: `Generator ${gen.id} legacy recharge capacity invalid` });
+      if (gen.streakCooldown && (gen.recharge || !Number.isSafeInteger(gen.streakCooldown.uses) || gen.streakCooldown.uses < 1 || !Number.isSafeInteger(gen.streakCooldown.durationMs) || gen.streakCooldown.durationMs <= 0)) issues.push({ level: "error", message: `Generator ${gen.id} cooldown invalid` });
+      if (gen.upgrade) {
+        const upgrade = gen.upgrade;
+        const validOutputs = (outputs, minLevel) => Array.isArray(outputs) && outputs.length > 0 && outputs.every((output) => {
+          const item = catalog.get(output.itemId);
+          return item?.chainId === gen.chainId && item.level >= minLevel && item.level <= Math.min(12, minLevel + 2) && Number.isFinite(output.weight) && output.weight > 0;
+        });
+        if (!Number.isSafeInteger(upgrade.maxLevel) || upgrade.maxLevel < 2 || upgrade.maxLevel > 8 || !Number.isFinite(upgrade.rechargeFactor) || upgrade.rechargeFactor <= 0 || upgrade.rechargeFactor > 1 || !Number.isSafeInteger(upgrade.boostEnergyMultiplier) || upgrade.boostEnergyMultiplier < 2 || !Array.isArray(upgrade.levels) || upgrade.levels.length !== upgrade.maxLevel - 1 || upgrade.levels.some((entry, index) => entry.level !== index + 2 || !validOutputs(entry.outputs, entry.level) || gen.energyCost > 0 && (!entry.boostOutputs || !validOutputs(entry.boostOutputs, entry.level)) || entry.boostOutputs !== void 0 && !validOutputs(entry.boostOutputs, entry.level))) {
+          issues.push({ level: "error", message: `Generator ${gen.id} upgrade invalid` });
+        }
+      }
       if (!byChain.has(gen.chainId)) {
         issues.push({
           level: "error",
@@ -1974,6 +5066,10 @@
             message: `Generator ${gen.id} output missing item ${out.itemId}`
           });
         }
+        const outputDefinition = catalog.get(out.itemId);
+        if (outputDefinition && (outputDefinition.chainId !== gen.chainId || gen.upgrade && outputDefinition.level > 3)) {
+          issues.push({ level: "error", message: `Generator ${gen.id} base output invalid: ${out.itemId}` });
+        }
         if (out.weight <= 0) {
           issues.push({
             level: "warn",
@@ -1983,7 +5079,7 @@
       }
     }
     for (const order of orders) {
-      if (order.requirements.length < game.orders.minRequirements || order.requirements.length > game.orders.maxRequirements) {
+      if (order.requirements.length < game.orders.minRequirements || order.requirements.length > game.orders.maxRequirements || order.requirements.some((requirement) => !Number.isSafeInteger(requirement.count) || requirement.count < 1) || order.requirements.reduce((sum, requirement) => sum + requirement.count, 0) > 2) {
         issues.push({
           level: "error",
           message: `Order ${order.id} requirement count out of range`
@@ -2020,9 +5116,36 @@
     if (game.board.rows * game.board.columns <= 0) {
       issues.push({ level: "error", message: "Board size invalid" });
     }
+    if (!game.collection || !Array.isArray(game.collection.chainIds) || !game.collection.chainIds.length || new Set(game.collection.chainIds).size !== game.collection.chainIds.length || game.collection.chainIds.some((id) => !byChain.has(id)) || !Number.isSafeInteger(game.collection.energyPerChain) || game.collection.energyPerChain <= 0 || !Number.isSafeInteger(game.collection.maxEnergyCap) || game.collection.maxEnergyCap < 1) issues.push({ level: "error", message: "Collection configuration invalid" });
+    if (!Array.isArray(game.generationBonusDrops) || game.generationBonusDrops.some((drop) => drop.generatorId !== "*" && !generators.some((gen) => gen.id === drop.generatorId) || !catalog.has(drop.itemId) || !Number.isFinite(drop.chance) || drop.chance < 0 || drop.chance > 1 || !Number.isSafeInteger(drop.minLevel) || drop.minLevel < 1)) issues.push({ level: "error", message: "Generation bonus drops invalid" });
+    if (items.filter((item) => item.wildcard).length !== 1 || items.some((item) => item.wildcard && (item.nextItemId || item.wildcardEligible))) issues.push({ level: "error", message: "Wildcard item invalid" });
+    if (!game.board.unlocks?.length || game.board.unlocks.some((u, i, all) => !Number.isInteger(u.level) || !Number.isInteger(u.rows) || !Number.isInteger(u.columns) || u.level < 1 || u.rows < 1 || u.columns < 1 || u.rows > game.board.rows || u.columns > game.board.columns || i > 0 && (u.level <= all[i - 1].level || u.rows < all[i - 1].rows || u.columns < all[i - 1].columns))) issues.push({ level: "error", message: "Board unlocks invalid" });
+    const rewards = game.rewards;
+    if (!rewards || !Number.isFinite(rewards.chestDropChance) || rewards.chestDropChance < 0 || rewards.chestDropChance > 1 || !Number.isInteger(rewards.discoveryCoins) || rewards.discoveryCoins < 0 || !Array.isArray(rewards.chestLoot) || !rewards.chestLoot.length || rewards.chestLoot.some((entry) => !catalog.has(entry.itemId) || !Number.isFinite(entry.weight) || entry.weight <= 0) || !Array.isArray(rewards.exchangeOffers) || !rewards.exchangeOffers.length || rewards.exchangeOffers.some((entry) => !entry.id || !Number.isInteger(entry.diamonds) || entry.diamonds <= 0 || !Number.isInteger(entry.energy) || entry.energy <= 0) || !Array.isArray(rewards.checkIn) || rewards.checkIn.length !== 7 || rewards.checkIn.some((entry) => [entry.coins, entry.energy, entry.diamonds].some((n) => !Number.isInteger(n) || n < 0))) issues.push({ level: "error", message: "Rewards configuration invalid" });
+    const chestItems = items.filter((item) => item.chainId === "treasure_chest").sort((a, b) => a.level - b.level);
+    for (const chainId of ["coin", "energy", "diamond"]) {
+      const supply = items.filter((item) => item.chainId === chainId).sort((a, b) => a.level - b.level);
+      if (supply.length !== 5 || supply.some((item, index) => item.level !== index + 1 || item.id !== `${chainId}_0${index + 1}` || item.nextItemId !== supply[index + 1]?.id || (index === 4 ? item.maxLevel !== true : item.maxLevel === true) || !Number.isSafeInteger(item.useValue) || (item.useValue ?? 0) <= 0 || index > 0 && (item.useValue ?? 0) <= 2 * (supply[index - 1].useValue ?? 0))) {
+        issues.push({ level: "error", message: `Supply chain ${chainId} invalid` });
+      }
+    }
+    if (chestItems.length !== 5 || chestItems.some((item, index) => item.level !== index + 1 || item.id !== (index === 0 ? "treasure_chest" : `treasure_chest_0${index + 1}`) || item.maxLevel !== (index === 4) || item.nextItemId !== chestItems[index + 1]?.id || item.wildcardEligible === true)) {
+      issues.push({ level: "error", message: "Treasure chest chain invalid" });
+    }
+    const validChestLoot = (loot) => Array.isArray(loot) && loot.length > 0 && loot.every((entry) => entry && typeof entry === "object" && typeof entry.itemId === "string" && ["coin", "energy", "diamond"].includes(catalog.get(entry.itemId)?.chainId ?? "") && Number.isFinite(entry.weight) && entry.weight > 0);
+    if (!rewards || !validChestLoot(rewards.chestLoot) || !Array.isArray(rewards.chestLevels) || rewards.chestLevels.length !== 5 || rewards.chestLevels.some((entry, index) => !entry || entry.level !== index + 1 || !Number.isSafeInteger(entry.count) || entry.count < 1 || entry.count > 32 || index > 0 && entry.loot === void 0 || !validChestLoot(entry.loot ?? rewards.chestLoot))) {
+      issues.push({ level: "error", message: "Treasure chest rewards invalid" });
+    }
+    if (!Number.isSafeInteger(game.orders.refreshCooldownMs) || game.orders.refreshCooldownMs <= 0 || !Number.isSafeInteger(game.orders.refreshDiamondCost) || game.orders.refreshDiamondCost <= 0) issues.push({ level: "error", message: "Order refresh configuration invalid" });
+    if (!game.generatorRestore || !Number.isSafeInteger(game.generatorRestore.cooldownCost) || game.generatorRestore.cooldownCost < 1 || !Number.isSafeInteger(game.generatorRestore.chargeCost) || game.generatorRestore.chargeCost < 1) issues.push({ level: "error", message: "Generator restore configuration invalid" });
+    const daily = game.rewards?.dailyTasks;
+    if (!Array.isArray(daily) || daily.length !== 3 || new Set(daily.map((task) => task.id)).size !== daily.length || daily.some((task) => !/^[a-z][a-z0-9_]*$/.test(task.id) || !["orders", "merges", "specific"].includes(task.kind) || !task.title || !Number.isSafeInteger(task.target) || task.target <= 0 || !task.reward || [task.reward.coins, task.reward.xp, task.reward.energy, task.reward.diamonds].some((n) => !Number.isSafeInteger(n) || n < 0)) || new Set(daily.map((task) => task.kind)).size !== 3) issues.push({ level: "error", message: "Daily tasks configuration invalid" });
     if (game.energy.recoverIntervalMs <= 0) {
       issues.push({ level: "error", message: "Energy recoverIntervalMs invalid" });
     }
+    if (game.energy.maxByLevel && (game.energy.maxByLevel.length !== progression.levels.length || game.energy.maxByLevel.some((n, i, a) => !Number.isSafeInteger(n) || n < 1 || n > 1e3 || i > 0 && n < a[i - 1]))) issues.push({ level: "error", message: "Energy capacity curve invalid" });
+    const dynamicOrders = game.orders.dynamic;
+    if (dynamicOrders && ([dynamicOrders.twoItemChance, dynamicOrders.rareChance, dynamicOrders.urgentChance].some((n) => !Number.isFinite(n) || n < 0 || n > 1) || !Number.isSafeInteger(dynamicOrders.urgentDurationMs) || dynamicOrders.urgentDurationMs <= 0 || !Number.isSafeInteger(dynamicOrders.rewardMultiplierMaxLevel) || dynamicOrders.rewardMultiplierMaxLevel < 1 || !Number.isFinite(dynamicOrders.rewardMultiplierMin) || !Number.isFinite(dynamicOrders.rewardMultiplierMax) || dynamicOrders.rewardMultiplierMin <= 0 || dynamicOrders.rewardMultiplierMax < dynamicOrders.rewardMultiplierMin)) issues.push({ level: "error", message: "Dynamic order configuration invalid" });
     for (const [name, values] of [
       ["memory", memories],
       ["furniture", furniture],
@@ -2037,11 +5160,8 @@
     if (memories.length === 0) {
       issues.push({ level: "error", message: "Memory content must not be empty" });
     }
-    if (furniture.length !== 10 || wishes.length !== 10) {
-      issues.push({ level: "error", message: "Life content must have 10 furniture items and wishes" });
-    }
-    if (furniture.reduce((n, f) => n + f.decorPoints, 0) !== 50) {
-      issues.push({ level: "error", message: "Furniture decor points must total 50" });
+    if (furniture.length < 10 || wishes.length !== 10) {
+      issues.push({ level: "error", message: "Life content must have at least 10 furniture items and 10 wishes" });
     }
     for (const memory of memories) {
       if (memory.artMode !== void 0 && !["cover", "contain"].includes(memory.artMode)) {
@@ -2066,7 +5186,7 @@
       if (item.coinCost < 0 || item.unlockLevel < 1 || item.decorPoints <= 0) {
         issues.push({ level: "error", message: `Furniture ${item.id} invalid` });
       }
-      if (!["living", "bedroom", "garden"].includes(item.room) || !item.placement || ![item.placement.x, item.placement.y, item.placement.width, item.placement.height].every(Number.isFinite) || item.placement.width <= 0 || item.placement.height <= 0) {
+      if (!["living", "bedroom", "garden", "study", "terrace", "pool"].includes(item.room) || !item.placement || ![item.placement.x, item.placement.y, item.placement.width, item.placement.height].every(Number.isFinite) || item.placement.width <= 0 || item.placement.height <= 0) {
         issues.push({ level: "error", message: `Furniture ${item.id} placement invalid` });
       }
     }
@@ -2077,6 +5197,9 @@
     }
     if (levelRewards.default.coinsPerLevel < 0 || levelRewards.default.heartsPerLevel < 0 || levelRewards.default.xp < 0) {
       issues.push({ level: "error", message: "Default level reward invalid" });
+    }
+    if (levelRewards.generatorRotation && (new Set(levelRewards.generatorRotation).size !== levelRewards.generatorRotation.length || levelRewards.generatorRotation.some((id) => !generators.some((generator) => generator.id === id)))) {
+      issues.push({ level: "error", message: "Level generator reward rotation invalid" });
     }
     const specialLevels = /* @__PURE__ */ new Set();
     for (const reward of levelRewards.special) {
@@ -2107,7 +5230,26 @@
         puzzleOk = p.columns === 3 && p.rows === 3 && p.ports.length === 9 && p.initial.length === 9 && p.solution.length === 9 && p.ports.every((ports) => ports.length === 2 && new Set(ports).size === 2 && ports.every((n) => Number.isInteger(n) && n >= 0 && n < 4)) && [...p.initial, ...p.solution].every((n) => Number.isInteger(n) && n >= 0 && n < 4) && Number.isInteger(p.start) && p.start >= 0 && p.start < 9 && Number.isInteger(p.end) && p.end >= 0 && p.end < 9;
         if (puzzleOk) puzzleOk = circuitState(p, p.solution).solved && !circuitState(p, p.initial).solved;
       }
-      if (!baseOk || !puzzleOk) issues.push({ level: "error", message: `Adventure ${c.id} invalid` });
+      let variantsOk = c.replayVariants === void 0 || Array.isArray(c.replayVariants);
+      const variantIds = /* @__PURE__ */ new Set(["classic"]);
+      if (Array.isArray(c.replayVariants)) {
+        for (const candidate of c.replayVariants) {
+          if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) {
+            variantsOk = false;
+            continue;
+          }
+          const variant = candidate;
+          const id = variant.id;
+          const variantPuzzle = variant.puzzle;
+          const variantPuzzleValid = validPuzzleDefinition(variantPuzzle);
+          const sameKind = !puzzleOk || variantPuzzleValid && variantPuzzle.kind === p.kind;
+          const hints = variant.hints;
+          const valid = typeof id === "string" && /^[a-z][a-z0-9_]*$/.test(id) && !variantIds.has(id) && nonEmptyText(variant.instruction) && Array.isArray(hints) && hints.length === 3 && hints.every(nonEmptyText) && variantPuzzleValid && sameKind;
+          if (typeof id === "string") variantIds.add(id);
+          if (!valid) variantsOk = false;
+        }
+      }
+      if (!baseOk || !puzzleOk || !variantsOk) issues.push({ level: "error", message: `Adventure ${c.id} invalid` });
     }
     if (bundle.smallDates.length < 4) {
       issues.push({ level: "error", message: "Small dates must provide at least 4 themes" });
@@ -2117,7 +5259,7 @@
     let levelOneDate = false;
     for (const date of bundle.smallDates) {
       const cost = requirementsBaseCost(date.requirements, (id) => catalog.get(id)?.level);
-      const dateOk = /^[a-z][a-z0-9_]*$/.test(date.id) && !smallDateIds.has(date.id) && typeof date.title === "string" && date.title.trim().length > 0 && typeof date.description === "string" && date.description.trim().length > 0 && typeof date.memoryId === "string" && date.memoryId.length > 0 && Number.isInteger(date.minLevel) && date.minLevel >= 1 && date.minLevel <= 18 && date.requirements.length > 0 && date.requirements.every((r) => {
+      const dateOk = /^[a-z][a-z0-9_]*$/.test(date.id) && !smallDateIds.has(date.id) && typeof date.title === "string" && date.title.trim().length > 0 && typeof date.description === "string" && date.description.trim().length > 0 && typeof date.memoryId === "string" && date.memoryId.length > 0 && Number.isInteger(date.minLevel) && date.minLevel >= 1 && date.minLevel <= 18 && date.requirements.length > 0 && date.requirements.reduce((sum, requirement) => sum + requirement.count, 0) <= 2 && date.requirements.every((r) => {
         const def = catalog.get(r.itemId);
         return !!def && def.level <= 3 && Number.isInteger(r.count) && r.count > 0;
       }) && cost >= 2 && cost <= 8 && [date.rewardCoins, date.rewardXp, date.rewardHearts].every((n) => Number.isInteger(n) && n >= 0);
@@ -2196,6 +5338,9 @@
       this.current = ms;
     }
   };
+  function businessDayUtc8(timestampMs) {
+    return Math.floor((timestampMs + 8 * 60 * 60 * 1e3) / 864e5);
+  }
 
   // assets/scripts/infrastructure/RandomService.ts
   var SystemRandomService = class {
@@ -2315,6 +5460,57 @@
       }
     };
   }
+
+  // assets/scripts/gameplay/JournalService.ts
+  function normalizeJournal(raw) {
+    const value = raw && typeof raw === "object" ? raw : {};
+    const entries = [];
+    if (Array.isArray(value.entries)) for (const entry of value.entries) {
+      if (!entry || !Number.isSafeInteger(entry.day) || typeof entry.text !== "string" || typeof entry.photoPath !== "string" || entries.some((e) => e.day === entry.day)) continue;
+      entries.push({ day: entry.day, text: entry.text.slice(0, 2e3), photoPath: entry.photoPath, rewarded: entry.rewarded === true });
+    }
+    const claimed = entries.filter((entry) => entry.rewarded).map((entry) => entry.day);
+    if (typeof value.lastRewardDay === "number" && Number.isSafeInteger(value.lastRewardDay)) claimed.push(value.lastRewardDay);
+    return { entries, lastRewardDay: claimed.length ? Math.max(...claimed) : null };
+  }
+  var JournalService = class {
+    constructor(raw, clock, energy, onChange) {
+      this.clock = clock;
+      this.energy = energy;
+      this.onChange = onChange;
+      this.data = normalizeJournal(raw);
+    }
+    get state() {
+      return { entries: this.data.entries.map((e) => ({ ...e })), lastRewardDay: this.data.lastRewardDay };
+    }
+    today() {
+      const value = this.data.entries.find((entry) => entry.day === businessDayUtc8(this.clock.now()));
+      return value ? { ...value } : null;
+    }
+    entries() {
+      return this.state.entries.sort((a, b) => b.day - a.day);
+    }
+    saveToday(text, photoPath) {
+      text = text.trim();
+      photoPath = photoPath.trim();
+      if (!text) return { ok: false, reason: "NEED_TEXT" };
+      if (text.length > 2e3) return { ok: false, reason: "TOO_LONG" };
+      if (!photoPath) return { ok: false, reason: "NEED_PHOTO" };
+      const day = businessDayUtc8(this.clock.now());
+      const existing = this.data.entries.find((entry2) => entry2.day === day);
+      const rewarded = !existing?.rewarded && (this.data.lastRewardDay === null || day > this.data.lastRewardDay);
+      const amount = rewarded ? this.energy.maxEnergy : 0;
+      const entry = { day, text, photoPath, rewarded: !!existing?.rewarded || rewarded };
+      if (existing) Object.assign(existing, entry);
+      else this.data.entries.push(entry);
+      if (rewarded) {
+        this.data.lastRewardDay = day;
+        this.energy.add(amount);
+      }
+      this.onChange();
+      return { ok: true, energy: amount, rewarded };
+    }
+  };
 
   // assets/scripts/infrastructure/SaveService.ts
   var SaveService = class {
@@ -2436,13 +5632,17 @@
       if (version > this.options.version) {
         return null;
       }
-      const player = this.mergePlayer(parsed.player, defaults.player, version);
-      const boardCells = this.mergeBoard(
-        parsed.board,
-        defaults.board,
-        version
-      );
+      const allowedCollection = new Set(this.options.collection?.chainIds ?? []);
+      const claimedCollectionIds = Array.isArray(parsed.claimedCollectionIds) ? Array.from(new Set(parsed.claimedCollectionIds.filter((id) => typeof id === "string" && allowedCollection.has(id)))) : [];
+      const collectionBonus = claimedCollectionIds.length * (this.options.collection?.energyPerChain ?? 0);
+      const player = this.mergePlayer(parsed.player, defaults.player, version, collectionBonus);
+      const overflow = [];
+      const boardCells = this.mergeBoard(parsed.board, defaults.board, version, overflow);
       if (!boardCells) return null;
+      const retainedOpenCellIndices = new Set(Array.isArray(parsed.retainedOpenCellIndices) ? parsed.retainedOpenCellIndices.filter((index) => Number.isInteger(index) && index >= 0 && index < defaults.board.length) : []);
+      if (version < 7) {
+        for (const cell of boardCells) if (cell.item) retainedOpenCellIndices.add(cell.index);
+      }
       const activeOrders = Array.isArray(parsed.activeOrders) ? parsed.activeOrders.filter(isActiveOrder) : defaults.activeOrders;
       if (activeOrders.length !== defaults.activeOrders.length && activeOrders.length === 0) {
         repaired = true;
@@ -2456,20 +5656,59 @@
         life.placedFurnitureIds = [this.options.legacyStarterFurnitureId];
         repaired = true;
       }
+      if (version < 6) {
+        const legacyMemoryRights = {
+          anniversary: ["marriage_registration", "wedding_thanksgiving"],
+          letters: ["zhoushan_bonfire"],
+          night_view: ["qinwang_palace", "hengdian_hot_spring"],
+          promise: ["huangshan_trip", "qiandao_lake", "wangchen_pavilion"],
+          jeju_first: ["shanghai_departure"],
+          barbie_summer: ["nanhu_boat"],
+          snow_and_family: ["hengdian_family"],
+          hangzhou_wedding: ["wedding_mv"],
+          summer_before_wedding: ["concert", "xian_terracotta"]
+        };
+        for (const [oldId, rights] of Object.entries(legacyMemoryRights)) {
+          if (life.unlockedMemoryIds.includes(oldId)) for (const id of rights) {
+            if (!life.unlockedMemoryIds.includes(id)) life.unlockedMemoryIds.push(id);
+          }
+        }
+      }
+      const rawWarehouse = parsed.play?.warehouse;
+      const legacyWarehouse = Array.isArray(rawWarehouse) ? rawWarehouse.filter((item) => !!item && typeof item === "object" && typeof item.uid === "string" && typeof item.definitionId === "string") : [];
+      if (rawWarehouse !== void 0 && (!Array.isArray(rawWarehouse) || legacyWarehouse.length !== rawWarehouse.length)) repaired = true;
+      const legacyItems = [...boardCells.flatMap((c) => c.item ? [c.item] : []), ...overflow, ...legacyWarehouse];
+      const known = version < 6 ? legacyItems.map((item) => item.definitionId) : [];
+      const strings = (v) => Array.isArray(v) ? Array.from(new Set(v.filter((x) => typeof x === "string"))) : [];
+      const inbox = Array.isArray(parsed.rewardInbox) ? parsed.rewardInbox.filter((i) => i && typeof i.uid === "string" && typeof i.definitionId === "string") : [];
       const data = {
         version: this.options.version,
         savedAt: typeof parsed.savedAt === "number" ? parsed.savedAt : this.options.clock.now(),
         player,
         board: boardCells,
+        legacyBoardEntitlement: version < 6 || parsed.legacyBoardEntitlement === true,
+        retainedOpenCellIndices: Array.from(retainedOpenCellIndices).sort((a, b) => a - b),
+        rewardInbox: [...overflow, ...inbox],
+        discoveredItemIds: Array.from(/* @__PURE__ */ new Set([...strings(parsed.discoveredItemIds), ...known])),
+        claimedDiscoveryIds: Array.from(/* @__PURE__ */ new Set([...strings(parsed.claimedDiscoveryIds), ...known])),
+        generatorCharges: this.mergeGeneratorCharges(parsed.generatorCharges),
+        generatorInventory: this.mergeGeneratorInventory(parsed.generatorInventory),
+        generatorCooldowns: this.mergeGeneratorCooldowns(parsed.generatorCooldowns),
+        claimedCollectionIds,
+        orderRefreshAt: Array.isArray(parsed.orderRefreshAt) ? parsed.orderRefreshAt.map((v) => typeof v === "number" && Number.isFinite(v) ? v : null) : [],
+        dailyTasks: this.mergeDailyTasks(parsed.dailyTasks),
+        journal: normalizeJournal(parsed.journal),
+        checkIn: { lastClaimDay: typeof parsed.checkIn?.lastClaimDay === "number" && Number.isFinite(parsed.checkIn.lastClaimDay) ? parsed.checkIn.lastClaimDay : null, claims: Math.max(0, Math.floor(num(parsed.checkIn?.claims, 0))) },
         activeOrders: activeOrders.length > 0 ? activeOrders : defaults.activeOrders,
         tutorial,
         recentOrderIds: Array.isArray(parsed.recentOrderIds) ? parsed.recentOrderIds.filter((x) => typeof x === "string") : [],
         life,
-        play: this.mergePlay(parsed.play, defaults.play, boardCells)
+        preferences: this.mergePreferences(parsed.preferences, defaults.preferences),
+        play: this.mergePlay(parsed.play, defaults.play, boardCells, version)
       };
       return { data, repaired };
     }
-    mergePlayer(raw, fallback, version) {
+    mergePlayer(raw, fallback, version, collectionBonus) {
       if (!raw || typeof raw !== "object") return { ...fallback };
       const p = raw;
       const level = Math.max(1, Math.min(18, Math.floor(num(p.level, fallback.level))));
@@ -2484,51 +5723,98 @@
         xp = newFloor + Math.round(progress * 50 * level) + (level >= 5 ? Math.max(0, oldXp - oldFloor) : 0);
       }
       const oldMax = Math.max(1, num(p.maxEnergy, fallback.maxEnergy));
-      const oldEnergy = Math.min(oldMax, Math.max(0, num(p.energy, fallback.energy)));
-      const energy = version === 1 ? Math.max(0, fallback.maxEnergy - (oldMax - oldEnergy)) : Math.min(fallback.maxEnergy, oldEnergy);
+      const oldEnergy = Math.max(0, num(p.energy, fallback.energy));
+      const baseCap = this.options.energyCaps?.[Math.min(this.options.energyCaps.length - 1, level - 1)] ?? fallback.maxEnergy;
+      const maxEnergy = Math.min(this.options.collection?.maxEnergyCap ?? Number.MAX_SAFE_INTEGER, baseCap + collectionBonus);
+      const energy = Math.min(Number.MAX_SAFE_INTEGER, Math.max(0, maxEnergy + oldEnergy - oldMax));
       return {
         level,
         xp,
-        coins: num(p.coins, fallback.coins),
+        coins: Math.max(0, num(p.coins, fallback.coins)),
+        diamonds: Math.max(0, num(p.diamonds, 0)),
         hearts: num(p.hearts, fallback.hearts),
         energy,
-        maxEnergy: fallback.maxEnergy,
+        maxEnergy,
         lastEnergyAt: num(p.lastEnergyAt, fallback.lastEnergyAt),
         unlockedChainIds: Array.isArray(p.unlockedChainIds) ? p.unlockedChainIds.filter((x) => typeof x === "string") : [...fallback.unlockedChainIds]
       };
     }
-    mergeBoard(raw, fallback, version) {
-      if (!Array.isArray(raw)) {
-        return fallback.map((c) => ({ ...c, item: c.item ? { ...c.item } : void 0 }));
-      }
-      const legacy = version === 1 && raw.length === 63 && fallback.length === 81;
-      if (raw.length !== fallback.length && !legacy) {
-        return null;
-      }
+    mergeBoard(raw, fallback, version, overflow) {
+      if (!Array.isArray(raw)) return fallback.map((c) => ({ ...c, item: c.item ? { ...c.item } : void 0 }));
+      const oldWidth = version < 6 && raw.length === 81 ? 9 : version < 6 && raw.length === 63 ? 7 : version < 7 && raw.length === 48 ? 6 : 0;
+      if (raw.length !== fallback.length && !oldWidth) return null;
       const cells = fallback.map((c) => ({ index: c.index }));
       for (let i = 0; i < raw.length; i += 1) {
         const cell = raw[i];
         if (!cell || typeof cell !== "object") return null;
-        const item = cell.item;
-        if (item && typeof item === "object") {
-          const it = item;
-          if (typeof it.uid !== "string" || typeof it.definitionId !== "string") {
-            return null;
-          }
-          const index = legacy ? Math.floor(i / 7) * 9 + i % 7 : i;
-          cells[index].item = { uid: it.uid, definitionId: it.definitionId };
-        }
+        if (!cell.item) continue;
+        if (typeof cell.item.uid !== "string" || typeof cell.item.definitionId !== "string") return null;
+        const item = { ...cell.item, uid: cell.item.uid, definitionId: cell.item.definitionId };
+        const row = oldWidth ? Math.floor(i / oldWidth) : Math.floor(i / 6);
+        const column = oldWidth ? i % oldWidth : i % 6;
+        if (row < fallback.length / 6 && column < 6) cells[row * 6 + column].item = item;
+        else overflow.push(item);
       }
       return cells;
     }
-    mergePlay(raw, fallback, board) {
-      const p = raw && typeof raw === "object" ? raw : {};
+    mergeDailyTasks(raw) {
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) return void 0;
+      const d = raw;
+      if (!Number.isSafeInteger(d.day) || typeof d.targetItemId !== "string" || !d.progress || typeof d.progress !== "object" || Array.isArray(d.progress)) return void 0;
+      const progress = /* @__PURE__ */ Object.create(null);
+      for (const [key, value] of Object.entries(d.progress)) if (/^[a-z][a-z0-9_]*$/.test(key) && Number.isSafeInteger(value) && value >= 0) progress[key] = value;
+      return { day: d.day, targetItemId: d.targetItemId, progress, claimedIds: Array.isArray(d.claimedIds) ? Array.from(new Set(d.claimedIds.filter((id) => typeof id === "string"))) : [] };
+    }
+    mergeGeneratorCooldowns(raw) {
+      const result = /* @__PURE__ */ Object.create(null);
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) return result;
+      for (const [id, value] of Object.entries(raw)) {
+        if (!/^[a-z][a-z0-9_]*$/.test(id) || !value || typeof value !== "object" || Array.isArray(value)) continue;
+        const state = value;
+        if (Number.isSafeInteger(state.streak) && (state.streak ?? -1) >= 0 && (state.cooldownStartedAt === null || typeof state.cooldownStartedAt === "number" && Number.isFinite(state.cooldownStartedAt))) result[id] = { streak: state.streak, cooldownStartedAt: state.cooldownStartedAt };
+      }
+      return result;
+    }
+    mergeGeneratorInventory(raw) {
+      const result = /* @__PURE__ */ Object.create(null);
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) return result;
+      for (const [id, value] of Object.entries(raw)) {
+        if (!/^[a-z][a-z0-9_]*$/.test(id) || !Array.isArray(value)) continue;
+        const counts = Array.from({ length: 8 }, (_, index) => Number.isSafeInteger(value[index]) && value[index] >= 0 ? value[index] : 0);
+        if (counts.some((count) => count > 0)) result[id] = counts;
+      }
+      return result;
+    }
+    mergeGeneratorCharges(raw) {
+      const result = /* @__PURE__ */ Object.create(null);
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) return result;
+      for (const [id, value] of Object.entries(raw)) {
+        if (!/^[a-z][a-z0-9_]*$/.test(id) || !value || typeof value !== "object" || Array.isArray(value)) continue;
+        const state = value;
+        if (typeof state.charges === "number" && Number.isSafeInteger(state.charges) && state.charges >= 0 && typeof state.lastRecoveryAt === "number" && Number.isFinite(state.lastRecoveryAt)) result[id] = {
+          charges: state.charges,
+          lastRecoveryAt: state.lastRecoveryAt,
+          ...typeof state.capacity === "number" && Number.isSafeInteger(state.capacity) && state.capacity > 0 ? { capacity: state.capacity } : {}
+        };
+      }
+      return result;
+    }
+    mergePreferences(raw, fallback) {
+      if (!raw || typeof raw !== "object") return { ...fallback };
+      const value = raw;
+      return {
+        soundEnabled: typeof value.soundEnabled === "boolean" ? value.soundEnabled : fallback.soundEnabled,
+        vibrationEnabled: typeof value.vibrationEnabled === "boolean" ? value.vibrationEnabled : fallback.vibrationEnabled
+      };
+    }
+    mergePlay(raw, fallback, board, version) {
+      const p = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
       const used = new Set(board.flatMap((cell) => cell.item ? [cell.item.uid] : []));
       const warehouse = (Array.isArray(p.warehouse) ? p.warehouse : []).filter((item) => {
         if (!item || typeof item.uid !== "string" || typeof item.definitionId !== "string" || used.has(item.uid)) return false;
         used.add(item.uid);
         return true;
-      }).map((item) => ({ uid: item.uid, definitionId: item.definitionId }));
+      }).map((item) => ({ ...item, uid: item.uid, definitionId: item.definitionId }));
       const strings = (value) => Array.isArray(value) ? Array.from(new Set(value.filter((v) => typeof v === "string"))) : [];
       const puzzle = (value) => ({
         found: strings(value.found),
@@ -2548,17 +5834,62 @@
         };
       }
       const replays = /* @__PURE__ */ Object.create(null);
-      if (p.replays && typeof p.replays === "object") for (const [id, value] of Object.entries(p.replays)) {
-        if (!value || typeof value !== "object" || !/^[a-z][a-z0-9_]*$/.test(id)) continue;
-        replays[id] = puzzle(value);
+      if (p.replays && typeof p.replays === "object" && !Array.isArray(p.replays)) {
+        for (const [id, value] of Object.entries(p.replays)) {
+          if (!value || typeof value !== "object" || Array.isArray(value) || !/^[a-z][a-z0-9_]*$/.test(id)) continue;
+          const replay = value;
+          const variantId = typeof replay.variantId === "string" && /^[a-z][a-z0-9_]*$/.test(replay.variantId) ? replay.variantId : "classic";
+          replays[id] = { ...puzzle(replay), variantId };
+        }
       }
-      const rawDate = p.smallDate && typeof p.smallDate === "object" ? p.smallDate : {};
+      const nonNegativeInt = (value) => typeof value === "number" && Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+      const replayStats = /* @__PURE__ */ Object.create(null);
+      if (p.replayStats && typeof p.replayStats === "object" && !Array.isArray(p.replayStats)) {
+        for (const [id, value] of Object.entries(p.replayStats)) {
+          if (!value || typeof value !== "object" || Array.isArray(value) || !/^[a-z][a-z0-9_]*$/.test(id)) continue;
+          const stats = value;
+          const solved = nonNegativeInt(stats.solved);
+          const skipped = nonNegativeInt(stats.skipped);
+          const best = typeof stats.bestSolvedHints === "number" && Number.isSafeInteger(stats.bestSolvedHints) && stats.bestSolvedHints >= 0 ? stats.bestSolvedHints : null;
+          const activeRun = replays[id]?.outcome === "playing" ? 1 : 0;
+          replayStats[id] = {
+            started: Math.max(nonNegativeInt(stats.started), solved + skipped + activeRun),
+            solved,
+            skipped,
+            totalHints: nonNegativeInt(stats.totalHints),
+            bestSolvedHints: solved > 0 ? best : null,
+            legacyHistoryIncomplete: stats.legacyHistoryIncomplete === true || version < 5
+          };
+        }
+      }
+      for (const [id, replay] of Object.entries(replays)) {
+        if (replayStats[id]) continue;
+        const solved = replay.outcome === "solved" ? 1 : 0;
+        const skipped = replay.outcome === "skipped" ? 1 : 0;
+        const finished = solved + skipped > 0;
+        replayStats[id] = {
+          started: 1,
+          solved,
+          skipped,
+          totalHints: finished ? replay.hints : 0,
+          bestSolvedHints: solved ? replay.hints : null,
+          legacyHistoryIncomplete: true
+        };
+      }
+      const rawDate = p.smallDate && typeof p.smallDate === "object" && !Array.isArray(p.smallDate) ? p.smallDate : {};
       const smallDate = {
         currentId: typeof rawDate.currentId === "string" && /^[a-z][a-z0-9_]*$/.test(rawDate.currentId) ? rawDate.currentId : "",
         rotation: Math.max(0, Math.floor(num(rawDate.rotation, fallback.smallDate?.rotation ?? 0))),
         completed: Math.max(0, Math.floor(num(rawDate.completed, fallback.smallDate?.completed ?? 0)))
       };
-      return { warehouse, scissors: Math.max(0, Math.floor(num(p.scissors, fallback.scissors))), chapters, replays, smallDate };
+      return {
+        warehouse,
+        scissors: Math.max(0, Math.floor(num(p.scissors, fallback.scissors))),
+        chapters,
+        replays,
+        replayStats,
+        smallDate
+      };
     }
     mergeLife(raw, fallback) {
       if (!raw || typeof raw !== "object") return {
@@ -2569,6 +5900,13 @@
       const strings = (value) => Array.isArray(value) ? Array.from(new Set(value.filter((x) => typeof x === "string"))) : [];
       const claimedLevels = Array.isArray(state.claimedLevelRewards) ? Array.from(new Set(state.claimedLevelRewards.filter((x) => typeof x === "number" && Number.isInteger(x) && x >= 2 && x <= 18))) : [];
       return {
+        furniturePositions: state.furniturePositions && typeof state.furniturePositions === "object" && !Array.isArray(state.furniturePositions) ? Object.fromEntries(Object.entries(state.furniturePositions).filter(([, p]) => p && Number.isFinite(p.x) && Number.isFinite(p.y) && p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1).map(([id, p]) => [id, {
+          x: p.x,
+          y: p.y,
+          scale: typeof p.scale === "number" && Number.isFinite(p.scale) && p.scale >= 0.5 && p.scale <= 1.8 ? p.scale : 1,
+          rotation: typeof p.rotation === "number" && Number.isFinite(p.rotation) && p.rotation >= -180 && p.rotation <= 180 ? p.rotation : 0,
+          flipped: typeof p.flipped === "boolean" ? p.flipped : false
+        }])) : {},
         unlockedMemoryIds: strings(state.unlockedMemoryIds),
         ownedFurnitureIds: strings(state.ownedFurnitureIds),
         placedFurnitureIds: strings(state.placedFurnitureIds),
@@ -2589,7 +5927,8 @@
         generatorClicked: !!t.generatorClicked,
         firstMergeCompleted: !!t.firstMergeCompleted,
         firstOrderCompleted: !!t.firstOrderCompleted,
-        firstOrderHintShown: !!t.firstOrderHintShown
+        firstOrderHintShown: !!t.firstOrderHintShown,
+        ...Array.isArray(t.firstUseHints) ? { firstUseHints: Array.from(new Set(t.firstUseHints.filter((hint) => ["backpack", "scissors", "chest"].includes(hint)))) } : {}
       };
     }
     backupCorrupt(raw) {
@@ -2620,12 +5959,13 @@
       board[0].item = { uid: "start_c1a", definitionId: "coffee_01" };
       board[1].item = { uid: "start_c1b", definitionId: "coffee_01" };
       board[2].item = { uid: "start_c1c", definitionId: "coffee_01" };
-      board[3].item = { uid: "start_c1d", definitionId: "coffee_01" };
+      board[columns].item = { uid: "start_c1d", definitionId: "coffee_01" };
     }
     const player = {
       level: 1,
       xp: 0,
       coins: 0,
+      diamonds: 0,
       hearts: 0,
       energy: config.energy.initialEnergy,
       maxEnergy: config.energy.maxEnergy,
@@ -2635,29 +5975,42 @@
     return {
       version: config.saveVersion,
       savedAt,
+      preferences: { soundEnabled: true, vibrationEnabled: true },
       player,
       play: {
         warehouse: [],
         scissors: config.toolbox.startingScissors,
         chapters: {},
         replays: {},
+        replayStats: {},
         smallDate: { currentId: "", rotation: 0, completed: 0 }
       },
       board,
+      legacyBoardEntitlement: false,
+      retainedOpenCellIndices: [],
+      rewardInbox: [],
+      discoveredItemIds: ["coffee_01"],
+      claimedDiscoveryIds: [],
+      checkIn: { lastClaimDay: null, claims: 0 },
+      generatorCharges: {},
+      generatorInventory: {},
+      generatorCooldowns: {},
+      claimedCollectionIds: [],
+      orderRefreshAt: [],
       activeOrders: [
         {
           uid: "order_start_1",
           templateId: "order_tutorial_coffee",
           requirements: [{ itemId: "coffee_02", count: 1 }],
-          rewardCoins: 20,
+          rewardCoins: 3,
           rewardXp: 10,
           rewardHearts: 1
         },
         {
           uid: "order_start_2",
           templateId: "order_coffee_pair",
-          requirements: [{ itemId: "coffee_02", count: 2 }],
-          rewardCoins: 32,
+          requirements: [{ itemId: "coffee_01", count: 1 }],
+          rewardCoins: 5,
           rewardXp: 14,
           rewardHearts: 5
         },
@@ -2665,7 +6018,7 @@
           uid: "order_start_3",
           templateId: "order_coffee_cup",
           requirements: [{ itemId: "coffee_03", count: 1 }],
-          rewardCoins: 30,
+          rewardCoins: 5,
           rewardXp: 12,
           rewardHearts: 5
         }
@@ -2678,6 +6031,7 @@
       },
       recentOrderIds: ["order_tutorial_coffee", "order_coffee_pair", "order_coffee_cup"],
       life: {
+        furniturePositions: {},
         unlockedMemoryIds: [],
         ownedFurnitureIds: [],
         placedFurnitureIds: [],
@@ -2715,6 +6069,13 @@
   var gameLogger = new GameLogger(true);
 
   // assets/scripts/core/merge/mergeEngine.ts
+  function remainingToolUses(item, definition) {
+    if (!definition.maxUses) return 0;
+    return item.remainingUses === void 0 ? definition.maxUses : Math.min(
+      definition.maxUses,
+      Math.max(0, Math.floor(Number.isFinite(item.remainingUses) ? item.remainingUses : 0))
+    );
+  }
   var MergeEngine = class {
     constructor(catalog) {
       this.catalog = catalog;
@@ -2731,19 +6092,31 @@
       if (!sourceDef || !targetDef) {
         return { ok: false, reason: "MISSING_DEFINITION" };
       }
-      if (source.definitionId !== target.definitionId) {
+      const wildcardPair = sourceDef.wildcard === true !== (targetDef.wildcard === true);
+      const ordinary = sourceDef.wildcard ? targetDef : sourceDef;
+      if (wildcardPair && !ordinary.wildcardEligible) {
         return { ok: false, reason: "DIFFERENT_ITEM" };
       }
-      if (!sourceDef.nextItemId) {
+      if (!wildcardPair && source.definitionId !== target.definitionId) {
+        return { ok: false, reason: "DIFFERENT_ITEM" };
+      }
+      if (ordinary.maxUses && (!remainingToolUses(source, ordinary) || !remainingToolUses(target, ordinary))) return { ok: false, reason: "DIFFERENT_ITEM" };
+      if (!ordinary.nextItemId) {
         return { ok: false, reason: "MAX_LEVEL" };
       }
-      const nextDef = this.catalog.get(sourceDef.nextItemId);
+      const nextDef = this.catalog.get(ordinary.nextItemId);
       if (!nextDef) {
         return { ok: false, reason: "MISSING_DEFINITION" };
       }
       return {
         ok: true,
-        item: { uid: nextUid, definitionId: nextDef.id },
+        item: {
+          uid: nextUid,
+          definitionId: nextDef.id,
+          ...ordinary.maxUses && nextDef.maxUses ? { remainingUses: Math.max(1, Math.floor(
+            (remainingToolUses(source, ordinary) + remainingToolUses(target, ordinary)) * nextDef.maxUses / (ordinary.maxUses * 2)
+          )) } : {}
+        },
         sourceUid: source.uid,
         targetUid: target.uid
       };
@@ -2758,6 +6131,7 @@
     if (!isValidIndex(to, board.rows, board.columns)) {
       return { kind: "CANCEL" };
     }
+    if (board.cells[from]?.locked || board.cells[to]?.locked) return { kind: "CANCEL" };
     if (from === to) {
       return { kind: "CANCEL" };
     }
@@ -2768,6 +6142,13 @@
     const target = getCellItem(board, to);
     if (!target) {
       return { kind: "MOVE", from, to };
+    }
+    const tool = catalog.get(source.definitionId), targetDefinition = catalog.get(target.definitionId);
+    if (tool?.maxUses && targetDefinition?.chainId !== tool.chainId) {
+      const uses = remainingToolUses(source, tool);
+      const previous = Array.from(catalog.values()).find((item) => item.nextItemId === target.definitionId);
+      if (uses <= 0 || !previous || targetDefinition?.maxUses || uses > 1 && !board.cells.some((cell) => !cell.locked && !cell.item)) return { kind: "CANCEL" };
+      return { kind: "SPLIT", from, to };
     }
     const mergeEngine = new MergeEngine(catalog);
     if (mergeEngine.canMerge(source, target)) {
@@ -2786,6 +6167,16 @@
       return { ok: false, reason: "EMPTY_SOURCE" };
     }
     const targetIndex = drop.to;
+    if (drop.kind === "SPLIT") {
+      const tool = catalog.get(source.definitionId), target2 = next.cells[targetIndex].item;
+      const previous = Array.from(catalog.values()).find((item) => item.nextItemId === target2.definitionId);
+      const uses = remainingToolUses(source, tool);
+      const extra = uses === 1 ? next.cells[from] : next.cells.find((cell) => !cell.locked && !cell.item);
+      next.cells[from].item = uses === 1 ? void 0 : { ...source, remainingUses: uses - 1 };
+      next.cells[targetIndex].item = { uid: target2.uid, definitionId: previous.id };
+      extra.item = { uid: nextUid, definitionId: previous.id };
+      return { ok: true, kind: "SPLIT", board: next };
+    }
     if (drop.kind === "MOVE") {
       next.cells[from].item = void 0;
       next.cells[targetIndex].item = source;
@@ -2870,6 +6261,7 @@
       this.catalog = catalog;
       this.ids = ids;
       this.bus = bus;
+      this.unlockLevels = [];
       if (initial && "cells" in initial && "rows" in initial) {
         this.board = initial;
       } else if (Array.isArray(initial)) {
@@ -2887,6 +6279,14 @@
     }
     getBoard() {
       return this.board;
+    }
+    getLockedUnlockLevel(index) {
+      return this.unlockLevels[index] || null;
+    }
+    configureUnlocks(level, unlocks, retainedIndices = []) {
+      this.unlockLevels = this.board.cells.map((c) => unlocks.find((u) => Math.floor(c.index / this.board.columns) < u.rows && c.index % this.board.columns < u.columns)?.level ?? 0);
+      const retained = new Set(retainedIndices);
+      for (const cell of this.board.cells) cell.locked = !retained.has(cell.index) && (!this.unlockLevels[cell.index] || level < this.unlockLevels[cell.index]);
     }
     getRows() {
       return this.board.rows;
@@ -2939,6 +6339,11 @@
         };
       }
       const dest = to;
+      if (result.kind === "SPLIT") {
+        this.bus.emit("BOARD_CHANGED", { reason: "tool" });
+        this.bus.emit("PLAY_CHANGED", { reason: "scissors" });
+        return { ok: true, kind: "SPLIT", from, to: dest };
+      }
       if (result.kind === "MOVE") {
         const uid = this.board.cells[dest]?.item?.uid ?? "";
         this.bus.emit("ITEM_MOVED", { uid, from, to: dest });
@@ -2987,7 +6392,7 @@
     }
     placeAt(index, definitionId) {
       if (index < 0 || index >= this.board.cells.length) return null;
-      if (this.board.cells[index].item) return null;
+      if (this.board.cells[index].item || this.board.cells[index].locked) return null;
       const item = { uid: this.ids.next(), definitionId };
       this.board.cells[index].item = item;
       this.bus.emit("ITEM_SPAWNED", {
@@ -3003,13 +6408,13 @@
   // assets/scripts/core/energy/energy.ts
   function recoverEnergy(input) {
     const maxEnergy = Math.max(0, input.maxEnergy);
-    let energy = clampInt(input.energy, 0, maxEnergy);
+    let energy = clampInt(input.energy, 0, Number.MAX_SAFE_INTEGER);
     const interval = Math.max(1, input.recoverIntervalMs);
     const now = Number.isFinite(input.now) ? input.now : input.lastEnergyAt;
     const last = Number.isFinite(input.lastEnergyAt) ? input.lastEnergyAt : now;
     if (energy >= maxEnergy) {
       return {
-        energy: maxEnergy,
+        energy,
         maxEnergy,
         lastEnergyAt: now,
         recovered: 0
@@ -3095,10 +6500,11 @@
       return this.player.energy >= cost;
     }
     spend(cost) {
+      const before = this.player.energy;
       const result = spendEnergy(this.player.energy, cost);
       if (!result.ok) return result;
       this.player.energy = result.energy;
-      if (this.player.energy === this.player.maxEnergy - cost && this.player.lastEnergyAt === 0) {
+      if (before >= this.player.maxEnergy && this.player.energy < this.player.maxEnergy) {
         this.player.lastEnergyAt = this.clock.now();
       }
       this.bus.emit("ENERGY_CHANGED", {
@@ -3110,10 +6516,7 @@
     }
     add(amount) {
       const before = this.player.energy;
-      this.player.energy = Math.min(
-        this.player.maxEnergy,
-        this.player.energy + amount
-      );
+      this.player.energy = Math.min(Number.MAX_SAFE_INTEGER, this.player.energy + Math.max(0, Math.floor(amount)));
       const delta = this.player.energy - before;
       if (delta !== 0) {
         this.bus.emit("ENERGY_CHANGED", {
@@ -3131,7 +6534,7 @@
 
   // assets/scripts/gameplay/GeneratorService.ts
   var GeneratorService = class {
-    constructor(generators, catalog, board, energy, player, random, clock) {
+    constructor(generators, catalog, board, energy, player, random, clock, chargeStates = {}, inventory = {}, cooldownStates = {}) {
       this.generators = generators;
       this.catalog = catalog;
       this.board = board;
@@ -3139,6 +6542,160 @@
       this.player = player;
       this.random = random;
       this.clock = clock;
+      this.chargeStates = chargeStates;
+      this.inventory = inventory;
+      this.cooldownStates = cooldownStates;
+      this.spawning = false;
+      this.ensureUnlockedCharges();
+    }
+    ensureUnlockedCharges() {
+      for (const gen of this.generators) {
+        if (this.isUnlocked(gen) && !this.inventory[gen.id]) {
+          this.inventory[gen.id] = Array.from({ length: gen.upgrade?.maxLevel ?? 1 }, (_, index) => index === 0 ? 1 : 0);
+        }
+        if (this.inventory[gen.id]) while (this.inventory[gen.id].length < (gen.upgrade?.maxLevel ?? 1)) this.inventory[gen.id].push(0);
+        const savedCooldown = this.cooldownStates[gen.id];
+        if (gen.streakCooldown && savedCooldown?.cooldownStartedAt != null && savedCooldown.streak < gen.streakCooldown.uses) {
+          if (this.clock.now() >= savedCooldown.cooldownStartedAt + this.streakInterval(gen)) savedCooldown.streak = 0;
+          savedCooldown.cooldownStartedAt = null;
+        }
+        if (!gen.recharge || !this.isUnlocked(gen)) continue;
+        const rule = gen.recharge;
+        if (!this.chargeStates[gen.id]) this.chargeStates[gen.id] = { charges: rule.capacity, lastRecoveryAt: this.clock.now(), capacity: rule.capacity };
+        const saved = this.chargeStates[gen.id];
+        const previousCapacity = saved.capacity ?? rule.legacyCapacity ?? rule.capacity;
+        if (previousCapacity !== rule.capacity) {
+          saved.charges = Math.max(0, Math.min(rule.capacity, saved.charges + rule.capacity - previousCapacity));
+          if (saved.charges >= rule.capacity) saved.lastRecoveryAt = Math.max(this.clock.now(), saved.lastRecoveryAt);
+        }
+        saved.capacity = rule.capacity;
+      }
+    }
+    activeLevel(gen) {
+      const counts = this.inventory[gen.id] ?? [];
+      for (let i = counts.length - 1; i >= 0; i--) if (counts[i] > 0) return i + 1;
+      return 1;
+    }
+    interval(gen, level = this.activeLevel(gen)) {
+      return gen.recharge ? Math.max(1, Math.round(gen.recharge.intervalMs * Math.pow(gen.upgrade?.rechargeFactor ?? 1, level - 1))) : 0;
+    }
+    streakInterval(gen, level = this.activeLevel(gen)) {
+      return gen.streakCooldown ? Math.max(1, Math.round(gen.streakCooldown.durationMs * Math.pow(gen.upgrade?.rechargeFactor ?? 1, level - 1))) : 0;
+    }
+    getStatus(id) {
+      const gen = this.get(id);
+      if (!gen) return null;
+      const unlocked = this.isUnlocked(gen), level = unlocked ? this.activeLevel(gen) : 0, rule = gen.recharge;
+      const boostAvailable = unlocked && level > 1 && gen.energyCost > 0 && !!gen.upgrade?.levels.find((v) => v.level === level)?.boostOutputs;
+      const cooldown = gen.streakCooldown ? this.cooldownStates[id] : void 0;
+      const cooldownMs = gen.streakCooldown ? this.streakInterval(gen, level || 1) : unlocked ? this.interval(gen, level) : rule?.intervalMs ?? 0;
+      const remainingCooldownMs = cooldown?.cooldownStartedAt == null ? 0 : Math.max(0, cooldown.cooldownStartedAt + cooldownMs - this.clock.now());
+      const streak = cooldown?.cooldownStartedAt != null && remainingCooldownMs === 0 ? 0 : Math.min(gen.streakCooldown?.uses ?? 0, cooldown?.streak ?? 0);
+      const base = {
+        unlocked,
+        level,
+        maxLevel: gen.upgrade?.maxLevel ?? 1,
+        inventory: [...this.inventory[id] ?? Array.from({ length: gen.upgrade?.maxLevel ?? 1 }, () => 0)],
+        energyCost: gen.energyCost,
+        boostAvailable,
+        boostEnergyCost: boostAvailable ? gen.energyCost * (gen.upgrade?.boostEnergyMultiplier ?? 2) : null,
+        cooldownMs,
+        streak,
+        streakLimit: gen.streakCooldown?.uses ?? 0,
+        remainingCooldownMs
+      };
+      if (!rule) return { ...base, charges: null, maxCharges: null, nextRecoveryMs: null };
+      if (!unlocked) return { ...base, charges: null, maxCharges: rule.capacity, nextRecoveryMs: null };
+      const saved = this.chargeStates[id];
+      if (!saved) return { ...base, charges: rule.capacity, maxCharges: rule.capacity, nextRecoveryMs: null };
+      const elapsed = Math.max(0, this.clock.now() - saved.lastRecoveryAt), interval = this.interval(gen, level);
+      const restored = Math.floor(elapsed / interval);
+      const charges = Math.min(rule.capacity, saved.charges + restored);
+      const anchor = saved.lastRecoveryAt + restored * interval;
+      return { ...base, charges, maxCharges: rule.capacity, nextRecoveryMs: charges >= rule.capacity ? null : Math.max(0, anchor + interval - this.clock.now()) };
+    }
+    merge(id, level) {
+      const gen = this.get(id);
+      if (!gen) return { ok: false, reason: "NOT_FOUND" };
+      if (!this.isUnlocked(gen)) return { ok: false, reason: "LOCKED" };
+      if (!Number.isInteger(level) || level < 1 || level >= (gen.upgrade?.maxLevel ?? 1)) return { ok: false, reason: "MAX_LEVEL" };
+      const inventory = this.inventory[id];
+      if (!inventory || (inventory[level - 1] ?? 0) < 2) return { ok: false, reason: "NOT_ENOUGH_GENERATORS" };
+      const previousLevel = this.activeLevel(gen), oldInterval = this.interval(gen, previousLevel);
+      const saved = this.chargeStates[id], status = this.getStatus(id);
+      if (saved && status && status.charges !== null && gen.recharge) {
+        const now2 = this.clock.now(), elapsed = Math.max(0, now2 - saved.lastRecoveryAt), steps = Math.floor(elapsed / oldInterval);
+        const anchor = saved.lastRecoveryAt + steps * oldInterval;
+        saved.charges = status.charges;
+        saved.lastRecoveryAt = status.charges >= gen.recharge.capacity ? Math.max(now2, saved.lastRecoveryAt) : anchor;
+      }
+      inventory[level - 1] -= 2;
+      inventory[level] = (inventory[level] ?? 0) + 1;
+      const newInterval = this.interval(gen), now = this.clock.now();
+      if (saved && gen.recharge && saved.charges < gen.recharge.capacity && newInterval !== oldInterval && now > saved.lastRecoveryAt) {
+        const progress = now - saved.lastRecoveryAt;
+        saved.lastRecoveryAt = now - Math.floor(progress * newInterval / oldInterval);
+      }
+      return { ok: true, level: level + 1 };
+    }
+    grantLevelReward(level, rotation) {
+      const eligible = rotation.map((id) => this.get(id)).filter((g) => !!g && this.isUnlocked(g));
+      if (!eligible.length) return null;
+      const gen = eligible[(level - 2) % eligible.length];
+      this.ensureUnlockedCharges();
+      this.inventory[gen.id][0] += 1;
+      return gen.id;
+    }
+    grantPurchased(id) {
+      const gen = this.get(id);
+      if (!gen) return { ok: false, reason: "NOT_FOUND" };
+      if (!this.isUnlocked(gen)) return { ok: false, reason: "LOCKED" };
+      this.ensureUnlockedCharges();
+      this.inventory[id][0] += 1;
+      return { ok: true, inventory: [...this.inventory[id]] };
+    }
+    getInventory() {
+      return Object.fromEntries(Object.entries(this.inventory).map(([id, counts]) => [id, [...counts]]));
+    }
+    getCooldownStates() {
+      return Object.fromEntries(Object.entries(this.cooldownStates).map(([id, state]) => [id, { ...state }]));
+    }
+    restoreExhausted(id) {
+      if (this.spawning) return { ok: false, reason: "IN_PROGRESS" };
+      const generator = this.get(id);
+      if (!generator) return { ok: false, reason: "NOT_FOUND" };
+      const status = this.getStatus(id);
+      if (!status.unlocked) return { ok: false, reason: "LOCKED" };
+      if (generator.recharge) {
+        if (status.charges !== 0) return { ok: false, reason: "NOT_NEEDED" };
+        const saved = this.chargeStates[id];
+        if (!saved) return { ok: false, reason: "NOT_NEEDED" };
+        saved.charges = generator.recharge.capacity;
+        saved.capacity = generator.recharge.capacity;
+        saved.lastRecoveryAt = Math.max(this.clock.now(), saved.lastRecoveryAt);
+        return { ok: true, kind: "charges", restoredUses: generator.recharge.capacity };
+      }
+      if (!generator.streakCooldown || status.remainingCooldownMs <= 0 || status.streak < generator.streakCooldown.uses) return { ok: false, reason: "NOT_NEEDED" };
+      this.cooldownStates[id] = { streak: 0, cooldownStartedAt: null };
+      return { ok: true, kind: "cooldown", restoredUses: generator.streakCooldown.uses };
+    }
+    spendCharge(gen) {
+      const rule = gen.recharge;
+      if (!rule) return null;
+      this.ensureUnlockedCharges();
+      const saved = this.chargeStates[gen.id];
+      const previous = { ...saved };
+      const now = this.clock.now();
+      const elapsed = Math.max(0, now - saved.lastRecoveryAt);
+      const interval = this.interval(gen);
+      const steps = Math.floor(elapsed / interval);
+      const charges = Math.min(rule.capacity, saved.charges + steps);
+      saved.charges = charges - 1;
+      saved.lastRecoveryAt = charges === rule.capacity ? Math.max(now, saved.lastRecoveryAt) : saved.lastRecoveryAt + steps * interval;
+      return previous;
+    }
+    getChargeStates() {
+      return Object.fromEntries(Object.entries(this.chargeStates).map(([id, state]) => [id, { ...state }]));
     }
     list() {
       return this.generators;
@@ -3149,10 +6706,20 @@
     isUnlocked(generator) {
       return this.player.level >= generator.unlockLevel || this.player.unlockedChainIds.includes(generator.chainId);
     }
-    rollOutput(generator) {
-      return pickWeighted(generator.outputs, this.random);
+    rollOutput(generator, level = 1, boost = false) {
+      const upgrade = generator.upgrade?.levels.find((v) => v.level === level);
+      return pickWeighted((boost ? upgrade?.boostOutputs : upgrade?.outputs) ?? generator.outputs, this.random);
     }
-    spawn(generatorId) {
+    spawn(generatorId, boost = false) {
+      if (this.spawning) return { ok: false, reason: "IN_PROGRESS" };
+      this.spawning = true;
+      try {
+        return this.spawnOnce(generatorId, boost);
+      } finally {
+        this.spawning = false;
+      }
+    }
+    spawnOnce(generatorId, boost) {
       const generator = this.get(generatorId);
       if (!generator) {
         return { ok: false, reason: "UNKNOWN_GENERATOR" };
@@ -3160,29 +6727,41 @@
       if (!this.isUnlocked(generator)) {
         return { ok: false, reason: "LOCKED" };
       }
-      if (!this.energy.canSpend(generator.energyCost)) {
+      const status = this.getStatus(generatorId);
+      if (status.remainingCooldownMs > 0) return { ok: false, reason: "GENERATOR_COOLDOWN" };
+      if (boost && !status.boostAvailable) return { ok: false, reason: "BOOST_UNAVAILABLE" };
+      const energyCost = generator.energyCost * (boost ? generator.upgrade?.boostEnergyMultiplier ?? 2 : 1);
+      if (generator.recharge && status.charges === 0) return { ok: false, reason: "NO_CHARGES" };
+      if (!this.energy.canSpend(energyCost)) {
         return { ok: false, reason: "NOT_ENOUGH_ENERGY" };
       }
       if (this.board.isFull()) {
         return { ok: false, reason: "BOARD_FULL" };
       }
-      const output = this.rollOutput(generator);
+      const output = this.rollOutput(generator, status.level, boost);
       if (!output || !this.catalog.has(output.itemId)) {
         return { ok: false, reason: "UNKNOWN_GENERATOR" };
       }
-      const spend = this.energy.spend(generator.energyCost);
+      const previousCharge = this.spendCharge(generator);
+      const spend = energyCost > 0 ? this.energy.spend(energyCost) : { ok: true };
       if (!spend.ok) {
+        if (previousCharge) this.chargeStates[generator.id] = previousCharge;
         return spend;
       }
-      if (this.player.energy < this.player.maxEnergy) {
+      if (energyCost > 0 && this.player.energy < this.player.maxEnergy) {
         if (!this.player.lastEnergyAt) {
           this.player.lastEnergyAt = this.clock.now();
         }
       }
       const spawned = this.board.spawn(output.itemId);
       if (!spawned.ok) {
-        this.energy.add(generator.energyCost);
+        if (previousCharge) this.chargeStates[generator.id] = previousCharge;
+        if (energyCost > 0) this.energy.add(energyCost);
         return { ok: false, reason: "BOARD_FULL" };
+      }
+      if (generator.streakCooldown) {
+        const streak = status.streak + 1;
+        this.cooldownStates[generatorId] = { streak, cooldownStartedAt: streak >= generator.streakCooldown.uses ? this.clock.now() : null };
       }
       return {
         ok: true,
@@ -3199,23 +6778,6 @@
     for (const req of requirements) totals.set(req.itemId, (totals.get(req.itemId) ?? 0) + req.count);
     return Array.from(totals.entries()).sort(([first], [second]) => first.localeCompare(second)).map(([itemId, count]) => `${itemId}x${count}`).join("|");
   }
-  function filterOrderTemplates(templates, playerLevel, catalog, unlockedChainIds, minItemLevel, maxItemLevel) {
-    const unlocked = new Set(unlockedChainIds);
-    return templates.filter((template) => {
-      if (playerLevel < template.minLevel || playerLevel > template.maxLevel) {
-        return false;
-      }
-      for (const req of template.requirements) {
-        const def = catalog.get(req.itemId);
-        if (!def) return false;
-        if (!unlocked.has(def.chainId)) return false;
-        if (def.level < minItemLevel || def.level > maxItemLevel) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }
   function instantiateOrder(template, uid) {
     const requirements = template.requirements.map((r) => ({
       itemId: r.itemId,
@@ -3224,48 +6786,90 @@
     return {
       uid,
       templateId: template.id,
+      ...template.longTerm === true ? { longTerm: true } : {},
       requirements,
       rewardCoins: template.rewardCoins,
       rewardXp: template.rewardXp,
       rewardHearts: template.rewardHearts
     };
   }
-  function pickOrderTemplate(candidates, random, context = {}) {
-    if (candidates.length === 0) return null;
-    const activeIds = new Set(context.activeOrderIds ?? []);
-    const activeSignatures = new Set(context.activeOrderSignatures ?? []);
-    const recentIds = new Set((context.recentOrderIds ?? []).slice(-3));
-    const recentSignatures = new Set(context.recentSignatures ?? []);
-    const notActive = candidates.filter((template) => !activeIds.has(template.id) && !activeSignatures.has(requirementSignature(template.requirements)));
-    const preferred = notActive.filter((template) => !recentIds.has(template.id) && !recentSignatures.has(requirementSignature(template.requirements)));
-    const pool = preferred.length > 0 ? preferred : notActive.length > 0 ? notActive : [...candidates];
-    const index = random.pickIndex(pool.length);
-    return pool[index] ?? pool[0] ?? null;
-  }
+  var DEFAULT_DYNAMIC_ORDER_CONFIG = {
+    twoItemChance: 0.3,
+    rareChance: 0.2,
+    urgentChance: 0.1,
+    urgentDurationMs: 30 * 6e4,
+    rewardMultiplierMin: 1.2,
+    rewardMultiplierMax: 1.8,
+    rewardMultiplierMaxLevel: 18
+  };
   function generateOrder(input) {
-    const candidates = filterOrderTemplates(
-      input.templates,
-      input.player.level,
-      input.catalog,
-      input.player.unlockedChainIds,
-      input.minItemLevel,
-      input.maxItemLevel
-    );
-    const nonTutorial = candidates.filter((t) => !t.tutorialOnly);
-    const tutorial = candidates.filter((t) => t.tutorialOnly);
-    const preferTutorial = tutorial.length > 0 && input.recentOrderIds.length === 0;
-    const pool = preferTutorial ? tutorial : nonTutorial.length > 0 ? nonTutorial : candidates;
-    const templateById = new Map(input.templates.map((template2) => [template2.id, template2]));
-    const recentSignatures = input.recentOrderIds.slice(-3).map((id) => templateById.get(id)).filter((template2) => !!template2).map((template2) => requirementSignature(template2.requirements));
-    const activeOrders = input.activeOrders ?? [];
-    const template = pickOrderTemplate(pool, input.random, {
-      recentOrderIds: input.recentOrderIds,
-      recentSignatures,
-      activeOrderIds: activeOrders.map((order) => order.templateId),
-      activeOrderSignatures: activeOrders.map((order) => requirementSignature(order.requirements))
+    const unlocked = new Set(input.player.unlockedChainIds);
+    const limited = new Set(input.limitedChainIds ?? []);
+    const hasLimited = (requirements2) => requirements2.some((r) => {
+      const def = input.catalog.get(r.itemId);
+      return !!def && limited.has(def.chainId);
     });
-    if (!template) return null;
-    return instantiateOrder(template, input.id);
+    const active = input.activeOrders ?? [];
+    const occupiedLimited = active.some((order) => hasLimited(order.requirements));
+    const maxLevel = Math.min(input.maxItemLevel, 3 + Math.floor((Math.max(1, input.player.level) - 1) / 4));
+    const items = Array.from(input.catalog.values()).filter((item) => {
+      const floor = Math.max(input.minItemLevel, input.minimumLevelForChain?.(item.chainId) ?? 1);
+      return (input.canProduceItem?.(item.id) ?? true) && unlocked.has(item.chainId) && item.level >= floor && item.level <= Math.max(maxLevel, floor);
+    });
+    const common = items.filter((item) => !limited.has(item.chainId));
+    const rare = items.filter((item) => limited.has(item.chainId));
+    if (!common.length) return null;
+    const level = input.player.level;
+    const dynamic = input.dynamic ?? DEFAULT_DYNAMIC_ORDER_CONFIG;
+    const count = input.random.next() < dynamic.twoItemChance ? 2 : 1;
+    const wantsRare = !occupiedLimited && rare.length > 0 && input.random.next() < dynamic.rareChance;
+    const candidates = [];
+    if (count === 1) {
+      for (const item of wantsRare ? rare : common) candidates.push([{ itemId: item.id, count: 1 }]);
+    } else if (wantsRare) {
+      for (const item of rare) {
+        candidates.push([{ itemId: item.id, count: 2 }]);
+        for (const other of common) candidates.push([{ itemId: item.id, count: 1 }, { itemId: other.id, count: 1 }]);
+      }
+    } else {
+      for (let i = 0; i < common.length; i++) {
+        candidates.push([{ itemId: common[i].id, count: 2 }]);
+        for (let j = i + 1; j < common.length; j++) candidates.push([{ itemId: common[i].id, count: 1 }, { itemId: common[j].id, count: 1 }]);
+      }
+    }
+    const affordable = candidates.filter((requirements2) => {
+      const costs = /* @__PURE__ */ new Map();
+      for (const req of requirements2) {
+        const item = input.catalog.get(req.itemId);
+        const floor = Math.max(input.minItemLevel, input.minimumLevelForChain?.(item.chainId) ?? 1);
+        costs.set(item.chainId, (costs.get(item.chainId) ?? 0) + 2 ** Math.max(0, item.level - floor) * req.count);
+      }
+      return Array.from(costs.entries()).every(([chain, cost2]) => cost2 <= (input.maxMergeCostForChain?.(chain) ?? Infinity));
+    });
+    const activeSignatures = new Set(active.map((order) => requirementSignature(order.requirements)));
+    const replacing = input.replacingRequirements && requirementSignature(input.replacingRequirements);
+    const byId = new Map(input.templates.map((template) => [template.id, template]));
+    const recentIds = new Set(input.recentOrderIds.slice(-3).map((id) => {
+      const old = byId.get(id);
+      return old ? `dynamic:${requirementSignature(old.requirements)}` : id;
+    }));
+    const notOccupied = affordable.filter((rows) => !activeSignatures.has(requirementSignature(rows)));
+    const different = notOccupied.filter((rows) => requirementSignature(rows) !== replacing);
+    const preferred = different.filter((rows) => !recentIds.has(`dynamic:${requirementSignature(rows)}`));
+    const pool = preferred.length ? preferred : different.length ? different : notOccupied.length ? notOccupied : affordable;
+    const requirements = pool[input.random.pickIndex(pool.length)];
+    if (!requirements) return null;
+    const cost = requirements.reduce((sum, req) => sum + 2 ** ((input.catalog.get(req.itemId)?.level ?? 1) - 1) * req.count, 0);
+    const multiplier = dynamic.rewardMultiplierMin + (dynamic.rewardMultiplierMax - dynamic.rewardMultiplierMin) * (Math.min(dynamic.rewardMultiplierMaxLevel, Math.max(1, level)) - 1) / Math.max(1, dynamic.rewardMultiplierMaxLevel - 1);
+    return {
+      uid: input.id,
+      templateId: `dynamic:${requirementSignature(requirements)}`,
+      requirements,
+      ...level >= 15 && hasLimited(requirements) ? { longTerm: true } : {},
+      rewardCoins: Math.ceil(cost * multiplier),
+      rewardXp: Math.max(6, cost * 2 + 6),
+      rewardHearts: Math.max(1, Math.ceil(cost / 2))
+    };
   }
   function generateTutorialOrder(templates, id) {
     const template = templates.find((t) => t.tutorialOnly) ?? templates[0];
@@ -3275,7 +6879,7 @@
 
   // assets/scripts/gameplay/OrderService.ts
   var OrderService = class {
-    constructor(templates, catalog, board, player, progression, random, ids, bus, slots, minItemLevel, maxItemLevel) {
+    constructor(templates, catalog, board, player, progression, random, ids, bus, slots, minItemLevel, maxItemLevel, limitedChainIds = [], clock = new SystemClockService(), dynamic = DEFAULT_DYNAMIC_ORDER_CONFIG, projectItem = (id) => id, minimumLevelForChain = () => 1, canProduceItem = () => true, maxMergeCostForChain = () => Infinity) {
       this.templates = templates;
       this.catalog = catalog;
       this.board = board;
@@ -3287,21 +6891,78 @@
       this.slots = slots;
       this.minItemLevel = minItemLevel;
       this.maxItemLevel = maxItemLevel;
+      this.limitedChainIds = limitedChainIds;
+      this.clock = clock;
+      this.dynamic = dynamic;
+      this.projectItem = projectItem;
+      this.minimumLevelForChain = minimumLevelForChain;
+      this.canProduceItem = canProduceItem;
+      this.maxMergeCostForChain = maxMergeCostForChain;
       this.orders = [];
       this.recentOrderIds = [];
     }
     hydrate(orders, recentOrderIds) {
       this.orders = orders.map((o) => ({
         ...o,
+        ...o.longTerm === true || this.templates.find((t) => t.id === o.templateId)?.longTerm === true ? { longTerm: true } : {},
         requirements: o.requirements.map((r) => ({ ...r }))
       }));
       this.recentOrderIds = [...recentOrderIds];
+      const limit = 2;
+      for (const order of this.orders) {
+        const valid = order.requirements.filter((r) => r && typeof r.itemId === "string" && this.catalog.has(r.itemId) && Number.isSafeInteger(r.count) && r.count > 0);
+        let remaining = limit;
+        order.requirements = valid.flatMap((requirement) => {
+          const count = Math.min(remaining, requirement.count);
+          remaining -= count;
+          return count > 0 ? [{ itemId: requirement.itemId, count }] : [];
+        });
+      }
+      for (let index = 0; index < this.orders.length; index++) {
+        if (this.orders[index].requirements.length) continue;
+        const replacement = this.createNextOrder(false, this.orders[index].uid);
+        if (replacement) this.orders[index] = replacement;
+      }
+      this.orders = this.orders.filter((order) => order.requirements.length > 0);
+      this.reconcileRequirements();
+    }
+    reconcileRequirements() {
+      for (const order of this.orders) {
+        if (this.board.findItemsForRequirements(order.requirements)) continue;
+        if (order.requirements.some((req) => !this.canProduceItem(req.itemId) || !this.player.unlockedChainIds.includes(this.catalog.get(req.itemId)?.chainId ?? ""))) {
+          const replacement = this.createNextOrder(false, order.uid);
+          if (replacement) {
+            order.requirements = replacement.requirements;
+            order.templateId = replacement.templateId;
+            delete order.longTerm;
+            this.bus.emit("ORDER_UPDATED", { orderUid: order.uid });
+          }
+        }
+        let changed = false;
+        const counts = /* @__PURE__ */ new Map();
+        for (const requirement of order.requirements) {
+          const itemId = this.projectItem(requirement.itemId);
+          if (itemId !== requirement.itemId) changed = true;
+          counts.set(itemId, (counts.get(itemId) ?? 0) + requirement.count);
+        }
+        if (changed) order.requirements = Array.from(counts.entries()).map(([itemId, count]) => ({ itemId, count }));
+        if (changed) this.bus.emit("ORDER_UPDATED", { orderUid: order.uid });
+      }
     }
     getOrders() {
-      return this.orders.map((o) => ({
-        ...o,
-        requirements: o.requirements.map((r) => ({ ...r }))
-      }));
+      return this.orders.map((o) => {
+        const copy = { ...o, requirements: o.requirements.map((r) => ({ ...r })) };
+        if (copy.urgentUntil !== void 0 && this.clock.now() >= copy.urgentUntil) {
+          if (copy.urgentBaseCoins !== void 0) copy.rewardCoins = copy.urgentBaseCoins;
+          if (copy.urgentBaseXp !== void 0) copy.rewardXp = copy.urgentBaseXp;
+          if (copy.urgentBaseHearts !== void 0) copy.rewardHearts = copy.urgentBaseHearts;
+          delete copy.urgentUntil;
+          delete copy.urgentBaseCoins;
+          delete copy.urgentBaseXp;
+          delete copy.urgentBaseHearts;
+        }
+        return copy;
+      });
     }
     getRecentIds() {
       return [...this.recentOrderIds];
@@ -3314,15 +6975,21 @@
         this.bus.emit("ORDER_UPDATED", { orderUid: created.uid });
       }
     }
-    createNextOrder(forceTutorial = false) {
+    createNextOrder(forceTutorial = false, replacingUid) {
       const order = forceTutorial ? generateTutorialOrder(this.templates, this.ids.next()) : generateOrder({
         player: this.player,
         templates: this.templates,
         catalog: this.catalog,
         recentOrderIds: this.recentOrderIds,
-        activeOrders: this.orders,
+        activeOrders: this.orders.filter((order2) => order2.uid !== replacingUid),
+        dynamic: this.dynamic,
+        replacingRequirements: this.orders.find((order2) => order2.uid === replacingUid)?.requirements,
         minItemLevel: this.minItemLevel,
         maxItemLevel: this.maxItemLevel,
+        minimumLevelForChain: this.minimumLevelForChain,
+        canProduceItem: this.canProduceItem,
+        maxMergeCostForChain: this.maxMergeCostForChain,
+        limitedChainIds: this.limitedChainIds,
         random: this.random,
         id: this.ids.next()
       });
@@ -3333,6 +7000,18 @@
         }
       }
       return order;
+    }
+    getSlot(orderUid) {
+      return this.orders.findIndex((order) => order.uid === orderUid);
+    }
+    refresh(orderUid) {
+      const index = this.getSlot(orderUid);
+      if (index < 0) return { ok: false, reason: "ORDER_NOT_FOUND" };
+      const replacement = this.createNextOrder(false, orderUid);
+      if (!replacement) return { ok: false, reason: "NO_REPLACEMENT" };
+      this.orders[index] = replacement;
+      this.bus.emit("ORDER_UPDATED", { orderUid: replacement.uid });
+      return { ok: true, orderUid: replacement.uid };
     }
     canClaim(orderUid) {
       const order = this.orders.find((o) => o.uid === orderUid);
@@ -3348,6 +7027,7 @@
       if (index < 0) {
         return { ok: false, reason: "ORDER_NOT_FOUND" };
       }
+      this.expireUrgentOrders();
       const order = this.orders[index];
       const locations = this.board.findItemsForRequirements(order.requirements);
       if (!locations) {
@@ -3361,11 +7041,18 @@
       this.progression.addCoins(rewardCoins);
       this.progression.addHearts(rewardHearts);
       this.progression.addXp(rewardXp);
-      const replacement = this.createNextOrder(false);
-      this.orders.splice(index, 1);
-      if (replacement) {
-        this.orders.push(replacement);
+      const replacement = this.createNextOrder(false, orderUid);
+      if (replacement && this.random.next() < this.dynamic.urgentChance) {
+        replacement.urgentBaseCoins = replacement.rewardCoins;
+        replacement.urgentBaseXp = replacement.rewardXp;
+        replacement.urgentBaseHearts = replacement.rewardHearts;
+        replacement.rewardCoins *= 2;
+        replacement.rewardXp *= 2;
+        replacement.rewardHearts *= 2;
+        replacement.urgentUntil = this.clock.now() + this.dynamic.urgentDurationMs;
       }
+      if (replacement) this.orders[index] = replacement;
+      else this.orders.splice(index, 1);
       this.bus.emit("ORDER_COMPLETED", {
         orderUid,
         rewardCoins,
@@ -3383,6 +7070,23 @@
         rewardHearts
       };
     }
+    /** Returns whether an expired order changed, so the caller can persist and refresh UI. */
+    expireUrgentOrders() {
+      let changed = false;
+      for (const order of this.orders) {
+        if (order.urgentUntil !== void 0 && this.clock.now() >= order.urgentUntil) {
+          if (order.urgentBaseCoins !== void 0) order.rewardCoins = order.urgentBaseCoins;
+          if (order.urgentBaseXp !== void 0) order.rewardXp = order.urgentBaseXp;
+          if (order.urgentBaseHearts !== void 0) order.rewardHearts = order.urgentBaseHearts;
+          delete order.urgentUntil;
+          delete order.urgentBaseCoins;
+          delete order.urgentBaseXp;
+          delete order.urgentBaseHearts;
+          changed = true;
+        }
+      }
+      return changed;
+    }
     refreshProgressHints() {
       for (const order of this.orders) {
         this.bus.emit("ORDER_UPDATED", { orderUid: order.uid });
@@ -3392,12 +7096,16 @@
 
   // assets/scripts/gameplay/ProgressionService.ts
   var ProgressionService = class {
-    constructor(player, progression, generators, bus) {
+    constructor(player, progression, generators, bus, energyCaps, collectionBonus = () => 0, maxEnergyCap = Number.MAX_SAFE_INTEGER) {
       this.player = player;
       this.progression = progression;
       this.generators = generators;
       this.bus = bus;
+      this.energyCaps = energyCaps;
+      this.collectionBonus = collectionBonus;
+      this.maxEnergyCap = maxEnergyCap;
       this.syncUnlocks();
+      this.syncEnergyCap();
     }
     get level() {
       return this.player.level;
@@ -3418,6 +7126,7 @@
       if (newLevel > previousLevel) {
         for (let level = previousLevel + 1; level <= newLevel; level += 1) {
           this.player.level = level;
+          this.syncEnergyCap();
           const newly = this.syncUnlocks(level - 1, level);
           unlockedChains.push(...newly);
           this.bus.emit("LEVEL_UP", {
@@ -3476,6 +7185,10 @@
         }
       }
       return newly;
+    }
+    syncEnergyCap() {
+      const cap = this.energyCaps?.[Math.min(this.energyCaps.length - 1, this.player.level - 1)];
+      if (cap !== void 0) this.player.maxEnergy = Math.min(this.maxEnergyCap, cap + this.collectionBonus());
     }
   };
 
@@ -3613,7 +7326,7 @@
 
   // assets/scripts/gameplay/PlayService.ts
   var PlayService = class {
-    constructor(state, bundle, board, ids, bus, progression, energy, life) {
+    constructor(state, bundle, board, ids, bus, progression, energy, life, projectItem = (id) => id) {
       this.bundle = bundle;
       this.board = board;
       this.ids = ids;
@@ -3621,6 +7334,7 @@
       this.progression = progression;
       this.energy = energy;
       this.life = life;
+      this.projectItem = projectItem;
       this.deliveringSmallDate = false;
       const loaded = JSON.parse(JSON.stringify(state));
       this.data = {
@@ -3628,6 +7342,7 @@
         scissors: typeof loaded.scissors === "number" ? loaded.scissors : bundle.game.toolbox.startingScissors,
         chapters: loaded.chapters && typeof loaded.chapters === "object" ? loaded.chapters : {},
         replays: loaded.replays && typeof loaded.replays === "object" ? loaded.replays : {},
+        replayStats: loaded.replayStats && typeof loaded.replayStats === "object" ? loaded.replayStats : {},
         smallDate: { ...createSmallDateProgress(), ...loaded.smallDate ?? {} }
       };
       for (const chapter of bundle.adventures) {
@@ -3635,16 +7350,37 @@
         if (p) {
           p.step = Math.min(chapter.steps.length, Math.max(0, p.step));
           p.hints = Math.min(chapter.hints.length, Math.max(0, p.hints));
-          this.normalizePuzzle(chapter, p);
+          this.normalizePuzzle(chapter.puzzle, p);
           if (p.claimed) {
             p.step = chapter.steps.length;
             if (p.outcome === "playing") p.outcome = "solved";
           } else if (p.step < chapter.steps.length) p.outcome = "playing";
+          p.step = chapter.steps.length;
         }
         const replay = this.data.replays[chapter.id];
         if (replay && p?.claimed) {
-          replay.hints = Math.max(0, Math.min(chapter.hints.length, replay.hints));
-          this.normalizePuzzle(chapter, replay);
+          const definition = this.variantDefinition(chapter, replay.variantId);
+          if (!definition) {
+            replay.variantId = "classic";
+            replay.found = [];
+            replay.selected = [];
+            replay.rotations = [];
+            replay.code = "";
+          }
+          const active = this.variantDefinition(chapter, replay.variantId) ?? this.classicDefinition(chapter);
+          replay.hints = Math.max(0, Math.min(active.hints.length, replay.hints));
+          this.normalizePuzzle(active.puzzle, replay);
+          if (!this.data.replayStats[chapter.id]) {
+            this.data.replayStats[chapter.id] = {
+              ...createReplayStats(),
+              started: 1,
+              solved: replay.outcome === "solved" ? 1 : 0,
+              skipped: replay.outcome === "skipped" ? 1 : 0,
+              totalHints: replay.outcome === "playing" ? 0 : replay.hints,
+              bestSolvedHints: replay.outcome === "solved" ? replay.hints : null,
+              legacyHistoryIncomplete: true
+            };
+          }
         } else if (replay) {
           delete this.data.replays[chapter.id];
         }
@@ -3655,7 +7391,8 @@
       return JSON.parse(JSON.stringify(this.data));
     }
     progress(id) {
-      return { ...createChapterProgress(), ...this.state.chapters[id] };
+      const chapter = this.bundle.adventures.find((entry) => entry.id === id);
+      return { ...createChapterProgress(), ...this.state.chapters[id], ...chapter ? { step: chapter.steps.length } : {} };
     }
     hasReplay(id) {
       return !!this.data.replays[id];
@@ -3664,27 +7401,81 @@
       const replay = this.data.replays[id];
       return replay ? JSON.parse(JSON.stringify(replay)) : void 0;
     }
+    replaySummary(id) {
+      const stats = this.data.replayStats[id] ?? createReplayStats();
+      return { ...stats };
+    }
     /** Renderers read whichever independent progress is active: practice first, otherwise the chapter. */
     puzzleProgress(id) {
       return this.replayProgress(id) ?? this.progress(id);
     }
+    puzzleDefinition(id) {
+      const chapter = this.bundle.adventures.find((entry) => entry.id === id);
+      if (!chapter) return void 0;
+      return JSON.parse(JSON.stringify(this.activeDefinition(chapter, id)));
+    }
+    activeDefinition(chapter, id) {
+      const replay = this.data.replays[id];
+      return (replay && this.variantDefinition(chapter, replay.variantId)) ?? this.classicDefinition(chapter);
+    }
+    chapterAvailability(id) {
+      const index = this.bundle.adventures.findIndex((chapter2) => chapter2.id === id);
+      if (index < 0) return void 0;
+      const chapter = this.bundle.adventures[index];
+      const currentLevel = this.progression.level;
+      return {
+        available: currentLevel >= chapter.unlockLevel,
+        requiredLevel: chapter.unlockLevel,
+        currentLevel
+      };
+    }
+    journeyProgress() {
+      const completed = this.bundle.adventures.filter((chapter) => this.progress(chapter.id).claimed).length;
+      const nextChapter = this.bundle.adventures.find((chapter) => !this.progress(chapter.id).claimed) ?? null;
+      return {
+        completed,
+        total: this.bundle.adventures.length,
+        nextChapter,
+        nextProgress: nextChapter ? this.progress(nextChapter.id) : null,
+        availability: nextChapter ? this.chapterAvailability(nextChapter.id) ?? null : null
+      };
+    }
     isAvailable(id) {
-      const i = this.bundle.adventures.findIndex((c) => c.id === id);
-      return i >= 0 && this.progression.level >= this.bundle.adventures[i].unlockLevel && (i === 0 || this.progress(this.bundle.adventures[i - 1].id).claimed);
+      return this.chapterAvailability(id)?.available ?? false;
     }
     current(id) {
       const chapter = this.bundle.adventures.find((c) => c.id === id);
       if (!chapter || !this.isAvailable(id)) return;
       const progress = this.data.chapters[id] ?? (this.data.chapters[id] = createChapterProgress());
+      progress.step = chapter.steps.length;
       return { chapter, progress };
     }
-    normalizePuzzle(chapter, progress) {
-      if (chapter.puzzle.kind === "find") {
-        progress.found = progress.found.filter((id) => chapter.puzzle.kind === "find" && chapter.puzzle.hotspots.some((h) => h.id === id));
-      } else if (chapter.puzzle.kind === "sequence") {
-        progress.selected = progress.selected.filter((id) => chapter.puzzle.kind === "sequence" && chapter.puzzle.tiles.some((t) => t.id === id));
-      } else if (progress.rotations.length !== chapter.puzzle.ports.length) {
+    classicDefinition(chapter) {
+      return { puzzle: chapter.puzzle, instruction: chapter.instruction, hints: chapter.hints, variantId: "classic" };
+    }
+    variantDefinition(chapter, variantId) {
+      if (variantId === "classic") return this.classicDefinition(chapter);
+      const variant = chapter.replayVariants?.find((candidate) => candidate.id === variantId);
+      return variant ? { puzzle: variant.puzzle, instruction: variant.instruction, hints: variant.hints, variantId: variant.id } : void 0;
+    }
+    normalizePuzzle(puzzle, progress) {
+      if (puzzle.kind === "find") {
+        progress.found = progress.found.filter((id) => puzzle.hotspots.some((hotspot) => hotspot.id === id));
+        progress.selected = [];
         progress.rotations = [];
+        if (progress.code.length > puzzle.solution.length || !Array.from(progress.code).every((digit) => digit >= "0" && digit <= "9")) progress.code = "";
+      } else if (puzzle.kind === "sequence") {
+        progress.found = [];
+        progress.selected = progress.selected.filter((id) => puzzle.tiles.some((tile) => tile.id === id));
+        progress.rotations = [];
+        progress.code = "";
+      } else {
+        progress.found = [];
+        progress.selected = [];
+        progress.code = "";
+        if (progress.rotations.length !== puzzle.ports.length || !progress.rotations.every((rotation) => Number.isInteger(rotation) && rotation >= 0 && rotation < 4)) {
+          progress.rotations = [];
+        }
       }
     }
     changed(reason) {
@@ -3693,7 +7484,7 @@
     }
     store(index) {
       const item = this.board.getBoard().cells[index]?.item;
-      if (!item) return { ok: false, reason: "INVALID" };
+      if (!item || this.board.getBoard().cells[index]?.locked) return { ok: false, reason: "INVALID" };
       if (this.data.warehouse.length >= this.bundle.game.toolbox.warehouseSlots) return { ok: false, reason: "WAREHOUSE_FULL" };
       const next = cloneBoard(this.board.getBoard());
       next.cells[index].item = void 0;
@@ -3705,20 +7496,32 @@
       const at = this.data.warehouse.findIndex((item) => item.uid === uid);
       if (at < 0) return { ok: false, reason: "INVALID" };
       const next = cloneBoard(this.board.getBoard());
-      const empty = next.cells.find((cell) => !cell.item);
+      const empty = next.cells.find((cell) => !cell.locked && !cell.item);
       if (!empty) return { ok: false, reason: "BOARD_FULL" };
       empty.item = { ...this.data.warehouse[at] };
       this.data.warehouse.splice(at, 1);
       this.board.replaceBoard(next, "tool");
       return this.changed("warehouse");
     }
+    takeScissors() {
+      if (this.data.scissors <= 0) return { ok: false, reason: "NO_SCISSORS" };
+      if (this.board.isFull()) return { ok: false, reason: "BOARD_FULL" };
+      const result = this.board.spawn("scissors_01");
+      if (!result.ok) return result;
+      this.data.scissors -= 1;
+      return this.changed("scissors");
+    }
+    grantScissors(count) {
+      this.data.scissors += Math.max(0, Math.floor(count));
+      this.changed("scissors");
+    }
     split(index) {
       const item = this.board.getBoard().cells[index]?.item;
       const previous = item && Array.from(this.bundle.catalog.values()).find((d) => d.nextItemId === item.definitionId);
-      if (!item || !previous) return { ok: false, reason: "CANNOT_SPLIT" };
+      if (!item || !previous || this.bundle.catalog.get(item.definitionId)?.maxUses || this.board.getBoard().cells[index]?.locked) return { ok: false, reason: "CANNOT_SPLIT" };
       if (this.data.scissors <= 0) return { ok: false, reason: "NO_SCISSORS" };
       const next = cloneBoard(this.board.getBoard());
-      const empty = next.cells.find((cell) => !cell.item);
+      const empty = next.cells.find((cell) => !cell.locked && !cell.item);
       if (!empty) return { ok: false, reason: "BOARD_FULL" };
       const used = /* @__PURE__ */ new Set([...next.cells.flatMap((c) => c.item ? [c.item.uid] : []), ...this.data.warehouse.map((i) => i.uid)]);
       let uid = this.ids.next();
@@ -3741,8 +7544,7 @@
       this.life.record("orders");
       return this.changed("chapter");
     }
-    applyPuzzle(chapter, progress, action, value) {
-      const puzzle = chapter.puzzle;
+    applyPuzzle(puzzle, progress, action, value) {
       if (action === "find" && puzzle.kind === "find" && puzzle.hotspots.some((h) => h.id === value)) {
         if (!progress.found.includes(value)) progress.found.push(value);
       } else if (action === "select" && puzzle.kind === "sequence" && puzzle.tiles.some((t) => t.id === value)) {
@@ -3770,7 +7572,8 @@
       const progress = replay ?? current.progress;
       if (!replay && current.progress.step < current.chapter.steps.length) return { ok: false, reason: "NOT_READY" };
       if (progress.outcome !== "playing") return { ok: false, reason: "NOT_READY" };
-      if (!this.applyPuzzle(current.chapter, progress, action, value)) return { ok: false, reason: "INVALID" };
+      const definition = this.activeDefinition(current.chapter, id);
+      if (!this.applyPuzzle(definition.puzzle, progress, action, value)) return { ok: false, reason: "INVALID" };
       return this.changed("chapter");
     }
     hint(id) {
@@ -3780,7 +7583,7 @@
       const progress = replay ?? current.progress;
       if (!replay && current.progress.step < current.chapter.steps.length) return { ok: false, reason: "LOCKED" };
       if (progress.outcome !== "playing") return { ok: false, reason: "NOT_READY" };
-      progress.hints = Math.min(current.chapter.hints.length, progress.hints + 1);
+      progress.hints = Math.min(this.activeDefinition(current.chapter, id).hints.length, progress.hints + 1);
       return this.changed("chapter");
     }
     solve(id, skip = false) {
@@ -3791,15 +7594,42 @@
       const { chapter } = current;
       if (!replay && current.progress.step < chapter.steps.length) return { ok: false, reason: "NOT_READY" };
       if (progress.outcome !== "playing") return { ok: false, reason: "NOT_READY" };
-      const puzzle = chapter.puzzle;
+      const puzzle = this.activeDefinition(chapter, id).puzzle;
       const correct = puzzle.kind === "find" ? progress.found.length === puzzle.hotspots.length && progress.code === puzzle.solution : puzzle.kind === "sequence" ? JSON.stringify(progress.selected) === JSON.stringify(puzzle.solution) : circuitState(puzzle, progress.rotations).solved;
       if (!skip && !correct) return { ok: false, reason: "WRONG_ANSWER" };
       progress.outcome = skip ? "skipped" : "solved";
+      if (replay) {
+        const stats = this.replayStats(id);
+        if (skip) stats.skipped += 1;
+        else {
+          stats.solved += 1;
+          stats.bestSolvedHints = stats.bestSolvedHints === null ? progress.hints : Math.min(stats.bestSolvedHints, progress.hints);
+        }
+        stats.totalHints += progress.hints;
+      }
       return this.changed("chapter");
     }
     circuit(id) {
-      const chapter = this.bundle.adventures.find((c) => c.id === id);
-      return chapter?.puzzle.kind === "circuit" ? circuitState(chapter.puzzle, this.puzzleProgress(id).rotations) : void 0;
+      const definition = this.puzzleDefinition(id);
+      return definition?.puzzle.kind === "circuit" ? circuitState(definition.puzzle, this.puzzleProgress(id).rotations) : void 0;
+    }
+    replayStats(id) {
+      return this.data.replayStats[id] ?? (this.data.replayStats[id] = createReplayStats());
+    }
+    beginReplay(chapter) {
+      const stats = this.replayStats(chapter.id);
+      const variants = [
+        this.classicDefinition(chapter),
+        ...(chapter.replayVariants ?? []).map((variant2) => ({
+          puzzle: variant2.puzzle,
+          instruction: variant2.instruction,
+          hints: variant2.hints,
+          variantId: variant2.id
+        }))
+      ];
+      const variant = variants[stats.started % variants.length];
+      stats.started += 1;
+      this.data.replays[chapter.id] = createReplayProgress(variant.variantId);
     }
     /** Start a free practice run, or resume the one already in progress. */
     startReplay(id) {
@@ -3807,15 +7637,15 @@
       if (!chapter) return { ok: false, reason: "LOCKED" };
       if (!this.progress(id).claimed) return { ok: false, reason: "NOT_CLAIMED" };
       const existing = this.data.replays[id];
-      if (!existing || existing.outcome !== "playing") this.data.replays[id] = createReplayProgress();
+      if (!existing || existing.outcome !== "playing") this.beginReplay(chapter);
       return this.changed("chapter");
     }
-    /** Explicitly discard practice progress and begin the same chapter again. */
+    /** Explicitly discard practice progress and begin a new counted run. */
     restartReplay(id) {
       const chapter = this.bundle.adventures.find((c) => c.id === id);
       if (!chapter) return { ok: false, reason: "LOCKED" };
       if (!this.progress(id).claimed) return { ok: false, reason: "NOT_CLAIMED" };
-      this.data.replays[id] = createReplayProgress();
+      this.beginReplay(chapter);
       return this.changed("chapter");
     }
     claim(id) {
@@ -3856,8 +7686,14 @@
       }
     }
     smallDateOrder() {
-      const template = this.bundle.smallDates.find((date) => date.id === this.data.smallDate.currentId);
-      if (!template || !this.smallDatePool().some((date) => date.id === template.id)) return void 0;
+      const original = this.bundle.smallDates.find((date) => date.id === this.data.smallDate.currentId);
+      if (!original || !this.smallDatePool().some((date) => date.id === original.id)) return void 0;
+      const counts = /* @__PURE__ */ new Map();
+      for (const req of original.requirements) {
+        const id = this.projectItem(req.itemId);
+        counts.set(id, (counts.get(id) ?? 0) + req.count);
+      }
+      const template = { ...original, requirements: Array.from(counts.entries()).map(([itemId, count]) => ({ itemId, count })) };
       const progress = this.board.getOrderProgress(template);
       return {
         template,
@@ -3898,6 +7734,17 @@
   var GameContext = class {
     constructor(options = {}) {
       this.bus = new GameEventBus();
+      this.inboxRef = [];
+      this.reservedIds = /* @__PURE__ */ new Set();
+      this.discovered = [];
+      this.claimedDiscoveries = [];
+      this.claimedCollections = [];
+      this.legacyBoardEntitlement = false;
+      this.retainedOpenCellIndices = [];
+      this.exchanging = false;
+      this.purchasingGenerator = false;
+      this.orderRefreshAt = [];
+      this.checkIn = { lastClaimDay: null, claims: 0 };
       this.bootState = "BOOT";
       this.bootError = null;
       this.saveFailed = false;
@@ -3905,10 +7752,17 @@
       this.logger = options.logger ?? new GameLogger(true);
       this.bundle = options.config ?? loadConfigBundle();
       this.config = this.bundle.game;
+      this.bus.on("ITEM_SPAWNED", ({ definitionId }) => this.recordBaseAcquisition(definitionId));
       this.platform = new PlatformService(options.storage);
       this.clock = options.clock ?? (options.deterministic ? new FakeClockService() : new SystemClockService());
       this.random = options.random ?? (options.deterministic ? new FixedRandomService([0]) : new SystemRandomService());
-      this.ids = options.ids ?? (options.deterministic ? new SequentialIdService("det") : new IdService());
+      const sourceIds = options.ids ?? (options.deterministic ? new SequentialIdService("det") : new IdService());
+      this.ids = { next: () => {
+        let id = sourceIds.next();
+        while (this.reservedIds.has(id)) id = sourceIds.next();
+        this.reservedIds.add(id);
+        return id;
+      } };
       this.saveService = new SaveService({
         storage: this.platform.getStorage(),
         clock: this.clock,
@@ -3918,6 +7772,8 @@
         debounceMs: options.saveDebounceMs ?? 200,
         logger: (m) => this.logger.debug("SAVE", m),
         legacyStarterFurnitureId: this.bundle.furniture[0]?.id,
+        energyCaps: this.config.energy.maxByLevel,
+        collection: this.config.collection,
         onWrite: (result) => {
           this.saveFailed = !result.ok;
           if (result.ok) this.bus.emit("GAME_SAVED", { savedAt: result.savedAt });
@@ -3930,6 +7786,16 @@
     }
     get tutorial() {
       return this.tutorialRef;
+    }
+    get preferences() {
+      return { ...this.preferencesRef };
+    }
+    setPreferences(patch) {
+      this.preferencesRef = {
+        soundEnabled: typeof patch.soundEnabled === "boolean" ? patch.soundEnabled : this.preferencesRef.soundEnabled,
+        vibrationEnabled: typeof patch.vibrationEnabled === "boolean" ? patch.vibrationEnabled : this.preferencesRef.vibrationEnabled
+      };
+      this.save();
     }
     get gameConfig() {
       return this.config;
@@ -3959,11 +7825,23 @@
           data = loaded.defaultData;
           this.logger.debug("SAVE", `using default (${loaded.reason})`);
         }
+        for (const id of [...data.board.flatMap((c) => c.item ? [c.item.uid] : []), ...data.rewardInbox.map((i) => i.uid), ...data.play.warehouse.map((i) => i.uid), ...data.activeOrders.map((o) => o.uid)]) this.reservedIds.add(id);
+        this.inboxRef = data.rewardInbox.map((i) => ({ ...i }));
+        this.discovered = [...data.discoveredItemIds];
+        for (const item of [...data.board.flatMap((cell) => cell.item ? [cell.item] : []), ...data.play.warehouse, ...data.rewardInbox]) this.recordBaseAcquisition(item.definitionId, false);
+        this.claimedDiscoveries = [...data.claimedDiscoveryIds];
+        this.claimedCollections = [...data.claimedCollectionIds ?? []];
+        this.legacyBoardEntitlement = data.legacyBoardEntitlement;
+        this.retainedOpenCellIndices = [...data.retainedOpenCellIndices ?? []];
+        this.checkIn = { ...data.checkIn };
+        this.orderRefreshAt = [...data.orderRefreshAt ?? []];
+        this.dailyTasks = data.dailyTasks ? { ...data.dailyTasks, progress: { ...data.dailyTasks.progress }, claimedIds: [...data.dailyTasks.claimedIds] } : void 0;
         this.playerRef = {
           ...data.player,
           unlockedChainIds: [...data.player.unlockedChainIds]
         };
         this.tutorialRef = { ...data.tutorial };
+        this.preferencesRef = { ...data.preferences };
         this.lifeRef = {
           ...data.life,
           unlockedMemoryIds: [...data.life.unlockedMemoryIds],
@@ -3972,7 +7850,8 @@
           claimedWishIds: [...data.life.claimedWishIds],
           claimedLevelRewards: [...data.life.claimedLevelRewards],
           photoPaths: [...data.life.photoPaths],
-          stats: { ...data.life.stats }
+          stats: { ...data.life.stats },
+          furniturePositions: Object.fromEntries(Object.entries(data.life.furniturePositions).map(([id, position]) => [id, { ...position }]))
         };
         this.board = new BoardService(
           this.bundle.catalog,
@@ -3986,6 +7865,8 @@
             cells: data.board
           })
         );
+        this.board.configureUnlocks(this.playerRef.level, this.config.board.unlocks, this.retainedOpenCellIndices);
+        this.bus.on("LEVEL_UP", ({ level }) => this.board.configureUnlocks(level, this.config.board.unlocks, this.retainedOpenCellIndices));
         this.energy = new EnergyService(
           this.playerRef,
           this.clock,
@@ -3996,7 +7877,10 @@
           this.playerRef,
           this.bundle.progression,
           this.bundle.generators,
-          this.bus
+          this.bus,
+          this.config.energy.maxByLevel,
+          () => this.claimedCollections.length * this.config.collection.energyPerChain,
+          this.config.collection.maxEnergyCap
         );
         this.life = new LifeService(
           this.lifeRef,
@@ -4015,8 +7899,13 @@
           this.energy,
           this.playerRef,
           this.random,
-          this.clock
+          this.clock,
+          data.generatorCharges ?? {},
+          data.generatorInventory ?? {},
+          data.generatorCooldowns ?? {}
         );
+        this.bus.on("LEVEL_UP", () => this.generators.ensureUnlockedCharges());
+        this.bus.on("LEVEL_UP", () => this.energy.markRegenPoint());
         this.orders = new OrderService(
           this.bundle.orders,
           this.bundle.catalog,
@@ -4028,11 +7917,25 @@
           this.bus,
           this.config.orders.activeSlots,
           this.config.orders.minItemLevel,
-          this.config.orders.maxItemLevel
+          this.config.orders.maxItemLevel,
+          this.bundle.generators.filter((g) => g.recharge).map((g) => g.chainId),
+          this.clock,
+          this.config.orders.dynamic,
+          (id) => this.projectProducerItem(id),
+          (chain) => this.producerLevel(chain),
+          (id) => this.canProduceOrderItem(id),
+          (chain) => {
+            const generator = this.bundle.generators.find((entry) => entry.chainId === chain);
+            return this.player.level < 15 ? generator?.recharge?.capacity ?? Infinity : Infinity;
+          }
         );
         this.orders.hydrate(data.activeOrders, data.recentOrderIds ?? []);
         this.orders.ensureFilled();
-        this.play = new PlayService(data.play, this.bundle, this.board, this.ids, this.bus, this.progression, this.energy, this.life);
+        this.play = new PlayService(data.play, this.bundle, this.board, this.ids, this.bus, this.progression, this.energy, this.life, (id) => this.projectProducerItem(id));
+        this.journal = new JournalService(data.journal, this.clock, this.energy, () => {
+          this.bus.emit("JOURNAL_CHANGED", {});
+          this.save();
+        });
         this.bootState = "RECOVER_ENERGY";
         this.energy.tick();
         this.bootState = "INIT_GAME";
@@ -4047,9 +7950,87 @@
         throw err;
       }
     }
-    spawnFromGenerator(generatorId) {
-      const result = this.generators.spawn(generatorId);
+    getGeneratorStatus(id) {
+      return this.generators.getStatus(id);
+    }
+    getGeneratorPurchaseQuote(id) {
+      const generator = this.generators.get(id);
+      if (!generator) return { ok: false, reason: "NOT_FOUND" };
+      if (!this.generators.isUnlocked(generator)) return { ok: false, reason: "LOCKED" };
+      return { ok: true, generatorId: id, cost: generator.purchaseCoins };
+    }
+    purchaseGenerator(id) {
+      if (this.purchasingGenerator) return { ok: false, reason: "IN_PROGRESS" };
+      const quote = this.getGeneratorPurchaseQuote(id);
+      if (!quote.ok) return quote;
+      if (this.player.coins < quote.cost) return { ok: false, reason: "NOT_ENOUGH_COINS" };
+      this.purchasingGenerator = true;
+      try {
+        if (!this.progression.spendCoins(quote.cost)) return { ok: false, reason: "NOT_ENOUGH_COINS" };
+        const result = this.generators.grantPurchased(id);
+        if (!result.ok) {
+          this.progression.addCoins(quote.cost);
+          return result;
+        }
+        this.bus.emit("GENERATOR_CHANGED", { generatorId: id });
+        this.save();
+        return { ...quote, inventory: result.inventory };
+      } finally {
+        this.purchasingGenerator = false;
+      }
+    }
+    getGeneratorRestoreQuote(id) {
+      const generator = this.generators.get(id), status = this.generators.getStatus(id);
+      if (!generator || !status) return { ok: false, reason: "NOT_FOUND" };
+      if (!status.unlocked) return { ok: false, reason: "LOCKED" };
+      if (generator.recharge && status.charges === 0) return {
+        ok: true,
+        generatorId: id,
+        kind: "charges",
+        cost: this.config.generatorRestore.chargeCost,
+        restoredUses: generator.recharge.capacity,
+        remainingMs: status.nextRecoveryMs ?? 0
+      };
+      if (generator.streakCooldown && status.remainingCooldownMs > 0 && status.streak >= generator.streakCooldown.uses) return {
+        ok: true,
+        generatorId: id,
+        kind: "cooldown",
+        cost: this.config.generatorRestore.cooldownCost,
+        restoredUses: generator.streakCooldown.uses,
+        remainingMs: status.remainingCooldownMs
+      };
+      return { ok: false, reason: "NOT_NEEDED" };
+    }
+    restoreGenerator(id) {
+      if (this.exchanging) return { ok: false, reason: "IN_PROGRESS" };
+      const quote = this.getGeneratorRestoreQuote(id);
+      if (!quote.ok) return quote;
+      if (this.player.diamonds < quote.cost) return { ok: false, reason: "NOT_ENOUGH_DIAMONDS" };
+      this.exchanging = true;
+      try {
+        const restored = this.generators.restoreExhausted(id);
+        if (!restored.ok) return restored;
+        this.player.diamonds -= quote.cost;
+        this.bus.emit("GENERATOR_CHANGED", { generatorId: id });
+        this.bus.emit("REWARDS_CHANGED", { reason: "exchange" });
+        this.save();
+        return { ...quote, kind: restored.kind, restoredUses: restored.restoredUses };
+      } finally {
+        this.exchanging = false;
+      }
+    }
+    spawnFromGenerator(generatorId, boost = false) {
+      const result = this.generators.spawn(generatorId, boost);
       if (result.ok) {
+        const generator = this.generators.get(generatorId);
+        const level = this.generators.getStatus(generatorId)?.level ?? 0;
+        for (const drop of this.config.generationBonusDrops) {
+          if (!generator || drop.generatorId !== "*" && drop.generatorId !== generatorId || level < drop.minLevel || drop.excludeRecharge && generator.recharge) continue;
+          if (this.random.next() < drop.chance) {
+            if (!this.board.spawn(drop.itemId).ok) this.enqueue(drop.itemId);
+          }
+        }
+        this.bus.emit("GENERATOR_CHANGED", { generatorId });
         this.life.record("spawns");
         if (!this.tutorialRef.generatorClicked) {
           this.tutorialRef.generatorClicked = true;
@@ -4060,24 +8041,72 @@
       }
       return result;
     }
+    mergeGenerators(id, level) {
+      const result = this.generators.merge(id, level);
+      if (result.ok) {
+        this.orders.reconcileRequirements();
+        this.ensureDailyTasks();
+        this.bus.emit("GENERATOR_CHANGED", { generatorId: id });
+        this.save();
+      }
+      return result;
+    }
+    producerLevel(chainId) {
+      const generator = this.bundle.generators.find((entry) => entry.chainId === chainId);
+      return generator ? Math.max(1, this.generators.getStatus(generator.id)?.level ?? 1) : 1;
+    }
+    canProduceOrderItem(id) {
+      const item = this.bundle.catalog.get(id);
+      if (!item || item.wildcard || item.maxUses) return false;
+      const direct = this.bundle.generators.find((generator) => generator.chainId === item.chainId);
+      if (direct) return this.generators.getStatus(direct.id)?.unlocked === true;
+      return this.config.generationBonusDrops.some((drop) => {
+        const source = this.generators.getStatus(drop.generatorId);
+        return drop.chance > 0 && source?.unlocked && source.level >= drop.minLevel && this.bundle.catalog.get(drop.itemId)?.chainId === item.chainId;
+      });
+    }
+    projectProducerItem(id, mergeResult = false) {
+      const item = this.bundle.catalog.get(id);
+      if (!item) return id;
+      const generator = this.bundle.generators.find((entry) => entry.chainId === item.chainId);
+      if (!generator) return id;
+      const level = Math.max(item.level, this.producerLevel(item.chainId) + (mergeResult ? 1 : 0));
+      return this.bundle.items.find((candidate) => candidate.chainId === item.chainId && candidate.level === level)?.id ?? id;
+    }
     dropItem(from, to) {
       const result = this.board.tryDrop(from, to);
       if (result.ok && result.kind === "MERGE") {
         this.life.record("merges");
+        this.handleMerge(result.resultDefinitionId);
+        this.recordDaily("merges", result.resultDefinitionId);
         if (!this.tutorialRef.firstMergeCompleted) {
           this.tutorialRef.firstMergeCompleted = true;
           this.bus.emit("TUTORIAL_UPDATED", { ...this.tutorialRef });
         }
       }
       if (result.ok) {
+        if (result.kind === "SPLIT") this.acknowledgeFirstUseHint("scissors");
+        if (result.kind === "SPLIT" && to !== null) {
+          const item = this.board.getBoard().cells[to].item;
+          if (item) this.recordBaseAcquisition(item.definitionId);
+        }
         this.orders.refreshProgressHints();
         this.save();
       }
       return result;
     }
     playAction(action, value) {
-      const result = action === "store" ? this.play.store(Number(value)) : action === "withdraw" ? this.play.withdraw(value) : action === "split" ? this.play.split(Number(value)) : action === "deliver" ? this.play.deliver(value) : action === "hint" ? this.play.hint(value) : action === "claim" ? this.play.claim(value) : action === "replay" ? this.play.startReplay(value) : action === "replay_reset" ? this.play.restartReplay(value) : action === "small_date" ? this.play.deliverSmallDate(value) : this.play.solve(value, action === "skip");
+      const result = action === "take_scissors" ? this.play.takeScissors() : action === "store" ? this.play.store(Number(value)) : action === "withdraw" ? this.play.withdraw(value) : action === "split" ? this.play.split(Number(value)) : action === "deliver" ? this.play.deliver(value) : action === "hint" ? this.play.hint(value) : action === "claim" ? this.play.claim(value) : action === "replay" ? this.play.startReplay(value) : action === "replay_reset" ? this.play.restartReplay(value) : action === "small_date" ? this.play.deliverSmallDate(value) : this.play.solve(value, action === "skip");
       if (result.ok) {
+        if (action === "store") this.acknowledgeFirstUseHint("backpack");
+        if (action === "split") this.acknowledgeFirstUseHint("scissors");
+        if (action === "split") {
+          const item = this.board.getBoard().cells[Number(value)]?.item;
+          if (item) this.recordBaseAcquisition(item.definitionId);
+        } else if (action === "withdraw") {
+          const item = this.board.getBoard().cells.find((cell) => cell.item?.uid === value)?.item;
+          if (item) this.recordBaseAcquisition(item.definitionId);
+        }
         this.orders.refreshProgressHints();
         this.save();
       }
@@ -4087,6 +8116,35 @@
       const result = this.play.act(id, action, value);
       if (result.ok) this.save();
       return result;
+    }
+    acknowledgeFirstUseHint(hint) {
+      if (!["backpack", "scissors", "chest"].includes(hint)) return { ok: false, reason: "INVALID" };
+      if (this.tutorialRef.firstUseHints?.includes(hint)) return { ok: false, reason: "ALREADY_ACKNOWLEDGED" };
+      this.tutorialRef.firstUseHints = [...this.tutorialRef.firstUseHints ?? [], hint];
+      this.bus.emit("TUTORIAL_UPDATED", { ...this.tutorialRef });
+      this.save();
+      return { ok: true };
+    }
+    getFirstUseGuide() {
+      if (this.bootState !== "READY" || !this.tutorialRef.firstOrderCompleted && this.life.state.stats.orders === 0) return;
+      const seen = new Set(this.tutorialRef.firstUseHints ?? []), board = this.board.getBoard();
+      if (!seen.has("chest")) {
+        const source = board.cells.find((cell) => cell.item && this.bundle.catalog.get(cell.item.definitionId)?.chainId === "treasure_chest");
+        if (source) return { hint: "chest", sourceIndex: source.index };
+        if (this.inboxRef.some((item) => this.bundle.catalog.get(item.definitionId)?.chainId === "treasure_chest")) return { hint: "chest" };
+      }
+      if (!seen.has("scissors")) {
+        const source = board.cells.find((cell) => cell.item && this.bundle.catalog.get(cell.item.definitionId)?.maxUses);
+        if (source) {
+          const target = board.cells.find((cell) => this.board.previewDrop(source.index, cell.index).kind === "SPLIT");
+          return { hint: "scissors", sourceIndex: source.index, ...target ? { targetIndex: target.index } : {} };
+        }
+      }
+      const open = board.cells.filter((cell) => !cell.locked), occupied = open.filter((cell) => cell.item);
+      if (!seen.has("backpack") && occupied.length >= Math.min(6, Math.max(2, open.length - 2)) && this.play.state.warehouse.length < this.config.toolbox.warehouseSlots) {
+        const source = occupied.find((cell) => cell.item && !this.bundle.catalog.get(cell.item.definitionId)?.maxUses);
+        if (source) return { hint: "backpack", sourceIndex: source.index };
+      }
     }
     getMergeHint() {
       return this.board.getMergeHint();
@@ -4113,7 +8171,12 @@
     }
     claimLevelReward(level) {
       const result = this.life.claimLevelReward(level);
-      if (result.ok) this.save();
+      if (result.ok) {
+        this.enqueue("treasure_chest");
+        const generatorId = this.generators.grantLevelReward(level, this.bundle.levelRewards.generatorRotation ?? []);
+        if (generatorId) this.bus.emit("GENERATOR_CHANGED", { generatorId });
+        this.save();
+      }
       return result;
     }
     addPhoto(path) {
@@ -4128,6 +8191,7 @@
       const result = this.orders.claim(orderUid);
       if (result.ok) {
         this.life.record("orders");
+        this.recordDaily("orders");
         if (!this.tutorialRef.firstOrderCompleted) {
           this.tutorialRef.firstOrderCompleted = true;
           this.bus.emit("TUTORIAL_UPDATED", { ...this.tutorialRef });
@@ -4169,12 +8233,26 @@
           ...this.playerRef,
           unlockedChainIds: [...this.playerRef.unlockedChainIds]
         },
+        generatorCharges: this.generators.getChargeStates(),
+        generatorInventory: this.generators.getInventory(),
+        generatorCooldowns: this.generators.getCooldownStates(),
+        claimedCollectionIds: [...this.claimedCollections],
+        orderRefreshAt: [...this.orderRefreshAt],
+        dailyTasks: this.dailyTasks ? { ...this.dailyTasks, progress: { ...this.dailyTasks.progress }, claimedIds: [...this.dailyTasks.claimedIds] } : void 0,
+        journal: this.journal.state,
+        legacyBoardEntitlement: this.legacyBoardEntitlement,
+        retainedOpenCellIndices: [...this.retainedOpenCellIndices],
+        rewardInbox: this.inboxRef.map((i) => ({ ...i })),
+        discoveredItemIds: [...this.discovered],
+        claimedDiscoveryIds: [...this.claimedDiscoveries],
+        checkIn: { ...this.checkIn },
         board: this.board.getBoard().cells.map((c) => ({
           index: c.index,
           item: c.item ? { ...c.item } : void 0
         })),
         activeOrders: this.orders.getOrders(),
         tutorial: { ...this.tutorialRef },
+        preferences: { ...this.preferencesRef },
         play: this.play.state,
         recentOrderIds: this.orders.getRecentIds(),
         life: {
@@ -4185,7 +8263,8 @@
           claimedWishIds: [...this.lifeRef.claimedWishIds],
           claimedLevelRewards: [...this.lifeRef.claimedLevelRewards],
           photoPaths: [...this.lifeRef.photoPaths],
-          stats: { ...this.lifeRef.stats }
+          stats: { ...this.lifeRef.stats },
+          furniturePositions: Object.fromEntries(Object.entries(this.lifeRef.furniturePositions).map(([id, position]) => [id, { ...position }]))
         }
       };
     }
@@ -4198,6 +8277,259 @@
     }
     flushSave() {
       this.saveService.flush();
+    }
+    /** Legacy callers cannot replace an order or spend diamonds. */
+    getOrderRefreshStatus(_uid) {
+      return null;
+    }
+    refreshOrderClock() {
+      if (this.orders.expireUrgentOrders()) {
+        this.save();
+        this.orders.refreshProgressHints();
+      }
+    }
+    getTodayJournal() {
+      return this.journal.today();
+    }
+    getJournalEntries() {
+      return this.journal.entries();
+    }
+    saveTodayJournal(text, photoPath) {
+      return this.journal.saveToday(text, photoPath);
+    }
+    refreshOrder(_uid, _mode) {
+      return { ok: false, reason: "DISABLED" };
+    }
+    ensureDailyTasks() {
+      const day = businessDayUtc8(this.clock.now());
+      if (this.dailyTasks && day <= this.dailyTasks.day) {
+        const task = this.config.rewards.dailyTasks.find((entry) => entry.kind === "specific");
+        if (!task || this.dailyTasks.claimedIds.includes(task.id) || (this.dailyTasks.progress[task.id] ?? 0) >= task.target) return false;
+        const target = this.projectProducerItem(this.dailyTasks.targetItemId, true);
+        if (target === this.dailyTasks.targetItemId) return false;
+        this.dailyTasks.targetItemId = target;
+        this.bus.emit("DAILY_TASKS_CHANGED", { day: this.dailyTasks.day });
+        return true;
+      }
+      const unlocked = new Set(this.player.unlockedChainIds);
+      const producerChains = new Set(this.bundle.generators.filter((g) => unlocked.has(g.chainId)).map((g) => g.chainId));
+      const choices = this.bundle.items.filter((item) => item.level === 2 && producerChains.has(item.chainId));
+      const index = (day % choices.length + choices.length) % choices.length;
+      this.dailyTasks = { day, targetItemId: this.projectProducerItem(choices[index]?.id ?? "coffee_02", true), progress: {}, claimedIds: [] };
+      return true;
+    }
+    recordDaily(kind, itemId) {
+      this.ensureDailyTasks();
+      const state = this.dailyTasks;
+      for (const task of this.config.rewards.dailyTasks) {
+        if (task.kind === kind || kind === "merges" && task.kind === "specific" && state.targetItemId === itemId) state.progress[task.id] = Math.min(task.target, (state.progress[task.id] ?? 0) + 1);
+      }
+      this.bus.emit("DAILY_TASKS_CHANGED", { day: state.day });
+    }
+    getDailyTasks() {
+      if (this.ensureDailyTasks()) this.save();
+      const state = this.dailyTasks;
+      return { day: state.day, tasks: this.config.rewards.dailyTasks.map((task) => {
+        const progress = state.progress[task.id] ?? 0, claimed = state.claimedIds.includes(task.id);
+        return { id: task.id, title: task.title, target: task.target, progress, claimed, ready: !claimed && progress >= task.target, reward: { ...task.reward }, ...task.kind === "specific" ? { targetItemId: state.targetItemId } : {} };
+      }) };
+    }
+    claimDailyTask(id) {
+      this.ensureDailyTasks();
+      const state = this.dailyTasks, task = this.config.rewards.dailyTasks.find((t) => t.id === id);
+      if (!task) return { ok: false, reason: "NOT_FOUND" };
+      if (state.claimedIds.includes(id)) return { ok: false, reason: "ALREADY_CLAIMED" };
+      if ((state.progress[id] ?? 0) < task.target) return { ok: false, reason: "NOT_READY" };
+      state.claimedIds.push(id);
+      const { coins, xp, diamonds } = task.reward;
+      const energy = task.reward.energy;
+      this.progression.addCoins(coins);
+      this.progression.addXp(xp);
+      this.player.diamonds += diamonds;
+      this.energy.add(energy);
+      this.bus.emit("DAILY_TASKS_CHANGED", { day: state.day });
+      this.save();
+      return { ok: true, coins, xp, energy, diamonds };
+    }
+    get rewardInbox() {
+      return this.inboxRef.map((i) => ({ ...i }));
+    }
+    isItemDiscovered(id) {
+      return this.bundle.catalog.has(id) && this.discovered.includes(id);
+    }
+    getDiscoveryProgress() {
+      return { discovered: this.bundle.items.filter((i) => this.isItemDiscovered(i.id)).length, total: this.bundle.items.length };
+    }
+    getCollectionProgress() {
+      return this.config.collection.chainIds.map((chainId) => {
+        const items = this.bundle.items.filter((item) => item.chainId === chainId);
+        const discovered = items.filter((item) => this.isItemDiscovered(item.id)).length;
+        const claimed = this.claimedCollections.includes(chainId);
+        return { chainId, discovered, total: items.length, claimed, ready: !claimed && items.length > 0 && discovered === items.length, energyBonus: this.config.collection.energyPerChain };
+      });
+    }
+    claimCollectionBonus(chainId) {
+      const collection = this.getCollectionProgress().find((item) => item.chainId === chainId);
+      if (!collection) return { ok: false, reason: "NOT_FOUND" };
+      if (collection.claimed) return { ok: false, reason: "ALREADY_CLAIMED" };
+      if (!collection.ready) return { ok: false, reason: "NOT_READY" };
+      this.claimedCollections.push(chainId);
+      const previous = this.player.maxEnergy;
+      this.progression.syncEnergyCap();
+      this.bus.emit("COLLECTION_CHANGED", { chainId });
+      this.bus.emit("ENERGY_CHANGED", { energy: this.player.energy, maxEnergy: this.player.maxEnergy, delta: 0 });
+      this.save();
+      return { ok: true, energyBonus: this.player.maxEnergy - previous };
+    }
+    newItem(definitionId) {
+      const used = /* @__PURE__ */ new Set([...this.board.getBoard().cells.flatMap((c) => c.item ? [c.item.uid] : []), ...this.inboxRef.map((i) => i.uid), ...this.play.state.warehouse.map((i) => i.uid)]);
+      let uid = this.ids.next();
+      while (used.has(uid)) uid = this.ids.next();
+      return { uid, definitionId };
+    }
+    recordBaseAcquisition(id, notify = true) {
+      const definition = this.bundle.catalog.get(id);
+      if (!definition || definition.level !== 1 || this.discovered.includes(id)) return;
+      this.discovered.push(id);
+      if (notify) this.bus.emit("COLLECTION_CHANGED", { chainId: definition.chainId });
+    }
+    enqueue(id) {
+      this.inboxRef.push(this.newItem(id));
+      this.recordBaseAcquisition(id);
+      this.bus.emit("REWARDS_CHANGED", { reason: "inbox" });
+    }
+    handleMerge(id) {
+      const chain = this.bundle.catalog.get(id)?.chainId;
+      if (chain === "treasure_chest") {
+        if (!this.discovered.includes(id)) {
+          this.discovered.push(id);
+          this.bus.emit("COLLECTION_CHANGED", { chainId: chain });
+        }
+        return;
+      }
+      if (!this.discovered.includes(id)) this.discovered.push(id);
+      if (!this.claimedDiscoveries.includes(id)) {
+        this.claimedDiscoveries.push(id);
+        this.progression.addCoins(this.config.rewards.discoveryCoins);
+        this.bus.emit("DISCOVERY_CHANGED", { definitionId: id });
+      }
+      if (chain && this.config.collection.chainIds.includes(chain) && this.random.next() < this.config.rewards.chestDropChance) {
+        const placed = this.board.spawn("treasure_chest");
+        if (!placed.ok) this.enqueue("treasure_chest");
+      }
+    }
+    claimInboxItem(uid) {
+      const at = this.inboxRef.findIndex((i) => i.uid === uid);
+      if (at < 0) return { ok: false, reason: "NOT_FOUND" };
+      const cell = this.board.getBoard().cells.find((c) => !c.locked && !c.item);
+      if (!cell) return { ok: false, reason: "BOARD_FULL" };
+      cell.item = this.inboxRef.splice(at, 1)[0];
+      this.bus.emit("BOARD_CHANGED", { reason: "tool" });
+      this.bus.emit("REWARDS_CHANGED", { reason: "inbox" });
+      this.save();
+      return { ok: true };
+    }
+    useBoardItem(index, expectedUid) {
+      const cell = this.board.getBoard().cells[index];
+      const item = cell?.item;
+      const def = item && this.bundle.catalog.get(item.definitionId);
+      if (!cell || cell.locked || !item || expectedUid !== void 0 && item.uid !== expectedUid || !def || !["coin", "energy", "diamond", "treasure_chest"].includes(def.chainId)) return { ok: false, reason: "INVALID" };
+      const chest = def.chainId === "treasure_chest" ? this.config.rewards.chestLevels.find((entry) => entry.level === def.level) : void 0;
+      if (def.chainId === "treasure_chest" && !chest) return { ok: false, reason: "INVALID" };
+      const choices = chest ? Array.from({ length: chest.count }, () => pickWeighted(chest.loot ?? this.config.rewards.chestLoot, this.random)) : [];
+      if (choices.some((entry) => !entry)) return { ok: false, reason: "INVALID" };
+      const items = choices.map((entry) => this.newItem(entry.itemId));
+      cell.item = void 0;
+      let amount = def.useValue ?? 0;
+      if (def.chainId === "coin") this.progression.addCoins(amount);
+      if (def.chainId === "energy") this.energy.add(amount);
+      if (def.chainId === "diamond") this.player.diamonds += amount;
+      const loot = items.map((created) => {
+        const empty = this.board.getBoard().cells.find((candidate) => !candidate.locked && !candidate.item);
+        if (empty) empty.item = created;
+        else this.inboxRef.push(created);
+        return { ...created, cellIndex: empty?.index ?? null };
+      });
+      for (const created of items) this.recordBaseAcquisition(created.definitionId);
+      if (chest) this.acknowledgeFirstUseHint("chest");
+      this.bus.emit("BOARD_CHANGED", { reason: "tool" });
+      this.bus.emit("REWARDS_CHANGED", { reason: "used" });
+      this.save();
+      return chest ? { ok: true, amount, loot } : { ok: true, amount };
+    }
+    exchangeDiamonds(offerId) {
+      if (this.exchanging) return { ok: false, reason: "IN_PROGRESS" };
+      const offer = this.config.rewards.exchangeOffers.find((o) => o.id === offerId);
+      if (!offer) return { ok: false, reason: "INVALID" };
+      if (this.player.energy >= this.player.maxEnergy) return { ok: false, reason: "ENERGY_FULL" };
+      if (this.player.diamonds < offer.diamonds) return { ok: false, reason: "NOT_ENOUGH_DIAMONDS" };
+      const energy = Math.min(offer.energy, this.player.maxEnergy - this.player.energy);
+      this.exchanging = true;
+      try {
+        this.player.diamonds -= offer.diamonds;
+        this.energy.add(energy);
+        this.bus.emit("REWARDS_CHANGED", { reason: "exchange" });
+        this.save();
+        return { ok: true, energy };
+      } finally {
+        this.exchanging = false;
+      }
+    }
+    moveFurniture(id, x, y) {
+      if (!this.life.state.ownedFurnitureIds.includes(id) || !this.life.state.placedFurnitureIds.includes(id)) return { ok: false, reason: "LOCKED" };
+      if (!this.bundle.furniture.some((f) => f.id === id)) return { ok: false, reason: "NOT_FOUND" };
+      if (![x, y].every((v) => Number.isFinite(v) && v >= 0 && v <= 1)) return { ok: false, reason: "NOT_READY" };
+      const previous = this.life.state.furniturePositions[id];
+      this.life.state.furniturePositions[id] = { ...previous, x, y };
+      this.bus.emit("LIFE_CHANGED", { reason: "furniture" });
+      this.save();
+      return { ok: true };
+    }
+    setFurnitureTransform(id, patch) {
+      const furniture = this.bundle.furniture.find((item) => item.id === id);
+      if (!furniture) return { ok: false, reason: "NOT_FOUND" };
+      if (!this.life.state.ownedFurnitureIds.includes(id) || !this.life.state.placedFurnitureIds.includes(id)) return { ok: false, reason: "LOCKED" };
+      if (!patch || typeof patch !== "object" || Array.isArray(patch) || patch.scale !== void 0 && (typeof patch.scale !== "number" || !Number.isFinite(patch.scale) || patch.scale < 0.5 || patch.scale > 1.8) || patch.rotation !== void 0 && (typeof patch.rotation !== "number" || !Number.isFinite(patch.rotation) || patch.rotation < -180 || patch.rotation > 180) || patch.flipped !== void 0 && typeof patch.flipped !== "boolean" || patch.x !== void 0 && (typeof patch.x !== "number" || !Number.isFinite(patch.x) || patch.x < 0 || patch.x > 1) || patch.y !== void 0 && (typeof patch.y !== "number" || !Number.isFinite(patch.y) || patch.y < 0 || patch.y > 1)) return { ok: false, reason: "NOT_READY" };
+      const saved = this.life.state.furniturePositions[id];
+      if (!saved && (patch.x === void 0 || patch.y === void 0)) return { ok: false, reason: "NOT_READY" };
+      const previous = saved ?? { x: patch.x, y: patch.y };
+      this.life.state.furniturePositions[id] = {
+        ...previous,
+        x: patch.x ?? previous.x,
+        y: patch.y ?? previous.y,
+        scale: patch.scale ?? previous.scale ?? 1,
+        rotation: patch.rotation ?? previous.rotation ?? 0,
+        flipped: patch.flipped ?? previous.flipped ?? false
+      };
+      this.bus.emit("LIFE_CHANGED", { reason: "furniture" });
+      this.save();
+      return { ok: true };
+    }
+    resetFurniturePosition(id) {
+      if (!this.bundle.furniture.some((f) => f.id === id)) return { ok: false, reason: "NOT_FOUND" };
+      if (!this.life.state.ownedFurnitureIds.includes(id)) return { ok: false, reason: "LOCKED" };
+      delete this.life.state.furniturePositions[id];
+      this.bus.emit("LIFE_CHANGED", { reason: "furniture" });
+      this.save();
+      return { ok: true };
+    }
+    getCheckInStatus() {
+      const day = businessDayUtc8(this.clock.now());
+      return { day, claims: this.checkIn.claims, cycleIndex: this.checkIn.claims % this.config.rewards.checkIn.length, canClaim: this.checkIn.lastClaimDay === null || day > this.checkIn.lastClaimDay, nextReward: { ...this.config.rewards.checkIn[this.checkIn.claims % this.config.rewards.checkIn.length] }, lastClaimDay: this.checkIn.lastClaimDay };
+    }
+    claimDailyCheckIn() {
+      const status = this.getCheckInStatus();
+      if (!status.canClaim) return { ok: false, reason: "ALREADY_CLAIMED" };
+      const { coins, diamonds, energy } = status.nextReward;
+      this.checkIn = { lastClaimDay: status.day, claims: this.checkIn.claims + 1 };
+      this.progression.addCoins(coins);
+      this.player.diamonds += diamonds;
+      this.energy.add(energy);
+      const itemId = status.nextReward.itemId;
+      if (itemId) this.enqueue(itemId);
+      this.bus.emit("CHECK_IN_CHANGED", { day: status.day });
+      this.save();
+      return { ok: true, coins, energy, diamonds, ...itemId ? { itemId } : {} };
     }
     markTutorialFromBoard() {
       this.bus.emit("TUTORIAL_UPDATED", { ...this.tutorialRef });

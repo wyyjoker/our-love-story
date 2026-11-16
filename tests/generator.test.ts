@@ -17,6 +17,7 @@ function makePlayer(): PlayerState {
     level: 1,
     xp: 0,
     coins: 0,
+    diamonds: 0,
     hearts: 0,
     energy: 100,
     maxEnergy: 100,
@@ -31,9 +32,9 @@ describe('Config validation', () => {
     expect(issues).toEqual([]);
   });
 
-  it('has 4 chains × 8 levels', () => {
+  it('has 4 chains × 12 levels', () => {
     const bundle = loadConfigBundle();
-    expect(bundle.items).toHaveLength(32);
+    expect(bundle.items.filter((item) => ['coffee', 'flower', 'dessert', 'gift'].includes(item.chainId))).toHaveLength(48);
   });
 });
 
@@ -80,12 +81,12 @@ describe('GeneratorService', () => {
     expect(player.energy).toBe(99);
   });
 
-  it('weighted output with high roll yields Lv2', () => {
+  it('weighted output with high roll yields Lv3', () => {
     // 0.95 of total 100 �?coffee_02 (15 weight after 85)
     const { gen } = setup([0.95]);
     const result = gen.spawn('coffee_machine');
     expect(result.ok).toBe(true);
-    if (result.ok) expect(result.itemDefinitionId).toBe('coffee_02');
+    if (result.ok) expect(result.itemDefinitionId).toBe('coffee_03');
   });
 
   it('fails when energy = 0 and does not spawn', () => {

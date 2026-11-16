@@ -9,8 +9,8 @@ describe('client safety calculations', () => {
     expect(long.perPage).toBe(4);
     expect(long.extra).toBeGreaterThan(0);
     const page = lifePageLayout(750, 1626);
-    expect(page.y + 500 + long.extra).toBeLessThanOrEqual(1626 / 2 - 144);
-    expect(page.y - 500 - long.extra).toBeGreaterThanOrEqual(-1626 / 2 + 104);
+    expect(page.y + 500 + long.extra).toBeLessThanOrEqual(1626 / 2 - 156);
+    expect(page.y - 500 - long.extra).toBeGreaterThanOrEqual(-1626 / 2 + 144);
   });
   it('crops within each atlas cell without stretching or sampling its neighbours', () => {
     const crop = cropPhoto(400, 400, 294, 158, 0.2);
@@ -25,8 +25,8 @@ describe('client safety calculations', () => {
   it('keeps life-page content between navigation and status on a short notched screen', () => {
     const safe = safeContentRect(750, 1334, { top: 150, bottom: 68, left: 0, right: 0 });
     const page = lifePageLayout(safe.width, safe.height);
-    expect(page.y + 500 * page.scale).toBeLessThanOrEqual(safe.height / 2 - 144);
-    expect(page.y - 500 * page.scale).toBeGreaterThanOrEqual(-safe.height / 2 + 104);
+    expect(page.y + 500 * page.scale).toBeLessThanOrEqual(safe.height / 2 - 156);
+    expect(page.y - 500 * page.scale).toBeGreaterThanOrEqual(-safe.height / 2 + 144);
   });
   it('keeps the full top and bottom safe area on a notched portrait screen', () => {
     const rect = safeContentRect(750, 1626, { top: 144, bottom: 68, left: 0, right: 0 });

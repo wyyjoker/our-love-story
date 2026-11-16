@@ -1,0 +1,5 @@
+AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+  assert.ok(await active('GeneratorRecoveryCountdown'))
+
+    at file:///E:/A-game/tools/qa-cocos-web.mjs:1285:10

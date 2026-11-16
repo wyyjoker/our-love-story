@@ -6,12 +6,12 @@ import { FakeClockService } from '../assets/scripts/infrastructure/ClockService'
 import { GameViewMapper } from '../assets/scripts/presentation/GameViewMapper';
 
 describe('isolated review save', () => {
-  it('reproduces Lv12, 320/600, reference currencies and all 32 item definitions', () => {
+  it('reproduces Lv12, 320/600, reference currencies and a representative selection of item definitions', () => {
     const bundle = loadConfigBundle();
     const data = createDemoSave(bundle, 1000);
     expect(data.player).toMatchObject({ level: 12, xp: 3620, energy: 86, coins: 12460, hearts: 520 });
-    expect(data.board).toHaveLength(81);
-    expect(new Set(data.board.flatMap((cell) => cell.item ? [cell.item.definitionId] : [])).size).toBe(32);
+    expect(data.board).toHaveLength(42);
+    expect(new Set(data.board.flatMap((cell) => cell.item ? [cell.item.definitionId] : [])).size).toBe(41);
     const game = createGameContext({ storage: createDemoStorage(bundle, 1000), clock: new FakeClockService(1000) });
     expect(new GameViewMapper(bundle).mapStatus(game.player, 1000, bundle.game.energy.recoverIntervalMs).xpText).toBe('XP 320 / 600');
     expect(game.life.pendingLevelRewards()).toEqual([]);

@@ -1,0 +1,861 @@
+﻿{
+    "projectRoot":  "E:\\A-game",
+    "apply":  true,
+    "processCheckAvailable":  true,
+    "profileCount":  106,
+    "bytesBefore":  9697785696,
+    "bytesAfter":  0,
+    "freedBytes":  9697785696,
+    "deletedCount":  106,
+    "skippedCount":  0,
+    "records":  [
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T12-26-42-919Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  195222403,
+                        "bytesAfter":  0,
+                        "freedBytes":  195222403,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T12-35-39-528Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  195268876,
+                        "bytesAfter":  0,
+                        "freedBytes":  195268876,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T13-18-32-420Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  106619520,
+                        "bytesAfter":  0,
+                        "freedBytes":  106619520,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T13-26-53-327Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  195252832,
+                        "bytesAfter":  0,
+                        "freedBytes":  195252832,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T13-54-20-630Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  136438947,
+                        "bytesAfter":  0,
+                        "freedBytes":  136438947,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T14-00-22-235Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  139834281,
+                        "bytesAfter":  0,
+                        "freedBytes":  139834281,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T14-07-14-218Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  81073529,
+                        "bytesAfter":  0,
+                        "freedBytes":  81073529,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T14-08-06-984Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  195464696,
+                        "bytesAfter":  0,
+                        "freedBytes":  195464696,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T15-59-19-311Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  72768887,
+                        "bytesAfter":  0,
+                        "freedBytes":  72768887,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-00-16-302Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  73110994,
+                        "bytesAfter":  0,
+                        "freedBytes":  73110994,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-02-16-160Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  191267383,
+                        "bytesAfter":  0,
+                        "freedBytes":  191267383,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-08-59-096Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  72794113,
+                        "bytesAfter":  0,
+                        "freedBytes":  72794113,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-09-39-034Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  107371824,
+                        "bytesAfter":  0,
+                        "freedBytes":  107371824,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-12-54-912Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  193064293,
+                        "bytesAfter":  0,
+                        "freedBytes":  193064293,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-22-32-661Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  75082979,
+                        "bytesAfter":  0,
+                        "freedBytes":  75082979,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-29-29-078Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  196655065,
+                        "bytesAfter":  0,
+                        "freedBytes":  196655065,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-41-11-525Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  73153730,
+                        "bytesAfter":  0,
+                        "freedBytes":  73153730,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-45-08-047Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  87392097,
+                        "bytesAfter":  0,
+                        "freedBytes":  87392097,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-47-14-707Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  88399635,
+                        "bytesAfter":  0,
+                        "freedBytes":  88399635,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-49-39-321Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  29528864,
+                        "bytesAfter":  0,
+                        "freedBytes":  29528864,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-50-05-325Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  29483981,
+                        "bytesAfter":  0,
+                        "freedBytes":  29483981,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-50-30-178Z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  106255832,
+                        "bytesAfter":  0,
+                        "freedBytes":  106255832,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-53-19-804Z-3amhdh\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  78578529,
+                        "bytesAfter":  0,
+                        "freedBytes":  78578529,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-54-30-837Z-vTd3lD\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  78560677,
+                        "bytesAfter":  0,
+                        "freedBytes":  78560677,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-56-23-271Z-AplkxB\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  27569577,
+                        "bytesAfter":  0,
+                        "freedBytes":  27569577,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-57-47-166Z-FMPRqW\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  73103381,
+                        "bytesAfter":  0,
+                        "freedBytes":  73103381,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-57-47-167Z-aZ00qA\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  78546253,
+                        "bytesAfter":  0,
+                        "freedBytes":  78546253,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-59-12-470Z-O7BNl9\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  78579113,
+                        "bytesAfter":  0,
+                        "freedBytes":  78579113,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T17-01-32-018Z-821gmo\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  78743100,
+                        "bytesAfter":  0,
+                        "freedBytes":  78743100,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T17-01-32-019Z-avLOsZ\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  198400635,
+                        "bytesAfter":  0,
+                        "freedBytes":  198400635,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T17-44-43-884Z-JHGzbu\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  74718010,
+                        "bytesAfter":  0,
+                        "freedBytes":  74718010,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T17-45-37-804Z-F38jLJ\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  74732770,
+                        "bytesAfter":  0,
+                        "freedBytes":  74732770,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T17-49-38-420Z-yJVIaf\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  74918183,
+                        "bytesAfter":  0,
+                        "freedBytes":  74918183,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T17-53-17-891Z-Qc3t8Y\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  74897176,
+                        "bytesAfter":  0,
+                        "freedBytes":  74897176,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T17-54-41-053Z-zZdIzQ\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  196214487,
+                        "bytesAfter":  0,
+                        "freedBytes":  196214487,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T18-05-34-943Z-szrV3X\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  112429791,
+                        "bytesAfter":  0,
+                        "freedBytes":  112429791,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T18-09-57-232Z-3CKwPm\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  198433448,
+                        "bytesAfter":  0,
+                        "freedBytes":  198433448,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T18-09-57-269Z-Y8PTkK\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  76638103,
+                        "bytesAfter":  0,
+                        "freedBytes":  76638103,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T23-59-10-095Z-6KRTLO\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  30574353,
+                        "bytesAfter":  0,
+                        "freedBytes":  30574353,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T23-59-10-095Z-Ndh0lH\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  30057005,
+                        "bytesAfter":  0,
+                        "freedBytes":  30057005,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T23-59-49-579Z-cG3gAz\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  74062001,
+                        "bytesAfter":  0,
+                        "freedBytes":  74062001,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T23-59-49-631Z-5zGWMh\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  75497228,
+                        "bytesAfter":  0,
+                        "freedBytes":  75497228,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-14T00-00-48-127Z-fAiD3t\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  75016935,
+                        "bytesAfter":  0,
+                        "freedBytes":  75016935,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-36-21-791Z-HJaSpV\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  76584778,
+                        "bytesAfter":  0,
+                        "freedBytes":  76584778,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-36-21-792Z-LlLvwr\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  122568298,
+                        "bytesAfter":  0,
+                        "freedBytes":  122568298,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-36-21-792Z-tinhEG\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  31111617,
+                        "bytesAfter":  0,
+                        "freedBytes":  31111617,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-37-20-487Z-1ltYLu\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  78739474,
+                        "bytesAfter":  0,
+                        "freedBytes":  78739474,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-45-28-050Z-jEe395\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  76581057,
+                        "bytesAfter":  0,
+                        "freedBytes":  76581057,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-45-28-050Z-YEYXZJ\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  149888273,
+                        "bytesAfter":  0,
+                        "freedBytes":  149888273,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-45-28-071Z-90KAeL\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  80864048,
+                        "bytesAfter":  0,
+                        "freedBytes":  80864048,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-47-50-825Z-IB59b7\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  108850250,
+                        "bytesAfter":  0,
+                        "freedBytes":  108850250,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-56-07-576Z-arCO60\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  153410380,
+                        "bytesAfter":  0,
+                        "freedBytes":  153410380,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-56-07-590Z-YTMZ5I\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  121267451,
+                        "bytesAfter":  0,
+                        "freedBytes":  121267451,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-56-07-605Z-ih4lia\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  122254165,
+                        "bytesAfter":  0,
+                        "freedBytes":  122254165,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-56-07-609Z-ww9lad\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  156191899,
+                        "bytesAfter":  0,
+                        "freedBytes":  156191899,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T11-00-20-353Z-EYAYEV\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  189619685,
+                        "bytesAfter":  0,
+                        "freedBytes":  189619685,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T11-00-20-353Z-XUqPg8\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  141935855,
+                        "bytesAfter":  0,
+                        "freedBytes":  141935855,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T11-09-51-640Z-WVunJW\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  199993036,
+                        "bytesAfter":  0,
+                        "freedBytes":  199993036,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T11-09-51-651Z-zOiKZx\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  111921750,
+                        "bytesAfter":  0,
+                        "freedBytes":  111921750,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T11-13-24-301Z-7ViC0w\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  75156469,
+                        "bytesAfter":  0,
+                        "freedBytes":  75156469,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T11-13-24-301Z-ockhqU\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  75911149,
+                        "bytesAfter":  0,
+                        "freedBytes":  75911149,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-05-54-075Z-5asIfx\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  74791847,
+                        "bytesAfter":  0,
+                        "freedBytes":  74791847,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-06-04-231Z-qO8Ffx\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  34407224,
+                        "bytesAfter":  0,
+                        "freedBytes":  34407224,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-09-30-831Z-MBniRJ\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  74949037,
+                        "bytesAfter":  0,
+                        "freedBytes":  74949037,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-09-41-187Z-il46Wl\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  33019201,
+                        "bytesAfter":  0,
+                        "freedBytes":  33019201,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-11-24-310Z-VkTYUN\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  74793444,
+                        "bytesAfter":  0,
+                        "freedBytes":  74793444,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-12-33-806Z-jW1nMa\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  74696088,
+                        "bytesAfter":  0,
+                        "freedBytes":  74696088,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-12-33-822Z-NptM4a\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  197952084,
+                        "bytesAfter":  0,
+                        "freedBytes":  197952084,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-25-04-827Z-0D5r4G\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  74751691,
+                        "bytesAfter":  0,
+                        "freedBytes":  74751691,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-25-04-837Z-OBb3m1\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  199858683,
+                        "bytesAfter":  0,
+                        "freedBytes":  199858683,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-25-04-865Z-9a2gjM\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  1968806,
+                        "bytesAfter":  0,
+                        "freedBytes":  1968806,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-25-52-791Z-LHvhcz\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  42165213,
+                        "bytesAfter":  0,
+                        "freedBytes":  42165213,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-26-15-866Z-P6bZDO\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  75420051,
+                        "bytesAfter":  0,
+                        "freedBytes":  75420051,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-02-05-475Z-nRcCpu\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  75566576,
+                        "bytesAfter":  0,
+                        "freedBytes":  75566576,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-02-15-791Z-ARNrgA\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  74935898,
+                        "bytesAfter":  0,
+                        "freedBytes":  74935898,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-11-01-291Z-3Gi6ZP\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  30498475,
+                        "bytesAfter":  0,
+                        "freedBytes":  30498475,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-11-01-295Z-OOmvnP\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  32310819,
+                        "bytesAfter":  0,
+                        "freedBytes":  32310819,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-11-01-297Z-nXoXKy\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  106891881,
+                        "bytesAfter":  0,
+                        "freedBytes":  106891881,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-16-32-452Z-KpfsyE\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  40936140,
+                        "bytesAfter":  0,
+                        "freedBytes":  40936140,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-16-32-454Z-wmz13a\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  30221328,
+                        "bytesAfter":  0,
+                        "freedBytes":  30221328,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-16-32-455Z-6JuBnU\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  35082894,
+                        "bytesAfter":  0,
+                        "freedBytes":  35082894,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-18-27-770Z-e2lnz5\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  34787050,
+                        "bytesAfter":  0,
+                        "freedBytes":  34787050,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-23-51-751Z-JRrxWc\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  141966509,
+                        "bytesAfter":  0,
+                        "freedBytes":  141966509,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-23-51-765Z-Ef4L3b\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  35426038,
+                        "bytesAfter":  0,
+                        "freedBytes":  35426038,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-23-51-770Z-lpW3Nd\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  34937166,
+                        "bytesAfter":  0,
+                        "freedBytes":  34937166,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-54-39-012Z-kiTb4K\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  35216395,
+                        "bytesAfter":  0,
+                        "freedBytes":  35216395,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-54-49-416Z-gAYz2z\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  39858154,
+                        "bytesAfter":  0,
+                        "freedBytes":  39858154,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-59-42-048Z-Rs7MlE\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  74921246,
+                        "bytesAfter":  0,
+                        "freedBytes":  74921246,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-59-42-055Z-FQjpUl\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  35319270,
+                        "bytesAfter":  0,
+                        "freedBytes":  35319270,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-59-42-056Z-1IRNor\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  30867217,
+                        "bytesAfter":  0,
+                        "freedBytes":  30867217,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-00-39-798Z-OTf4r9\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  41547282,
+                        "bytesAfter":  0,
+                        "freedBytes":  41547282,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-01-03-255Z-3XC41R\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  73431909,
+                        "bytesAfter":  0,
+                        "freedBytes":  73431909,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-02-55-033Z-IvuKcZ\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  108084249,
+                        "bytesAfter":  0,
+                        "freedBytes":  108084249,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-04-27-050Z-5OL7Oi\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  37480784,
+                        "bytesAfter":  0,
+                        "freedBytes":  37480784,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-14-12-428Z-o98VXv\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  80907742,
+                        "bytesAfter":  0,
+                        "freedBytes":  80907742,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-14-12-428Z-R70OPQ\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  194177092,
+                        "bytesAfter":  0,
+                        "freedBytes":  194177092,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-14-12-436Z-fUa8B8\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  34920550,
+                        "bytesAfter":  0,
+                        "freedBytes":  34920550,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-16-12-051Z-Tx8C8o\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  34636892,
+                        "bytesAfter":  0,
+                        "freedBytes":  34636892,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-16-12-060Z-IsEWoB\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  77069522,
+                        "bytesAfter":  0,
+                        "freedBytes":  77069522,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-26-20-298Z-QcEbSQ\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  132857486,
+                        "bytesAfter":  0,
+                        "freedBytes":  132857486,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T15-57-37-687Z-ItdsoH\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  73869232,
+                        "bytesAfter":  0,
+                        "freedBytes":  73869232,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T16-20-19-947Z-VHNrJU\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  2324663,
+                        "bytesAfter":  0,
+                        "freedBytes":  2324663,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T16-20-50-541Z-Uq4QVX\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  46947935,
+                        "bytesAfter":  0,
+                        "freedBytes":  46947935,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T16-24-06-399Z-ACxTNC\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  70860882,
+                        "bytesAfter":  0,
+                        "freedBytes":  70860882,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T16-30-00-751Z-5dqyaF\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  70751994,
+                        "bytesAfter":  0,
+                        "freedBytes":  70751994,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T16-31-31-512Z-yGhaGS\\browser-profile",
+                        "status":  "deleted",
+                        "bytesBefore":  194775907,
+                        "bytesAfter":  0,
+                        "freedBytes":  194775907,
+                        "error":  ""
+                    }
+                ]
+}

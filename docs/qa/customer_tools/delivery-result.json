@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "scope": "delivery",
+  "checks": [
+    "delivery sequence, exact one-time rewards, arrival counters and no replacement controls at 320",
+    "delivery sequence, exact one-time rewards, arrival counters and no replacement controls at 375",
+    "delivery sequence, exact one-time rewards, arrival counters and no replacement controls at 430",
+    "parallel slots, page cancellation and restart preserve committed rewards",
+    "level-up follows delivery and claim payout finishes without locking gameplay",
+    "restart during delivery preserves rewards without replaying an unfinished effect",
+    "first discovery uses an illustrated non-blocking card and still pays exactly once"
+  ],
+  "exceptions": [],
+  "testedBuildDigest": "84ccdd1c55278c6d06d7dd2cc2d1c836cd2274b4b3f68815811a18e7f73c0303",
+  "version": "1.3.0",
+  "output": "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-23-51-765Z-Ef4L3b"
+}

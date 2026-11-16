@@ -13,7 +13,9 @@ import type { ConfigBundle } from '../config/ConfigRepository';
 import { getXpToNext } from '../core/progression/progression';
 
 export type ItemVm = {
+  remainingUses?: number;
   uid: string;
+  discovered?: boolean;
   definitionId: string;
   displayName: string;
   level: number;
@@ -31,6 +33,8 @@ export type OrderReqVm = {
 };
 
 export type OrderVm = {
+  longTerm?: boolean;
+  urgentUntil?: number;
   uid: string;
   requirements: OrderReqVm[];
   rewardCoins: number;
@@ -63,17 +67,22 @@ export type StatusVm = {
   energyCountdownText: string;
   coins: number;
   hearts: number;
+  diamonds: number;
   coinsText: string;
   heartsText: string;
+  diamondsText: string;
 };
 
 export type BoardVm = {
   rows: number;
   columns: number;
   items: ItemVm[];
+  lockedIndices: number[];
+  lockedUnlockLevels: Array<number | null>;
 };
 
 const CHAIN_CODE: Record<string, string> = {
+  scissors: '剪',
   coffee: '咖',
   flower: '花',
   dessert: '甜',
@@ -136,13 +145,15 @@ export class GameViewMapper {
       energyCountdownText,
       coins: player.coins,
       hearts: player.hearts,
+      diamonds: player.diamonds,
       coinsText: String(player.coins),
       heartsText: String(player.hearts),
+      diamondsText: String(player.diamonds),
     };
   }
 
   mapBoard(
-    board: { rows: number; columns: number; cells: Array<{ index: number; item?: { uid: string; definitionId: string } }> },
+    board: { rows: number; columns: number; cells: Array<{ index: number; locked?: boolean; item?: { uid: string; definitionId: string; remainingUses?: number } }> },
   ): BoardVm {
     const items: ItemVm[] = [];
     for (const cell of board.cells) {
@@ -151,6 +162,7 @@ export class GameViewMapper {
       if (!def) continue;
       items.push({
         uid: cell.item.uid,
+        remainingUses: def.maxUses ? Math.max(0, Math.min(def.maxUses, cell.item.remainingUses ?? def.maxUses)) : undefined,
         definitionId: def.id,
         displayName: def.displayName,
         level: def.level,
@@ -159,7 +171,9 @@ export class GameViewMapper {
         cellIndex: cell.index,
       });
     }
-    return { rows: board.rows, columns: board.columns, items };
+    const lockedIndices = board.cells.filter((c) => c.locked).map((c) => c.index);
+    const lockedUnlockLevels = board.cells.map((c) => this.bundle.game.board.unlocks.find((u) => Math.floor(c.index / board.columns) < u.rows && c.index % board.columns < u.columns)?.level ?? null);
+    return { rows: board.rows, columns: board.columns, items, lockedIndices, lockedUnlockLevels };
   }
 
   mapOrder(order: ActiveOrder, progress: OrderProgress): OrderVm {
@@ -175,6 +189,8 @@ export class GameViewMapper {
     });
     return {
       uid: order.uid,
+      ...(order.longTerm === true ? { longTerm: true } : {}),
+      ...(order.urgentUntil !== undefined ? { urgentUntil: order.urgentUntil } : {}),
       requirements,
       rewardCoins: order.rewardCoins,
       rewardXp: order.rewardXp,

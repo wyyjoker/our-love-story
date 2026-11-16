@@ -8,12 +8,12 @@ describe('merge guidance', () => {
     expect(game.getMergeHint()).toEqual({ from: 0, to: 1, definitionId: 'coffee_01' });
     expect(JSON.stringify(game.buildSaveData())).toBe(before);
     game.dropItem(0, 1);
-    expect(game.getMergeHint()).toEqual({ from: 2, to: 3, definitionId: 'coffee_01' });
+    expect(game.getMergeHint()).toEqual({ from: 2, to: 6, definitionId: 'coffee_01' });
   });
   it('does not suggest swaps or a merge beyond the last item level', () => {
     const game = createGameContext({ deterministic: true });
     game.debugClearBoard();
-    game.debugSpawn('coffee_08'); game.debugSpawn('coffee_08'); game.debugSpawn('flower_01');
+    game.debugSpawn('coffee_12'); game.debugSpawn('coffee_12'); game.debugSpawn('flower_01');
     expect(game.getMergeHint()).toBeNull();
   });
 });

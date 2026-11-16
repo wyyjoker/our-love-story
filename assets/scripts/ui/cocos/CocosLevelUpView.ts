@@ -1,3 +1,4 @@
+import { RewardPalette } from './CocosRewardEffects';
 import { Button, Graphics, Label, Node, Tween, tween, Vec3 } from 'cc';
 import { applyArt, generatorArt } from './CocosArt';
 import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect } from './CocosTheme';
@@ -31,19 +32,19 @@ export class CocosLevelUpView {
     this.card = createUiNode('LevelRewardCard');
     this.node.addChild(this.card);
     ensureTransform(this.card, 630, 790);
-    paintRoundRect(this.card.addComponent(Graphics), 630, 790, 38, hexColor('#FFF9EB'), hexColor('#EFCFB2'), 4);
+    paintRoundRect(this.card.addComponent(Graphics), 630, 790, 38, hexColor(RewardPalette.paper), hexColor(RewardPalette.edge), 1.5);
     const ribbon = createUiNode('RewardRibbon');
     this.card.addChild(ribbon);
     ribbon.setPosition(0, 310, 0);
-    paintRoundRect(ribbon.addComponent(Graphics), 604, 108, 24, hexColor('#EA939C'), hexColor('#FFF3E4'), 3);
-    const title = makeLabel('升级啦！', 53, hexColor('#FFF5CF'), true);
+    paintRoundRect(ribbon.addComponent(Graphics), 540, 90, 28, hexColor('#F6E0DE'));
+    const title = makeLabel('升级啦！', 44, hexColor(RewardPalette.ink), true);
     ribbon.addChild(title.node);
     ensureTransform(title.node, 530, 84);
     const crown = createUiNode('RewardCrown');
     this.card.addChild(crown);
     crown.setPosition(0, 392, 0);
     const crownG = crown.addComponent(Graphics);
-    crownG.fillColor = hexColor('#F3C568');
+    crownG.fillColor = hexColor('#DFBB7B');
     crownG.strokeColor = hexColor('#FFF7DF');
     crownG.lineWidth = 3;
     crownG.moveTo(-30, -12); crownG.lineTo(-40, 12); crownG.lineTo(-18, 4); crownG.lineTo(0, 28); crownG.lineTo(18, 4); crownG.lineTo(40, 12); crownG.lineTo(30, -12); crownG.close(); crownG.fill(); crownG.stroke();
@@ -57,13 +58,13 @@ export class CocosLevelUpView {
     this.card.addChild(glow);
     glow.setPosition(0, 20, 0);
     const glowG = glow.addComponent(Graphics);
-    glowG.fillColor = hexColor('#FFE6AC', 140);
+    glowG.fillColor = hexColor('#F5E1D6', 140);
     glowG.circle(0, 0, 123); glowG.fill();
     for (let i = 0; i < 12; i += 1) {
       const angle = i * Math.PI / 6;
       const x = Math.cos(angle) * 164;
       const y = Math.sin(angle) * 128;
-      glowG.fillColor = hexColor(i % 2 ? '#EFA0AF' : '#F4C96B', 210);
+      glowG.fillColor = hexColor(i % 2 ? '#E0AEB4' : '#DABB83', 190);
       glowG.moveTo(x, y + 7); glowG.lineTo(x + 4, y); glowG.lineTo(x, y - 7); glowG.lineTo(x - 4, y); glowG.close(); glowG.fill();
     }
 
@@ -76,7 +77,7 @@ export class CocosLevelUpView {
     ensureTransform(this.descLabel.node, 530, 50);
     this.descLabel.node.setPosition(0, 164, 0);
 
-    const note = makeLabel('把每一次成长，珍藏成我们的回忆', 22, hexColor('#AE7471'));
+    const note = makeLabel('另赠宝箱和生成器 · 可在「补给与签到」查看', 22, hexColor('#AE7471'));
     this.card.addChild(note.node);
     ensureTransform(note.node, 570, 38);
     note.node.setPosition(0, -122, 0);
@@ -84,7 +85,7 @@ export class CocosLevelUpView {
       const tile = createUiNode(`Reward_${name}`);
       this.card.addChild(tile);
       tile.setPosition(-182 + index * 182, -209, 0);
-      paintRoundRect(tile.addComponent(Graphics), 164, 106, 22, hexColor('#FFE8DF'), hexColor('#FFF8F1'), 2);
+      paintRoundRect(tile.addComponent(Graphics), 164, 106, 22, hexColor('#F8EBE3'));
       const value = makeLabel('', 28, hexColor(index === 1 ? '#D46A87' : '#945C3C'), true);
       tile.addChild(value.node);
       ensureTransform(value.node, 156, 46);
@@ -100,7 +101,7 @@ export class CocosLevelUpView {
     this.card.addChild(this.claim);
     ensureTransform(this.claim, 400, 76);
     this.claim.setPosition(0, -325, 0);
-    paintRoundRect(this.claim.addComponent(Graphics), 400, 76, 38, CocosTheme.primary(), hexColor('#FFF1EA'), 3);
+    paintRoundRect(this.claim.addComponent(Graphics), 400, 76, 38, hexColor(RewardPalette.coral));
     const caption = makeLabel('领取这份心意  ♥', 28, CocosTheme.surface(), true);
     this.claim.addChild(caption.node);
     ensureTransform(caption.node, 370, 66);
@@ -113,17 +114,19 @@ export class CocosLevelUpView {
     });
   }
 
+  rewardOrigin(): Vec3 { return this.claim.worldPosition.clone(); }
+
   show(level: number, unlockedChains: string[], reward: { coins: number; hearts: number; xp: number }, onClaim: () => void): void {
     this.onClaim = onClaim;
     this.levelLabel.string = `Lv.${level}`;
     const unlocked = unlockedChains[0];
-    const names: Record<string, string> = { coffee: '咖啡机', flower: '花篮', dessert: '甜品烤箱', gift: '礼物盒' };
+    const names: Record<string, string> = { coffee: '咖啡机', flower: '花篮', dessert: '甜品烤箱', gift: '礼物盒', fruit: '阳光橘树' };
     this.descLabel.string = unlocked ? `${names[unlocked] ?? unlocked} 已解锁` : '又靠近我们的浪漫小屋一步';
-    const generatorId: Record<string, string> = { coffee: 'coffee_machine', flower: 'flower_basket', dessert: 'dessert_oven', gift: 'gift_box' };
+    const generatorId: Record<string, string> = { coffee: 'coffee_machine', flower: 'flower_basket', dessert: 'dessert_oven', gift: 'gift_box', fruit: 'orange_tree' };
     const art = unlocked ? generatorArt(generatorId[unlocked]) : { sheet: 'game_icon' };
     this.icon.active = true;
     if (art) applyArt(this.icon, { ...art, preserveAspect: true }, 250, 216);
-    this.rewardLabels[0].string = `★ +${reward.coins}`;
+    this.rewardLabels[0].string = `◉ +${reward.coins}`;
     this.rewardLabels[1].string = `♥ +${reward.hearts}`;
     this.rewardLabels[2].string = `✦ +${reward.xp}`;
     this.node.active = true;

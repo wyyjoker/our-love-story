@@ -9,6 +9,7 @@ import {
   ensureOpacity,
   makeLabel,
   paintRoundRect,
+  hexColor,
 } from './CocosTheme';
 
 export type ToastTone = 'info' | 'success' | 'warn';
@@ -33,7 +34,7 @@ export class CocosToastView {
     this.node = createUiNode('ToastView');
     parent.addChild(this.node);
     ensureTransform(this.node, 0, 0);
-    this.node.setPosition(0, -height * 0.18, 0);
+    this.node.setPosition(0, height / 2 - 210, 0);
   }
 
   clear(): void {
@@ -49,34 +50,35 @@ export class CocosToastView {
 
   show(message: string, tone: ToastTone = 'info'): void {
     this.clear();
-    const w = Math.min(520, this.width * 0.78);
-    const h = 70;
+    const w = Math.min(620, this.width * 0.86);
+    const multiline = message.includes('\n');
+    const h = multiline ? 108 : 72;
     const item = createUiNode('Toast');
     this.current = item;
     this.node.addChild(item);
     ensureTransform(item, w, h);
     item.setPosition(0, 0, 0);
     const g = item.addComponent(Graphics);
-    const bg =
+    const accent =
       tone === 'success'
-        ? CocosTheme.ok()
+        ? hexColor('#6C8D63')
         : tone === 'warn'
-          ? CocosTheme.danger()
-          : CocosTheme.textPrimary();
-    paintRoundRect(g, w, h, 28, bg);
-    const label = makeLabel(message, 22, CocosTheme.surface(), true);
+          ? hexColor('#BE6F69')
+          : hexColor('#9D7080');
+    paintRoundRect(g, w, h, 24, hexColor('#FFFAF1', 252), accent, 2);
+    const label = makeLabel(message, 26, accent, true);
     item.addChild(label.node);
     ensureTransform(label.node, w - 24, h - 6);
     label.overflow = Label.Overflow.SHRINK;
     label.enableWrapText = true;
-    label.lineHeight = 26;
+    label.lineHeight = 34;
     const op = ensureOpacity(item);
     op.opacity = 0;
     item.setScale(0.96, 0.96, 1);
     tween(op).to(0.12, { opacity: 255 }).start();
     tween(item)
       .to(0.12, { scale: new Vec3(1, 1, 1) })
-      .delay(1.4)
+      .delay(multiline ? 2 : 1.4)
       .call(() => {
         tween(op)
           .to(0.2, { opacity: 0 })

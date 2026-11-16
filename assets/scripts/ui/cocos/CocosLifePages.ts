@@ -1,14 +1,15 @@
-import { BlockInputEvents, Button, Graphics, Label, Mask, Node, ScrollView, UIOpacity } from 'cc';
+import { BlockInputEvents, Button, Camera, EventTouch, Graphics, Input, Label, Mask, Node, ScrollView, UITransform, Vec3 } from 'cc';
 import type { GameContext } from '../../gameplay/GameContext';
 import type { FurnitureDefinition, MemoryDefinition, WishDefinition } from '../../core/types';
 import type { UiRoots } from './UiFactory';
-import { applyArt, applyLocalPhoto, furnitureArt, itemArt } from './CocosArt';
+import { applyArt, applyLocalPhoto, furnitureArtFor, itemArt } from './CocosArt';
 import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect } from './CocosTheme';
 import { sizeOf } from './UiFactory';
-import { fitPhoto, journalLayout, lifePageLayout, photoPage } from '../../presentation/UiSafety';
+import { fitPhoto, journalLayout, lifePageLayout, photoPage, LIFE_BOTTOM_RESERVED } from '../../presentation/UiSafety';
+import { memoryVisibility } from '../../presentation/MemoryVisibility';
 
 type Page = 'merge' | 'memories' | 'home';
-type MemoryTab = 'album' | 'diary' | 'photos';
+type MemoryTab = 'album' | 'diary' | 'timeline' | 'photos';
 type HomeRoom = FurnitureDefinition['room'];
 
 function label(parent: Node, text: string, x: number, y: number, size = 20, width = 620, color = CocosTheme.textPrimary(), bold = false): Label {
@@ -56,6 +57,38 @@ function diaryBody(parent: Node, text: string, extra: number): boolean {
   body.overflow = Label.Overflow.RESIZE_HEIGHT;
   body.updateRenderData(true);
   contentTransform.setContentSize(560, Math.max(height, textTransform.height + 8));
+  const scroll = viewport.addComponent(ScrollView);
+  scroll.horizontal = false;
+  scroll.vertical = true;
+  scroll.elastic = false;
+  scroll.cancelInnerEvents = true;
+  scroll.content = content;
+  scroll.scrollToTop(0);
+  return contentTransform.height > height;
+}
+
+function scrollingCopy(parent: Node, name: string, text: string, x: number, y: number, width: number, height: number): boolean {
+  const viewport = createUiNode(`${name}Viewport`);
+  parent.addChild(viewport);
+  ensureTransform(viewport, width, height);
+  viewport.setPosition(x, y, 0);
+  viewport.addComponent(Mask);
+  const content = createUiNode(`${name}Content`);
+  viewport.addChild(content);
+  const contentTransform = ensureTransform(content, width, height, 0.5, 1);
+  content.setPosition(0, height / 2, 0);
+  const body = makeLabel(text, 22, CocosTheme.textPrimary());
+  body.node.name = `${name}Text`;
+  content.addChild(body.node);
+  const bodyTransform = ensureTransform(body.node, width, height, 0.5, 1);
+  body.node.setPosition(0, -4, 0);
+  body.enableWrapText = true;
+  body.horizontalAlign = Label.HorizontalAlign.LEFT;
+  body.verticalAlign = Label.VerticalAlign.TOP;
+  body.lineHeight = 33;
+  body.overflow = Label.Overflow.RESIZE_HEIGHT;
+  body.updateRenderData(true);
+  contentTransform.setContentSize(width, Math.max(height, bodyTransform.height + 8));
   const scroll = viewport.addComponent(ScrollView);
   scroll.horizontal = false;
   scroll.vertical = true;
@@ -118,12 +151,16 @@ export class CocosLifePages {
   private category = '全部';
   private homeRoom: HomeRoom = 'living';
   private wishPage = 0;
+  private roomPage = 0;
+  private arranging = false;
+  private selectedFurniture: string | null = null;
   private readonly homeBackdrops: Record<HomeRoom, Node>;
   private readonly pageRoot: Node;
   private readonly navRoot: Node;
   private readonly taskRoot: Node;
   private readonly catalogRoot: Node;
   private readonly photoRoot: Node;
+  private readonly endingRoot: Node;
 
   constructor(
     private readonly game: GameContext,
@@ -138,13 +175,19 @@ export class CocosLifePages {
       living: createUiNode('HomeBackdropLiving'),
       bedroom: createUiNode('HomeBackdropBedroom'),
       garden: createUiNode('HomeBackdropGarden'),
+      study: createUiNode('HomeBackdropStudy'),
+      terrace: createUiNode('HomeBackdropTerrace'),
+      pool: createUiNode('HomeBackdropPool'),
     };
     const roomArt: Record<HomeRoom, string> = {
       living: 'home_background_empty',
       bedroom: 'home_bedroom',
       garden: 'home_garden',
+      study: 'home_study',
+      terrace: 'home_terrace',
+      pool: 'home_pool',
     };
-    for (const room of ['living', 'bedroom', 'garden'] as const) {
+    for (const room of ['living', 'bedroom', 'garden', 'study', 'terrace', 'pool'] as const) {
       const backdrop = this.homeBackdrops[room];
       roots.background.addChild(backdrop);
       applyArt(backdrop, { sheet: roomArt[room] }, backdropSize.width, backdropSize.height);
@@ -161,8 +204,8 @@ export class CocosLifePages {
 
     this.navRoot = createUiNode('Navigation');
     roots.navLayer.addChild(this.navRoot);
-    ensureTransform(this.navRoot, 720, 82);
-    this.navRoot.setPosition(0, -roots.designHeight / 2 + 55, 0);
+    ensureTransform(this.navRoot, roots.designWidth - 24, 104);
+    this.navRoot.setPosition(0, -roots.designHeight / 2 + 56, 0);
 
     this.taskRoot = createUiNode('Wishes');
     roots.modalLayer.addChild(this.taskRoot);
@@ -182,14 +225,22 @@ export class CocosLifePages {
     this.photoRoot.addComponent(BlockInputEvents);
     this.photoRoot.active = false;
 
+    this.endingRoot = createUiNode('WeddingEndingOverlay');
+    roots.modalLayer.addChild(this.endingRoot);
+    ensureTransform(this.endingRoot, roots.designWidth, roots.designHeight);
+    this.endingRoot.addComponent(BlockInputEvents);
+    this.endingRoot.active = false;
+
     this.renderNav();
   }
 
   setPage(page: Page): void {
     this.photoRoot.active = false;
+    this.endingRoot.active = false;
     this.taskRoot.active = false;
     this.catalogRoot.active = false;
     this.page = page;
+    if (page !== 'home') { this.arranging = false; this.selectedFurniture = null; }
     const merge = page === 'merge';
     this.syncHomeBackdrop();
     this.roots.ordersSlot.active = merge;
@@ -210,6 +261,73 @@ export class CocosLifePages {
     this.memoryTab = 'diary'; this.memoryPage = index; this.setPage('memories');
   }
 
+  openTimeline(): void {
+    this.memoryTab = 'timeline';
+    this.memoryPage = 0;
+    this.setPage('memories');
+  }
+
+  openWeddingEnding(): boolean {
+    const chapters = this.game.bundle.adventures;
+    const finalChapter = chapters[chapters.length - 1];
+    if (!finalChapter || !this.game.play.progress(finalChapter.id).claimed) return false;
+    const memoryIndex = this.game.bundle.memories.findIndex((item) => item.id === finalChapter.memoryId);
+    if (memoryIndex < 0) return false;
+    const memory = this.game.bundle.memories[memoryIndex];
+    if (!this.game.life.state.unlockedMemoryIds.includes(memory.id)) return false;
+
+    this.memoryTab = 'diary';
+    this.memoryPage = memoryIndex;
+    this.setPage('memories');
+    this.endingRoot.active = true;
+    this.renderWeddingEnding(memory);
+    this.renderNav();
+    return true;
+  }
+
+  private renderWeddingEnding(memory: MemoryDefinition): void {
+    const panel = this.modalPanel(this.endingRoot, 'WeddingEndingPanel');
+    const gift = this.game.config.couple.gift;
+    const textOr = (value: string | undefined, fallback: string): string => value?.trim() || fallback;
+    label(panel, textOr(gift?.title, '婚礼来信'), -35, 394, 32, 470, hexColor('#8B5358'), true);
+    const close = button(panel, '关闭', 275, 395, 88, 46, () => {
+      this.endingRoot.active = false;
+      this.renderNav();
+    });
+    close.name = 'WeddingEndingClose';
+
+    const illustration = createUiNode('WeddingEndingIllustration');
+    panel.addChild(illustration);
+    illustration.setPosition(0, 230, 0);
+    const [sheet, cell] = memory.art.split('#');
+    applyArt(illustration, { sheet, index: Number(cell ?? 0), columns: cell === undefined ? 1 : memory.artColumns ?? 5,
+      rows: memory.artRows ?? 1, cropToFill: memory.artMode !== 'contain', preserveAspect: memory.artMode === 'contain',
+      cropFocusY: memory.artFocusY ?? 0.2 }, 590, 190);
+    label(panel, memory.dateLabel ?? '', 0, 105, 19, 570, CocosTheme.textSecondary());
+
+    if (gift?.salutation?.trim()) {
+      const salutation = label(panel, gift.salutation.trim(), 0, 50, 22, 560, CocosTheme.textPrimary(), true);
+      salutation.horizontalAlign = Label.HorizontalAlign.LEFT;
+    }
+    scrollingCopy(panel, 'WeddingLetterBody', textOr(gift?.body, '专属信待填写'), 0, -100, 560, 250);
+    if (gift?.signoff?.trim()) {
+      const signoff = label(panel, gift.signoff.trim(), 0, -245, 20, 560, CocosTheme.textPrimary());
+      signoff.horizontalAlign = Label.HorizontalAlign.RIGHT;
+    }
+    if (gift?.signature?.trim()) {
+      const signature = label(panel, gift.signature.trim(), 0, -290, 20, 560, CocosTheme.textPrimary(), true);
+      signature.horizontalAlign = Label.HorizontalAlign.RIGHT;
+    }
+
+    const timeline = button(panel, '查看回忆时间轴', -130, -374, 240, 104, () => this.openTimeline(), 'cream');
+    timeline.name = 'WeddingEndingTimeline';
+    const home = button(panel, '继续经营小屋', 140, -374, 250, 104, () => {
+      this.endingRoot.active = false;
+      this.setPage('home');
+    }, 'pink');
+    home.name = 'WeddingEndingContinueHome';
+  }
+
   render(): void {
     this.renderNav();
     if (this.page !== 'merge') {
@@ -223,45 +341,40 @@ export class CocosLifePages {
 
   private renderNav(): void {
     clear(this.navRoot);
+    const width = this.roots.designWidth - 24;
+    const fullSize = sizeOf(this.roots.canvas, this.roots.designWidth, this.roots.designHeight);
+    const bottomInset = Math.max(0, fullSize.height / 2 + this.roots.safeArea.position.y - this.roots.designHeight / 2);
+    const base = createUiNode('NavigationBase');
+    this.navRoot.addChild(base);
+    base.setPosition(0, -4 - bottomInset / 2, 0);
+    paintRoundRect(base.addComponent(Graphics), fullSize.width, 112 + bottomInset, 0, hexColor('#FFF4E8', 250));
+    const shadow = createUiNode('NavigationShadow'); this.navRoot.addChild(shadow); shadow.setPosition(0, -4, 0);
+    paintRoundRect(shadow.addComponent(Graphics), width + 4, 108, 26, hexColor('#805D46', 28));
+    const tray = createUiNode('NavigationTray'); this.navRoot.addChild(tray);
+    paintRoundRect(tray.addComponent(Graphics), width, 104, 26, hexColor('#FFF9F0'), hexColor('#E7CDBB'), 2);
+    const gap = 6;
+    const tabWidth = (width - 20 - gap * 3) / 4;
     const entries: Array<[string, Page | null]> = [['任务', null], ['合成', 'merge'], ['回忆', 'memories'], ['家园', 'home']];
     entries.forEach(([title, page], index) => {
       const selected = page === null ? this.taskRoot.active : page === this.page && !this.taskRoot.active;
       const entry = createUiNode(`Button_${title}`);
       this.navRoot.addChild(entry);
-      ensureTransform(entry, 162, 82);
-      entry.setPosition(-270 + index * 180, 0, 0);
+      ensureTransform(entry, tabWidth, 104);
+      entry.setPosition(-width / 2 + 10 + tabWidth / 2 + index * (tabWidth + gap), 0, 0);
+      const selection = createUiNode('NavigationSelection'); entry.addChild(selection);
+      paintRoundRect(selection.addComponent(Graphics), 104, 54, 23, hexColor('#F7E2E3'), hexColor('#E9CFCA'), 1);
+      selection.setPosition(0, 14, 0); selection.active = selected;
       const circle = createUiNode('NavigationIcon');
       entry.addChild(circle);
-      circle.setPosition(0, 10, 0);
-      const caption = createUiNode('NavigationCaption');
-      entry.addChild(caption);
-      caption.setPosition(0, -32, 0);
-      paintRoundRect(caption.addComponent(Graphics), 76, 30, 15, selected ? hexColor('#FFF1EE', 250) : hexColor('#FFF9F1', 235));
-      paintRoundRect(circle.addComponent(Graphics), 65, 65, 32, selected ? hexColor('#E993A3') : hexColor('#FFF9F1', 245), selected ? hexColor('#FFF7F3') : hexColor('#DDC7B4'), 3);
+      circle.setPosition(0, 14, 0);
       const icon = createUiNode('NavSymbol');
       circle.addChild(icon);
-      const g = icon.addComponent(Graphics);
-      g.lineWidth = 2.5;
-      g.strokeColor = selected ? hexColor('#FFFFFF') : hexColor('#987261');
-      g.fillColor = g.strokeColor;
-      if (index === 0) {
-        g.roundRect(-12, -15, 24, 29, 3); g.stroke();
-        g.roundRect(-5, 12, 10, 5, 2); g.fill();
-        for (const y of [7, 0, -7]) { g.moveTo(-8, y); g.lineTo(-5, y - 2); g.lineTo(-2, y + 2); g.moveTo(2, y); g.lineTo(8, y); } g.stroke();
-      } else if (index === 1) {
-        g.roundRect(-15, -7, 18, 18, 4); g.stroke();
-        g.roundRect(-2, -15, 18, 18, 4); g.stroke();
-        g.moveTo(1, 9); g.lineTo(10, 9); g.moveTo(6, 5); g.lineTo(6, 14); g.stroke();
-      } else if (index === 2) {
-        g.roundRect(-15, -14, 30, 28, 3); g.stroke();
-        g.moveTo(-11, -9); g.lineTo(-3, 2); g.lineTo(3, -4); g.lineTo(7, 1); g.lineTo(12, -9); g.stroke();
-        g.circle(7, 7, 3); g.fill();
-      } else {
-        g.moveTo(-16, 0); g.lineTo(0, 15); g.lineTo(16, 0); g.stroke();
-        g.moveTo(-11, 1); g.lineTo(-11, -15); g.lineTo(11, -15); g.lineTo(11, 1); g.stroke();
-        g.roundRect(-4, -15, 8, 12, 1); g.fill();
-      }
-      label(entry, title, 0, -32, 22, 150, selected ? hexColor('#A5485D') : hexColor('#785B4E'), true);
+      ensureTransform(icon, 44, 44);
+      icon.setScale(1.35, 1.35, 1);
+      icon.setScale(1, 1, 1);
+      applyArt(icon, { sheet: 'navigation_illustrated_sheet', index, columns: 2, rows: 2, preserveAspect: true }, 66, 60);
+      const caption = label(entry, title, 0, -29, 25, tabWidth - 12, selected ? hexColor('#8E4157') : hexColor('#8C7360'), selected);
+      caption.node.name = 'NavigationCaption';
       entry.addComponent(Button);
       entry.on(Button.EventType.CLICK, () => {
         if (page === null) this.showTasks();
@@ -275,35 +388,32 @@ export class CocosLifePages {
     const total = memories.length;
     const { compact, perPage, extra } = journalLayout(this.roots.designWidth, this.roots.designHeight);
     paper(this.pageRoot, 'AlbumPaper', 0, 0, 704, 1000 + 2 * extra, '#FFF7EC');
-    const banner = paper(this.pageRoot, 'AlbumTitlePaper', -145, 433 + extra, 414, 112, '#FFE6E4');
-    banner.setRotationFromEuler(0, 0, 1.5);
-    label(banner, '回忆相册', 18, 23, 38, 310, hexColor('#8C3F49'), true);
-    label(banner, 'Story Memories', 18, -24, 22, 310, hexColor('#CD858B'));
-    const flowers = createUiNode('AlbumFlowers');
-    this.pageRoot.addChild(flowers);
-    flowers.setPosition(-318, 430 + extra, 0);
-    applyArt(flowers, { sheet: 'flower_sheet', index: 4, columns: 4, rows: 2, preserveAspect: true }, 78, 98);
+    const header = createUiNode('AlbumHeader'); this.pageRoot.addChild(header); header.setPosition(0, 449 + extra, 0);
+    label(header, '我们的故事', -185, 0, 34, 300, hexColor('#8C3F49'), true);
     const unlocked = memories.filter((memory) => this.game.life.state.unlockedMemoryIds.includes(memory.id)).length;
-    const progress = paper(this.pageRoot, 'AlbumProgress', 209, 433 + extra, 244, 100, '#FFFCF7');
-    label(progress, `已珍藏 ${unlocked}/${total}`, 0, 19, 24, 222, hexColor('#8B5358'), true);
-    const track = createUiNode('AlbumProgressTrack');
-    progress.addChild(track);
-    track.setPosition(0, -21, 0);
-    paintRoundRect(track.addComponent(Graphics), 192, 13, 6, hexColor('#EEDCD3'));
+    const progress = createUiNode('AlbumProgress'); header.addChild(progress); progress.setPosition(192, 0, 0);
+    label(progress, `已珍藏 ${unlocked}/${total}`, 0, 4, 24, 244, hexColor('#8B5358'), true);
+    const track = createUiNode('AlbumProgressTrack'); progress.addChild(track); track.setPosition(0, -23, 0);
+    paintRoundRect(track.addComponent(Graphics), 208, 10, 5, hexColor('#EEDCD3'));
     if (unlocked > 0) {
-      const fill = createUiNode('AlbumProgressFill');
-      track.addChild(fill);
-      const width = 192 * Math.min(1, unlocked / this.game.bundle.memories.length);
-      fill.setPosition(-96 + width / 2, 0, 0);
-      paintRoundRect(fill.addComponent(Graphics), width, 13, 6, hexColor('#E68B9B'));
+      const fill = createUiNode('AlbumProgressFill'); track.addChild(fill);
+      const width = 208 * Math.min(1, unlocked / total); fill.setPosition(-104 + width / 2, 0, 0);
+      paintRoundRect(fill.addComponent(Graphics), width, 10, 5, hexColor('#E68B9B'));
     }
-    label(this.pageRoot, '这些闪闪发光的瞬间，都是我们的故事。', 0, 354 + extra, 20, 650, hexColor('#9A7163'));
-    const tabs: Array<[MemoryTab, string]> = [['album', '回忆相册'], ['diary', '心动日记'], ['photos', '拍照留念']];
-    tabs.forEach(([id, name], index) => button(this.pageRoot, name, -220 + index * 220, 307 + extra, 202, 50, () => {
-      this.memoryTab = id;
-      this.memoryPage = 0;
-      this.render();
-    }, this.memoryTab === id ? 'pink' : 'cream'));
+    const tabs: Array<[MemoryTab, string]> = [
+      ['album', '相册'], ['diary', '心动日记'], ['timeline', '时间轴'], ['photos', '拍照留念'],
+    ];
+    const tabCenters = [-250.5, -83.5, 83.5, 250.5];
+    tabs.forEach(([id, name], index) => {
+      const tab = button(this.pageRoot, name, tabCenters[index], 363 + extra, 167, 72, () => {
+        this.memoryTab = id;
+        this.memoryPage = 0;
+        this.render();
+      }, this.memoryTab === id ? 'pink' : 'cream');
+      tab.name = `MemoryTab_${id}`;
+      // Keep the original touch area while the visible tab stays compact.
+      ensureTransform(tab, 167, 104);
+    });
 
     if (this.memoryTab === 'photos') {
       this.renderPhotos();
@@ -313,29 +423,61 @@ export class CocosLifePages {
       this.memoryPage = Math.max(0, Math.min(this.memoryPage, total - 1));
       const memory = memories[this.memoryPage];
       const unlocked = this.game.life.state.unlockedMemoryIds.includes(memory.id);
+      const visible = memoryVisibility(memory, unlocked);
       const card = paper(this.pageRoot, 'DiaryCard', 0, -50, 660, 650 + 2 * extra);
       tape(card, -208, 310 + extra, -9);
-      label(card, memory.title, 0, 270 + extra, 30, 610, hexColor('#8B5358'), true);
-      label(card, memory.dateLabel ?? '', 0, 224 + extra, 21, 590, CocosTheme.textSecondary());
+      label(card, visible.title, 0, 270 + extra, 30, 610, hexColor('#8B5358'), true);
+      label(card, visible.date, 0, 224 + extra, 21, 590, CocosTheme.textSecondary());
       const illustration = createUiNode('DiaryIllustration');
       card.addChild(illustration);
       illustration.setPosition(0, 62 + extra / 2, 0);
       const [sheet, cell] = memory.art.split('#');
-      applyArt(illustration, { sheet, index: Number(cell ?? 0), columns: cell === undefined ? 1 : memory.artColumns ?? 5, rows: memory.artRows ?? 1,
+      if (unlocked) applyArt(illustration, { sheet, index: Number(cell ?? 0), columns: cell === undefined ? 1 : memory.artColumns ?? 5, rows: memory.artRows ?? 1,
         cropToFill: memory.artMode !== 'contain', preserveAspect: memory.artMode === 'contain', cropFocusY: memory.artFocusY ?? 0.2 }, 590, 270 + extra);
-      if (!unlocked) illustration.addComponent(UIOpacity).opacity = 150;
+      else label(illustration, '🔒 这段回忆还未解锁', 0, 0, 24, 550, CocosTheme.textSecondary());
       illustration.addComponent(Button);
       illustration.on(Button.EventType.CLICK, () => {
         if (unlocked) this.previewMemory(memory);
         else this.toast('先解锁这段回忆，再查看完整插画吧');
       });
-      const scrollable = diaryBody(card, unlocked ? memory.diary : '解锁这段回忆后，日记会在这里展开。', extra);
-      const artLabel = memory.artLabel ?? '故事插画';
-      label(card, `${artLabel} · 点击看大图${scrollable ? ' · 正文可滑动' : ''}`, 0, -94, 16, 560, CocosTheme.textSecondary());
+      const scrollable = diaryBody(card, visible.diary, extra);
+      const artLabel = unlocked ? memory.artLabel ?? '故事插画' : '等待珍藏';
+      label(card, unlocked ? `${artLabel} · 点击看大图${scrollable ? ' · 正文可滑动' : ''}` : artLabel, 0, -94, 20, 560, CocosTheme.textSecondary());
       const adventure = this.game.bundle.adventures.find((c) => c.memoryId === memory.id);
-      label(card, `第 ${this.memoryPage + 1} / ${total} 页`, adventure ? -177 : 0, -292 - extra, 17, 260, CocosTheme.textSecondary());
-      if (adventure) button(card, '回忆探索 ›', 150, -292 - extra, 264, 40, () => this.openAdventure?.(adventure.id), 'pink');
+      const finalChapter = this.game.bundle.adventures[this.game.bundle.adventures.length - 1];
+      const finalClaimed = !!finalChapter && finalChapter.id === adventure?.id
+        && this.game.play.progress(finalChapter.id).claimed;
+      label(card, `第 ${this.memoryPage + 1} / ${total} 页`, finalClaimed ? 0 : adventure ? -177 : 0, finalClaimed ? -246 - extra : -292 - extra, 21, 260, CocosTheme.textSecondary());
+      if (finalClaimed) {
+        const hitArea = createUiNode('WeddingLetterReplay');
+        this.pageRoot.addChild(hitArea);
+        ensureTransform(hitArea, 264, 104);
+        hitArea.setPosition(-150, -370 - extra, 0);
+        const hitGraphics = hitArea.addComponent(Graphics);
+        hitGraphics.fillColor = hexColor('#FFFFFF', 0);
+        hitGraphics.rect(-132, -52, 264, 104);
+        hitGraphics.fill();
+        const visual = createUiNode('WeddingLetterReplayVisual');
+        hitArea.addChild(visual);
+        ensureTransform(visual, 264, 40);
+        visual.setPosition(0, 28, 0);
+        paintRoundRect(visual.addComponent(Graphics), 264, 40, 20, CocosTheme.primary(), CocosTheme.border(), 1);
+        label(visual, '重读婚礼信 ›', 0, 0, 23, 252, CocosTheme.surface(), true);
+        hitArea.addComponent(Button);
+        hitArea.on(Button.EventType.CLICK, () => {
+          if (!this.openWeddingEnding()) this.toast('领取最后一章纪念后即可重读婚礼信');
+        });
+      }
+      if (adventure) {
+        const availability = this.game.play.chapterAvailability(adventure.id);
+        const explore = button(card, availability?.available ? '回忆探索 ›' : `Lv${adventure.unlockLevel} 开启探索`, 150, -292 - extra, 264, 60, () => this.openAdventure?.(adventure.id), 'pink');
+        explore.name = `MemoryAdventure_${adventure.id}`;
+      }
       this.pager(total, () => this.memoryPage, (page) => { this.memoryPage = page; this.render(); });
+      return;
+    }
+    if (this.memoryTab === 'timeline') {
+      this.renderTimeline(extra);
       return;
     }
     const pages = Math.ceil(this.game.bundle.memories.length / perPage);
@@ -344,38 +486,136 @@ export class CocosLifePages {
     for (let offset = 0; offset < perPage; offset += 1) {
       const memory = this.game.bundle.memories[start + offset];
       if (memory) this.memoryCard(memory, start + offset, compact ? 0 : offset % 2 === 0 ? -171 : 171,
-        compact ? -91 : offset < 2 ? 100 + extra / 2 : -252 - extra / 2, compact, extra);
+        compact ? -52 : offset < 2 ? 100 + extra / 2 : -252 - extra / 2, compact, extra);
     }
     this.pager(pages, () => this.memoryPage, (page) => { this.memoryPage = page; this.render(); });
   }
 
+  private renderTimeline(extra: number): void {
+    const memories = this.game.bundle.memories;
+    const viewportHeight = 666 + 2 * extra;
+    const viewport = createUiNode('MemoryTimelineViewport');
+    this.pageRoot.addChild(viewport);
+    ensureTransform(viewport, 660, viewportHeight);
+    viewport.setPosition(0, -47, 0);
+    viewport.addComponent(Mask);
+
+    const contentHeight = Math.max(viewportHeight, memories.length * 142 + 32);
+    const content = createUiNode('MemoryTimelineContent');
+    viewport.addChild(content);
+    ensureTransform(content, 650, contentHeight, 0.5, 1);
+    content.setPosition(0, viewportHeight / 2, 0);
+
+    const spine = createUiNode('MemoryTimelineSpine');
+    content.addChild(spine);
+    ensureTransform(spine, 8, Math.max(80, contentHeight - 80));
+    spine.setPosition(-316, -contentHeight / 2, 0);
+    const spineGraphics = spine.addComponent(Graphics);
+    spineGraphics.lineWidth = 4;
+    spineGraphics.strokeColor = hexColor('#E7C8B9');
+    spineGraphics.moveTo(0, Math.max(20, contentHeight / 2 - 40));
+    spineGraphics.lineTo(0, -Math.max(20, contentHeight / 2 - 40));
+    spineGraphics.stroke();
+    const artworkEntries: Array<{ picture: Node; memory: MemoryDefinition; loaded: boolean }> = [];
+
+    memories.forEach((memory, index) => {
+      const unlocked = this.game.life.state.unlockedMemoryIds.includes(memory.id);
+      const visible = memoryVisibility(memory, unlocked);
+      const prior = index === 0 || this.game.life.state.unlockedMemoryIds.includes(memories[index - 1].id);
+      const rowY = -72 - index * 142;
+      const row = button(content, '', 0, rowY, 610, 128, () => {
+        if (unlocked) {
+          this.openMemory(memory.id);
+          return;
+        }
+        const result = this.game.unlockMemory(memory.id);
+        this.toast(result.ok ? '新回忆已经珍藏 ♥'
+          : result.reason === 'NOT_ENOUGH_HEARTS' ? '爱心还不够，先完成订单和心愿吧' : '请先解锁前一段回忆');
+        this.render();
+      }, 'cream');
+      row.name = `TimelineEntry_${memory.id}`;
+
+      const dot = createUiNode(`TimelineMarker_${memory.id}`);
+      content.addChild(dot);
+      ensureTransform(dot, 28, 28);
+      dot.setPosition(-316, rowY, 0);
+      const dotGraphics = dot.addComponent(Graphics);
+      dotGraphics.fillColor = hexColor(unlocked ? '#E993A3' : '#D2C7BE');
+      dotGraphics.circle(0, 0, 12);
+      dotGraphics.fill();
+
+      const picture = createUiNode(`TimelineArt_${memory.id}`);
+      row.addChild(picture);
+      ensureTransform(picture, 96, 100);
+      picture.setPosition(-238, 0, 0);
+      if (!unlocked) label(picture, '🔒', 0, 0, 28, 90, CocosTheme.textSecondary());
+      artworkEntries.push({ picture, memory, loaded: !unlocked });
+
+      label(row, visible.date, 45, 42, 16, 445, CocosTheme.textSecondary());
+      label(row, visible.title, 45, 0, 21, 445, hexColor('#8B5358'), true);
+      if (unlocked) {
+        paragraph(row, visible.summary, 45, -41, 16, 440, 40, CocosTheme.textSecondary());
+      } else {
+        const caption = prior ? `♥ ${memory.heartCost} 解锁` : '先解锁上一段';
+        label(row, caption, 45, -41, 17, 440, CocosTheme.textSecondary());
+      }
+    });
+
+    const scroll = viewport.addComponent(ScrollView);
+    scroll.horizontal = false;
+    scroll.vertical = true;
+    scroll.elastic = false;
+    scroll.cancelInnerEvents = true;
+    scroll.content = content;
+    scroll.scrollToTop(0);
+    const updateVisibleArtwork = (): void => {
+      const offset = Math.max(0, scroll.getScrollOffset().y);
+      const first = Math.max(0, Math.floor(offset / 142) - 2);
+      const last = Math.min(artworkEntries.length - 1, Math.ceil((offset + viewportHeight) / 142) + 2);
+      for (let index = first; index <= last; index += 1) {
+        const entry = artworkEntries[index];
+        if (!entry || entry.loaded) continue;
+        entry.loaded = true;
+        const [sheet, cell] = entry.memory.art.split('#');
+        applyArt(entry.picture, { sheet, index: Number(cell ?? 0), columns: cell === undefined ? 1 : entry.memory.artColumns ?? 5,
+          rows: entry.memory.artRows ?? 1, cropToFill: entry.memory.artMode !== 'contain',
+          preserveAspect: entry.memory.artMode === 'contain', cropFocusY: entry.memory.artFocusY ?? 0.2 }, 96, 100);
+      }
+    };
+    viewport.on(ScrollView.EventType.SCROLLING, updateVisibleArtwork);
+    updateVisibleArtwork();
+  }
+
   private memoryCard(memory: MemoryDefinition, index: number, x: number, y: number, compact: boolean, extra: number): void {
     const unlocked = this.game.life.state.unlockedMemoryIds.includes(memory.id);
+    const visible = memoryVisibility(memory, unlocked);
     const prior = index === 0 || this.game.life.state.unlockedMemoryIds.includes(this.game.bundle.memories[index - 1].id);
-    const card = paper(this.pageRoot, `Memory_${memory.id}`, x, y, compact ? 650 : 326, compact ? 670 : 336 + extra);
-    tape(card, compact ? 165 : 66, compact ? 333 : 167 + extra / 2, -8);
+    const card = paper(this.pageRoot, `Memory_${memory.id}`, x, y, compact ? 650 : 326, compact ? 720 : 336 + extra);
+    tape(card, compact ? 165 : 66, compact ? 358 : 167 + extra / 2, -8);
     const picture = createUiNode('Illustration');
     card.addChild(picture);
-    picture.setPosition(0, compact ? 142 : 83, 0);
+    picture.setPosition(0, compact ? 146 : 83, 0);
     const [sheet, cell] = memory.art.split('#');
-    applyArt(picture, { sheet, index: Number(cell ?? 0), columns: cell === undefined ? 1 : memory.artColumns ?? 5, rows: memory.artRows ?? 1,
-      cropToFill: memory.artMode !== 'contain', preserveAspect: memory.artMode === 'contain', cropFocusY: memory.artFocusY ?? 0.2 }, compact ? 602 : 294, compact ? 320 : 158 + extra);
-    if (!unlocked) {
-      const opacity = picture.addComponent(UIOpacity);
-      opacity.opacity = 170;
+    if (unlocked) applyArt(picture, { sheet, index: Number(cell ?? 0), columns: cell === undefined ? 1 : memory.artColumns ?? 5, rows: memory.artRows ?? 1,
+      cropToFill: memory.artMode !== 'contain', preserveAspect: memory.artMode === 'contain', cropFocusY: memory.artFocusY ?? 0.2 }, compact ? 602 : 294, compact ? 386 : 158 + extra);
+    else {
+      const seal = createUiNode('LockedMemorySeal'); picture.addChild(seal);
+      paintRoundRect(seal.addComponent(Graphics), compact ? 172 : 116, compact ? 184 : 122, 22, hexColor('#F7ECE2'), hexColor('#E7D5C5'), 1);
+      label(seal, '♡', 0, compact ? 24 : 18, compact ? 62 : 48, 100, hexColor('#D6AFA5'));
+      label(seal, '尚未解锁', 0, compact ? -42 : -33, compact ? 23 : 18, compact ? 156 : 108, CocosTheme.textSecondary());
     }
     const badge = createUiNode('MemoryNumber');
     card.addChild(badge);
-    badge.setPosition(compact ? -291 : -141, compact ? 316 : 149 + extra / 2, 0);
+    badge.setPosition(compact ? -291 : -141, compact ? 341 : 149 + extra / 2, 0);
     paintRoundRect(badge.addComponent(Graphics), 57, 52, 24, hexColor('#E993A0'), hexColor('#FFF8F4'), 2);
     label(badge, String(index + 1).padStart(2, '0'), 0, 0, 22, 52, hexColor('#FFFFFF'), true);
-    label(card, memory.title, 0, compact ? -70 : -20 - extra / 2, compact ? 32 : 23, compact ? 604 : 300, hexColor('#8B5358'), true);
-    label(card, memory.dateLabel ?? '', 0, compact ? -112 : -50 - extra / 2, compact ? 23 : 16, compact ? 604 : 296, CocosTheme.textSecondary());
-    const summary = compact || memory.summary.length <= 24 ? memory.summary : memory.summary.slice(0, 23) + '…';
-    const copy = paragraph(card, summary, 0, compact ? -185 : -91 - extra / 2, compact ? 24 : 19, compact ? 564 : 286, compact ? 108 : 52, CocosTheme.textSecondary());
+    label(card, visible.title, 0, compact ? -95 : -20 - extra / 2, compact ? 32 : 23, compact ? 604 : 300, hexColor('#8B5358'), true);
+    label(card, visible.date, 0, compact ? -136 : -50 - extra / 2, compact ? 23 : 16, compact ? 604 : 296, CocosTheme.textSecondary());
+    const summary = compact || visible.summary.length <= 24 ? visible.summary : visible.summary.slice(0, 23) + '…';
+    const copy = paragraph(card, summary, 0, compact ? -204 : -91 - extra / 2, compact ? 24 : 19, compact ? 564 : 286, compact ? 84 : 52, CocosTheme.textSecondary());
     copy.lineHeight = compact ? 34 : 25;
     const caption = unlocked ? '翻开日记 ›' : prior ? `♥ ${memory.heartCost} 解锁` : '先解锁上一段';
-    button(card, caption, 0, compact ? -285 : -141 - extra / 2, compact ? 500 : 282, compact ? 66 : 46, () => {
+    button(card, caption, 0, compact ? -308 : -141 - extra / 2, compact ? 500 : 282, compact ? 66 : 46, () => {
       if (unlocked) {
         this.memoryTab = 'diary';
         this.memoryPage = index;
@@ -397,7 +637,12 @@ export class CocosLifePages {
     count.setPosition(0, 244 + extra, 0);
     paintRoundRect(count.addComponent(Graphics), 650, 48, 20, CocosTheme.surface());
     label(count, `本机留念 ${paths.length} 张 · 点击照片查看大图`, 0, 0, 22, 620, CocosTheme.textPrimary(), true);
-    if (paths.length === 0) label(this.pageRoot, '前往家园，点击「拍照」留下第一张照片。', 0, 25, 20, 620, CocosTheme.textSecondary());
+    if (paths.length === 0) {
+      const empty = paper(this.pageRoot, 'PhotoEmptyCard', 0, -20, 590, 360, '#FFFDF7');
+      label(empty, '▧', 0, 72, 72, 140, hexColor('#DCBBAA'));
+      label(empty, '把喜欢的小屋，留在相册里', 0, -15, 27, 540, hexColor('#8B5358'), true);
+      label(empty, '前往家园，点击「拍照」留下第一张照片。', 0, -80, 22, 550, CocosTheme.textSecondary());
+    }
     const data = photoPage(paths, this.memoryPage);
     this.memoryPage = data.page;
     data.photos.forEach(({ path, index }, offset) => {
@@ -406,11 +651,11 @@ export class CocosLifePages {
       label(holder, `留念 ${index + 1}`, 0, -100 - extra / 2, 19, 270, CocosTheme.textSecondary());
     });
     if (paths.length > 0) {
-      button(this.pageRoot, '上一页', -200, -336 - extra, 144, 48, () => { this.memoryPage = (data.page - 1 + data.pages) % data.pages; this.render(); });
+      button(this.pageRoot, '上一页', -200, -336 - extra, 144, 64, () => { this.memoryPage = (data.page - 1 + data.pages) % data.pages; this.render(); });
       label(this.pageRoot, `${data.page + 1} / ${data.pages}`, 0, -336 - extra, 21, 120);
-      button(this.pageRoot, '下一页', 200, -336 - extra, 144, 48, () => { this.memoryPage = (data.page + 1) % data.pages; this.render(); });
+      button(this.pageRoot, '下一页', 200, -336 - extra, 144, 64, () => { this.memoryPage = (data.page + 1) % data.pages; this.render(); });
     }
-    button(this.pageRoot, '去家园拍照', 0, -418 - extra, 240, 58, () => this.setPage('home'), 'pink');
+    button(this.pageRoot, '去家园拍照', 0, -418 - extra, 280, 72, () => this.setPage('home'), 'pink');
   }
 
   private photoPicture(parent: Node, path: string, width: number, height: number): void {
@@ -427,10 +672,11 @@ export class CocosLifePages {
   }
 
   private previewMemory(memory: MemoryDefinition): void {
+    if (!this.game.life.state.unlockedMemoryIds.includes(memory.id)) return;
     this.photoRoot.active = true;
     const panel = this.modalPanel(this.photoRoot, 'StoryArtDetail');
     label(panel, memory.title, -40, 392, 28, 490, CocosTheme.textPrimary(), true);
-    button(panel, '关闭', 275, 395, 88, 46, () => { this.photoRoot.active = false; });
+    button(panel, '关闭', 275, 395, 100, 68, () => { this.photoRoot.active = false; });
     const illustration = createUiNode('StoryArtFull');
     panel.addChild(illustration);
     illustration.setPosition(0, 28, 0);
@@ -450,11 +696,11 @@ export class CocosLifePages {
     this.photoRoot.active = true;
     const panel = this.modalPanel(this.photoRoot, 'PhotoDetail');
     label(panel, `留念 ${index + 1} / ${paths.length}`, -60, 392, 29, 450, CocosTheme.textPrimary(), true);
-    button(panel, '关闭', 275, 395, 88, 46, () => { this.photoRoot.active = false; });
+    button(panel, '关闭', 275, 395, 100, 68, () => { this.photoRoot.active = false; });
     const picture = button(panel, '', 0, 28, 610, 590, () => this.previewPhoto(index));
     this.photoPicture(picture, path, 590, 570);
-    button(panel, '上一张', -174, -330, 160, 54, () => this.previewPhoto((index - 1 + paths.length) % paths.length));
-    button(panel, '下一张', 174, -330, 160, 54, () => this.previewPhoto((index + 1) % paths.length));
+    button(panel, '上一张', -174, -330, 160, 68, () => this.previewPhoto((index - 1 + paths.length) % paths.length));
+    button(panel, '下一张', 174, -330, 160, 68, () => this.previewPhoto((index + 1) % paths.length));
     label(panel, '照片保存在当前设备，点击图片可重新加载', 0, -395, 20, 620, CocosTheme.textSecondary());
   }
 
@@ -462,22 +708,20 @@ export class CocosLifePages {
     this.syncHomeBackdrop();
     const verticalExtra = Math.max(0, (this.roots.designHeight - 1334) * 0.3);
     const decor = this.game.life.getDecorPoints();
+    const maxDecor = this.game.bundle.furniture.reduce((sum, item) => sum + item.decorPoints, 0);
     const wished = this.game.life.state.claimedWishIds.length;
-    const note = createUiNode('HomeWishNote');
-    this.pageRoot.addChild(note);
-    ensureTransform(note, 328, 146);
-    note.setPosition(-174, 395 + verticalExtra, 0);
-    paintRoundRect(note.addComponent(Graphics), 328, 146, 22, hexColor('#FFF8F1', 242), hexColor('#E7BDB5'), 2);
-    label(note, '⌂  小屋心愿', -14, 43, 25, 282, hexColor('#8B5358'), true);
-    label(note, '已完成 ' + wished + '/10  ·  装修 ' + decor + '/50', -14, 0, 20, 290, CocosTheme.textSecondary());
-    button(note, '查看心愿 ›', 0, -46, 180, 38, () => this.showTasks(), 'pink');
+    const note = createUiNode('HomeWishNote'); this.pageRoot.addChild(note);
+    ensureTransform(note, 252, 62); note.setPosition(-205, 454 + verticalExtra * .5, 0);
+    paintRoundRect(note.addComponent(Graphics), 252, 62, 24, hexColor('#FFF8F1', 246), hexColor('#E7CFC3'), 1);
+    label(note, `♡ 心愿 ${wished}/10 ›`, 0, 0, 25, 230, hexColor('#8B5358'), true);
+    note.addComponent(Button); note.on(Button.EventType.CLICK, () => this.showTasks());
 
     this.renderRoomTabs();
     const scene = createUiNode('HomeFurnitureScene');
     this.pageRoot.addChild(scene);
     ensureTransform(scene, 670, 580);
     scene.setPosition(0, 0, 0);
-    if (this.homeRoom !== 'garden') {
+    if (this.homeRoom !== 'garden' && this.homeRoom !== 'pool') {
       const rug = createUiNode('RoomRug');
       scene.addChild(rug);
       rug.setPosition(this.homeRoom === 'living' ? -20 : 58, -208, 0);
@@ -490,16 +734,33 @@ export class CocosLifePages {
     const placed = this.game.bundle.furniture
       .map((item, index) => ({ item, index }))
       .filter(({ item }) => item.room === this.homeRoom && this.game.life.state.placedFurnitureIds.includes(item.id))
-      .sort((a, b) => b.item.placement.y - a.item.placement.y);
+      .sort((a, b) => {
+        const positions = this.game.life.state.furniturePositions;
+        const aY = positions[a.item.id] ? (positions[a.item.id].y - 0.5) * 580 : a.item.placement.y;
+        const bY = positions[b.item.id] ? (positions[b.item.id].y - 0.5) * 580 : b.item.placement.y;
+        return bY - aY;
+      });
     for (const { item, index } of placed) {
-      const { x, y, width, height } = item.placement;
-      const art = furnitureArt(index);
-      const bounds = art.region!;
-      const fitted = fitPhoto(bounds.width, bounds.height, width, height);
+      const { width, height } = item.placement;
+      const position = this.game.life.state.furniturePositions[item.id];
+      const x = position ? (position.x - 0.5) * 670 : item.placement.x;
+      const y = position ? (position.y - 0.5) * 580 : item.placement.y;
+      const art = furnitureArtFor(item, index);
+      const bounds = art.region;
+      const fitted = bounds ? fitPhoto(bounds.width, bounds.height, width, height) : { width, height };
+      const transform = position ?? { x: item.placement.x / 670 + 0.5, y: item.placement.y / 580 + 0.5 };
+      const scale = transform.scale ?? 1;
+      const rotation = transform.rotation ?? 0;
+      const flipped = transform.flipped ?? false;
+      const radians = rotation * Math.PI / 180;
+      const bboxWidth = (Math.abs(fitted.width * Math.cos(radians)) + Math.abs(fitted.height * Math.sin(radians))) * scale;
+      const bboxHeight = (Math.abs(fitted.width * Math.sin(radians)) + Math.abs(fitted.height * Math.cos(radians))) * scale;
       if (item.id !== 'flower_wall') {
         const shadow = createUiNode('Shadow_' + item.id);
         scene.addChild(shadow);
-        shadow.setPosition(x, y - fitted.height * 0.46, 0);
+        shadow.setPosition(x, y - bboxHeight * 0.46, 0);
+        shadow.setScale(scale, scale, 1);
+        shadow.setRotationFromEuler(0, 0, rotation);
         const g = shadow.addComponent(Graphics);
         g.fillColor = hexColor('#725545', 40);
         g.ellipse(0, 0, fitted.width * 0.39, Math.max(6, fitted.width * 0.035)); g.fill();
@@ -507,7 +768,65 @@ export class CocosLifePages {
       const sprite = createUiNode('Placed_' + item.id);
       scene.addChild(sprite);
       sprite.setPosition(x, y, 0);
+      sprite.setScale(scale * (flipped ? -1 : 1), scale, 1);
+      sprite.setRotationFromEuler(0, 0, rotation);
       applyArt(sprite, art, width, height);
+      if (this.arranging && this.selectedFurniture === item.id) {
+        const selection = createUiNode(`FurnitureSelection_${item.id}`);
+        sprite.addChild(selection);
+        ensureTransform(selection, fitted.width + 18, fitted.height + 18);
+        const outline = selection.addComponent(Graphics);
+        outline.strokeColor = hexColor('#E67D91');
+        outline.lineWidth = 6;
+        outline.roundRect(-(fitted.width + 18) / 2, -(fitted.height + 18) / 2, fitted.width + 18, fitted.height + 18, 14);
+        outline.stroke();
+      }
+      if (this.arranging) {
+        let positionCommitted = false;
+        let moved = false;
+        let pickup: Vec3 | null = null;
+        const grabOffset = new Vec3();
+        const pointerInScene = (event: EventTouch): Vec3 => {
+          const screen = event.getLocation();
+          const world = new Vec3();
+          const camera = this.roots.camera.getComponent(Camera);
+          if (camera) camera.screenToWorld(new Vec3(screen.x, screen.y, 0), world);
+          else { const ui = event.getUILocation(); world.set(ui.x, ui.y, 0); }
+          return scene.getComponent(UITransform)!.convertToNodeSpaceAR(world);
+        };
+        const commitPosition = (): void => {
+          if (positionCommitted) return;
+          positionCommitted = true;
+          if (!moved) { this.render(); return; }
+          const result = this.game.moveFurniture(item.id, (sprite.position.x + 335) / 670, (sprite.position.y + 290) / 580);
+          this.toast(result.ok ? '位置已保存' : '位置保存失败');
+          this.render();
+        };
+        sprite.on(Node.EventType.TOUCH_START, (event: EventTouch) => {
+          this.selectedFurniture = item.id;
+          pickup = pointerInScene(event);
+          grabOffset.set(pickup.x - sprite.position.x, pickup.y - sprite.position.y, 0);
+        });
+        sprite.on(Node.EventType.TOUCH_MOVE, (event: EventTouch) => {
+          const local = pointerInScene(event);
+          if (pickup && Math.hypot(local.x - pickup.x, local.y - pickup.y) > 6) moved = true;
+          if (!moved) return;
+          const halfWidth = Math.min(335, bboxWidth / 2);
+          const halfHeight = Math.min(290, bboxHeight / 2);
+          sprite.setPosition(Math.max(-335 + halfWidth, Math.min(335 - halfWidth, local.x - grabOffset.x)), Math.max(-290 + halfHeight, Math.min(290 - halfHeight, local.y - grabOffset.y)), 0);
+        });
+        sprite.on(Node.EventType.TOUCH_END, (event: EventTouch) => {
+          event.propagationStopped = true;
+          commitPosition();
+        });
+        sprite.on(Node.EventType.TOUCH_CANCEL, (event: EventTouch) => {
+          event.propagationStopped = true;
+          // Cocos reports a release outside the pickup node as node-level cancel.
+          // Keep that drag; only roll back for an actual OS/input cancellation.
+          if (event.getEventCode() === Input.EventType.TOUCH_END) commitPosition();
+          else if (!positionCommitted) this.render();
+        });
+      }
     }
     const souvenirs = this.game.bundle.adventures.filter((chapter) => this.game.play.progress(chapter.id).claimed && chapter.souvenir.room === this.homeRoom);
     const hasSouvenir = souvenirs.length > 0;
@@ -536,50 +855,143 @@ export class CocosLifePages {
       scene.addChild(hint);
       hint.setPosition(0, -184, 0);
       paintRoundRect(hint.addComponent(Graphics), 400, 58, 28, hexColor('#FFF8F3', 232));
-      label(hint, '这里还空着，来放一件家具吧 ♥', 0, 0, 18, 380, hexColor('#8B5358'));
+      label(hint, '这里还空着，来放一件家具吧 ♥', 0, 0, 22, 380, hexColor('#8B5358'));
     }
 
+    const trayY = -390 - verticalExtra * .75;
+    if (!this.arranging) {
+      const tray = createUiNode('HomeControlTray'); this.pageRoot.addChild(tray); tray.setPosition(0, trayY, 0);
+      paintRoundRect(tray.addComponent(Graphics), 680, 184, 28, hexColor('#FFF8F1', 248), hexColor('#E7CFC3'), 1);
+    }
     const actions = createUiNode('HomeActions');
     this.pageRoot.addChild(actions);
-    ensureTransform(actions, 680, 58);
-    actions.setPosition(0, -326 - verticalExtra * 0.58, 0);
-    button(actions, '拍照留念', -218, 0, 204, 54, this.takePhoto, 'cream');
-    button(actions, '拜访', 0, 0, 204, 54, () => this.toast('当前是单机小屋，拜访功能尚未开放'), 'cream');
-    button(actions, '布置家具', 218, 0, 204, 54, () => this.showCatalog(), 'pink');
-
-    const progress = createUiNode('DecorProgress');
-    this.pageRoot.addChild(progress);
-    ensureTransform(progress, 664, 76);
-    progress.setPosition(0, -421 - verticalExtra, 0);
-    paintRoundRect(progress.addComponent(Graphics), 664, 76, 22, hexColor('#FFF8F1', 244), hexColor('#FFFFFF'), 2);
-    label(progress, '装扮我们的小屋', -180, 15, 23, 270, hexColor('#8B5358'), true);
-    label(progress, decor + '/50', 250, 15, 18, 86, CocosTheme.textSecondary(), true);
-    const track = createUiNode('DecorTrack');
-    progress.addChild(track);
-    track.setPosition(0, -19, 0);
-    paintRoundRect(track.addComponent(Graphics), 590, 12, 6, hexColor('#EEDBD4'));
-    if (decor > 0) {
-      const filled = createUiNode('DecorFilled');
-      track.addChild(filled);
-      const fillWidth = Math.max(12, 590 * Math.min(1, decor / 50));
-      filled.setPosition(-295 + fillWidth / 2, 0, 0);
-      paintRoundRect(filled.addComponent(Graphics), fillWidth, 12, 6, hexColor('#E98D9E'));
+    ensureTransform(actions, 680, 72);
+    const normalActionsY = this.arranging ? -326 - verticalExtra * .58 : trayY - 37;
+    let actionsY = normalActionsY;
+    if (this.arranging) {
+      const pageLayout = lifePageLayout(this.roots.designWidth, this.roots.designHeight);
+      const contentBottom = (-this.roots.designHeight / 2 + LIFE_BOTTOM_RESERVED - pageLayout.y) / pageLayout.scale;
+      const panelBottom = Math.max(contentBottom + 12, -537 - verticalExtra);
+      const panelTop = panelBottom + 174;
+      actionsY = Math.max(normalActionsY, panelTop + 44);
     }
+    actions.setPosition(0, actionsY, 0);
+    button(actions, this.arranging ? '完成布置' : '调整位置', -218, 0, 204, 68, () => { this.arranging = !this.arranging; this.selectedFurniture = null; this.render(); }, 'cream');
+    const resetOrPhoto = button(actions, this.arranging ? '恢复默认' : '拍照留念', 0, 0, 204, 68, () => {
+      if (!this.arranging) { this.takePhoto(); return; }
+      if (!this.selectedFurniture) { this.toast('请先点选要恢复的家具'); return; }
+      const result = this.game.resetFurniturePosition(this.selectedFurniture);
+      this.toast(result.ok ? '家具位置、大小和方向已恢复默认' : '无法恢复家具默认设置'); this.render();
+    }, 'cream');
+    if (this.arranging) resetOrPhoto.name = 'FurnitureResetAll';
+    button(actions, '布置家具', 218, 0, 204, 68, () => this.showCatalog(), 'pink');
+
+    if (this.arranging) this.renderFurnitureTransformControls(verticalExtra);
+    else {
+      const progress = createUiNode('DecorProgress');
+      this.pageRoot.addChild(progress);
+      ensureTransform(progress, 664, 76);
+      progress.setPosition(0, trayY + 43, 0);
+      paintRoundRect(progress.addComponent(Graphics), 664, 76, 22, hexColor('#FFF8F1', 0));
+      label(progress, '装扮我们的小屋', -180, 15, 23, 270, hexColor('#8B5358'), true);
+      label(progress, decor + '/' + maxDecor, 250, 15, 18, 86, CocosTheme.textSecondary(), true);
+      const track = createUiNode('DecorTrack');
+      progress.addChild(track);
+      track.setPosition(0, -19, 0);
+      paintRoundRect(track.addComponent(Graphics), 590, 12, 6, hexColor('#EEDBD4'));
+      if (decor > 0) {
+        const filled = createUiNode('DecorFilled');
+        track.addChild(filled);
+        const fillWidth = Math.max(12, 590 * Math.min(1, decor / maxDecor));
+        filled.setPosition(-295 + fillWidth / 2, 0, 0);
+        paintRoundRect(filled.addComponent(Graphics), fillWidth, 12, 6, hexColor('#E98D9E'));
+      }
+    }
+  }
+
+  private renderFurnitureTransformControls(verticalExtra: number): void {
+    const panel = createUiNode('FurnitureTransformControls');
+    this.pageRoot.addChild(panel);
+    const pageLayout = lifePageLayout(this.roots.designWidth, this.roots.designHeight);
+    const contentBottom = (-this.roots.designHeight / 2 + LIFE_BOTTOM_RESERVED - pageLayout.y) / pageLayout.scale;
+    const panelBottom = Math.max(contentBottom + 12, -537 - verticalExtra);
+    const panelCenter = panelBottom + 87;
+    ensureTransform(panel, 664, 174);
+    panel.setPosition(0, panelCenter, 0);
+    paintRoundRect(panel.addComponent(Graphics), 664, 174, 24, hexColor('#FFF8F1', 246), hexColor('#E7BDB5'), 2);
+    const item = this.game.bundle.furniture.find((entry) => entry.id === this.selectedFurniture);
+    const saved = item ? this.game.life.state.furniturePositions[item.id] : undefined;
+    const scale = saved?.scale ?? 1;
+    const rotation = saved?.rotation ?? 0;
+    const flipped = saved?.flipped ?? false;
+    const description = item
+      ? `${item.title}  ·  ${Math.round(scale * 100)}%  ·  ${rotation}°  ·  ${flipped ? '已翻转' : '未翻转'}`
+      : '点选当前房间的一件家具，再拖动或调整大小与方向';
+    label(panel, description, 0, 58, 20, 630, hexColor('#8B5358'), true).node.name = 'FurnitureTransformStatus';
+    const selectedTone = item ? 'cream' : 'sage';
+    const change = (patch: { scale?: number; rotation?: number; flipped?: boolean }): void => {
+      if (!item) { this.toast('请先点选当前房间中已摆放的家具'); return; }
+      this.updateFurnitureTransform(item, patch);
+    };
+    const controls: Array<{ name: string; title: string; x: number; onTap: () => void }> = [
+      { name: 'FurnitureScaleDown', title: '−\n缩小', x: -260, onTap: () => change({ scale: Math.max(0.5, Math.round((scale - 0.1) * 10) / 10) }) },
+      { name: 'FurnitureScaleUp', title: '+\n放大', x: -130, onTap: () => change({ scale: Math.min(1.8, Math.round((scale + 0.1) * 10) / 10) }) },
+      { name: 'FurnitureRotateLeft', title: '↶\n左转', x: 0, onTap: () => change({ rotation: ((rotation + 15 + 180 + 360) % 360) - 180 }) },
+      { name: 'FurnitureRotateRight', title: '↷\n右转', x: 130, onTap: () => change({ rotation: ((rotation - 15 + 180 + 360) % 360) - 180 }) },
+      { name: 'FurnitureFlipHorizontal', title: '⇄\n翻转', x: 260, onTap: () => change({ flipped: !flipped }) },
+    ];
+    controls.forEach(({ name, title, x, onTap }) => {
+      const node = button(panel, title, x, -24, 124, 108, onTap, selectedTone);
+      node.name = name;
+      const caption = node.getComponentInChildren(Label);
+      if (caption) {
+        caption.fontSize = 32;
+        caption.lineHeight = 36;
+        ensureTransform(caption.node, 112, 92);
+      }
+    });
+  }
+
+  private updateFurnitureTransform(item: FurnitureDefinition, patch: { scale?: number; rotation?: number; flipped?: boolean }): void {
+    const saved = this.game.life.state.furniturePositions[item.id];
+    const x = saved?.x ?? item.placement.x / 670 + 0.5;
+    const y = saved?.y ?? item.placement.y / 580 + 0.5;
+    const scale = patch.scale ?? saved?.scale ?? 1;
+    const rotation = patch.rotation ?? saved?.rotation ?? 0;
+    const art = furnitureArtFor(item, this.game.bundle.furniture.findIndex((entry) => entry.id === item.id));
+    const fitted = art.region ? fitPhoto(art.region.width, art.region.height, item.placement.width, item.placement.height) : { width: item.placement.width, height: item.placement.height };
+    const radians = rotation * Math.PI / 180;
+    const halfWidth = Math.min(335, (Math.abs(fitted.width * Math.cos(radians)) + Math.abs(fitted.height * Math.sin(radians))) * scale / 2);
+    const halfHeight = Math.min(290, (Math.abs(fitted.width * Math.sin(radians)) + Math.abs(fitted.height * Math.cos(radians))) * scale / 2);
+    const currentX = x * 670 - 335;
+    const currentY = y * 580 - 290;
+    const clampedX = Math.max(-335 + halfWidth, Math.min(335 - halfWidth, currentX));
+    const clampedY = Math.max(-290 + halfHeight, Math.min(290 - halfHeight, currentY));
+    const result = this.game.setFurnitureTransform(item.id, {
+      ...patch,
+      x: (clampedX + 335) / 670,
+      y: (clampedY + 290) / 580,
+    });
+    this.toast(result.ok ? '家具方向与大小已保存' : result.reason === 'NOT_READY' ? '调整未完成，请重试' : '这件家具当前无法调整');
+    this.render();
   }
 
   private renderRoomTabs(): void {
     const tabs = createUiNode('HomeRoomTabs');
     this.pageRoot.addChild(tabs);
-    tabs.setPosition(0, 302 + Math.max(0, (this.roots.designHeight - 1334) * 0.17), 0);
-    const rooms: Array<[HomeRoom, string]> = [['living', '客厅'], ['bedroom', '卧室'], ['garden', '花园']];
-    rooms.forEach(([room, title], index) => button(tabs, title, -116 + index * 116, 0, 108, 46, () => {
-      this.homeRoom = room;
+    tabs.setPosition(0, 370 + Math.max(0, (this.roots.designHeight - 1334) * 0.17), 0);
+    const rooms: Array<[HomeRoom, string]> = [['living', '客厅'], ['bedroom', '卧室'], ['garden', '花园'], ['study', '书房'], ['terrace', '露台'], ['pool', '泳池']];
+    const visible = rooms.slice(this.roomPage * 3, this.roomPage * 3 + 3);
+    paintRoundRect(tabs.addComponent(Graphics), 620, 78, 30, hexColor('#FFF8EE', 240), hexColor('#E6D0BE'), 2);
+    visible.forEach(([room, title], index) => button(tabs, title, -204 + index * 170, 0, 158, 64, () => {
+      this.homeRoom = room; this.selectedFurniture = null;
       this.render();
     }, this.homeRoom === room ? 'pink' : 'cream'));
+    button(tabs, this.roomPage ? '‹' : '›', 246, 0, 90, 64, () => { this.roomPage = 1 - this.roomPage; this.render(); });
   }
 
   private syncHomeBackdrop(): void {
-    for (const room of ['living', 'bedroom', 'garden'] as const) {
+    for (const room of ['living', 'bedroom', 'garden', 'study', 'terrace', 'pool'] as const) {
       this.homeBackdrops[room].active = this.page === 'home' && this.homeRoom === room;
     }
   }
@@ -587,9 +999,9 @@ export class CocosLifePages {
   private pager(pages: number, current: () => number, set: (page: number) => void): void {
     if (pages <= 1) return;
     const y = -461 - journalLayout(this.roots.designWidth, this.roots.designHeight).extra;
-    button(this.pageRoot, '上一页', -215, y, 124, 48, () => set((current() - 1 + pages) % pages), 'cream');
+    button(this.pageRoot, '上一页', -215, y, 144, 64, () => set((current() - 1 + pages) % pages), 'cream');
     label(this.pageRoot, (current() + 1) + ' / ' + pages, 0, y, 22, 140, CocosTheme.textSecondary());
-    button(this.pageRoot, '下一页', 215, y, 124, 48, () => set((current() + 1) % pages), 'cream');
+    button(this.pageRoot, '下一页', 215, y, 144, 64, () => set((current() + 1) % pages), 'cream');
   }
 
   private modalPanel(root: Node, name: string): Node {
@@ -598,8 +1010,9 @@ export class CocosLifePages {
     const panel = createUiNode(name);
     root.addChild(panel);
     ensureTransform(panel, 690, 914);
-    const scale = Math.min(1, (this.roots.designHeight - 150) / 914);
+    const scale = Math.min(1, (this.roots.designHeight - 150) / 914, (this.roots.designWidth - 28) / 690);
     panel.setScale(scale, scale, 1);
+    if (name === 'FurniturePanel') panel.setPosition(0, -this.roots.designHeight / 2 + 457 * scale + 18, 0);
     paintRoundRect(panel.addComponent(Graphics), 690, 914, 30, hexColor('#FFF9F3'), hexColor('#F5D7CD'), 3);
     return panel;
   }
@@ -616,22 +1029,22 @@ export class CocosLifePages {
     const panel = this.modalPanel(this.taskRoot, 'WishesPanel');
     const claimed = this.game.life.state.claimedWishIds.length;
     label(panel, '小屋心愿  ' + claimed + '/10', -52, 392, 31, 490, hexColor('#8B5358'), true);
-    button(panel, '今日约会 · 剧情与解谜 ›', 0, 342, 530, 44, () => this.openAdventure?.(), 'pink');
-    button(panel, '关闭', 275, 395, 88, 46, () => {
+    button(panel, '今日约会 · 剧情与解谜 ›', 0, 326, 590, 64, () => this.openAdventure?.(), 'pink');
+    button(panel, '关闭', 275, 395, 100, 68, () => {
       this.taskRoot.active = false;
       this.renderNav();
     });
     const first = this.wishPage * 4;
     this.game.bundle.wishes.slice(first, first + 4).forEach((wish, index) => {
-      this.wishCard(panel, wish, 223 - index * 157);
+      this.wishCard(panel, wish, 211 - index * 157);
     });
     const pages = Math.ceil(this.game.bundle.wishes.length / 4);
-    button(panel, '‹', -90, -392, 60, 48, () => {
+    button(panel, '‹', -145, -392, 128, 64, () => {
       this.wishPage = (this.wishPage - 1 + pages) % pages;
       this.renderTasks();
     });
     label(panel, (this.wishPage + 1) + ' / ' + pages, 0, -392, 20, 90, CocosTheme.textSecondary());
-    button(panel, '›', 90, -392, 60, 48, () => {
+    button(panel, '›', 145, -392, 128, 64, () => {
       this.wishPage = (this.wishPage + 1) % pages;
       this.renderTasks();
     });
@@ -644,10 +1057,17 @@ export class CocosLifePages {
     parent.addChild(card);
     ensureTransform(card, 626, 132);
     card.setPosition(0, y, 0);
-    paintRoundRect(card.addComponent(Graphics), 626, 132, 20, hexColor('#FFF0EA'), hexColor('#F1D9D0'));
+    paintRoundRect(card.addComponent(Graphics), 626, 132, 20, claimed ? hexColor('#F2EFE5') : hexColor('#FFF0EA'), hexColor('#F1D9D0'));
     label(card, wish.title, -128, 35, 23, 315, CocosTheme.textPrimary(), true);
-    label(card, progress + '/' + wish.target + '  ·  金币+' + wish.rewardCoins + '  爱心+' + wish.rewardHearts, -125, -17, 21, 380, CocosTheme.textSecondary());
-    button(card, claimed ? '已领取' : progress >= wish.target ? '领取奖励' : '进行中', 225, 0, 130, 54, () => {
+    label(card, progress + '/' + wish.target + '  ·  金币+' + wish.rewardCoins + '  爱心+' + wish.rewardHearts, -105, -5, 22, 360, CocosTheme.textSecondary());
+    const track = createUiNode('WishProgress'); card.addChild(track); track.setPosition(-105, -44, 0);
+    paintRoundRect(track.addComponent(Graphics), 358, 10, 5, hexColor('#EAD8CF'));
+    if (progress > 0) {
+      const fill = createUiNode('WishProgressFill'); track.addChild(fill);
+      const filled = 358 * Math.min(1, progress / wish.target); fill.setPosition(-179 + filled / 2, 0, 0);
+      paintRoundRect(fill.addComponent(Graphics), filled, 10, 5, hexColor(claimed ? '#A6B99A' : '#E997A6'));
+    }
+    button(card, claimed ? '已领取' : progress >= wish.target ? '领取奖励' : '进行中', 221, 0, 144, 76, () => {
       if (claimed) { this.toast('这份心愿已经领取过了'); return; }
       if (progress < wish.target) { this.toast('还需要再完成一些进度'); return; }
       const result = this.game.claimWish(wish.id);
@@ -668,12 +1088,12 @@ export class CocosLifePages {
     const panel = this.modalPanel(this.catalogRoot, 'FurniturePanel');
     label(panel, '布置我们的小屋', -75, 390, 31, 470, hexColor('#8B5358'), true);
     label(panel, '挑选家具，摆进喜欢的房间', 0, 345, 22, 580, CocosTheme.textSecondary());
-    button(panel, '关闭', 275, 395, 88, 46, () => {
+    button(panel, '关闭', 275, 395, 100, 68, () => {
       this.catalogRoot.active = false;
       this.renderNav();
     });
-    const categories = ['全部', '客厅', '卧室', '花园', '装饰', '特殊'];
-    categories.forEach((name, index) => button(panel, name, -263 + index * 105, 297, 98, 44, () => {
+    const categories = ['全部', '客厅', '卧室', '花园', '书房', '露台', '泳池'];
+    categories.forEach((name, index) => button(panel, name, -270 + index * 90, 289, 84, 64, () => {
       this.category = name;
       this.furniturePage = 0;
       this.renderCatalog();
@@ -683,16 +1103,16 @@ export class CocosLifePages {
     this.furniturePage = Math.min(this.furniturePage, pages - 1);
     filtered.slice(this.furniturePage * 4, this.furniturePage * 4 + 4).forEach((item, offset) => {
       const index = this.game.bundle.furniture.findIndex((entry) => entry.id === item.id);
-      this.furnitureCard(panel, item, index, offset % 2 === 0 ? -157 : 157, offset < 2 ? 134 : -146);
+      this.furnitureCard(panel, item, index, offset % 2 === 0 ? -157 : 157, offset < 2 ? 117 : -159);
     });
     if (filtered.length === 0) label(panel, '这里暂时没有家具', 0, 0, 23, 450, CocosTheme.textSecondary());
     if (pages > 1) {
-      button(panel, '‹', -90, -392, 60, 48, () => {
+      button(panel, '‹', -145, -392, 128, 64, () => {
         this.furniturePage = (this.furniturePage - 1 + pages) % pages;
         this.renderCatalog();
       });
       label(panel, (this.furniturePage + 1) + ' / ' + pages, 0, -392, 20, 90, CocosTheme.textSecondary());
-      button(panel, '›', 90, -392, 60, 48, () => {
+      button(panel, '›', 145, -392, 128, 64, () => {
         this.furniturePage = (this.furniturePage + 1) % pages;
         this.renderCatalog();
       });
@@ -707,20 +1127,21 @@ export class CocosLifePages {
     const locked = this.game.player.level < item.unlockLevel;
     const card = createUiNode('Furniture_' + item.id);
     parent.addChild(card);
-    ensureTransform(card, 298, 246);
+    ensureTransform(card, 298, 258);
     card.setPosition(x, y, 0);
-    paintRoundRect(card.addComponent(Graphics), 298, 246, 22, CocosTheme.surface(), CocosTheme.border(), 2);
+    paintRoundRect(card.addComponent(Graphics), 298, 258, 22, CocosTheme.surface(), CocosTheme.border(), 2);
     const icon = createUiNode('FurnitureArt');
     card.addChild(icon);
-    icon.setPosition(0, 34, 0);
-    applyArt(icon, furnitureArt(index), 222, 145);
-    label(card, item.title, 0, -59, 23, 276, CocosTheme.textPrimary(), true);
+    icon.setPosition(0, 44, 0);
+    applyArt(icon, furnitureArtFor(item, index), 228, 144);
+    label(card, item.title, 0, -43, 25, 276, CocosTheme.textPrimary(), true);
     const action = locked ? 'Lv' + item.unlockLevel + ' 解锁' : owned ? placed ? '收起' : '摆放' : '金币 ' + item.coinCost;
-    button(card, action, 0, -96, 200, 43, () => {
+    button(card, action, 0, -91, 244, 64, () => {
       if (locked) { this.toast('达到 Lv' + item.unlockLevel + ' 后解锁'); return; }
       const result = owned ? this.game.placeFurniture(item.id) : this.game.buyFurniture(item.id);
       if (result.ok) {
         this.homeRoom = item.room;
+        this.roomPage = item.room === 'study' || item.room === 'terrace' || item.room === 'pool' ? 1 : 0;
         this.catalogRoot.active = false;
         this.toast(owned ? placed ? '家具已收起' : '家具已摆放' : '新家具已摆放 ♥');
         this.render();

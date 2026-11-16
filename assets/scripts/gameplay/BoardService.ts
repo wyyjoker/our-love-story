@@ -27,6 +27,7 @@ export type SpawnOnBoardResult =
   | { ok: false; reason: 'BOARD_FULL' };
 
 export type DropItemResult =
+  | { ok: true; kind: 'SPLIT'; from: number; to: number }
   | { ok: true; kind: 'MOVE'; from: number; to: number }
   | { ok: true; kind: 'SWAP'; from: number; to: number }
   | {
@@ -68,6 +69,18 @@ export class BoardService {
 
   getBoard(): BoardState {
     return this.board;
+  }
+
+  private unlockLevels: number[] = [];
+
+  getLockedUnlockLevel(index: number): number | null {
+    return this.unlockLevels[index] || null;
+  }
+
+  configureUnlocks(level: number, unlocks: ReadonlyArray<{ level: number; rows: number; columns: number }>, retainedIndices: readonly number[] = []): void {
+    this.unlockLevels = this.board.cells.map((c) => unlocks.find((u) => Math.floor(c.index / this.board.columns) < u.rows && c.index % this.board.columns < u.columns)?.level ?? 0);
+    const retained = new Set(retainedIndices);
+    for (const cell of this.board.cells) cell.locked = !retained.has(cell.index) && (!this.unlockLevels[cell.index] || level < this.unlockLevels[cell.index]);
   }
 
   getRows(): number {
@@ -129,6 +142,7 @@ export class BoardService {
     }
 
     const dest = to as number;
+    if (result.kind === 'SPLIT') { this.bus.emit('BOARD_CHANGED', { reason: 'tool' }); this.bus.emit('PLAY_CHANGED', { reason: 'scissors' }); return { ok: true, kind: 'SPLIT', from, to: dest }; }
     if (result.kind === 'MOVE') {
       const uid = this.board.cells[dest]?.item?.uid ?? '';
       this.bus.emit('ITEM_MOVED', { uid, from, to: dest });
@@ -187,7 +201,7 @@ export class BoardService {
 
   placeAt(index: number, definitionId: string): ItemInstance | null {
     if (index < 0 || index >= this.board.cells.length) return null;
-    if (this.board.cells[index].item) return null;
+    if (this.board.cells[index].item || this.board.cells[index].locked) return null;
     const item: ItemInstance = { uid: this.ids.next(), definitionId };
     this.board.cells[index].item = item;
     this.bus.emit('ITEM_SPAWNED', {

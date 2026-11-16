@@ -22,9 +22,13 @@ export class ProgressionService {
     private readonly progression: ProgressionConfig,
     private readonly generators: readonly GeneratorDefinition[],
     private readonly bus: GameEventBus,
+    private readonly energyCaps?: readonly number[],
+    private readonly collectionBonus: () => number = () => 0,
+    private readonly maxEnergyCap = Number.MAX_SAFE_INTEGER,
   ) {
     // Normalize unlocked chains from level on construct
     this.syncUnlocks();
+    this.syncEnergyCap();
   }
 
   get level(): number {
@@ -51,6 +55,7 @@ export class ProgressionService {
     if (newLevel > previousLevel) {
       for (let level = previousLevel + 1; level <= newLevel; level += 1) {
         this.player.level = level;
+        this.syncEnergyCap();
         const newly = this.syncUnlocks(level - 1, level);
         unlockedChains.push(...newly);
         this.bus.emit('LEVEL_UP', {
@@ -118,5 +123,10 @@ export class ProgressionService {
     }
     // Existing saves retain previously earned unlocks after balance changes.
     return newly;
+  }
+
+  syncEnergyCap(): void {
+    const cap = this.energyCaps?.[Math.min(this.energyCaps.length - 1, this.player.level - 1)];
+    if (cap !== undefined) this.player.maxEnergy = Math.min(this.maxEnergyCap, cap + this.collectionBonus());
   }
 }

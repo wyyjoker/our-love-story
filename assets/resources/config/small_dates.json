@@ -6,8 +6,14 @@
     "memoryId": "letters",
     "minLevel": 1,
     "requirements": [
-      { "itemId": "coffee_02", "count": 1 },
-      { "itemId": "coffee_01", "count": 1 }
+      {
+        "itemId": "coffee_02",
+        "count": 1
+      },
+      {
+        "itemId": "coffee_01",
+        "count": 1
+      }
     ],
     "rewardCoins": 16,
     "rewardXp": 8,
@@ -20,8 +26,14 @@
     "memoryId": "first_trip",
     "minLevel": 5,
     "requirements": [
-      { "itemId": "coffee_03", "count": 1 },
-      { "itemId": "dessert_02", "count": 1 }
+      {
+        "itemId": "coffee_03",
+        "count": 1
+      },
+      {
+        "itemId": "dessert_02",
+        "count": 1
+      }
     ],
     "rewardCoins": 20,
     "rewardXp": 10,
@@ -34,8 +46,14 @@
     "memoryId": "shenxianju",
     "minLevel": 3,
     "requirements": [
-      { "itemId": "flower_02", "count": 1 },
-      { "itemId": "coffee_02", "count": 1 }
+      {
+        "itemId": "flower_02",
+        "count": 1
+      },
+      {
+        "itemId": "coffee_02",
+        "count": 1
+      }
     ],
     "rewardCoins": 18,
     "rewardXp": 9,
@@ -48,11 +66,89 @@
     "memoryId": "new_year_balloons",
     "minLevel": 5,
     "requirements": [
-      { "itemId": "dessert_02", "count": 1 },
-      { "itemId": "coffee_01", "count": 1 }
+      {
+        "itemId": "dessert_02",
+        "count": 1
+      },
+      {
+        "itemId": "coffee_01",
+        "count": 1
+      }
     ],
     "rewardCoins": 19,
     "rewardXp": 9,
     "rewardHearts": 3
+  },
+  {
+    "id": "small_date_shared_coffee",
+    "title": "一起磨咖啡豆",
+    "description": "把咖啡豆放进磨豆机，慢慢准备一杯清晨咖啡。",
+    "memoryId": "letters",
+    "minLevel": 1,
+    "requirements": [
+      {
+        "itemId": "coffee_01",
+        "count": 2
+      }
+    ],
+    "rewardCoins": 16,
+    "rewardXp": 8,
+    "rewardHearts": 2
+  },
+  {
+    "id": "small_date_flower_window",
+    "title": "窗台插花",
+    "description": "挑两枝喜欢的花，摆在窗边一起整理。",
+    "memoryId": "shenxianju",
+    "minLevel": 3,
+    "requirements": [
+      {
+        "itemId": "flower_02",
+        "count": 2
+      }
+    ],
+    "rewardCoins": 18,
+    "rewardXp": 9,
+    "rewardHearts": 2
+  },
+  {
+    "id": "small_date_shared_dessert",
+    "title": "分着吃甜点",
+    "description": "准备几份小甜点和咖啡，在家里留一段悠闲时间。",
+    "memoryId": "first_trip",
+    "minLevel": 5,
+    "requirements": [
+      {
+        "itemId": "dessert_02",
+        "count": 1
+      },
+      {
+        "itemId": "coffee_02",
+        "count": 1
+      }
+    ],
+    "rewardCoins": 20,
+    "rewardXp": 10,
+    "rewardHearts": 3
+  },
+  {
+    "id": "small_date_garden_pause",
+    "title": "花园小歇",
+    "description": "带一枝花和一份甜点，在花园里坐一会儿。",
+    "memoryId": "shenxianju",
+    "minLevel": 5,
+    "requirements": [
+      {
+        "itemId": "dessert_02",
+        "count": 1
+      },
+      {
+        "itemId": "flower_02",
+        "count": 1
+      }
+    ],
+    "rewardCoins": 18,
+    "rewardXp": 9,
+    "rewardHearts": 2
   }
 ]

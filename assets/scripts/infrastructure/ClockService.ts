@@ -27,3 +27,8 @@ export class FakeClockService implements ClockService {
     this.current = ms;
   }
 }
+
+/** UTC+8 business day, independent of the device timezone. */
+export function businessDayUtc8(timestampMs: number): number {
+  return Math.floor((timestampMs + 8 * 60 * 60 * 1000) / 86400000);
+}

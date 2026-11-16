@@ -86,37 +86,21 @@ describe('1.2 order pacing', () => {
     id: 'next',
   });
 
-  it('keeps the tutorial first order but avoids equal needs from active and recent templates', () => {
+  it('keeps the tutorial order and avoids matching active needs for dynamic orders', () => {
     const tutorial = template('tutorial', [{ itemId: 'coffee_02', count: 1 }], { tutorialOnly: true });
-    const sameA = template('same_a', [{ itemId: 'coffee_02', count: 1 }]);
-    const sameB = template('same_b', [{ itemId: 'coffee_02', count: 1 }]);
-    const different = template('different', [{ itemId: 'coffee_03', count: 1 }]);
-    const templates = [tutorial, sameA, sameB, different];
-    expect(generateTutorialOrder(templates, 'tutorial')?.templateId).toBe('tutorial');
-    // No history yet: the tutorial order is still the intended first fill.
-    expect(generate(templates, [])?.templateId).toBe('tutorial');
-    // With history, different ids sharing the same normalized requirement are excluded.
-    expect(generate(templates, ['tutorial'], [{ templateId: 'same_a', requirements: [{ itemId: 'coffee_02', count: 1 }] }])?.templateId)
-      .toBe('different');
+    expect(generateTutorialOrder([tutorial], 'tutorial')?.templateId).toBe('tutorial');
+    const active = [{ templateId: 'same_a', requirements: [{ itemId: 'coffee_02', count: 1 }] }];
+    const result = generate([tutorial], ['tutorial'], active);
+    expect(result).not.toBeNull();
+    expect(requirementSignature(result!.requirements)).not.toBe(requirementSignature(active[0].requirements));
   });
 
-  it('suppresses the last three normalized signatures even when template ids differ', () => {
-    const sameA = template('same_a', [{ itemId: 'coffee_03', count: 1 }]);
-    const sameB = template('same_b', [{ itemId: 'coffee_03', count: 1 }]);
-    const different = template('different', [{ itemId: 'coffee_04', count: 1 }]);
-    const order = generateOrder({
-      player: { level: 1, unlockedChainIds: ['coffee'] },
-      templates: [sameA, sameB, different],
-      catalog: bundle.catalog,
-      recentOrderIds: ['same_a', 'same_a', 'same_a'],
-      activeOrders: [],
-      minItemLevel: 2,
-      maxItemLevel: 5,
-      random: new FixedRandomService([0]),
-      id: 'next',
-    });
-    expect(order?.templateId).toBe('different');
-    expect(requirementSignature(sameA.requirements)).toBe(requirementSignature(sameB.requirements));
+  it('suppresses recent legacy template signatures when alternatives exist', () => {
+    const old = template('same_a', [{ itemId: 'coffee_02', count: 1 }]);
+    const order = generateOrder({ player, templates: [old], catalog: bundle.catalog,
+      recentOrderIds: ['same_a'], activeOrders: [], minItemLevel: 2, maxItemLevel: 5,
+      random: new FixedRandomService([0]), id: 'next' });
+    expect(requirementSignature(order!.requirements)).not.toBe(requirementSignature(old.requirements));
   });
 
   it('degrades gracefully instead of looping or returning an empty slot when options are exhausted', () => {
@@ -233,7 +217,7 @@ describe('1.2 free puzzle replays', () => {
     delete (legacy.play as { smallDate?: unknown }).smallDate;
     f.values.set(game.config.saveKey, JSON.stringify(legacy));
     const restored = f.open();
-    expect(restored.config.saveVersion).toBe(3);
+    expect(restored.config.saveVersion).toBe(8);
     expect(restored.play.state.replays).toEqual({});
     expect(restored.play.state.smallDate).toMatchObject({ rotation: 0, completed: 0 });
     expect(restored.play.progress('zhoushan').claimed).toBe(true);
@@ -299,6 +283,8 @@ describe('1.2 repeatable small dates', () => {
     expect(game.player.coins - coins).toBe(first.template.rewardCoins);
     expect(game.buildSaveData().play.smallDate).toMatchObject({ rotation: 1, completed: 1 });
     expect(game.board.getBoard().cells.filter((cell) => cell.item)).toHaveLength(first.template.requirements.reduce((n, req) => n + req.count, 0));
+    // Lv1 now has multiple themes: prepare the newly rendered recipe, not a copy of the first.
+    prepareSmallDate(game, second.template.requirements);
     expect(game.playAction('small_date', second.token)).toEqual({ ok: true });
     expect(game.player.coins - coins).toBe(first.template.rewardCoins + second.template.rewardCoins);
     expect(game.buildSaveData().play.smallDate).toMatchObject({ rotation: 2, completed: 2 });

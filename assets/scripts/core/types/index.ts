@@ -8,13 +8,19 @@ export type ItemDefinition = {
   level: number;
   displayName: string;
   nextItemId?: string;
+  maxLevel?: boolean;
   sellValue?: number;
+  useValue?: number;
+  maxUses?: number;
+  wildcardEligible?: boolean;
+  wildcard?: boolean;
   icon?: string;
 };
 
 export type ItemInstance = {
   uid: string;
   definitionId: string;
+  remainingUses?: number;
 };
 
 export type BoardPosition = {
@@ -24,6 +30,7 @@ export type BoardPosition = {
 
 export type BoardCellState = {
   index: number;
+  locked?: boolean;
   item?: ItemInstance;
 };
 
@@ -37,6 +44,7 @@ export type PlayerState = {
   level: number;
   xp: number;
   coins: number;
+  diamonds: number;
   hearts: number;
   energy: number;
   maxEnergy: number;
@@ -49,7 +57,22 @@ export type OrderRequirement = {
   count: number;
 };
 
+export type OrderDynamicConfig = {
+  twoItemChance: number;
+  rareChance: number;
+  urgentChance: number;
+  urgentDurationMs: number;
+  rewardMultiplierMin: number;
+  rewardMultiplierMax: number;
+  rewardMultiplierMaxLevel: number;
+};
+
 export type ActiveOrder = {
+  longTerm?: boolean;
+  urgentUntil?: number;
+  urgentBaseCoins?: number;
+  urgentBaseXp?: number;
+  urgentBaseHearts?: number;
   uid: string;
   templateId: string;
   requirements: OrderRequirement[];
@@ -58,7 +81,10 @@ export type ActiveOrder = {
   rewardHearts: number;
 };
 
+export type FirstUseHint = 'backpack' | 'scissors' | 'chest';
+
 export type TutorialState = {
+  firstUseHints?: FirstUseHint[];
   generatorClicked: boolean;
   firstMergeCompleted: boolean;
   firstOrderCompleted: boolean;
@@ -90,7 +116,7 @@ export type FurnitureDefinition = {
   id: string;
   title: string;
   category: string;
-  room: 'living' | 'bedroom' | 'garden';
+  room: 'living' | 'bedroom' | 'garden' | 'study' | 'terrace' | 'pool';
   placement: { x: number; y: number; width: number; height: number };
   coinCost: number;
   unlockLevel: number;
@@ -110,11 +136,13 @@ export type WishDefinition = {
 };
 
 export type LevelRewardConfig = {
+  generatorRotation?: string[];
   default: { coinsPerLevel: number; heartsPerLevel: number; xp: number };
   special: Array<{ level: number; coins: number; hearts: number; xp: number }>;
 };
 
 export type LifeState = {
+  furniturePositions: Record<string, { x: number; y: number; scale?: number; rotation?: number; flipped?: boolean }>;
   unlockedMemoryIds: string[];
   ownedFurnitureIds: string[];
   placedFurnitureIds: string[];
@@ -124,11 +152,33 @@ export type LifeState = {
   stats: GameStats;
 };
 
+export type GamePreferences = {
+  soundEnabled: boolean;
+  vibrationEnabled: boolean;
+};
+
+export type GeneratorChargeState = { charges: number; lastRecoveryAt: number; capacity?: number };
+export type GeneratorCooldownState = { streak: number; cooldownStartedAt: number | null };
+
 export type SaveData = {
   version: number;
   savedAt: number;
+  preferences: GamePreferences;
   player: PlayerState;
   board: BoardCellState[];
+  legacyBoardEntitlement: boolean;
+  retainedOpenCellIndices?: number[];
+  rewardInbox: ItemInstance[];
+  discoveredItemIds: string[];
+  claimedDiscoveryIds: string[];
+  checkIn: { lastClaimDay: number | null; claims: number };
+  generatorCharges?: Record<string, GeneratorChargeState>;
+  generatorInventory?: Record<string, number[]>;
+  generatorCooldowns?: Record<string, GeneratorCooldownState>;
+  claimedCollectionIds?: string[];
+  orderRefreshAt?: Array<number | null>;
+  dailyTasks?: { day: number; targetItemId: string; progress: Record<string, number>; claimedIds: string[] };
+  journal?: import('../../gameplay/JournalService').JournalState;
   activeOrders: ActiveOrder[];
   tutorial: TutorialState;
   recentOrderIds?: string[];
@@ -137,13 +187,18 @@ export type SaveData = {
 };
 
 export type GameConfig = {
+  generatorRestore: { cooldownCost: number; chargeCost: number };
+  collection: { chainIds: string[]; energyPerChain: number; maxEnergyCap: number };
+  generationBonusDrops: Array<{ generatorId: string; minLevel: number; chance: number; itemId: string; excludeRecharge?: boolean }>;
   gameTitle: string;
   saveKey: string;
   saveVersion: number;
   toolbox: { warehouseSlots: number; startingScissors: number };
-  board: { rows: number; columns: number };
+  board: { rows: number; columns: number; unlocks: Array<{ level: number; rows: number; columns: number }> };
+  rewards: { discoveryCoins: number; chestDropChance: number; chestLoot: Array<{ itemId: string; weight: number }>; chestLevels: Array<{ level: number; count: number; loot?: Array<{ itemId: string; weight: number }> }>; exchangeOffers: Array<{ id: string; diamonds: number; energy: number }>; checkIn: Array<{ coins: number; energy: number; diamonds: number; itemId?: string }>; dailyTasks: Array<{ id: string; kind: 'orders' | 'merges' | 'specific'; title: string; target: number; reward: { coins: number; xp: number; energy: number; diamonds: number } }> };
   energy: {
     maxEnergy: number;
+    maxByLevel?: number[];
     initialEnergy: number;
     generatorCost: number;
     recoverIntervalMs: number;
@@ -155,6 +210,9 @@ export type GameConfig = {
     maxRequirements: number;
     minItemLevel: number;
     maxItemLevel: number;
+    refreshCooldownMs: number;
+    refreshDiamondCost: number;
+    dynamic: OrderDynamicConfig;
   };
   couple: {
     gameTitle: string;
@@ -164,6 +222,14 @@ export type GameConfig = {
     metDate?: string;
     weddingDate?: string;
     theme: string;
+    gift?: {
+      coverMessage?: string;
+      title?: string;
+      salutation?: string;
+      body?: string;
+      signoff?: string;
+      signature?: string;
+    };
   };
 };
 
@@ -178,10 +244,15 @@ export type GeneratorDefinition = {
   chainId: string;
   unlockLevel: number;
   energyCost: number;
+  purchaseCoins: number;
+  recharge?: { capacity: number; intervalMs: number; legacyCapacity?: number };
+  streakCooldown?: { uses: number; durationMs: number };
+  upgrade?: { maxLevel: number; rechargeFactor: number; boostEnergyMultiplier: number; levels: Array<{ level: number; outputs: GeneratorOutput[]; boostOutputs?: GeneratorOutput[] }> };
   outputs: GeneratorOutput[];
 };
 
 export type OrderTemplate = {
+  longTerm?: boolean;
   id: string;
   minLevel: number;
   maxLevel: number;
@@ -205,6 +276,7 @@ export type ProgressionConfig = {
 export type DragKind = 'MOVE' | 'MERGE' | 'SWAP' | 'CANCEL';
 
 export type DropResolve =
+  | { kind: 'SPLIT'; from: number; to: number }
   | { kind: 'MOVE'; from: number; to: number }
   | { kind: 'MERGE'; from: number; to: number }
   | { kind: 'SWAP'; from: number; to: number }

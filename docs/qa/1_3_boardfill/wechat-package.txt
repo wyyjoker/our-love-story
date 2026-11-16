@@ -1,0 +1,4 @@
+Main package: 3,976,007 / 4,000,000 bytes
+subpackages\internal: 689,471 bytes
+subpackages\game_art: 11,696,869 bytes
+subpackages\main: 344,222 bytes

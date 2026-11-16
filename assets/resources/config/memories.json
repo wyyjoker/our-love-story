@@ -12,6 +12,18 @@
     "artFocusY": 0.22
   },
   {
+    "id": "zhoushan_bonfire",
+    "title": "舟山篝火与牵手",
+    "dateLabel": "2023 年 9 月 · 舟山",
+    "summary": "篝火边的时光，与我们的第一次牵手。",
+    "diary": "2023 年 9 月，舟山的行程里有晚上的篝火。\n\n我们的第一次牵手，也留在了舟山。",
+    "heartCost": 50,
+    "art": "story_31_zhoushan_bonfire",
+    "artMode": "cover",
+    "artLabel": "故事插画",
+    "artFocusY": 0.18
+  },
+  {
     "id": "shenxianju",
     "title": "初识后的第一座山",
     "dateLabel": "2023 年国庆 · 神仙居",
@@ -72,6 +84,30 @@
     "artFocusY": 0.18
   },
   {
+    "id": "qinwang_palace",
+    "title": "横店的秦王宫",
+    "dateLabel": "2023 年末 · 横店",
+    "summary": "跨年旅程中，我们一起去了秦王宫。",
+    "diary": "2023 年末，我们一起去横店跨年，也去了秦王宫。\n\n这段旅程，成为我们一起迎接新年的回忆。",
+    "heartCost": 50,
+    "art": "story_32_qinwang_palace",
+    "artMode": "cover",
+    "artLabel": "故事插画",
+    "artFocusY": 0.18
+  },
+  {
+    "id": "hengdian_hot_spring",
+    "title": "横店的温泉时光",
+    "dateLabel": "2023 年末 · 横店",
+    "summary": "横店跨年时，我们也一起泡了温泉。",
+    "diary": "2023 年末的横店跨年旅程里，我们一起泡了温泉。\n\n这也是那次旅行里想留住的片段。",
+    "heartCost": 50,
+    "art": "story_33_hengdian_hot_spring",
+    "artMode": "cover",
+    "artLabel": "故事插画",
+    "artFocusY": 0.18
+  },
+  {
     "id": "promise",
     "title": "山水之间，有你",
     "dateLabel": "黄山 · 千岛湖 · 望宸阁",
@@ -79,6 +115,42 @@
     "diary": "那一年，我们一起爬了黄山，爬完之后又去了千岛湖逛。后来，还一起去杭州望宸阁爬山。\n\n一段山路，一片湖景，都是一起走过的地方。因为身边是你，这些地名也成了我们故事的一部分。",
     "heartCost": 120,
     "art": "story_07_promise",
+    "artMode": "cover",
+    "artLabel": "故事插画",
+    "artFocusY": 0.18
+  },
+  {
+    "id": "huangshan_trip",
+    "title": "一起爬黄山",
+    "dateLabel": "2024 年初",
+    "summary": "我们一起爬过黄山。",
+    "diary": "2024 年初，我们一起爬了黄山。\n\n这座山，也成了我们共同去过的地方。",
+    "heartCost": 60,
+    "art": "story_34_huangshan_trip",
+    "artMode": "cover",
+    "artLabel": "故事插画",
+    "artFocusY": 0.18
+  },
+  {
+    "id": "qiandao_lake",
+    "title": "千岛湖的回忆",
+    "dateLabel": "2024 年初",
+    "summary": "爬完黄山，我们又去了千岛湖逛。",
+    "diary": "2024 年初，爬完黄山之后，我们又去了千岛湖逛。\n\n一起去过的风景，又多了一处。",
+    "heartCost": 60,
+    "art": "story_35_qiandao_lake",
+    "artMode": "cover",
+    "artLabel": "故事插画",
+    "artFocusY": 0.18
+  },
+  {
+    "id": "wangchen_pavilion",
+    "title": "一起去望宸阁",
+    "dateLabel": "2024 年初 · 杭州",
+    "summary": "后来，我们一起去杭州望宸阁爬山。",
+    "diary": "2024 年初，我们一起去杭州望宸阁爬山。\n\n想把这个一起到过的地方，也记进相册。",
+    "heartCost": 60,
+    "art": "story_36_wangchen_pavilion",
     "artMode": "cover",
     "artLabel": "故事插画",
     "artFocusY": 0.18
@@ -108,6 +180,18 @@
     "artFocusY": 0.18
   },
   {
+    "id": "shanghai_departure",
+    "title": "从上海出发",
+    "dateLabel": "2024 年 5 月 1 日",
+    "summary": "我们从上海乘飞机，飞往韩国济州岛。",
+    "diary": "2024 年 5 月 1 日，我们先去上海，再坐飞机飞往韩国济州岛。\n\n第一次一起去韩国的旅程，从这里出发。",
+    "heartCost": 50,
+    "art": "story_37_shanghai_departure",
+    "artMode": "cover",
+    "artLabel": "故事插画",
+    "artFocusY": 0.18
+  },
+  {
     "id": "first_home",
     "title": "第一次陪你过5·20生日",
     "dateLabel": "2024 年 5 月 20 日",
@@ -130,6 +214,18 @@
     "artMode": "cover",
     "artLabel": "故事插画",
     "artFocusY": 0.12
+  },
+  {
+    "id": "nanhu_boat",
+    "title": "南湖游船",
+    "dateLabel": "2024 年 7 月 7 日 · 嘉兴",
+    "summary": "在嘉兴南湖，我带你一起坐游船。",
+    "diary": "2024 年 7 月 7 日，我们去了嘉兴南湖。\n\n我带你坐了南湖游船，想把这一段也单独珍藏。",
+    "heartCost": 60,
+    "art": "story_38_nanhu_boat",
+    "artMode": "cover",
+    "artLabel": "故事插画",
+    "artFocusY": 0.18
   },
   {
     "id": "linan_rafting",
@@ -276,6 +372,18 @@
     "artFocusY": 0.2
   },
   {
+    "id": "hengdian_family",
+    "title": "带父母一起去横店",
+    "dateLabel": "2026 年 2 月 22 日 · 横店",
+    "summary": "这一次，我们带父母一起去了横店。",
+    "diary": "2026 年 2 月 22 日，我们带父母一起去了横店。\n\n从两个人的跨年旅行，到和父母同行，横店又多了一份回忆。",
+    "heartCost": 80,
+    "art": "story_39_hengdian_family",
+    "artMode": "cover",
+    "artLabel": "故事插画",
+    "artFocusY": 0.18
+  },
+  {
     "id": "wedding_preparations",
     "title": "为我们的婚礼做准备",
     "dateLabel": "2026 年五一",
@@ -312,6 +420,18 @@
     "artFocusY": 0.15
   },
   {
+    "id": "wedding_mv",
+    "title": "杭州的婚礼 MV",
+    "dateLabel": "2026 年 6 月 6 日 · 杭州",
+    "summary": "我们在杭州拍摄了婚礼 MV。",
+    "diary": "2026 年 6 月 6 日，我们在杭州拍了婚礼 MV。\n\n为婚礼留下的这段纪念，也想记进相册。",
+    "heartCost": 80,
+    "art": "story_40_wedding_mv",
+    "artMode": "cover",
+    "artLabel": "故事插画",
+    "artFocusY": 0.18
+  },
+  {
     "id": "summer_before_wedding",
     "title": "婚礼前，最后一个夏天",
     "dateLabel": "2026 年 8 月",
@@ -324,13 +444,61 @@
     "artFocusY": 0.12
   },
   {
+    "id": "concert",
+    "title": "一起去看演唱会",
+    "dateLabel": "2026 年 8 月 16 日",
+    "summary": "我们一起去看薛之谦“万兽之王”主题演唱会。",
+    "diary": "2026 年 8 月 16 日，我们一起去看了薛之谦“万兽之王”主题的演唱会。\n\n那是婚礼前的夏天，想单独留住的一次同行。",
+    "heartCost": 90,
+    "art": "story_41_concert",
+    "artMode": "cover",
+    "artLabel": "故事插画",
+    "artFocusY": 0.18
+  },
+  {
+    "id": "xian_terracotta",
+    "title": "西安的同行与兵马俑",
+    "dateLabel": "2026 年 8 月 27 日起 · 西安",
+    "summary": "一起送妹妹去西北大学，也看了秦始皇陵和兵马俑。",
+    "diary": "2026 年 8 月 27 日，我们一起去西安送妹妹上大学，她就读的是西北大学。\n\n这趟行程中，我们还顺道看了秦始皇陵和兵马俑。",
+    "heartCost": 90,
+    "art": "story_42_xian_terracotta",
+    "artMode": "cover",
+    "artLabel": "故事插画",
+    "artFocusY": 0.18
+  },
+  {
     "id": "anniversary",
-    "title": "婚礼、领证与答谢宴",
+    "title": "乐清草坪婚礼",
     "dateLabel": "2026 年 10 月 3 日",
-    "summary": "乐清草坪婚礼、领证，再到仙居的酒店答谢宴。",
-    "diary": "2026 年 10 月 3 日，我们在乐清办了草坪婚礼。\n\n10 月 20 日，我们领了证。10 月 31 日，又在仙居的酒店办了答谢宴。婚礼、领证和答谢宴，是这个十月里三份不同的纪念。\n\n从 2023 年 9 月 8 日在舟山相识，到第一次牵手、100 封情书，再到旅行、求婚、订婚和成家，我们一起走到了这里。往后的故事，也想继续和你写下去。",
+    "summary": "2026 年 10 月 3 日，我们在乐清举办了草坪婚礼。",
+    "diary": "2026 年 10 月 3 日，我们在乐清办了草坪婚礼。\n\n从舟山相识，到一起走过的旅途，我们迎来了这一天。往后的故事，也想继续和你写下去。",
     "heartCost": 300,
     "art": "story_28_anniversary",
+    "artMode": "cover",
+    "artLabel": "故事插画",
+    "artFocusY": 0.18
+  },
+  {
+    "id": "marriage_registration",
+    "title": "我们领证了",
+    "dateLabel": "2026 年 10 月 20 日",
+    "summary": "这一天，我们领了证。",
+    "diary": "2026 年 10 月 20 日，我们领了证。\n\n这一天，是属于我们的另一份纪念。",
+    "heartCost": 120,
+    "art": "story_29_certificate",
+    "artMode": "cover",
+    "artLabel": "故事插画",
+    "artFocusY": 0.18
+  },
+  {
+    "id": "wedding_thanksgiving",
+    "title": "仙居答谢宴",
+    "dateLabel": "2026 年 10 月 31 日 · 仙居",
+    "summary": "在仙居举办酒店答谢宴，珍藏这份纪念。",
+    "diary": "2026 年 10 月 31 日，我们在仙居的酒店办了答谢宴。\n\n婚礼、领证和答谢宴，是这个十月里三份不同的纪念。",
+    "heartCost": 120,
+    "art": "story_30_thanksgiving",
     "artMode": "cover",
     "artLabel": "故事插画",
     "artFocusY": 0.18

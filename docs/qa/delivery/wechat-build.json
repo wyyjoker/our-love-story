@@ -1,0 +1,16 @@
+{
+  "creatorVersion": "3.8.8",
+  "creatorExitCode": 36,
+  "mainBytes": 3986348,
+  "mainLimit": 4000000,
+  "headroom": 13652,
+  "subpackages": {
+    "subpackages/game_art": 13719913,
+    "subpackages/internal": 689471,
+    "subpackages/main": 380452
+  },
+  "totalBytes": 18776184,
+  "sha256": "e41e3f77af4fbac7a2050b64e9d126394eaededa8899aba811b918d5951e8df2",
+  "uploaded": false,
+  "phoneVerified": false
+}

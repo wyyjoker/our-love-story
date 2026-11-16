@@ -43,11 +43,13 @@ describe('GameContext full loop', () => {
     // board[1] should be coffee_02 â€?tutorial order ready
     expect(game.orders.canClaim('order_start_1')).toBe(true);
 
+    const tutorialOrder = game.orders.getOrders().find((order) => order.uid === 'order_start_1')!;
+    const coinsBeforeClaim = game.player.coins;
     const claim = game.claimOrder('order_start_1');
     expect(claim.ok).toBe(true);
-    expect(game.player.coins).toBe(20);
-    expect(game.player.hearts).toBe(1);
-    expect(game.player.xp).toBe(10);
+    expect(game.player.coins).toBe(coinsBeforeClaim + tutorialOrder.rewardCoins);
+    expect(game.player.hearts).toBe(tutorialOrder.rewardHearts);
+    expect(game.player.xp).toBe(tutorialOrder.rewardXp);
 
     // spawn from generator
     const spawn = game.spawnFromGenerator('coffee_machine');

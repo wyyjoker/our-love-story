@@ -1,14 +1,16 @@
+import { RewardPalette } from './CocosRewardEffects';
 /**
  * CocosBoardView — per-cell touch binding.
  * CRITICAL: TOUCH_MOVE/END must be on the SAME node as TOUCH_START (Cocos
  * dispatches the gesture to the hit target, not the parent). Bind all 4 events
  * on every cell + board fallback.
  */
-import { BlockInputEvents, Button, EventMouse, EventTouch, Input, input, Vec2, Vec3, UITransform, Node, Graphics, Camera, Label } from 'cc';
+import { BlockInputEvents, Button, EventMouse, EventTouch, Input, input, isValid, tween, Tween, Vec2, Vec3, UITransform, Node, Graphics, Camera, Label } from 'cc';
 import type { BoardVm, ItemVm } from '../../presentation/GameViewMapper';
 import type { DropResolve } from '../../core/types';
 import { CocosCellView } from './CocosCellView';
 import { CocosItemView } from './CocosItemView';
+import { applyArt, itemArt, openedChestArt } from './CocosArt';
 import {
   CocosTheme,
   createUiNode,
@@ -27,6 +29,9 @@ export type BoardDeps = {
   onDragFinished?: () => void;
   onOpenAdventure?: () => void;
   onOpenTools?: () => void;
+  onOpenBackpack?: () => void;
+  onOpenOrangeTree?: () => void;
+  onStore?: (index: number, uid: string) => void;
   onItemTap?: (index: number) => void;
 };
 
@@ -37,11 +42,17 @@ export class CocosBoardView {
   private columns: number;
   private gap = 6;
   private cellSize = 64;
+  private cellWidth = 64;
+  private cellHeight = 64;
+  private gridLeft = 0;
+  private gridTop = 0;
   private boardW = 0;
   private boardH = 0;
   private deps: BoardDeps;
   private camera: Camera | null = null;
-  private occupancyLabel: Label | null = null;
+  private goalLabel: Label | null = null;
+  private backpackLabel: Label | null = null;
+  private readonly chestEffects = new Set<Node>();
 
   private drag: {
     fromIndex: number;
@@ -71,15 +82,8 @@ export class CocosBoardView {
     this.node = createUiNode('BoardView');
     parent.addChild(this.node);
     ensureTransform(this.node, this.boardW, this.boardH);
-    [['OpenAdventure', '今日约会', deps.onOpenAdventure], ['OpenTools', '仓库与剪刀', deps.onOpenTools]].forEach(([name, caption, tap], i) => {
-      const n = createUiNode(String(name)); this.node.addChild(n); ensureTransform(n, 286, 48);
-      n.setPosition(i === 0 ? -151 : 151, this.boardH / 2 - 27, 0);
-      paintRoundRect(n.addComponent(Graphics), 286, 48, 22, hexColor(i === 0 ? '#F6CFD5' : '#FFF8EF'), hexColor('#E6CFC2'), 1);
-      const l = makeLabel(String(caption), 23, hexColor('#825A54'), true); n.addChild(l.node);
-      n.addComponent(Button); n.addComponent(BlockInputEvents); n.on(Button.EventType.CLICK, () => { if (typeof tap === 'function') tap(); });
-    });
-
     this.layoutCells();
+    this.buildToolbar();
     this.bindBoardTouch();
     // Desktop browsers may cancel a node touch as the pointer leaves the source
     // cell. Global release still arrives and must finish the drag.
@@ -104,58 +108,108 @@ export class CocosBoardView {
   }
 
   private layoutCells(): void {
-    this.cellSize = Math.floor(
-      Math.min(
-        (this.boardW - 22 - (this.columns - 1) * this.gap) / this.columns,
-        (this.boardH - 98 - (this.rows - 1) * this.gap) / this.rows,
-      ),
-    );
-    const totalW = this.columns * this.cellSize + (this.columns - 1) * this.gap;
-    const totalH = this.rows * this.cellSize + (this.rows - 1) * this.gap;
-    const paperH = totalH + 32;
+    // Keep one clear objective row above the grid, then devote all remaining
+    // height to the seven-row board. Width always fills all six columns;
+    // shorter screens use wider tiles rather than empty side gutters.
+    const toolbarHeight = 72;
+    this.gap = this.boardH < 600 ? 4 : 6;
+    this.cellWidth = Math.max(1, (this.boardW - 16 - (this.columns - 1) * this.gap) / this.columns);
+    this.cellHeight = Math.max(1, Math.min(
+      this.cellWidth,
+      (this.boardH - toolbarHeight - 18 - (this.rows - 1) * this.gap) / this.rows,
+    ));
+    this.cellSize = Math.min(this.cellWidth, this.cellHeight);
+    const totalW = this.columns * this.cellWidth + (this.columns - 1) * this.gap;
+    const totalH = this.rows * this.cellHeight + (this.rows - 1) * this.gap;
+    const paperH = totalH + 16;
+    const paperY = -this.boardH / 2 + paperH / 2 + 2;
     const paper = createUiNode('BoardPaper');
     this.node.addChild(paper);
     ensureTransform(paper, this.boardW, paperH);
-    paper.setPosition(0, -33, 0);
+    paper.setPosition(0, paperY, 0);
     paintRoundRect(paper.addComponent(Graphics), this.boardW, paperH, 22, hexColor('#FFF4E9', 244), hexColor('#FFFFFF'), 2);
-    this.addBoardNotes(paperH);
-    const originX = -totalW / 2 + this.cellSize / 2;
-    const originY = totalH / 2 - this.cellSize / 2 - 33;
-
+    this.gridLeft = -totalW / 2;
+    this.gridTop = paperY + totalH / 2;
+    const originX = this.gridLeft + this.cellWidth / 2;
+    const originY = this.gridTop - this.cellHeight / 2;
     this.cells = [];
     for (let r = 0; r < this.rows; r += 1) {
       for (let c = 0; c < this.columns; c += 1) {
         const index = r * this.columns + c;
-        const cell = new CocosCellView(this.node, index, this.cellSize);
-        const x = originX + c * (this.cellSize + this.gap);
-        const y = originY - r * (this.cellSize + this.gap);
-        cell.node.setPosition(x, y, 0);
+        const cell = new CocosCellView(this.node, index, this.cellWidth, this.cellHeight);
+        cell.node.setPosition(originX + c * (this.cellWidth + this.gap), originY - r * (this.cellHeight + this.gap), 0);
         this.cells.push(cell);
         this.bindNodeTouch(cell.node, index);
       }
     }
   }
 
-  private addBoardNotes(paperH: number): void {
-    const freeHalf = (this.boardH - 66 - paperH) / 2;
-    if (freeHalf < 64) return;
-    const noteY = paperH / 2 + freeHalf / 2;
-    const top = createUiNode('BoardSummary');
-    this.node.addChild(top);
-    top.setPosition(0, noteY - 33, 0);
-    paintRoundRect(top.addComponent(Graphics), 496, 58, 28, hexColor('#FFF9F3', 235), hexColor('#F5D7CD'), 1);
-    const count = makeLabel('', 24, hexColor('#825A54'), true);
-    top.addChild(count.node);
-    ensureTransform(count.node, 470, 48);
-    this.occupancyLabel = count;
+  private addOrangeTreeNav(parent: Node, x: number, y: number, width: number, height: number): void {
+    const nav = createUiNode('OpenOrangeTreeDock');
+    parent.addChild(nav);
+    ensureTransform(nav, width, height);
+    nav.setPosition(x, y, 0);
+    paintRoundRect(nav.addComponent(Graphics), width, height, height / 2, hexColor('#FFF0D4'), hexColor('#E8CB91'), 1);
+    const label = makeLabel('› 橘树', 17, hexColor('#805A3B'), true);
+    nav.addChild(label.node);
+    ensureTransform(label.node, width - 6, height - 4);
+    label.overflow = Label.Overflow.SHRINK;
+    nav.addComponent(Button);
+    nav.addComponent(BlockInputEvents);
+    nav.on(Button.EventType.CLICK, () => this.deps.onOpenOrangeTree?.());
+  }
 
-    const bottom = createUiNode('BoardHint');
-    this.node.addChild(bottom);
-    bottom.setPosition(0, -noteY - 33, 0);
-    paintRoundRect(bottom.addComponent(Graphics), 496, 58, 28, hexColor('#FFF9F3', 235), hexColor('#F5D7CD'), 1);
-    const hint = makeLabel('♡  拖动相同物品，合成更高等级', 22, hexColor('#966C66'));
-    bottom.addChild(hint.node);
-    ensureTransform(hint.node, 470, 48);
+  private buildToolbar(): void {
+    const height = 64, topY = this.boardH / 2 - height / 2 - 2;
+    const summaryWidth = this.boardW - 174;
+    const summary = createUiNode('BoardSummary'); this.node.addChild(summary);
+    ensureTransform(summary, summaryWidth, height); summary.setPosition(-87, topY, 0);
+    paintRoundRect(summary.addComponent(Graphics), summaryWidth, height, 22, hexColor('#FFF9F1'), hexColor('#E9D6C8'), 1);
+    const adventure = createUiNode('OpenAdventure'); summary.addChild(adventure);
+    ensureTransform(adventure, summaryWidth - 78, height); adventure.setPosition(-39, 0, 0);
+    const heart = makeLabel('♥', 24, hexColor('#D78696'), true); adventure.addChild(heart.node);
+    ensureTransform(heart.node, 32, 36); heart.node.setPosition(-summaryWidth / 2 + 62, 0, 0);
+    const goal = makeLabel('今日约会 · 看看今天的小目标', 24, hexColor('#825A54'), true);
+    adventure.addChild(goal.node); goal.node.name = 'BoardGoalText';
+    ensureTransform(goal.node, summaryWidth - 130, 48); goal.node.setPosition(17, 0, 0);
+    goal.enableWrapText = false; goal.overflow = Label.Overflow.SHRINK; this.goalLabel = goal;
+    adventure.addComponent(Button); adventure.on(Button.EventType.CLICK, () => this.deps.onOpenAdventure?.());
+    this.addOrangeTreeNav(summary, summaryWidth / 2 - 38, 0, 64, 48);
+
+    const bag = createUiNode('BoardBackpackButton'); this.node.addChild(bag);
+    ensureTransform(bag, 80, height); bag.setPosition(this.boardW / 2 - 126, topY, 0);
+    paintRoundRect(bag.addComponent(Graphics), 80, height, 20, hexColor('#FFF8EF'), hexColor('#E6CFC2'), 1);
+    const art = createUiNode('BackpackDropIcon'); bag.addChild(art); art.setPosition(0, 6, 0);
+    applyArt(art, { sheet: 'scissors_backpack_sheet', index: 5, columns: 3, rows: 2, preserveAspect: true }, 60, 56);
+    const count = createUiNode('BackpackCount'); bag.addChild(count); count.setPosition(18, -21, 0);
+    paintRoundRect(count.addComponent(Graphics), 48, 26, 13, hexColor('#FFFFFF'), hexColor('#E6CFC2'), 1);
+    this.backpackLabel = makeLabel('0/6', 18, hexColor('#825A54'), true);
+    this.backpackLabel.node.name = 'BoardBackpackLabel'; count.addChild(this.backpackLabel.node); ensureTransform(this.backpackLabel.node, 44, 24);
+    const supplies = createUiNode('OpenTools'); this.node.addChild(supplies);
+    ensureTransform(supplies, 78, height); supplies.setPosition(this.boardW / 2 - 40, topY, 0);
+    paintRoundRect(supplies.addComponent(Graphics), 78, height, 20, hexColor('#FFF8EF'), hexColor('#E6CFC2'), 1);
+    const gift = createUiNode('SupplyShortcutArt'); supplies.addChild(gift); gift.setPosition(0, 10, 0);
+    const giftArt = itemArt('treasure_chest'); if (giftArt) applyArt(gift, { ...giftArt, preserveAspect: true }, 42, 38);
+    const caption = makeLabel('补给', 19, hexColor('#825A54'), true); supplies.addChild(caption.node); ensureTransform(caption.node, 64, 25); caption.node.setPosition(0, -21, 0);
+    for (const [node, tap] of [[bag, this.deps.onOpenBackpack], [supplies, this.deps.onOpenTools]] as const) {
+      node.addComponent(Button); node.addComponent(BlockInputEvents);
+      let intentionalTap = false;
+      node.on(Node.EventType.TOUCH_START, () => { intentionalTap = this.drag === null; });
+      node.on(Node.EventType.TOUCH_CANCEL, () => { intentionalTap = false; });
+      node.on(Button.EventType.CLICK, () => { if (!intentionalTap) return; intentionalTap = false; tap?.(); });
+    }
+  }
+
+  shortcutAnchor(name: 'BoardBackpackButton' | 'OpenTools'): Vec3 | null {
+    return this.node.getChildByName(name)?.worldPosition.clone() ?? null;
+  }
+
+  setBackpackUsage(used: number, capacity: number): void {
+    if (this.backpackLabel) this.backpackLabel.string = `${used}/${capacity}`;
+  }
+
+  setGoalText(text: string): void {
+    if (this.goalLabel) this.goalLabel.string = text;
   }
 
   /** Bind the full gesture on one node so MOVE/END arrive at the same target as START. */
@@ -213,22 +267,20 @@ export class CocosBoardView {
   }
 
   private indexFromLocal(local: Vec3): number | null {
-    const totalW = this.columns * this.cellSize + (this.columns - 1) * this.gap;
-    const totalH = this.rows * this.cellSize + (this.rows - 1) * this.gap;
-    const originX = -totalW / 2;
-    const originY = -totalH / 2 - 33;
-    const x = local.x - originX;
-    const y = local.y - originY;
+    const totalW = this.columns * this.cellWidth + (this.columns - 1) * this.gap;
+    const totalH = this.rows * this.cellHeight + (this.rows - 1) * this.gap;
+    const x = local.x - this.gridLeft;
+    const y = this.gridTop - local.y;
     if (x < 0 || y < 0 || x > totalW || y > totalH) return null;
-    const step = this.cellSize + this.gap;
-    const c = Math.floor(x / step);
-    const r = Math.floor(y / step);
+    const stepX = this.cellWidth + this.gap;
+    const stepY = this.cellHeight + this.gap;
+    const c = Math.floor(x / stepX);
+    const r = Math.floor(y / stepY);
     if (c < 0 || r < 0 || c >= this.columns || r >= this.rows) return null;
-    const offsetX = x % step;
-    const offsetY = y % step;
-    if (offsetX > this.cellSize || offsetY > this.cellSize) return null;
-    const row = this.rows - 1 - r;
-    return row * this.columns + c;
+    const offsetX = x % stepX;
+    const offsetY = y % stepY;
+    if (offsetX > this.cellWidth || offsetY > this.cellHeight) return null;
+    return r * this.columns + c;
   }
 
   private indexFromHitTest(touch: EventTouch | EventMouse): number | null {
@@ -259,7 +311,7 @@ export class CocosBoardView {
     if (index === null || index < 0) return;
     const cell = this.cells[index];
     const item = cell?.itemView;
-    if (!cell || !item || !item.node.active || !item.uid) return;
+    if (!cell || cell.isLocked || !item || !item.node.active || !item.uid) return;
 
     this.drag = {
       fromIndex: index,
@@ -285,6 +337,7 @@ export class CocosBoardView {
     const to = this.resolveIndex(e);
     this.moveGhost(e);
     this.highlightTarget(e, to);
+    this.paintBackpack(this.overBackpack(e));
   }
 
   onTouchEnd(e: EventTouch | EventMouse): void {
@@ -293,7 +346,8 @@ export class CocosBoardView {
     const to = this.resolveIndex(e);
     this.drag = null;
     try {
-      if (drag.active) this.deps.onDrop(drag.fromIndex, to);
+      if (drag.active && this.overBackpack(e)) this.deps.onStore?.(drag.fromIndex, drag.uid);
+      else if (drag.active) this.deps.onDrop(drag.fromIndex, to);
       else this.deps.onItemTap?.(drag.fromIndex);
     } finally {
       drag.ghost?.destroy();
@@ -350,14 +404,29 @@ export class CocosBoardView {
     if (index === null || index < 0 || index === this.drag.fromIndex) return;
     const preview = this.deps.previewDrop(this.drag.fromIndex, index);
     const cell = this.cells[index];
-    if (!cell) return;
-    if (preview.kind === 'MERGE') cell.setHighlight('merge');
+    if (!cell || cell.isLocked) return;
+    if (preview.kind === 'MERGE' || preview.kind === 'SPLIT') cell.setHighlight('merge');
     else if (preview.kind === 'MOVE' || preview.kind === 'SWAP') {
       cell.setHighlight('move');
     }
   }
 
+  private paintBackpack(hover: boolean): void {
+    const node = this.node.getChildByName('BoardBackpackButton'); const tr = node?.getComponent(UITransform), ink = node?.getComponent(Graphics);
+    if (tr && ink) paintRoundRect(ink, tr.width, tr.height, tr.height / 2, hexColor(hover ? '#DFECCD' : '#FFF8EF'), hexColor(hover ? '#9DBA8E' : '#E6CFC2'), hover ? 2 : 1);
+  }
+
+  private overBackpack(event: EventTouch | EventMouse): boolean {
+    const node = this.node.getChildByName('BoardBackpackButton'); const tr = node?.getComponent(UITransform);
+    if (!node || !tr) return false;
+    const p = tr.convertToNodeSpaceAR(this.uiToWorld(event.getUILocation(), event));
+    const icon = node.getChildByName('BackpackDropIcon')?.getComponent(UITransform);
+    const q = icon?.convertToNodeSpaceAR(this.uiToWorld(event.getUILocation(), event));
+    return (Math.abs(p.x) <= tr.width / 2 && Math.abs(p.y) <= tr.height / 2) || !!(icon && q && Math.abs(q.x) <= icon.width / 2 && Math.abs(q.y) <= icon.height / 2);
+  }
+
   private clearHighlights(): void {
+    this.paintBackpack(false);
     for (const cell of this.cells) cell.setHighlight('none');
   }
 
@@ -367,7 +436,6 @@ export class CocosBoardView {
   }
 
   render(vm: BoardVm): void {
-    if (this.occupancyLabel) this.occupancyLabel.string = '棋盘物品  ' + vm.items.length + ' / ' + this.rows * this.columns;
     const byCell = new Map<number, ItemVm>();
     const byUid = new Map<string, ItemVm>();
     for (const item of vm.items) {
@@ -375,7 +443,10 @@ export class CocosBoardView {
       byUid.set(item.uid, item);
     }
     this.pendingVm = byUid;
+    const lockedIndices = new Set((vm as BoardVm & { lockedIndices?: number[] }).lockedIndices ?? []);
+    const unlockLevels = (vm as BoardVm & { lockedUnlockLevels?: Array<number | null> }).lockedUnlockLevels ?? [];
     for (const cell of this.cells) {
+      cell.setLocked(lockedIndices.has(cell.index), unlockLevels[cell.index] ?? null);
       const item = byCell.get(cell.index) ?? null;
       cell.setItem(item);
       if (item && cell.itemView && !this.boundItemNodes.has(cell.itemView.node)) {
@@ -394,7 +465,68 @@ export class CocosBoardView {
     this.cells[index]?.playSpawnPop();
   }
 
+  playChestOpen(index: number, level: number, loot: ReadonlyArray<{ uid: string; definitionId: string; cellIndex: number | null }>): void {
+    const source = this.cells[index]; if (!source) return;
+    const effect = createUiNode('ChestOpenBurst'); this.node.addChild(effect);
+    this.chestEffects.add(effect);
+    const origin = source.node.position.clone();
+    effect.once(Node.EventType.NODE_DESTROYED, () => {
+      this.chestEffects.delete(effect); Tween.stopAllByTarget(effect);
+      for (const child of effect.children) Tween.stopAllByTarget(child);
+    });
+    const glow = createUiNode('ChestOpenGlow'); effect.addChild(glow); glow.setPosition(origin);
+    const ink = glow.addComponent(Graphics); ink.fillColor = hexColor('#F7DED3', 180); ink.circle(0, 0, this.cellSize * 0.7); ink.fill();
+    for (let i = 0; i < 10; i += 1) {
+      const angle = i * Math.PI / 5, radius = this.cellSize * 0.88;
+      ink.fillColor = hexColor(i % 2 ? '#EDB7C3' : '#F1C46E');
+      const x = Math.cos(angle) * radius, y = Math.sin(angle) * radius;
+      ink.moveTo(x, y + 5); ink.lineTo(x + 3, y); ink.lineTo(x, y - 5); ink.lineTo(x - 3, y); ink.close(); ink.fill();
+    }
+    const opened = createUiNode('OpenedChest'); effect.addChild(opened); opened.setPosition(origin);
+    applyArt(opened, { ...openedChestArt(), preserveAspect: true }, this.cellSize * 1.25, this.cellSize * 1.25);
+    opened.setScale(0.45, 0.45, 1); tween(opened).to(0.16, { scale: new Vec3(1.06, 1.06, 1) }).to(0.12, { scale: new Vec3(1, 1, 1) }).delay(0.45).to(0.14, { scale: new Vec3(0, 0, 1) }).start();
+    const inBox = loot.filter((entry) => entry.cellIndex === null).length;
+    const summary = createUiNode('ChestLootSummary'); effect.addChild(summary);
+    const summaryY = this.gridTop - (this.rows * this.cellHeight + (this.rows - 1) * this.gap) + 40;
+    summary.setPosition(0, summaryY, 0); ensureTransform(summary, Math.min(560, this.boardW - 16), 62);
+    paintRoundRect(summary.addComponent(Graphics), Math.min(560, this.boardW - 16), 62, 24, hexColor(RewardPalette.paper), hexColor(RewardPalette.edge), 1.5);
+    const caption = makeLabel(`Lv${level} 宝箱 · 随机获得 ${loot.length} 件补给${inBox ? `\n${inBox} 件已放入恢复箱` : ''}`, 23, hexColor('#9A6746'), true);
+    summary.addChild(caption.node); ensureTransform(caption.node, Math.min(530, this.boardW - 40), 56); caption.enableWrapText = true; caption.overflow = Label.Overflow.SHRINK;
+    for (const [i, entry] of loot.slice(0, 8).entries()) {
+      const icon = createUiNode('ChestLootParticle'); effect.addChild(icon);
+      const art = itemArt(entry.definitionId); if (art) applyArt(icon, { ...art, preserveAspect: true }, this.cellSize * 0.7, this.cellSize * 0.7);
+      icon.setPosition(origin); icon.setScale(0.25, 0.25, 1); icon.pauseSystemEvents(true);
+      const angle = -Math.PI / 2 + i * Math.PI * 2 / Math.min(8, loot.length);
+      const bounce = new Vec3(origin.x + Math.cos(angle) * this.cellSize * 0.8, origin.y + Math.sin(angle) * this.cellSize * 0.8, 0);
+      const destination = entry.cellIndex === null ? this.node.getChildByName('OpenTools')?.position.clone() ?? origin : this.cells[entry.cellIndex]?.node.position.clone() ?? origin;
+      tween(icon).delay(i * 0.055).to(0.18, { position: bounce, scale: new Vec3(1.2, 1.2, 1) }).to(0.34, { position: destination, scale: new Vec3(0.85, 0.85, 1) }).to(0.1, { scale: new Vec3(0, 0, 1) }).start();
+    }
+    effect.pauseSystemEvents(true);
+    tween(effect).delay(1.5).call(() => { if (isValid(effect, true)) effect.destroy(); }).start();
+  }
+
+  clearChestEffects(): void {
+    for (const effect of Array.from(this.chestEffects)) { Tween.stopAllByTarget(effect); effect.destroy(); }
+    this.chestEffects.clear();
+  }
+
+  playResourceUse(index: number, definitionId: string, amount: number, unit: string): void {
+    const source = this.cells[index]; if (!source) return;
+    const effect = createUiNode('ResourceUseBurst'); this.node.addChild(effect); this.chestEffects.add(effect);
+    effect.setPosition(source.node.position);
+    effect.once(Node.EventType.NODE_DESTROYED, () => { this.chestEffects.delete(effect); Tween.stopAllByTarget(effect); });
+    const art = itemArt(definitionId);
+    if (art) { const icon = createUiNode('UsedResourceIcon'); effect.addChild(icon); applyArt(icon, { ...art, preserveAspect: true }, this.cellSize * 0.85, this.cellSize * 0.85); }
+    const message = makeLabel(`+${amount} ${unit}`, 28, hexColor(unit === '体力' ? '#64825B' : unit === '钻石' ? '#9171B8' : '#AA763D'), true);
+    message.node.name = 'ResourceUseAmount'; effect.addChild(message.node);
+    ensureTransform(message.node, 210, 46); message.node.setPosition(0, this.cellSize * 0.65, 0); message.overflow = Label.Overflow.SHRINK;
+    effect.pauseSystemEvents(true); effect.setScale(0.75, 0.75, 1);
+    const destination = new Vec3(effect.position.x, effect.position.y + this.cellSize * 0.6, 0);
+    tween(effect).to(0.12, { scale: new Vec3(1.12, 1.12, 1) }).to(0.4, { position: destination, scale: new Vec3(0.9, 0.9, 1) }).to(0.12, { scale: new Vec3(0, 0, 1) }).call(() => { if (isValid(effect, true)) effect.destroy(); }).start();
+  }
+
   dispose(): void {
+    this.clearChestEffects();
     input.off(Input.EventType.MOUSE_MOVE, this.onTouchMove, this);
     input.off(Input.EventType.MOUSE_UP, this.onTouchEnd, this);
     input.off(Input.EventType.TOUCH_MOVE, this.onTouchMove, this);

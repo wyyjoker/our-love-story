@@ -1,4 +1,11 @@
 export type GameEventMap = {
+  COLLECTION_CHANGED: { chainId: string };
+  JOURNAL_CHANGED: Record<string, never>;
+  GENERATOR_CHANGED: { generatorId: string };
+  DAILY_TASKS_CHANGED: { day: number };
+  REWARDS_CHANGED: { reason: 'inbox' | 'used' | 'exchange' };
+  DISCOVERY_CHANGED: { definitionId: string };
+  CHECK_IN_CHANGED: { day: number };
   PLAY_CHANGED: { reason: 'warehouse' | 'scissors' | 'chapter' | 'reward' };
   ITEM_SPAWNED: {
     uid: string;

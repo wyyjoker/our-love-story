@@ -1,0 +1,3 @@
+#love-loading { position: fixed; inset: 0; z-index: 2147483647; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 0 20px max(12vh, 48px); box-sizing: border-box; background: #f4e5d8 url('love_loading.jpg') center / cover no-repeat; color: #654738; font: 500 18px/1.6 system-ui, sans-serif; text-align: center; }
+#love-loading-title { font-size: 25px; font-weight: 700; text-shadow: 0 1px 8px #fff; }
+#love-loading-message { margin-top: 8px; padding: 4px 14px; border-radius: 18px; background: rgba(255,250,245,.86); }

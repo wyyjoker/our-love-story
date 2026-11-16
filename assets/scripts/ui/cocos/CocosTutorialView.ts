@@ -1,8 +1,9 @@
 /**
  * CocosTutorialView — hint bubble (never blocks board input).
  */
-import { Button, Node, Label, Graphics, Tween, tween, UITransform, Vec3 } from 'cc';
+import { Button, Node, Label, Graphics, Tween, tween, UITransform, Vec3, isValid } from 'cc';
 import { applyArt, itemArt } from './CocosArt';
+import type { FirstUseHint } from '../../core/types';
 import {
   CocosTheme,
   createUiNode,
@@ -21,9 +22,13 @@ export class CocosTutorialView {
   private guide: Node;
   private guideKey = '';
   private animation: Tween<{ t: number }> | null = null;
+  private disposed = false;
+  private activeHint: FirstUseHint | null = null;
+  private dismissTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(parent: Node, width: number, height: number) {
+  constructor(parent: Node, width: number, height: number, private readonly onDismiss?: (hint: FirstUseHint) => void) {
     this.node = createUiNode('TutorialView');
+    this.node.on(Node.EventType.NODE_DESTROYED, () => this.dispose());
     parent.addChild(this.node);
     ensureTransform(this.node, 0, 0);
     this.guide = createUiNode('TutorialGesture');
@@ -49,27 +54,36 @@ export class CocosTutorialView {
     const closeLabel = makeLabel('×', 25, CocosTheme.textSecondary(), true);
     close.addChild(closeLabel.node);
     close.addComponent(Button);
-    close.on(Button.EventType.CLICK, () => {
-      this.dismissedText = this.label.string;
-      this.bubble.active = false;
-      this.stopGuide();
-    });
+    close.on(Button.EventType.CLICK, () => this.dismiss());
     this.bubble.active = false;
   }
 
-  show(text: string): void {
+  show(text: string, hint?: FirstUseHint): void {
+    if (this.disposed) return;
+    if (this.label.string === text && this.activeHint === (hint ?? null) && this.bubble.active) return;
+    this.clearDismissTimer();
     if (this.label.string !== text) this.stopGuide();
-    this.label.string = text;
+    this.activeHint = hint ?? null; this.label.string = text;
     this.bubble.active = text !== this.dismissedText;
+    if (hint && this.bubble.active) this.dismissTimer = setTimeout(() => this.dismiss(), 6000);
   }
 
+  private clearDismissTimer(): void {
+    if (this.dismissTimer !== null) clearTimeout(this.dismissTimer);
+    this.dismissTimer = null;
+  }
+  private dismiss(): void {
+    const hint = this.activeHint; this.dismissedText = this.label.string; this.hide();
+    if (hint) this.onDismiss?.(hint);
+  }
   hide(): void {
-    this.bubble.active = false;
+    this.clearDismissTimer(); this.activeHint = null;
+    if (isValid(this.bubble, true)) this.bubble.active = false;
     this.stopGuide();
   }
 
   showGesture(fromWorld: Vec3, toWorld: Vec3, definitionId = '', size = 64): void {
-    if (!this.bubble.active) return;
+    if (this.disposed || !this.bubble.active) return;
     const tr = this.node.getComponent(UITransform)!;
     const from = tr.convertToNodeSpaceAR(fromWorld);
     const to = tr.convertToNodeSpaceAR(toWorld);
@@ -112,7 +126,10 @@ export class CocosTutorialView {
     moving.setPosition(point(0));
     const state = { t: 0 };
     this.animation = tween(state).to(1.15, { t: 1 }, {
-      onUpdate: (target) => moving.setPosition(point(target?.t ?? 0)),
+      onUpdate: (target) => {
+        if (!this.disposed && isValid(moving, true) && isValid(this.guide, true)) moving.setPosition(point(target?.t ?? 0));
+        else this.animation?.stop();
+      },
     }).delay(0.45).call(() => { state.t = 0; }).union().repeatForever().start();
     this.guide.pauseSystemEvents(true);
   }
@@ -121,8 +138,8 @@ export class CocosTutorialView {
     this.animation?.stop();
     this.animation = null;
     this.guideKey = '';
-    this.guide.active = false;
+    if (isValid(this.guide, true)) this.guide.active = false;
   }
 
-  dispose(): void { this.stopGuide(); }
+  dispose(): void { this.disposed = true; this.clearDismissTimer(); this.stopGuide(); }
 }

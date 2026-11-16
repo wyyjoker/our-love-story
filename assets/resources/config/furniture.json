@@ -158,5 +158,325 @@
     "unlockLevel": 18,
     "decorPoints": 6,
     "art": "art/furniture_swing"
+  },
+  {
+    "id": "cream_sofa",
+    "title": "奶油弧形沙发",
+    "category": "客厅",
+    "room": "living",
+    "placement": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 200
+    },
+    "coinCost": 200,
+    "unlockLevel": 1,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#0"
+  },
+  {
+    "id": "mint_sofa",
+    "title": "薄荷双人沙发",
+    "category": "客厅",
+    "room": "living",
+    "placement": {
+      "x": 0,
+      "y": -45,
+      "width": 300,
+      "height": 190
+    },
+    "coinCost": 225,
+    "unlockLevel": 1,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#1"
+  },
+  {
+    "id": "rattan_coffee_table",
+    "title": "圆形藤茶几",
+    "category": "客厅",
+    "room": "living",
+    "placement": {
+      "x": 0,
+      "y": -170,
+      "width": 180,
+      "height": 150
+    },
+    "coinCost": 250,
+    "unlockLevel": 1,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#2"
+  },
+  {
+    "id": "glass_side_table",
+    "title": "玻璃边桌",
+    "category": "客厅",
+    "room": "living",
+    "placement": {
+      "x": 190,
+      "y": -150,
+      "width": 140,
+      "height": 150
+    },
+    "coinCost": 275,
+    "unlockLevel": 1,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#3"
+  },
+  {
+    "id": "blue_bed",
+    "title": "蓝色软包床",
+    "category": "卧室",
+    "room": "bedroom",
+    "placement": {
+      "x": 20,
+      "y": -80,
+      "width": 350,
+      "height": 250
+    },
+    "coinCost": 300,
+    "unlockLevel": 2,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#4"
+  },
+  {
+    "id": "wood_bed",
+    "title": "原木四柱床",
+    "category": "卧室",
+    "room": "bedroom",
+    "placement": {
+      "x": 30,
+      "y": -60,
+      "width": 350,
+      "height": 280
+    },
+    "coinCost": 325,
+    "unlockLevel": 2,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#5"
+  },
+  {
+    "id": "wood_desk",
+    "title": "圆木书桌",
+    "category": "书房",
+    "room": "study",
+    "placement": {
+      "x": -100,
+      "y": -100,
+      "width": 260,
+      "height": 210
+    },
+    "coinCost": 350,
+    "unlockLevel": 2,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#6"
+  },
+  {
+    "id": "cream_bookcase",
+    "title": "奶油书柜",
+    "category": "书房",
+    "room": "study",
+    "placement": {
+      "x": -210,
+      "y": 90,
+      "width": 160,
+      "height": 260
+    },
+    "coinCost": 375,
+    "unlockLevel": 2,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#7"
+  },
+  {
+    "id": "reading_chair",
+    "title": "阅读扶手椅",
+    "category": "书房",
+    "room": "study",
+    "placement": {
+      "x": 160,
+      "y": -100,
+      "width": 190,
+      "height": 220
+    },
+    "coinCost": 400,
+    "unlockLevel": 3,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#8"
+  },
+  {
+    "id": "record_cabinet",
+    "title": "唱片柜",
+    "category": "书房",
+    "room": "study",
+    "placement": {
+      "x": 170,
+      "y": 60,
+      "width": 170,
+      "height": 210
+    },
+    "coinCost": 425,
+    "unlockLevel": 3,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#9"
+  },
+  {
+    "id": "terrace_chair",
+    "title": "露台藤椅",
+    "category": "露台",
+    "room": "terrace",
+    "placement": {
+      "x": -180,
+      "y": -120,
+      "width": 190,
+      "height": 200
+    },
+    "coinCost": 450,
+    "unlockLevel": 3,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#10"
+  },
+  {
+    "id": "flower_bench",
+    "title": "花架长凳",
+    "category": "露台",
+    "room": "terrace",
+    "placement": {
+      "x": 120,
+      "y": -100,
+      "width": 260,
+      "height": 220
+    },
+    "coinCost": 475,
+    "unlockLevel": 3,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#11"
+  },
+  {
+    "id": "greenhouse_shelf",
+    "title": "温室花架",
+    "category": "露台",
+    "room": "terrace",
+    "placement": {
+      "x": -200,
+      "y": 70,
+      "width": 180,
+      "height": 250
+    },
+    "coinCost": 500,
+    "unlockLevel": 4,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#12"
+  },
+  {
+    "id": "outdoor_table",
+    "title": "户外小餐桌",
+    "category": "露台",
+    "room": "terrace",
+    "placement": {
+      "x": 20,
+      "y": -170,
+      "width": 190,
+      "height": 180
+    },
+    "coinCost": 525,
+    "unlockLevel": 4,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#13"
+  },
+  {
+    "id": "rattan_light",
+    "title": "藤编落地灯",
+    "category": "露台",
+    "room": "terrace",
+    "placement": {
+      "x": 230,
+      "y": -45,
+      "width": 130,
+      "height": 190
+    },
+    "coinCost": 550,
+    "unlockLevel": 4,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#14"
+  },
+  {
+    "id": "round_rug",
+    "title": "圆形花纹地毯",
+    "category": "装饰",
+    "room": "living",
+    "placement": {
+      "x": 0,
+      "y": -200,
+      "width": 270,
+      "height": 130
+    },
+    "coinCost": 575,
+    "unlockLevel": 4,
+    "decorPoints": 5,
+    "art": "furniture_expansion_sheet#15"
+  },
+  {
+    "id": "pool_lounger",
+    "title": "奶油躺椅",
+    "category": "泳池",
+    "room": "pool",
+    "placement": {
+      "x": -65,
+      "y": -195,
+      "width": 250,
+      "height": 180
+    },
+    "coinCost": 400,
+    "unlockLevel": 5,
+    "decorPoints": 5,
+    "art": "pool:0"
+  },
+  {
+    "id": "pool_umbrella",
+    "title": "遮阳伞与小边桌",
+    "category": "泳池",
+    "room": "pool",
+    "placement": {
+      "x": 190,
+      "y": -150,
+      "width": 220,
+      "height": 280
+    },
+    "coinCost": 425,
+    "unlockLevel": 6,
+    "decorPoints": 5,
+    "art": "pool:1"
+  },
+  {
+    "id": "pool_towel_rack",
+    "title": "木制毛巾架",
+    "category": "泳池",
+    "room": "pool",
+    "placement": {
+      "x": -245,
+      "y": -160,
+      "width": 130,
+      "height": 190
+    },
+    "coinCost": 450,
+    "unlockLevel": 7,
+    "decorPoints": 5,
+    "art": "pool:2"
+  },
+  {
+    "id": "pool_float",
+    "title": "粉色泳圈",
+    "category": "泳池",
+    "room": "pool",
+    "placement": {
+      "x": 60,
+      "y": 45,
+      "width": 170,
+      "height": 130
+    },
+    "coinCost": 475,
+    "unlockLevel": 8,
+    "decorPoints": 5,
+    "art": "pool:3"
   }
 ]

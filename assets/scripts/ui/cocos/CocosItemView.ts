@@ -19,14 +19,19 @@ export class CocosItemView {
   private g!: Graphics;
   private codeLabel!: Label;
   private size = 64;
+  private width: number;
+  private height: number;
   private currentUid = '';
   private artNode: Node;
+  private levelBadge: Label;
 
-  constructor(parent: Node, size: number) {
+  constructor(parent: Node, size: number, width = size, height = size) {
     this.size = size;
+    this.width = width;
+    this.height = height;
     this.node = createUiNode('ItemView');
     parent.addChild(this.node);
-    ensureTransform(this.node, size, size);
+    ensureTransform(this.node, width, height);
     this.g = this.node.addComponent(Graphics);
     ensureOpacity(this.node);
     this.artNode = createUiNode('ItemArt');
@@ -34,6 +39,13 @@ export class CocosItemView {
     ensureTransform(this.artNode, size * 0.9, size * 0.9);
     this.codeLabel = makeLabel('', Math.floor(size * 0.34), CocosTheme.surface(), true);
     this.node.addChild(this.codeLabel.node);
+    ensureTransform(this.codeLabel.node, width - 8, height - 4);
+    this.codeLabel.overflow = Label.Overflow.SHRINK;
+    const badge = createUiNode('ItemLevelBadge'); this.node.addChild(badge);
+    ensureTransform(badge, 42, 22); badge.setPosition(width / 2 - 24, -height / 2 + 13, 0);
+    paintRoundRect(badge.addComponent(Graphics), 42, 22, 10, CocosTheme.surface(), CocosTheme.primary(), 1);
+    this.levelBadge = makeLabel('', 15, CocosTheme.textPrimary(), true); badge.addChild(this.levelBadge.node);
+    ensureTransform(this.levelBadge.node, 40, 20); this.levelBadge.overflow = Label.Overflow.SHRINK;
   }
 
   get uid(): string {
@@ -42,13 +54,15 @@ export class CocosItemView {
 
   render(vm: ItemVm): void {
     this.currentUid = vm.uid;
-    paintRoundRect(this.g, this.size, this.size, 12, CocosTheme.surface());
+    paintRoundRect(this.g, this.width, this.height, 12, CocosTheme.surface());
     const art = itemArt(vm.definitionId);
     this.artNode.active = !!art;
     this.codeLabel.node.active = true;
     this.codeLabel.color = CocosTheme.chain(vm.chainId);
     this.codeLabel.string = `${vm.code}`;
-    if (art) applyArt(this.artNode, art, this.size * 0.9, this.size * 0.9,
+    this.levelBadge.node.parent!.active = ['treasure_chest', 'coin', 'energy', 'diamond', 'scissors'].includes(vm.chainId) || vm.level >= 9;
+    this.levelBadge.string = vm.chainId === 'scissors' ? `${vm.remainingUses}次` : `Lv${vm.level}`;
+    if (art) applyArt(this.artNode, { ...art, preserveAspect: true }, this.size * 0.9, this.size * 0.9,
       (ready) => { this.codeLabel.node.active = !ready; });
     this.node.active = true;
   }

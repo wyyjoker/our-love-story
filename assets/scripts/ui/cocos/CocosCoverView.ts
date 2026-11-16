@@ -9,7 +9,8 @@ export class CocosCoverView {
 
   constructor(parent: Node, width: number, height: number, hasProgress: boolean, onEnter: () => void,
     bleed?: { width: number; height: number; x: number; y: number },
-    subtitleText = '把每一个平凡的日子，拼成浪漫的家') {
+    subtitleText = '把每一个平凡的日子，拼成浪漫的家',
+    personal?: { displayName?: string; message?: string }) {
     this.node = createUiNode('EntryCover');
     parent.addChild(this.node);
     ensureTransform(this.node, width, height);
@@ -36,9 +37,10 @@ export class CocosCoverView {
     title.overflow = Label.Overflow.SHRINK;
     title.node.setPosition(0, 34, 0);
 
-    const english = makeLabel('Our Love Story  ♡', 29, hexColor('#CD858B'));
+    const english = makeLabel(personal?.displayName?.trim() || 'Our Love Story  ♡', 29, hexColor('#CD858B'));
     titlePanel.addChild(english.node);
     ensureTransform(english.node, 570, 43);
+    english.overflow = Label.Overflow.SHRINK;
     english.node.setPosition(0, -22, 0);
 
     const subtitle = makeLabel(subtitleText, 20, hexColor('#936E65'));
@@ -46,6 +48,17 @@ export class CocosCoverView {
     ensureTransform(subtitle.node, 590, 36);
     subtitle.overflow = Label.Overflow.SHRINK;
     subtitle.node.setPosition(0, -67, 0);
+
+    if (personal?.message?.trim()) {
+      const dedication = makeLabel(personal.message.trim(), 26, hexColor('#744940'), true);
+      dedication.node.name = 'CoverDedication';
+      this.node.addChild(dedication.node);
+      ensureTransform(dedication.node, Math.min(width - 96, 590), 108);
+      dedication.enableWrapText = true;
+      dedication.overflow = Label.Overflow.SHRINK;
+      dedication.lineHeight = 36;
+      dedication.node.setPosition(0, height * 0.31 - 172, 0);
+    }
 
     const start = createUiNode('EnterGame');
     this.node.addChild(start);

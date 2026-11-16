@@ -11,6 +11,7 @@ function player(overrides: Partial<PlayerState> = {}): PlayerState {
     level: 1,
     xp: 0,
     coins: 0,
+    diamonds: 0,
     hearts: 0,
     energy: 50,
     maxEnergy: 50,

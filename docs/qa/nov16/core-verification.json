@@ -1,0 +1,24 @@
+{
+  "date": "2026-11-16",
+  "command": "npm run verify",
+  "exitCode": 0,
+  "core": {
+    "files": 43,
+    "tests": 305,
+    "passed": true
+  },
+  "tools": {
+    "tests": 6,
+    "passed": true
+  },
+  "steps": {
+    "lint:core": true,
+    "build:web": true,
+    "verify:cocos": true
+  },
+  "additional": {
+    "creatorDeclarationTypecheck": true,
+    "gitDiffWhitespaceCheck": true
+  },
+  "note": "Cocos static checks and Debug Harness build do not replace actual Creator builds. Actual builds and UI evidence are separate files in this folder."
+}

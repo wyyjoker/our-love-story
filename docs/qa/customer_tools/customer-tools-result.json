@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "scope": "customer_tools",
+  "checks": [
+    "customer-led side-by-side orders and illustrated navigation at 320",
+    "customer-led side-by-side orders and illustrated navigation at 375",
+    "customer-led side-by-side orders and illustrated navigation at 430",
+    "drag into backpack, take finite scissors, merge, drag to split and store worn tools across restart",
+    "full backpack rejects without loss and final scissors charge works on a full board"
+  ],
+  "exceptions": [],
+  "testedBuildDigest": "84ccdd1c55278c6d06d7dd2cc2d1c836cd2274b4b3f68815811a18e7f73c0303",
+  "version": "1.3.0",
+  "output": "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-23-51-770Z-lpW3Nd"
+}

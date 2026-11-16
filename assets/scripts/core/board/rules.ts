@@ -10,7 +10,7 @@ import {
   getCellItem,
   isValidIndex,
 } from '../board/board';
-import { MergeEngine } from '../merge/mergeEngine';
+import { MergeEngine, remainingToolUses } from '../merge/mergeEngine';
 import type { ItemCatalog } from '../item/catalog';
 
 export type ItemLocation = {
@@ -31,6 +31,7 @@ export function resolveDrop(
   if (!isValidIndex(to, board.rows, board.columns)) {
     return { kind: 'CANCEL' };
   }
+  if (board.cells[from]?.locked || board.cells[to]?.locked) return { kind: 'CANCEL' };
   if (from === to) {
     return { kind: 'CANCEL' };
   }
@@ -45,6 +46,14 @@ export function resolveDrop(
     return { kind: 'MOVE', from, to };
   }
 
+  const tool = catalog.get(source.definitionId), targetDefinition = catalog.get(target.definitionId);
+  if (tool?.maxUses && targetDefinition?.chainId !== tool.chainId) {
+    const uses = remainingToolUses(source, tool);
+    const previous = Array.from(catalog.values()).find((item) => item.nextItemId === target.definitionId);
+    if (uses <= 0 || !previous || targetDefinition?.maxUses || (uses > 1 && !board.cells.some((cell) => !cell.locked && !cell.item))) return { kind: 'CANCEL' };
+    return { kind: 'SPLIT', from, to };
+  }
+
   const mergeEngine = new MergeEngine(catalog);
   if (mergeEngine.canMerge(source, target)) {
     return { kind: 'MERGE', from, to };
@@ -53,6 +62,7 @@ export function resolveDrop(
 }
 
 export type BoardApplyResult =
+  | { ok: true; kind: 'SPLIT'; board: BoardState }
   | {
       ok: true;
       kind: 'MOVE' | 'SWAP';
@@ -85,6 +95,17 @@ export function applyDrop(
   }
 
   const targetIndex = drop.to;
+
+  if (drop.kind === 'SPLIT') {
+    const tool = catalog.get(source.definitionId)!, target = next.cells[targetIndex].item!;
+    const previous = Array.from(catalog.values()).find((item) => item.nextItemId === target.definitionId)!;
+    const uses = remainingToolUses(source, tool);
+    const extra = uses === 1 ? next.cells[from] : next.cells.find((cell) => !cell.locked && !cell.item)!;
+    next.cells[from].item = uses === 1 ? undefined : { ...source, remainingUses: uses - 1 };
+    next.cells[targetIndex].item = { uid: target.uid, definitionId: previous.id };
+    extra.item = { uid: nextUid, definitionId: previous.id };
+    return { ok: true, kind: 'SPLIT', board: next };
+  }
 
   if (drop.kind === 'MOVE') {
     next.cells[from].item = undefined;

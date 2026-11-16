@@ -36,7 +36,7 @@ describe('life content loop', () => {
     const game = createGameContext({ storage: storage(), deterministic: true });
     game.debugAddXp(7650);
     game.debugAddCoins(5000);
-    for (const item of game.bundle.furniture) {
+    for (const item of game.bundle.furniture.slice(0, 10)) {
       expect(game.buyFurniture(item.id).ok).toBe(true);
       expect(game.buyFurniture(item.id)).toEqual({ ok: false, reason: 'ALREADY_OWNED' });
     }
@@ -45,6 +45,32 @@ describe('life content loop', () => {
     expect(game.life.getDecorPoints()).toBe(46);
     expect(game.placeFurniture('sofa').ok).toBe(true);
     expect(game.life.getDecorPoints()).toBe(50);
+  });
+
+
+  it('places and restores furnishings across six independent rooms', () => {
+    const saved = storage();
+    const game = createGameContext({ storage: saved, deterministic: true });
+    game.debugAddXp(7650); game.debugAddCoins(20000);
+    expect(game.bundle.furniture).toHaveLength(30);
+    expect(new Set(game.bundle.furniture.map((item) => item.room))).toEqual(new Set(['living', 'bedroom', 'garden', 'study', 'terrace', 'pool']));
+    for (const item of game.bundle.furniture) expect(game.buyFurniture(item.id).ok).toBe(true);
+    expect(game.life.getDecorPoints()).toBe(game.bundle.furniture.reduce((total, item) => total + item.decorPoints, 0));
+    for (const room of ['living', 'bedroom', 'garden', 'study', 'terrace', 'pool'] as const) {
+      const item = game.bundle.furniture.find((entry) => entry.room === room)!;
+      expect(game.moveFurniture(item.id, 0.25, 0.75).ok).toBe(true);
+      expect(game.life.state.furniturePositions[item.id]).toEqual({ x: 0.25, y: 0.75 });
+    }
+    const restored = createGameContext({ storage: saved, deterministic: true });
+    for (const room of ['living', 'bedroom', 'garden', 'study', 'terrace', 'pool'] as const) {
+      const item = restored.bundle.furniture.find((entry) => entry.room === room)!;
+      expect(restored.life.state.furniturePositions[item.id]).toEqual({ x: 0.25, y: 0.75, scale: 1, rotation: 0, flipped: false });
+      expect(restored.resetFurniturePosition(item.id).ok).toBe(true);
+      expect(restored.life.state.furniturePositions[item.id]).toBeUndefined();
+      expect(restored.placeFurniture(item.id).ok).toBe(true);
+      expect(restored.life.state.placedFurnitureIds).not.toContain(item.id);
+      expect(restored.placeFurniture(item.id).ok).toBe(true);
+    }
   });
 
   it('claims wishes and level rewards only once; reward XP can level again', () => {

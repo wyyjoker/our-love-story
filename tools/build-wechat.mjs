@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { spawnSync } from 'node:child_process';
 import { prepareWechatBuild } from './prepare-wechat-build.mjs';
+import { applyStartupBranding } from './startup-branding.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 try {
@@ -26,9 +27,12 @@ try {
     const log = openSync(logPath, 'w');
     const started = Date.now();
     let result;
+    const creatorEnv = { ...process.env };
+    // Electron sets this when its embedded Node runner is active; Creator must launch normally.
+    delete creatorEnv.ELECTRON_RUN_AS_NODE;
     try {
       result = spawnSync(creator, ['--project', root, '--build', `configPath=${configPath.replaceAll('\\', '/')}`], {
-        cwd: root, windowsHide: true, stdio: ['ignore', log, log], timeout: 300_000,
+        cwd: root, env: creatorEnv, windowsHide: true, stdio: ['ignore', log, log], timeout: 300_000,
       });
     } finally { closeSync(log); }
     console.log(readFileSync(logPath, 'utf8').split(/\r?\n/).slice(-18).join('\n'));
@@ -45,6 +49,8 @@ try {
     if (project.appid !== appid || project.compileType !== 'game') {
       throw new Error('产物 AppID 或小游戏类型与本次配置不一致');
     }
+    const branding = await applyStartupBranding(root, buildDir, 'wechatgame', { notBefore: started });
+    console.log(`小屋启动图: ${branding.imageBytes} 字节`);
     const check = spawnSync(process.execPath, [join(root, 'tools/check-wechat-package.mjs'), buildDir], {
       cwd: root, stdio: 'inherit', windowsHide: true,
     });

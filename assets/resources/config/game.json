@@ -1,25 +1,101 @@
 {
   "gameTitle": "我们的浪漫小屋",
   "saveKey": "our-love-story-save",
-  "saveVersion": 3,
-  "toolbox": { "warehouseSlots": 6, "startingScissors": 2 },
+  "saveVersion": 8,
+  "toolbox": {
+    "warehouseSlots": 6,
+    "startingScissors": 2
+  },
   "board": {
-    "rows": 9,
-    "columns": 9
+    "rows": 7,
+    "columns": 6,
+    "unlocks": [
+      {
+        "level": 1,
+        "columns": 3,
+        "rows": 3
+      },
+      {
+        "level": 2,
+        "columns": 4,
+        "rows": 3
+      },
+      {
+        "level": 3,
+        "columns": 4,
+        "rows": 4
+      },
+      {
+        "level": 4,
+        "columns": 5,
+        "rows": 4
+      },
+      {
+        "level": 5,
+        "columns": 5,
+        "rows": 5
+      },
+      {
+        "level": 6,
+        "columns": 6,
+        "rows": 5
+      },
+      {
+        "level": 8,
+        "columns": 6,
+        "rows": 6
+      },
+      {
+        "level": 10,
+        "columns": 6,
+        "rows": 7
+      }
+    ]
   },
   "energy": {
     "maxEnergy": 100,
     "initialEnergy": 100,
     "generatorCost": 1,
-    "recoverIntervalMs": 240000
+    "recoverIntervalMs": 240000,
+    "maxByLevel": [
+      100,
+      150,
+      200,
+      250,
+      300,
+      350,
+      400,
+      450,
+      500,
+      550,
+      600,
+      650,
+      700,
+      750,
+      800,
+      850,
+      900,
+      1000
+    ]
   },
   "dragThresholdPx": 12,
   "orders": {
     "activeSlots": 3,
     "minRequirements": 1,
-    "maxRequirements": 2,
+    "maxRequirements": 3,
     "minItemLevel": 2,
-    "maxItemLevel": 5
+    "maxItemLevel": 5,
+    "refreshCooldownMs": 900000,
+    "refreshDiamondCost": 2,
+    "dynamic": {
+      "rareChance": 0.2,
+      "urgentChance": 0.1,
+      "urgentDurationMs": 1800000,
+      "rewardMultiplierMin": 1.2,
+      "rewardMultiplierMax": 1.8,
+      "rewardMultiplierMaxLevel": 18,
+      "twoItemChance": 0.3
+    }
   },
   "couple": {
     "gameTitle": "我们的浪漫小屋",
@@ -28,6 +104,305 @@
     "metMonth": "2023-09",
     "metDate": "2023-09-08",
     "weddingDate": "2026-10-03",
-    "theme": "warm-romantic"
+    "theme": "warm-romantic",
+    "gift": {
+      "coverMessage": "",
+      "title": "",
+      "salutation": "",
+      "body": "",
+      "signoff": "",
+      "signature": ""
+    }
+  },
+  "rewards": {
+    "discoveryCoins": 10,
+    "chestDropChance": 0.08,
+    "chestLoot": [
+      {
+        "itemId": "coin_01",
+        "weight": 5
+      },
+      {
+        "itemId": "energy_01",
+        "weight": 3
+      },
+      {
+        "itemId": "diamond_01",
+        "weight": 2
+      }
+    ],
+    "exchangeOffers": [
+      {
+        "id": "small",
+        "diamonds": 5,
+        "energy": 25
+      },
+      {
+        "id": "large",
+        "diamonds": 10,
+        "energy": 60
+      }
+    ],
+    "checkIn": [
+      {
+        "coins": 30,
+        "energy": 0,
+        "diamonds": 0
+      },
+      {
+        "coins": 0,
+        "energy": 15,
+        "diamonds": 0
+      },
+      {
+        "coins": 0,
+        "energy": 0,
+        "diamonds": 2
+      },
+      {
+        "coins": 50,
+        "energy": 0,
+        "diamonds": 0
+      },
+      {
+        "coins": 0,
+        "energy": 25,
+        "diamonds": 0
+      },
+      {
+        "coins": 0,
+        "energy": 0,
+        "diamonds": 3
+      },
+      {
+        "coins": 80,
+        "energy": 20,
+        "diamonds": 5,
+        "itemId": "scissors_02"
+      }
+    ],
+    "dailyTasks": [
+      {
+        "id": "orders_3",
+        "kind": "orders",
+        "title": "完成3笔订单",
+        "target": 3,
+        "reward": {
+          "coins": 50,
+          "xp": 20,
+          "energy": 10,
+          "diamonds": 1
+        }
+      },
+      {
+        "id": "merges_10",
+        "kind": "merges",
+        "title": "合成10次",
+        "target": 10,
+        "reward": {
+          "coins": 40,
+          "xp": 15,
+          "energy": 10,
+          "diamonds": 1
+        }
+      },
+      {
+        "id": "specific_2",
+        "kind": "specific",
+        "title": "合成指定物品2次",
+        "target": 2,
+        "reward": {
+          "coins": 35,
+          "xp": 15,
+          "energy": 5,
+          "diamonds": 1
+        }
+      }
+    ],
+    "chestLevels": [
+      {
+        "level": 1,
+        "count": 2
+      },
+      {
+        "level": 2,
+        "count": 4,
+        "loot": [
+          {
+            "itemId": "coin_01",
+            "weight": 8
+          },
+          {
+            "itemId": "energy_01",
+            "weight": 6
+          },
+          {
+            "itemId": "diamond_01",
+            "weight": 4
+          },
+          {
+            "itemId": "coin_02",
+            "weight": 1
+          },
+          {
+            "itemId": "energy_02",
+            "weight": 1
+          },
+          {
+            "itemId": "diamond_02",
+            "weight": 1
+          }
+        ]
+      },
+      {
+        "level": 3,
+        "count": 8,
+        "loot": [
+          {
+            "itemId": "coin_01",
+            "weight": 6
+          },
+          {
+            "itemId": "energy_01",
+            "weight": 4
+          },
+          {
+            "itemId": "diamond_01",
+            "weight": 3
+          },
+          {
+            "itemId": "coin_02",
+            "weight": 3
+          },
+          {
+            "itemId": "energy_02",
+            "weight": 2
+          },
+          {
+            "itemId": "diamond_02",
+            "weight": 2
+          },
+          {
+            "itemId": "coin_03",
+            "weight": 1
+          }
+        ]
+      },
+      {
+        "level": 4,
+        "count": 16,
+        "loot": [
+          {
+            "itemId": "coin_01",
+            "weight": 3
+          },
+          {
+            "itemId": "energy_01",
+            "weight": 2
+          },
+          {
+            "itemId": "diamond_01",
+            "weight": 2
+          },
+          {
+            "itemId": "coin_02",
+            "weight": 4
+          },
+          {
+            "itemId": "energy_02",
+            "weight": 3
+          },
+          {
+            "itemId": "diamond_02",
+            "weight": 3
+          },
+          {
+            "itemId": "coin_03",
+            "weight": 2
+          },
+          {
+            "itemId": "energy_03",
+            "weight": 2
+          },
+          {
+            "itemId": "diamond_03",
+            "weight": 2
+          }
+        ]
+      },
+      {
+        "level": 5,
+        "count": 32,
+        "loot": [
+          {
+            "itemId": "coin_01",
+            "weight": 2
+          },
+          {
+            "itemId": "energy_01",
+            "weight": 2
+          },
+          {
+            "itemId": "diamond_01",
+            "weight": 1
+          },
+          {
+            "itemId": "coin_02",
+            "weight": 3
+          },
+          {
+            "itemId": "energy_02",
+            "weight": 3
+          },
+          {
+            "itemId": "diamond_02",
+            "weight": 3
+          },
+          {
+            "itemId": "coin_03",
+            "weight": 3
+          },
+          {
+            "itemId": "energy_03",
+            "weight": 3
+          },
+          {
+            "itemId": "diamond_03",
+            "weight": 2
+          }
+        ]
+      }
+    ]
+  },
+  "collection": {
+    "chainIds": [
+      "coffee",
+      "flower",
+      "dessert",
+      "gift",
+      "fruit",
+      "sugar"
+    ],
+    "energyPerChain": 3,
+    "maxEnergyCap": 1000
+  },
+  "generationBonusDrops": [
+    {
+      "generatorId": "coffee_machine",
+      "minLevel": 2,
+      "chance": 0.1,
+      "itemId": "sugar_01"
+    },
+    {
+      "generatorId": "*",
+      "minLevel": 2,
+      "chance": 0.005,
+      "itemId": "wildcard",
+      "excludeRecharge": true
+    }
+  ],
+  "generatorRestore": {
+    "cooldownCost": 2,
+    "chargeCost": 5
   }
 }

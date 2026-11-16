@@ -43,8 +43,8 @@ describe('playful story and inventory loop', () => {
     const legacyRaw = JSON.stringify(legacy);
     f.values.set(f.game.config.saveKey, legacyRaw);
     const restored = f.open();
-    expect(restored.config.saveVersion).toBe(3);
-    expect(restored.life.state.unlockedMemoryIds).toEqual(['letters', 'first_trip']);
+    expect(restored.config.saveVersion).toBe(8);
+    expect(restored.life.state.unlockedMemoryIds).toEqual(['letters', 'first_trip', 'zhoushan_bonfire']);
     expect(restored.life.state.photoPaths).toEqual(['wxfile://photo']);
     expect(restored.player.coins).toBe(342); expect(restored.player.hearts).toBe(91);
     expect(f.values.get(f.game.config.saveKey + ':backup')).toBe(legacyRaw);
@@ -80,7 +80,7 @@ describe('playful story and inventory loop', () => {
   });
   it('splits every chain level without creating merge value, spending energy or counting a merge', () => {
     const bundle = loadConfigBundle();
-    for (const definition of bundle.items.filter((item) => item.level > 1)) {
+    for (const definition of bundle.items.filter((item) => item.level > 1 && !item.maxUses)) {
       const { game } = fixture(); game.debugClearBoard(); game.debugSpawn(definition.id);
       const uid = game.board.getBoard().cells[0].item!.uid;
       const energy = game.player.energy;
@@ -100,13 +100,14 @@ describe('playful story and inventory loop', () => {
     game.debugClearBoard(); game.debugSpawn('coffee_02');
     expect(game.playAction('split', '0')).toEqual({ ok: false, reason: 'NO_SCISSORS' });
   });
-  it('does not consume warehouse items or advance a story order that is not ready', () => {
+  it('no longer consumes warehouse or board items to open a story puzzle', () => {
     const { game } = fixture(); game.debugClearBoard(); game.debugSpawn('coffee_02'); game.playAction('store', '0');
     expect(game.playAction('deliver', 'zhoushan')).toEqual({ ok: false, reason: 'NOT_READY' });
-    expect(game.play.progress('zhoushan').step).toBe(0); expect(game.play.state.warehouse).toHaveLength(1);
+    expect(game.play.progress('zhoushan').step).toBe(2); expect(game.play.state.warehouse).toHaveLength(1);
+    expect(game.puzzleAction('zhoushan', 'find', 'calendar')).toEqual({ ok: true });
     game.playAction('withdraw', game.play.state.warehouse[0].uid);
-    expect(game.playAction('deliver', 'zhoushan').ok).toBe(true);
-    expect(game.play.progress('zhoushan').step).toBe(1); expect(game.board.getBoard().cells.every((c) => !c.item)).toBe(true);
+    expect(game.playAction('deliver', 'zhoushan')).toEqual({ ok: false, reason: 'NOT_READY' });
+    expect(game.board.getBoard().cells.some((c) => c.item?.definitionId === 'coffee_02')).toBe(true);
     expect(game.orders.getOrders()).toHaveLength(3);
   });
   it('keeps clues, code, free hint count and step progress after restart; wrong answers never charge energy', () => {
@@ -134,10 +135,9 @@ describe('playful story and inventory loop', () => {
     }
     expect(f.open().play.state).toEqual(game.play.state);
   });
-  it('permits free skipping only after required orders, and keeps previously purchased memory rights', () => {
+  it('permits free skipping at the required level and keeps previously purchased memory rights', () => {
     const { game } = fixture(); game.debugAddXp(7650);
-    expect(game.playAction('skip', 'love_letters')).toEqual({ ok: false, reason: 'LOCKED' });
-    expect(game.playAction('skip', 'zhoushan')).toEqual({ ok: false, reason: 'NOT_READY' });
+    expect(game.playAction('skip', 'love_letters')).toEqual({ ok: true });
     game.debugAddCoins(100); const normal = game.orders.getOrders().map((o) => o.uid);
     prepare(game, 'zhoushan'); expect(game.playAction('skip', 'zhoushan').ok).toBe(true);
     expect(game.play.progress('zhoushan').outcome).toBe('skipped');

@@ -3,7 +3,12 @@
     "id": "order_tutorial_coffee",
     "minLevel": 1,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "coffee_02", "count": 1 }],
+    "requirements": [
+      {
+        "itemId": "coffee_02",
+        "count": 1
+      }
+    ],
     "rewardCoins": 20,
     "rewardXp": 10,
     "rewardHearts": 1,
@@ -13,7 +18,12 @@
     "id": "order_coffee_bean_bundle",
     "minLevel": 1,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "coffee_01", "count": 2 }],
+    "requirements": [
+      {
+        "itemId": "coffee_01",
+        "count": 2
+      }
+    ],
     "rewardCoins": 12,
     "rewardXp": 6,
     "rewardHearts": 1
@@ -22,7 +32,12 @@
     "id": "order_coffee_powder",
     "minLevel": 1,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "coffee_02", "count": 1 }],
+    "requirements": [
+      {
+        "itemId": "coffee_02",
+        "count": 1
+      }
+    ],
     "rewardCoins": 18,
     "rewardXp": 8,
     "rewardHearts": 1
@@ -31,7 +46,12 @@
     "id": "order_coffee_cup",
     "minLevel": 1,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "coffee_03", "count": 1 }],
+    "requirements": [
+      {
+        "itemId": "coffee_03",
+        "count": 1
+      }
+    ],
     "rewardCoins": 30,
     "rewardXp": 12,
     "rewardHearts": 5
@@ -40,7 +60,12 @@
     "id": "order_coffee_pair",
     "minLevel": 1,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "coffee_02", "count": 2 }],
+    "requirements": [
+      {
+        "itemId": "coffee_02",
+        "count": 2
+      }
+    ],
     "rewardCoins": 32,
     "rewardXp": 14,
     "rewardHearts": 5
@@ -50,8 +75,14 @@
     "minLevel": 1,
     "maxLevel": 99,
     "requirements": [
-      { "itemId": "coffee_02", "count": 1 },
-      { "itemId": "coffee_03", "count": 1 }
+      {
+        "itemId": "coffee_02",
+        "count": 1
+      },
+      {
+        "itemId": "coffee_03",
+        "count": 1
+      }
     ],
     "rewardCoins": 34,
     "rewardXp": 15,
@@ -61,7 +92,12 @@
     "id": "order_coffee_03_pair",
     "minLevel": 1,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "coffee_03", "count": 2 }],
+    "requirements": [
+      {
+        "itemId": "coffee_03",
+        "count": 2
+      }
+    ],
     "rewardCoins": 42,
     "rewardXp": 18,
     "rewardHearts": 6
@@ -70,7 +106,12 @@
     "id": "order_flower_seed",
     "minLevel": 1,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "flower_01", "count": 2 }],
+    "requirements": [
+      {
+        "itemId": "flower_01",
+        "count": 2
+      }
+    ],
     "rewardCoins": 12,
     "rewardXp": 6,
     "rewardHearts": 1
@@ -79,7 +120,12 @@
     "id": "order_flower_sprout",
     "minLevel": 1,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "flower_02", "count": 1 }],
+    "requirements": [
+      {
+        "itemId": "flower_02",
+        "count": 1
+      }
+    ],
     "rewardCoins": 18,
     "rewardXp": 8,
     "rewardHearts": 1
@@ -88,7 +134,12 @@
     "id": "order_flower_sprout_pair",
     "minLevel": 3,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "flower_02", "count": 2 }],
+    "requirements": [
+      {
+        "itemId": "flower_02",
+        "count": 2
+      }
+    ],
     "rewardCoins": 30,
     "rewardXp": 14,
     "rewardHearts": 3
@@ -98,8 +149,14 @@
     "minLevel": 3,
     "maxLevel": 99,
     "requirements": [
-      { "itemId": "flower_02", "count": 1 },
-      { "itemId": "coffee_03", "count": 1 }
+      {
+        "itemId": "flower_02",
+        "count": 1
+      },
+      {
+        "itemId": "coffee_03",
+        "count": 1
+      }
     ],
     "rewardCoins": 34,
     "rewardXp": 16,
@@ -110,8 +167,14 @@
     "minLevel": 1,
     "maxLevel": 99,
     "requirements": [
-      { "itemId": "coffee_02", "count": 1 },
-      { "itemId": "flower_02", "count": 1 }
+      {
+        "itemId": "coffee_02",
+        "count": 1
+      },
+      {
+        "itemId": "flower_02",
+        "count": 1
+      }
     ],
     "rewardCoins": 28,
     "rewardXp": 14,
@@ -121,7 +184,12 @@
     "id": "order_latte_date",
     "minLevel": 5,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "coffee_05", "count": 1 }],
+    "requirements": [
+      {
+        "itemId": "coffee_05",
+        "count": 1
+      }
+    ],
     "rewardCoins": 45,
     "rewardXp": 22,
     "rewardHearts": 2
@@ -130,7 +198,12 @@
     "id": "order_tulip_pair",
     "minLevel": 2,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "flower_03", "count": 2 }],
+    "requirements": [
+      {
+        "itemId": "flower_03",
+        "count": 2
+      }
+    ],
     "rewardCoins": 36,
     "rewardXp": 18,
     "rewardHearts": 1
@@ -139,7 +212,12 @@
     "id": "order_rose_bouquet",
     "minLevel": 3,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "flower_04", "count": 1 }],
+    "requirements": [
+      {
+        "itemId": "flower_04",
+        "count": 1
+      }
+    ],
     "rewardCoins": 40,
     "rewardXp": 20,
     "rewardHearts": 2
@@ -149,8 +227,14 @@
     "minLevel": 3,
     "maxLevel": 99,
     "requirements": [
-      { "itemId": "dessert_03", "count": 1 },
-      { "itemId": "coffee_03", "count": 1 }
+      {
+        "itemId": "dessert_03",
+        "count": 1
+      },
+      {
+        "itemId": "coffee_03",
+        "count": 1
+      }
     ],
     "rewardCoins": 50,
     "rewardXp": 26,
@@ -160,7 +244,12 @@
     "id": "order_dessert_muffin_pair",
     "minLevel": 5,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "dessert_02", "count": 2 }],
+    "requirements": [
+      {
+        "itemId": "dessert_02",
+        "count": 2
+      }
+    ],
     "rewardCoins": 32,
     "rewardXp": 16,
     "rewardHearts": 3
@@ -170,8 +259,14 @@
     "minLevel": 5,
     "maxLevel": 99,
     "requirements": [
-      { "itemId": "dessert_02", "count": 1 },
-      { "itemId": "coffee_02", "count": 1 }
+      {
+        "itemId": "dessert_02",
+        "count": 1
+      },
+      {
+        "itemId": "coffee_02",
+        "count": 1
+      }
     ],
     "rewardCoins": 30,
     "rewardXp": 15,
@@ -181,7 +276,12 @@
     "id": "order_strawberry_cake",
     "minLevel": 3,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "dessert_04", "count": 1 }],
+    "requirements": [
+      {
+        "itemId": "dessert_04",
+        "count": 1
+      }
+    ],
     "rewardCoins": 48,
     "rewardXp": 24,
     "rewardHearts": 2
@@ -190,7 +290,12 @@
     "id": "order_double_cake",
     "minLevel": 4,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "dessert_05", "count": 1 }],
+    "requirements": [
+      {
+        "itemId": "dessert_05",
+        "count": 1
+      }
+    ],
     "rewardCoins": 60,
     "rewardXp": 30,
     "rewardHearts": 3
@@ -199,7 +304,12 @@
     "id": "order_gift_small",
     "minLevel": 5,
     "maxLevel": 99,
-    "requirements": [{ "itemId": "gift_03", "count": 1 }],
+    "requirements": [
+      {
+        "itemId": "gift_03",
+        "count": 1
+      }
+    ],
     "rewardCoins": 55,
     "rewardXp": 28,
     "rewardHearts": 2
@@ -209,8 +319,14 @@
     "minLevel": 8,
     "maxLevel": 99,
     "requirements": [
-      { "itemId": "gift_02", "count": 1 },
-      { "itemId": "flower_02", "count": 1 }
+      {
+        "itemId": "gift_02",
+        "count": 1
+      },
+      {
+        "itemId": "flower_02",
+        "count": 1
+      }
     ],
     "rewardCoins": 36,
     "rewardXp": 18,
@@ -221,8 +337,14 @@
     "minLevel": 4,
     "maxLevel": 99,
     "requirements": [
-      { "itemId": "coffee_05", "count": 1 },
-      { "itemId": "flower_05", "count": 1 }
+      {
+        "itemId": "coffee_05",
+        "count": 1
+      },
+      {
+        "itemId": "flower_05",
+        "count": 1
+      }
     ],
     "rewardCoins": 80,
     "rewardXp": 40,
@@ -233,11 +355,64 @@
     "minLevel": 5,
     "maxLevel": 99,
     "requirements": [
-      { "itemId": "dessert_05", "count": 1 },
-      { "itemId": "gift_04", "count": 1 }
+      {
+        "itemId": "dessert_05",
+        "count": 1
+      },
+      {
+        "itemId": "gift_04",
+        "count": 1
+      }
     ],
     "rewardCoins": 95,
     "rewardXp": 48,
     "rewardHearts": 4
+  },
+  {
+    "id": "order_orange_cup",
+    "minLevel": 5,
+    "maxLevel": 18,
+    "requirements": [
+      {
+        "itemId": "fruit_02",
+        "count": 1
+      }
+    ],
+    "rewardCoins": 34,
+    "rewardXp": 16,
+    "rewardHearts": 5
+  },
+  {
+    "id": "order_afternoon_together",
+    "minLevel": 6,
+    "maxLevel": 18,
+    "requirements": [
+      {
+        "itemId": "coffee_03",
+        "count": 1
+      },
+      {
+        "itemId": "flower_03",
+        "count": 1
+      }
+    ],
+    "rewardCoins": 75,
+    "rewardXp": 32,
+    "rewardHearts": 10
+  },
+  {
+    "id": "order_sunshine_longterm",
+    "minLevel": 15,
+    "maxLevel": 18,
+    "requirements": [
+      {
+        "itemId": "fruit_04",
+        "count": 1
+      }
+    ],
+    "rewardCoins": 100,
+    "rewardXp": 40,
+    "rewardHearts": 12,
+    "longTerm": true
   }
 ]

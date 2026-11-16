@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-16",
+  "version": "1.3.0",
+  "saveVersion": 8,
+  "core": {
+    "files": 45,
+    "tests": 321,
+    "passed": true
+  },
+  "toolTests": 6,
+  "requiredChecks": [
+    "test:core",
+    "lint:core",
+    "build:web",
+    "verify:cocos"
+  ],
+  "cocosTypeCheck": {
+    "passed": true,
+    "config": "temp/tsconfig.cocos-check.json"
+  },
+  "phoneTestThisRevision": false,
+  "uploaded": false,
+  "ui": {
+    "full": 48,
+    "customerTools": 5,
+    "delivery": 7,
+    "uncaughtExceptions": 0,
+    "webBuildDigest": "84ccdd1c55278c6d06d7dd2cc2d1c836cd2274b4b3f68815811a18e7f73c0303"
+  }
+}

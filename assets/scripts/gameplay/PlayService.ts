@@ -1,16 +1,23 @@
 import type {
   AdventureChapter,
+  ChapterAvailability,
   ChapterProgress,
+  JourneyProgress,
   PlayResult,
   PlayState,
+  PuzzleDefinition,
+  PuzzleDefinitionView,
   PuzzleProgress,
   ReplayProgress,
+  ReplayStats,
+  ReplaySummary,
   SmallDateDefinition,
 } from '../core/play/types';
 import {
   circuitState,
   createChapterProgress,
   createReplayProgress,
+  createReplayStats,
   createSmallDateProgress,
 } from '../core/play/types';
 import { cloneBoard } from '../core/board/board';
@@ -37,13 +44,15 @@ export class PlayService {
   private deliveringSmallDate = false;
   constructor(state: PlayState, private readonly bundle: ConfigBundle, private readonly board: BoardService,
     private readonly ids: IdGenerator, private readonly bus: GameEventBus, private readonly progression: ProgressionService,
-    private readonly energy: EnergyService, private readonly life: LifeService) {
+    private readonly energy: EnergyService, private readonly life: LifeService,
+    private readonly projectItem: (id: string) => string = (id) => id) {
     const loaded = JSON.parse(JSON.stringify(state)) as Partial<PlayState>;
     this.data = {
       warehouse: Array.isArray(loaded.warehouse) ? loaded.warehouse : [],
       scissors: typeof loaded.scissors === 'number' ? loaded.scissors : bundle.game.toolbox.startingScissors,
       chapters: loaded.chapters && typeof loaded.chapters === 'object' ? loaded.chapters : {},
       replays: loaded.replays && typeof loaded.replays === 'object' ? loaded.replays : {},
+      replayStats: loaded.replayStats && typeof loaded.replayStats === 'object' ? loaded.replayStats : {},
       smallDate: { ...createSmallDateProgress(), ...(loaded.smallDate ?? {}) },
     };
     for (const chapter of bundle.adventures) {
@@ -51,14 +60,36 @@ export class PlayService {
       if (p) {
         p.step = Math.min(chapter.steps.length, Math.max(0, p.step));
         p.hints = Math.min(chapter.hints.length, Math.max(0, p.hints));
-        this.normalizePuzzle(chapter, p);
+        this.normalizePuzzle(chapter.puzzle, p);
         if (p.claimed) { p.step = chapter.steps.length; if (p.outcome === 'playing') p.outcome = 'solved'; }
         else if (p.step < chapter.steps.length) p.outcome = 'playing';
+        // Material delivery is retired; unfinished legacy preparation moves to
+        // the puzzle, but never becomes a solved/claimable outcome by migration.
+        p.step = chapter.steps.length;
       }
       const replay = this.data.replays[chapter.id];
       if (replay && p?.claimed) {
-        replay.hints = Math.max(0, Math.min(chapter.hints.length, replay.hints));
-        this.normalizePuzzle(chapter, replay);
+        const definition = this.variantDefinition(chapter, replay.variantId);
+        if (!definition) {
+          replay.variantId = 'classic';
+          replay.found = [];
+          replay.selected = [];
+          replay.rotations = [];
+          replay.code = '';
+        }
+        const active = this.variantDefinition(chapter, replay.variantId) ?? this.classicDefinition(chapter);
+        replay.hints = Math.max(0, Math.min(active.hints.length, replay.hints));
+        this.normalizePuzzle(active.puzzle, replay);
+        if (!this.data.replayStats[chapter.id]) {
+          this.data.replayStats[chapter.id] = {
+            ...createReplayStats(), started: 1,
+            solved: replay.outcome === 'solved' ? 1 : 0,
+            skipped: replay.outcome === 'skipped' ? 1 : 0,
+            totalHints: replay.outcome === 'playing' ? 0 : replay.hints,
+            bestSolvedHints: replay.outcome === 'solved' ? replay.hints : null,
+            legacyHistoryIncomplete: true,
+          };
+        }
       } else if (replay) {
         delete this.data.replays[chapter.id];
       }
@@ -66,34 +97,89 @@ export class PlayService {
     this.ensureSmallDate();
   }
   get state(): PlayState { return JSON.parse(JSON.stringify(this.data)) as PlayState; }
-  progress(id: string): ChapterProgress { return { ...createChapterProgress(), ...this.state.chapters[id] }; }
+  progress(id: string): ChapterProgress {
+    const chapter = this.bundle.adventures.find((entry) => entry.id === id);
+    return { ...createChapterProgress(), ...this.state.chapters[id], ...(chapter ? { step: chapter.steps.length } : {}) };
+  }
   hasReplay(id: string): boolean { return !!this.data.replays[id]; }
   replayProgress(id: string): ReplayProgress | undefined {
     const replay = this.data.replays[id];
     return replay ? JSON.parse(JSON.stringify(replay)) as ReplayProgress : undefined;
   }
+  replaySummary(id: string): ReplaySummary {
+    const stats = this.data.replayStats[id] ?? createReplayStats();
+    return { ...stats };
+  }
   /** Renderers read whichever independent progress is active: practice first, otherwise the chapter. */
   puzzleProgress(id: string): PuzzleProgress {
     return this.replayProgress(id) ?? this.progress(id);
   }
-  isAvailable(id: string): boolean {
-    const i = this.bundle.adventures.findIndex((c) => c.id === id);
-    return i >= 0 && this.progression.level >= this.bundle.adventures[i].unlockLevel
-      && (i === 0 || this.progress(this.bundle.adventures[i - 1].id).claimed);
+  puzzleDefinition(id: string): PuzzleDefinitionView | undefined {
+    const chapter = this.bundle.adventures.find((entry) => entry.id === id);
+    if (!chapter) return undefined;
+    return JSON.parse(JSON.stringify(this.activeDefinition(chapter, id))) as PuzzleDefinitionView;
   }
+  private activeDefinition(chapter: AdventureChapter, id: string): PuzzleDefinitionView {
+    const replay = this.data.replays[id];
+    return (replay && this.variantDefinition(chapter, replay.variantId)) ?? this.classicDefinition(chapter);
+  }
+  chapterAvailability(id: string): ChapterAvailability | undefined {
+    const index = this.bundle.adventures.findIndex((chapter) => chapter.id === id);
+    if (index < 0) return undefined;
+    const chapter = this.bundle.adventures[index];
+    const currentLevel = this.progression.level;
+    return {
+      available: currentLevel >= chapter.unlockLevel,
+      requiredLevel: chapter.unlockLevel,
+      currentLevel,
+    };
+  }
+  journeyProgress(): JourneyProgress {
+    const completed = this.bundle.adventures.filter((chapter) => this.progress(chapter.id).claimed).length;
+    const nextChapter = this.bundle.adventures.find((chapter) => !this.progress(chapter.id).claimed) ?? null;
+    return {
+      completed,
+      total: this.bundle.adventures.length,
+      nextChapter,
+      nextProgress: nextChapter ? this.progress(nextChapter.id) : null,
+      availability: nextChapter ? this.chapterAvailability(nextChapter.id) ?? null : null,
+    };
+  }
+  isAvailable(id: string): boolean { return this.chapterAvailability(id)?.available ?? false; }
   private current(id: string): { chapter: AdventureChapter; progress: ChapterProgress } | undefined {
     const chapter = this.bundle.adventures.find((c) => c.id === id);
     if (!chapter || !this.isAvailable(id)) return;
     const progress = this.data.chapters[id] ?? (this.data.chapters[id] = createChapterProgress());
+    progress.step = chapter.steps.length;
     return { chapter, progress };
   }
-  private normalizePuzzle(chapter: AdventureChapter, progress: PuzzleProgress): void {
-    if (chapter.puzzle.kind === 'find') {
-      progress.found = progress.found.filter((id) => chapter.puzzle.kind === 'find' && chapter.puzzle.hotspots.some((h) => h.id === id));
-    } else if (chapter.puzzle.kind === 'sequence') {
-      progress.selected = progress.selected.filter((id) => chapter.puzzle.kind === 'sequence' && chapter.puzzle.tiles.some((t) => t.id === id));
-    } else if (progress.rotations.length !== chapter.puzzle.ports.length) {
+  private classicDefinition(chapter: AdventureChapter): PuzzleDefinitionView {
+    return { puzzle: chapter.puzzle, instruction: chapter.instruction, hints: chapter.hints, variantId: 'classic' };
+  }
+  private variantDefinition(chapter: AdventureChapter, variantId: string): PuzzleDefinitionView | undefined {
+    if (variantId === 'classic') return this.classicDefinition(chapter);
+    const variant = chapter.replayVariants?.find((candidate) => candidate.id === variantId);
+    return variant ? { puzzle: variant.puzzle, instruction: variant.instruction, hints: variant.hints, variantId: variant.id } : undefined;
+  }
+  private normalizePuzzle(puzzle: PuzzleDefinition, progress: PuzzleProgress): void {
+    if (puzzle.kind === 'find') {
+      progress.found = progress.found.filter((id) => puzzle.hotspots.some((hotspot) => hotspot.id === id));
+      progress.selected = [];
       progress.rotations = [];
+      if (progress.code.length > puzzle.solution.length || !Array.from(progress.code).every((digit) => digit >= '0' && digit <= '9')) progress.code = '';
+    } else if (puzzle.kind === 'sequence') {
+      progress.found = [];
+      progress.selected = progress.selected.filter((id) => puzzle.tiles.some((tile) => tile.id === id));
+      progress.rotations = [];
+      progress.code = '';
+    } else {
+      progress.found = [];
+      progress.selected = [];
+      progress.code = '';
+      if (progress.rotations.length !== puzzle.ports.length
+        || !progress.rotations.every((rotation) => Number.isInteger(rotation) && rotation >= 0 && rotation < 4)) {
+        progress.rotations = [];
+      }
     }
   }
   private changed(reason: 'warehouse' | 'scissors' | 'chapter' | 'reward'): PlayResult {
@@ -101,7 +187,7 @@ export class PlayService {
   }
   store(index: number): PlayResult {
     const item = this.board.getBoard().cells[index]?.item;
-    if (!item) return { ok: false, reason: 'INVALID' };
+    if (!item || this.board.getBoard().cells[index]?.locked) return { ok: false, reason: 'INVALID' };
     if (this.data.warehouse.length >= this.bundle.game.toolbox.warehouseSlots) return { ok: false, reason: 'WAREHOUSE_FULL' };
     const next = cloneBoard(this.board.getBoard());
     next.cells[index].item = undefined;
@@ -113,20 +199,27 @@ export class PlayService {
     const at = this.data.warehouse.findIndex((item) => item.uid === uid);
     if (at < 0) return { ok: false, reason: 'INVALID' };
     const next = cloneBoard(this.board.getBoard());
-    const empty = next.cells.find((cell) => !cell.item);
+    const empty = next.cells.find((cell) => !cell.locked && !cell.item);
     if (!empty) return { ok: false, reason: 'BOARD_FULL' };
     empty.item = { ...this.data.warehouse[at] };
     this.data.warehouse.splice(at, 1);
     this.board.replaceBoard(next, 'tool');
     return this.changed('warehouse');
   }
+  takeScissors(): PlayResult {
+    if (this.data.scissors <= 0) return { ok: false, reason: 'NO_SCISSORS' };
+    if (this.board.isFull()) return { ok: false, reason: 'BOARD_FULL' };
+    const result = this.board.spawn('scissors_01'); if (!result.ok) return result;
+    this.data.scissors -= 1; return this.changed('scissors');
+  }
+  grantScissors(count: number): void { this.data.scissors += Math.max(0, Math.floor(count)); this.changed('scissors'); }
   split(index: number): PlayResult {
     const item = this.board.getBoard().cells[index]?.item;
     const previous = item && Array.from(this.bundle.catalog.values()).find((d) => d.nextItemId === item.definitionId);
-    if (!item || !previous) return { ok: false, reason: 'CANNOT_SPLIT' };
+    if (!item || !previous || this.bundle.catalog.get(item.definitionId)?.maxUses || this.board.getBoard().cells[index]?.locked) return { ok: false, reason: 'CANNOT_SPLIT' };
     if (this.data.scissors <= 0) return { ok: false, reason: 'NO_SCISSORS' };
     const next = cloneBoard(this.board.getBoard());
-    const empty = next.cells.find((cell) => !cell.item);
+    const empty = next.cells.find((cell) => !cell.locked && !cell.item);
     if (!empty) return { ok: false, reason: 'BOARD_FULL' };
     const used = new Set([...next.cells.flatMap((c) => c.item ? [c.item.uid] : []), ...this.data.warehouse.map((i) => i.uid)]);
     let uid = this.ids.next();
@@ -149,9 +242,8 @@ export class PlayService {
     this.life.record('orders');
     return this.changed('chapter');
   }
-  private applyPuzzle(chapter: AdventureChapter, progress: PuzzleProgress,
+  private applyPuzzle(puzzle: PuzzleDefinition, progress: PuzzleProgress,
     action: 'find' | 'select' | 'rotate' | 'digit' | 'erase' | 'reset', value: string): boolean {
-    const puzzle = chapter.puzzle;
     if (action === 'find' && puzzle.kind === 'find' && puzzle.hotspots.some((h) => h.id === value)) {
       if (!progress.found.includes(value)) progress.found.push(value);
     } else if (action === 'select' && puzzle.kind === 'sequence' && puzzle.tiles.some((t) => t.id === value)) {
@@ -175,7 +267,8 @@ export class PlayService {
     const progress = replay ?? current.progress;
     if (!replay && current.progress.step < current.chapter.steps.length) return { ok: false, reason: 'NOT_READY' };
     if (progress.outcome !== 'playing') return { ok: false, reason: 'NOT_READY' };
-    if (!this.applyPuzzle(current.chapter, progress, action, value)) return { ok: false, reason: 'INVALID' };
+    const definition = this.activeDefinition(current.chapter, id);
+    if (!this.applyPuzzle(definition.puzzle, progress, action, value)) return { ok: false, reason: 'INVALID' };
     return this.changed('chapter');
   }
   hint(id: string): PlayResult {
@@ -185,7 +278,7 @@ export class PlayService {
     const progress = replay ?? current.progress;
     if (!replay && current.progress.step < current.chapter.steps.length) return { ok: false, reason: 'LOCKED' };
     if (progress.outcome !== 'playing') return { ok: false, reason: 'NOT_READY' };
-    progress.hints = Math.min(current.chapter.hints.length, progress.hints + 1);
+    progress.hints = Math.min(this.activeDefinition(current.chapter, id).hints.length, progress.hints + 1);
     return this.changed('chapter');
   }
   solve(id: string, skip = false): PlayResult {
@@ -196,18 +289,47 @@ export class PlayService {
     const { chapter } = current;
     if (!replay && current.progress.step < chapter.steps.length) return { ok: false, reason: 'NOT_READY' };
     if (progress.outcome !== 'playing') return { ok: false, reason: 'NOT_READY' };
-    const puzzle = chapter.puzzle;
+    const puzzle = this.activeDefinition(chapter, id).puzzle;
     const correct = puzzle.kind === 'find'
       ? progress.found.length === puzzle.hotspots.length && progress.code === puzzle.solution
       : puzzle.kind === 'sequence' ? JSON.stringify(progress.selected) === JSON.stringify(puzzle.solution)
         : circuitState(puzzle, progress.rotations).solved;
     if (!skip && !correct) return { ok: false, reason: 'WRONG_ANSWER' };
     progress.outcome = skip ? 'skipped' : 'solved';
+    if (replay) {
+      const stats = this.replayStats(id);
+      if (skip) stats.skipped += 1;
+      else {
+        stats.solved += 1;
+        stats.bestSolvedHints = stats.bestSolvedHints === null
+          ? progress.hints : Math.min(stats.bestSolvedHints, progress.hints);
+      }
+      stats.totalHints += progress.hints;
+    }
     return this.changed('chapter');
   }
   circuit(id: string) {
-    const chapter = this.bundle.adventures.find((c) => c.id === id);
-    return chapter?.puzzle.kind === 'circuit' ? circuitState(chapter.puzzle, this.puzzleProgress(id).rotations) : undefined;
+    const definition = this.puzzleDefinition(id);
+    return definition?.puzzle.kind === 'circuit'
+      ? circuitState(definition.puzzle, this.puzzleProgress(id).rotations) : undefined;
+  }
+  private replayStats(id: string): ReplayStats {
+    return this.data.replayStats[id] ?? (this.data.replayStats[id] = createReplayStats());
+  }
+  private beginReplay(chapter: AdventureChapter): void {
+    const stats = this.replayStats(chapter.id);
+    const variants: PuzzleDefinitionView[] = [
+      this.classicDefinition(chapter),
+      ...(chapter.replayVariants ?? []).map((variant) => ({
+        puzzle: variant.puzzle,
+        instruction: variant.instruction,
+        hints: variant.hints,
+        variantId: variant.id,
+      })),
+    ];
+    const variant = variants[stats.started % variants.length];
+    stats.started += 1;
+    this.data.replays[chapter.id] = createReplayProgress(variant.variantId);
   }
   /** Start a free practice run, or resume the one already in progress. */
   startReplay(id: string): PlayResult {
@@ -215,15 +337,15 @@ export class PlayService {
     if (!chapter) return { ok: false, reason: 'LOCKED' };
     if (!this.progress(id).claimed) return { ok: false, reason: 'NOT_CLAIMED' };
     const existing = this.data.replays[id];
-    if (!existing || existing.outcome !== 'playing') this.data.replays[id] = createReplayProgress();
+    if (!existing || existing.outcome !== 'playing') this.beginReplay(chapter);
     return this.changed('chapter');
   }
-  /** Explicitly discard practice progress and begin the same chapter again. */
+  /** Explicitly discard practice progress and begin a new counted run. */
   restartReplay(id: string): PlayResult {
     const chapter = this.bundle.adventures.find((c) => c.id === id);
     if (!chapter) return { ok: false, reason: 'LOCKED' };
     if (!this.progress(id).claimed) return { ok: false, reason: 'NOT_CLAIMED' };
-    this.data.replays[id] = createReplayProgress();
+    this.beginReplay(chapter);
     return this.changed('chapter');
   }
   claim(id: string): PlayResult {
@@ -265,8 +387,14 @@ export class PlayService {
     }
   }
   smallDateOrder(): SmallDateOrderView | undefined {
-    const template = this.bundle.smallDates.find((date) => date.id === this.data.smallDate.currentId);
-    if (!template || !this.smallDatePool().some((date) => date.id === template.id)) return undefined;
+    const original = this.bundle.smallDates.find((date) => date.id === this.data.smallDate.currentId);
+    if (!original || !this.smallDatePool().some((date) => date.id === original.id)) return undefined;
+    const counts = new Map<string, number>();
+    for (const req of original.requirements) {
+      const id = this.projectItem(req.itemId);
+      counts.set(id, (counts.get(id) ?? 0) + req.count);
+    }
+    const template = { ...original, requirements: Array.from(counts.entries()).map(([itemId, count]) => ({ itemId, count })) };
     const progress = this.board.getOrderProgress(template);
     return {
       template,

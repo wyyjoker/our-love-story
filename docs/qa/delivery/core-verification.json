@@ -1,0 +1,7 @@
+{
+  "coreTests": 306,
+  "coreFiles": 44,
+  "toolTests": 6,
+  "verifyAll": true,
+  "creatorDeclarationTypes": true
+}

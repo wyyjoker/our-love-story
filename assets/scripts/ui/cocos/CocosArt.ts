@@ -1,6 +1,7 @@
 import { assetManager, AssetManager, ImageAsset, isValid, Node, Rect, Size, Sprite, SpriteFrame, Texture2D } from 'cc';
 import { ensureTransform } from './CocosTheme';
 import { cropPhoto, fitPhoto } from '../../presentation/UiSafety';
+import type { FurnitureDefinition } from '../../core/types';
 
 export type ArtCell = { sheet: string; index?: number; columns?: number; rows?: number; preserveAspect?: boolean; cropToFill?: boolean; cropFocusY?: number;
   /** Explicit pixel bounds for irregular source atlases. */
@@ -87,16 +88,53 @@ export function applyArt(node: Node, art: ArtCell, width: number, height: number
 }
 
 export function itemArt(definitionId: string): ArtCell | null {
+  if (/^scissors_0[1-5]$/.test(definitionId)) return { sheet: 'scissors_backpack_sheet', index: Number(definitionId.slice(-1)) - 1, columns: 3, rows: 2, preserveAspect: true };
+  const sugarMatch = /^sugar_(0[1-3])$/.exec(definitionId);
+  if (sugarMatch) return { sheet: 'special_sheet', index: Number(sugarMatch[1]) - 1, columns: 2, rows: 2 };
+  if (definitionId === 'wildcard') return { sheet: 'special_sheet', index: 3, columns: 2, rows: 2 };
+  const fruitMatch = /^fruit_(0[1-9]|1[0-2])$/.exec(definitionId);
+  if (fruitMatch) { const level = Number(fruitMatch[1]); return level > 8
+    ? { sheet: 'fruit_extra_sheet', index: level - 9, columns: 2, rows: 2, preserveAspect: true }
+    : { sheet: 'fruit_sheet', index: level - 1, columns: 4, rows: 2 }; }
   const match = /^(coffee|flower|dessert|gift)_(\d{2})$/.exec(definitionId);
-  if (!match) return null;
-  const level = Number(match[2]);
-  if (level < 1 || level > 8) return null;
-  return { sheet: `${match[1]}_sheet`, index: level - 1, columns: 4, rows: 2 };
+  if (match) {
+    const level = Number(match[2]);
+    if (level < 1 || level > 12) return null;
+    if (level > 8) return { sheet: `${match[1]}_extra_sheet`, index: level - 9, columns: 2, rows: 2, preserveAspect: true };
+    return { sheet: `${match[1]}_sheet`, index: level - 1, columns: 4, rows: 2 };
+  }
+  const rewardMatch = /^(coin|energy|diamond)_(0[1-5])$/.exec(definitionId);
+  if (rewardMatch) {
+    const level = Number(rewardMatch[2]);
+    if (level > 3) {
+      const index = (level - 4) * 3 + ['coin', 'energy', 'diamond'].indexOf(rewardMatch[1]);
+      // Trim the atlas divider pixels, keeping only each 168px cell's artwork.
+      return { sheet: 'supply_extra_sheet', region: { x: (index % 3) * 168 + 3, y: Math.floor(index / 3) * 168 + 3, width: 162, height: 162 }, preserveAspect: true };
+    }
+    const chainOffset = rewardMatch[1] === 'coin' ? 0 : rewardMatch[1] === 'energy' ? 4 : 8;
+    return { sheet: 'treasure_sheet', index: chainOffset + Number(rewardMatch[2]) - 1, columns: 4, rows: 3 };
+  }
+  const chest = /^treasure_chest(?:_0([2-5]))?$/.exec(definitionId);
+  if (chest) return { sheet: 'chest_levels_sheet', index: Number(chest[1] ?? 1) - 1, columns: 3, rows: 2, preserveAspect: true };
+  return null;
+}
+
+export function openedChestArt(): ArtCell {
+  return { sheet: 'treasure_sheet', index: 7, columns: 4, rows: 3 };
 }
 
 export function generatorArt(id: string): ArtCell | null {
+  if (id === 'orange_tree') return { sheet: 'orange_tree', preserveAspect: true };
   const index = ['coffee_machine', 'flower_basket', 'dessert_oven', 'gift_box'].indexOf(id);
-  return index < 0 ? null : { sheet: 'generator_sheet', index, columns: 4, rows: 1 };
+  // The generator atlas is 2172×724, but its vertical cell margins are wide.
+  // Crop to each alpha-content bound so preserveAspect fits the actual machine.
+  const regions = [
+    { x: 55, y: 72, width: 488, height: 573 },
+    { x: 543, y: 66, width: 543, height: 602 },
+    { x: 1086, y: 117, width: 543, height: 491 },
+    { x: 1631, y: 102, width: 541, height: 550 },
+  ];
+  return index < 0 ? null : { sheet: 'generator_sheet', region: regions[index], preserveAspect: true };
 }
 
 // This original sheet is intentionally not a regular grid: the sofa and bed
@@ -111,6 +149,14 @@ export function furnitureArt(index: number): ArtCell {
   ];
   const [x, y, width, height] = regions[index] ?? regions[0];
   return { sheet: 'furniture_sheet', region: { x, y, width, height }, preserveAspect: true };
+}
+
+/** Keeps the original ten irregular furniture crops and maps new items to the 4x4 expansion atlas. */
+export function furnitureArtFor(definition: Pick<FurnitureDefinition, 'id' | 'art'>, index: number): ArtCell {
+  const poolMatch = /^pool:(\d+)$/.exec(definition.art);
+  if (poolMatch) return { sheet: 'pool_furniture_sheet', index: Number(poolMatch[1]), columns: 4, rows: 1, preserveAspect: true };
+  if (index < 10) return furnitureArt(index);
+  return { sheet: 'furniture_expansion_sheet', index: index - 10, columns: 4, rows: 4, preserveAspect: true };
 }
 
 export function applyLocalPhoto(node: Node, path: string, width: number, height: number, onStatus?: (status: 'ready' | 'failed') => void): void {

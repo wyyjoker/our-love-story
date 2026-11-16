@@ -1,0 +1,62 @@
+{
+  "generator": "OpenAI built-in image_gen",
+  "assets": {
+    "coffee": {
+      "prompt": "Original game sprite atlas, square 2 columns by 2 rows, four or five separate isolated whole objects centered individually in their cells with generous transparent padding; exact cell arrangement: top left amber latte flower cup; top right afternoon tea with two coffee cups; bottom left flower-decorated coffee pot set; bottom right romantic coffee feast. Warm cream pink, fine watercolor, lovingly detailed cozy original mobile merge game art, consistent front three-quarter perspective. Transparent background, no floor shadow, no tile or frame, no borders, no letters, no watermark; never cross cell boundaries.",
+      "source": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a1d566-1397-7d60-a718-141f2580c52a\\exec-30ba095b-3822-4fae-9b5e-4ee9a7580516.png",
+      "destination": "assets/game_art/coffee_extra_sheet.png",
+      "sizeBytes": 307238,
+      "finalSizeBytes": 307238
+    },
+    "flower": {
+      "prompt": "Original game sprite atlas, square 2 columns by 2 rows, four or five separate isolated whole objects centered individually in their cells with generous transparent padding; exact cell arrangement: top left rose glass cloche; top right heart-shaped floral wreath; bottom left luxurious bouquet; bottom right treasured wedding bouquet. Warm cream pink, fine watercolor, lovingly detailed cozy original mobile merge game art, consistent front three-quarter perspective. Transparent background, no floor shadow, no tile or frame, no borders, no letters, no watermark; never cross cell boundaries.",
+      "source": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a1d566-1397-7d60-a718-141f2580c52a\\exec-193cbadc-803f-4153-be54-7c3af652a030.png",
+      "destination": "assets/game_art/flower_extra_sheet.png",
+      "sizeBytes": 261687,
+      "finalSizeBytes": 261687
+    },
+    "dessert": {
+      "prompt": "Original game sprite atlas, square 2 columns by 2 rows, four or five separate isolated whole objects centered individually in their cells with generous transparent padding; exact cell arrangement: top left double-layer berry cake; top right swan cream-puff tower; bottom left rose three-tier wedding cake; bottom right dreamy dessert tower. Warm cream pink, fine watercolor, lovingly detailed cozy original mobile merge game art, consistent front three-quarter perspective. Transparent background, no floor shadow, no tile or frame, no borders, no letters, no watermark; never cross cell boundaries.",
+      "source": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a1d566-1397-7d60-a718-141f2580c52a\\exec-2e955cf3-9dcf-45a0-8952-7221d78a9518.png",
+      "destination": "assets/game_art/dessert_extra_sheet.png",
+      "sizeBytes": 254132,
+      "finalSizeBytes": 254132
+    },
+    "gift": {
+      "prompt": "Original game sprite atlas, square 2 columns by 2 rows, four or five separate isolated whole objects centered individually in their cells with generous transparent padding; exact cell arrangement: top left pearl ribbon gift box; top right crystal heart music box; bottom left ornate proposal ring box; bottom right romantic keepsake treasure chest. Warm cream pink, fine watercolor, lovingly detailed cozy original mobile merge game art, consistent front three-quarter perspective. Transparent background, no floor shadow, no tile or frame, no borders, no letters, no watermark; never cross cell boundaries.",
+      "source": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a1d566-1397-7d60-a718-141f2580c52a\\exec-a532121e-bafe-4a5f-9342-cbf69e6fab42.png",
+      "destination": "assets/game_art/gift_extra_sheet.png",
+      "sizeBytes": 292485,
+      "finalSizeBytes": 292485
+    },
+    "fruit": {
+      "prompt": "Original game sprite atlas, square 2 columns by 2 rows, four or five separate isolated whole objects centered individually in their cells with generous transparent padding; exact cell arrangement: top left orange blossom jelly cup; top right orange waffle dessert plate; bottom left orange celebration cake; bottom right sunny fruit feast. Warm cream pink, fine watercolor, lovingly detailed cozy original mobile merge game art, consistent front three-quarter perspective. Transparent background, no floor shadow, no tile or frame, no borders, no letters, no watermark; never cross cell boundaries.",
+      "source": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a1d566-1397-7d60-a718-141f2580c52a\\exec-7300e99a-1650-4b70-a69e-a4ba7f6b2138.png",
+      "destination": "assets/game_art/fruit_extra_sheet.png",
+      "sizeBytes": 259441,
+      "finalSizeBytes": 259441
+    },
+    "chest": {
+      "prompt": "Original game sprite atlas, landscape 3 columns by 2 rows, four or five separate isolated whole objects centered individually in their cells with generous transparent padding; exact cell arrangement: five closed treasure chests: top left wood with pink ribbon, top center cream flower chest, top right silver white jeweled chest, bottom left lavender gold trim chest, bottom center rose gold crown grand chest; bottom right empty. Warm cream pink, fine watercolor, lovingly detailed cozy original mobile merge game art, consistent front three-quarter perspective. Transparent background, no floor shadow, no tile or frame, no borders, no letters, no watermark; never cross cell boundaries.",
+      "source": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a1d566-1397-7d60-a718-141f2580c52a\\exec-49c7d464-38ed-460e-8c2e-129361bb2fa9.png",
+      "destination": "assets/game_art/chest_levels_sheet.png",
+      "sizeBytes": 152942,
+      "revision": {
+        "prompt": "Edit the provided sprite atlas: strictly remove ALL background paper texture, white haze, glow and ground shadow. Keep exactly the same five closed chests, their exact arrangement in a 3 by 2 grid, full contours, size, watercolor details and colors. The bottom right cell is entirely empty. The entire area outside the five chest objects, including gaps, must have alpha exactly zero, genuinely transparent, with clean soft edges. No text, borders, tiles or extra objects.",
+        "source": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a1d566-1397-7d60-a718-141f2580c52a\\exec-1f1fc63e-4f3b-42e9-b215-21e567de674a.png",
+        "sizeBytes": 345390,
+        "destination": "assets/game_art/chest_levels_sheet.png",
+        "resize": "600x400 PNG RGBA"
+      },
+      "finalSizeBytes": 345390
+    },
+    "supply": {
+      "prompt": "Original mobile merge game sprite atlas, landscape exactly 3 columns by 2 rows. Six isolated objects individually centered in their own cell with generous empty transparent margins: top left an abundant large gold coin pile, top center an elegant green energy bottle, top right a purple crystal diamond cluster; bottom left a luxurious bag of gold coins, bottom center an iridescent energy bottle with gold trim, bottom right an ornate grand diamond jewel box. Warm cream, gold and blush colors, delicate polished watercolor illustration, consistent front three-quarter perspective. Alpha exactly zero outside objects including cell gaps. Absolutely no paper texture, white haze, glow, shadows, background, tiles, borders, lettering or watermarks. No object crosses any cell boundary.",
+      "source": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a1d566-1397-7d60-a718-141f2580c52a\\exec-c1582553-5428-4f7e-b8f1-063b28ea0485.png",
+      "destination": "assets/game_art/supply_extra_sheet.png",
+      "sizeBytes": 275147,
+      "resize": "504x336 PNG RGBA",
+      "finalSizeBytes": 275147
+    }
+  }
+}

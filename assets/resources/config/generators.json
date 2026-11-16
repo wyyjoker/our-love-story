@@ -6,9 +6,248 @@
     "unlockLevel": 1,
     "energyCost": 1,
     "outputs": [
-      { "itemId": "coffee_01", "weight": 85 },
-      { "itemId": "coffee_02", "weight": 15 }
-    ]
+      {
+        "itemId": "coffee_01",
+        "weight": 70
+      },
+      {
+        "itemId": "coffee_02",
+        "weight": 25
+      },
+      {
+        "itemId": "coffee_03",
+        "weight": 5
+      }
+    ],
+    "upgrade": {
+      "maxLevel": 8,
+      "rechargeFactor": 0.8,
+      "boostEnergyMultiplier": 2,
+      "levels": [
+        {
+          "level": 2,
+          "outputs": [
+            {
+              "itemId": "coffee_02",
+              "weight": 70
+            },
+            {
+              "itemId": "coffee_03",
+              "weight": 25
+            },
+            {
+              "itemId": "coffee_04",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "coffee_02",
+              "weight": 25
+            },
+            {
+              "itemId": "coffee_03",
+              "weight": 50
+            },
+            {
+              "itemId": "coffee_04",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "outputs": [
+            {
+              "itemId": "coffee_03",
+              "weight": 70
+            },
+            {
+              "itemId": "coffee_04",
+              "weight": 25
+            },
+            {
+              "itemId": "coffee_05",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "coffee_03",
+              "weight": 25
+            },
+            {
+              "itemId": "coffee_04",
+              "weight": 50
+            },
+            {
+              "itemId": "coffee_05",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "outputs": [
+            {
+              "itemId": "coffee_04",
+              "weight": 70
+            },
+            {
+              "itemId": "coffee_05",
+              "weight": 25
+            },
+            {
+              "itemId": "coffee_06",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "coffee_04",
+              "weight": 25
+            },
+            {
+              "itemId": "coffee_05",
+              "weight": 50
+            },
+            {
+              "itemId": "coffee_06",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "outputs": [
+            {
+              "itemId": "coffee_05",
+              "weight": 70
+            },
+            {
+              "itemId": "coffee_06",
+              "weight": 25
+            },
+            {
+              "itemId": "coffee_07",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "coffee_05",
+              "weight": 25
+            },
+            {
+              "itemId": "coffee_06",
+              "weight": 50
+            },
+            {
+              "itemId": "coffee_07",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "outputs": [
+            {
+              "itemId": "coffee_06",
+              "weight": 70
+            },
+            {
+              "itemId": "coffee_07",
+              "weight": 25
+            },
+            {
+              "itemId": "coffee_08",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "coffee_06",
+              "weight": 25
+            },
+            {
+              "itemId": "coffee_07",
+              "weight": 50
+            },
+            {
+              "itemId": "coffee_08",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "outputs": [
+            {
+              "itemId": "coffee_07",
+              "weight": 70
+            },
+            {
+              "itemId": "coffee_08",
+              "weight": 25
+            },
+            {
+              "itemId": "coffee_09",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "coffee_07",
+              "weight": 25
+            },
+            {
+              "itemId": "coffee_08",
+              "weight": 50
+            },
+            {
+              "itemId": "coffee_09",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "outputs": [
+            {
+              "itemId": "coffee_08",
+              "weight": 70
+            },
+            {
+              "itemId": "coffee_09",
+              "weight": 25
+            },
+            {
+              "itemId": "coffee_10",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "coffee_08",
+              "weight": 25
+            },
+            {
+              "itemId": "coffee_09",
+              "weight": 50
+            },
+            {
+              "itemId": "coffee_10",
+              "weight": 25
+            }
+          ]
+        }
+      ]
+    },
+    "streakCooldown": {
+      "uses": 60,
+      "durationMs": 20000
+    },
+    "purchaseCoins": 100
   },
   {
     "id": "flower_basket",
@@ -17,9 +256,248 @@
     "unlockLevel": 3,
     "energyCost": 1,
     "outputs": [
-      { "itemId": "flower_01", "weight": 85 },
-      { "itemId": "flower_02", "weight": 15 }
-    ]
+      {
+        "itemId": "flower_01",
+        "weight": 70
+      },
+      {
+        "itemId": "flower_02",
+        "weight": 25
+      },
+      {
+        "itemId": "flower_03",
+        "weight": 5
+      }
+    ],
+    "upgrade": {
+      "maxLevel": 8,
+      "rechargeFactor": 0.8,
+      "boostEnergyMultiplier": 2,
+      "levels": [
+        {
+          "level": 2,
+          "outputs": [
+            {
+              "itemId": "flower_02",
+              "weight": 70
+            },
+            {
+              "itemId": "flower_03",
+              "weight": 25
+            },
+            {
+              "itemId": "flower_04",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "flower_02",
+              "weight": 25
+            },
+            {
+              "itemId": "flower_03",
+              "weight": 50
+            },
+            {
+              "itemId": "flower_04",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "outputs": [
+            {
+              "itemId": "flower_03",
+              "weight": 70
+            },
+            {
+              "itemId": "flower_04",
+              "weight": 25
+            },
+            {
+              "itemId": "flower_05",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "flower_03",
+              "weight": 25
+            },
+            {
+              "itemId": "flower_04",
+              "weight": 50
+            },
+            {
+              "itemId": "flower_05",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "outputs": [
+            {
+              "itemId": "flower_04",
+              "weight": 70
+            },
+            {
+              "itemId": "flower_05",
+              "weight": 25
+            },
+            {
+              "itemId": "flower_06",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "flower_04",
+              "weight": 25
+            },
+            {
+              "itemId": "flower_05",
+              "weight": 50
+            },
+            {
+              "itemId": "flower_06",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "outputs": [
+            {
+              "itemId": "flower_05",
+              "weight": 70
+            },
+            {
+              "itemId": "flower_06",
+              "weight": 25
+            },
+            {
+              "itemId": "flower_07",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "flower_05",
+              "weight": 25
+            },
+            {
+              "itemId": "flower_06",
+              "weight": 50
+            },
+            {
+              "itemId": "flower_07",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "outputs": [
+            {
+              "itemId": "flower_06",
+              "weight": 70
+            },
+            {
+              "itemId": "flower_07",
+              "weight": 25
+            },
+            {
+              "itemId": "flower_08",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "flower_06",
+              "weight": 25
+            },
+            {
+              "itemId": "flower_07",
+              "weight": 50
+            },
+            {
+              "itemId": "flower_08",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "outputs": [
+            {
+              "itemId": "flower_07",
+              "weight": 70
+            },
+            {
+              "itemId": "flower_08",
+              "weight": 25
+            },
+            {
+              "itemId": "flower_09",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "flower_07",
+              "weight": 25
+            },
+            {
+              "itemId": "flower_08",
+              "weight": 50
+            },
+            {
+              "itemId": "flower_09",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "outputs": [
+            {
+              "itemId": "flower_08",
+              "weight": 70
+            },
+            {
+              "itemId": "flower_09",
+              "weight": 25
+            },
+            {
+              "itemId": "flower_10",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "flower_08",
+              "weight": 25
+            },
+            {
+              "itemId": "flower_09",
+              "weight": 50
+            },
+            {
+              "itemId": "flower_10",
+              "weight": 25
+            }
+          ]
+        }
+      ]
+    },
+    "streakCooldown": {
+      "uses": 60,
+      "durationMs": 20000
+    },
+    "purchaseCoins": 150
   },
   {
     "id": "dessert_oven",
@@ -28,9 +506,248 @@
     "unlockLevel": 5,
     "energyCost": 1,
     "outputs": [
-      { "itemId": "dessert_01", "weight": 85 },
-      { "itemId": "dessert_02", "weight": 15 }
-    ]
+      {
+        "itemId": "dessert_01",
+        "weight": 70
+      },
+      {
+        "itemId": "dessert_02",
+        "weight": 25
+      },
+      {
+        "itemId": "dessert_03",
+        "weight": 5
+      }
+    ],
+    "upgrade": {
+      "maxLevel": 8,
+      "rechargeFactor": 0.8,
+      "boostEnergyMultiplier": 2,
+      "levels": [
+        {
+          "level": 2,
+          "outputs": [
+            {
+              "itemId": "dessert_02",
+              "weight": 70
+            },
+            {
+              "itemId": "dessert_03",
+              "weight": 25
+            },
+            {
+              "itemId": "dessert_04",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "dessert_02",
+              "weight": 25
+            },
+            {
+              "itemId": "dessert_03",
+              "weight": 50
+            },
+            {
+              "itemId": "dessert_04",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "outputs": [
+            {
+              "itemId": "dessert_03",
+              "weight": 70
+            },
+            {
+              "itemId": "dessert_04",
+              "weight": 25
+            },
+            {
+              "itemId": "dessert_05",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "dessert_03",
+              "weight": 25
+            },
+            {
+              "itemId": "dessert_04",
+              "weight": 50
+            },
+            {
+              "itemId": "dessert_05",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "outputs": [
+            {
+              "itemId": "dessert_04",
+              "weight": 70
+            },
+            {
+              "itemId": "dessert_05",
+              "weight": 25
+            },
+            {
+              "itemId": "dessert_06",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "dessert_04",
+              "weight": 25
+            },
+            {
+              "itemId": "dessert_05",
+              "weight": 50
+            },
+            {
+              "itemId": "dessert_06",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "outputs": [
+            {
+              "itemId": "dessert_05",
+              "weight": 70
+            },
+            {
+              "itemId": "dessert_06",
+              "weight": 25
+            },
+            {
+              "itemId": "dessert_07",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "dessert_05",
+              "weight": 25
+            },
+            {
+              "itemId": "dessert_06",
+              "weight": 50
+            },
+            {
+              "itemId": "dessert_07",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "outputs": [
+            {
+              "itemId": "dessert_06",
+              "weight": 70
+            },
+            {
+              "itemId": "dessert_07",
+              "weight": 25
+            },
+            {
+              "itemId": "dessert_08",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "dessert_06",
+              "weight": 25
+            },
+            {
+              "itemId": "dessert_07",
+              "weight": 50
+            },
+            {
+              "itemId": "dessert_08",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "outputs": [
+            {
+              "itemId": "dessert_07",
+              "weight": 70
+            },
+            {
+              "itemId": "dessert_08",
+              "weight": 25
+            },
+            {
+              "itemId": "dessert_09",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "dessert_07",
+              "weight": 25
+            },
+            {
+              "itemId": "dessert_08",
+              "weight": 50
+            },
+            {
+              "itemId": "dessert_09",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "outputs": [
+            {
+              "itemId": "dessert_08",
+              "weight": 70
+            },
+            {
+              "itemId": "dessert_09",
+              "weight": 25
+            },
+            {
+              "itemId": "dessert_10",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "dessert_08",
+              "weight": 25
+            },
+            {
+              "itemId": "dessert_09",
+              "weight": 50
+            },
+            {
+              "itemId": "dessert_10",
+              "weight": 25
+            }
+          ]
+        }
+      ]
+    },
+    "streakCooldown": {
+      "uses": 60,
+      "durationMs": 20000
+    },
+    "purchaseCoins": 200
   },
   {
     "id": "gift_box",
@@ -39,8 +756,400 @@
     "unlockLevel": 8,
     "energyCost": 1,
     "outputs": [
-      { "itemId": "gift_01", "weight": 85 },
-      { "itemId": "gift_02", "weight": 15 }
-    ]
+      {
+        "itemId": "gift_01",
+        "weight": 70
+      },
+      {
+        "itemId": "gift_02",
+        "weight": 25
+      },
+      {
+        "itemId": "gift_03",
+        "weight": 5
+      }
+    ],
+    "upgrade": {
+      "maxLevel": 8,
+      "rechargeFactor": 0.8,
+      "boostEnergyMultiplier": 2,
+      "levels": [
+        {
+          "level": 2,
+          "outputs": [
+            {
+              "itemId": "gift_02",
+              "weight": 70
+            },
+            {
+              "itemId": "gift_03",
+              "weight": 25
+            },
+            {
+              "itemId": "gift_04",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "gift_02",
+              "weight": 25
+            },
+            {
+              "itemId": "gift_03",
+              "weight": 50
+            },
+            {
+              "itemId": "gift_04",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "outputs": [
+            {
+              "itemId": "gift_03",
+              "weight": 70
+            },
+            {
+              "itemId": "gift_04",
+              "weight": 25
+            },
+            {
+              "itemId": "gift_05",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "gift_03",
+              "weight": 25
+            },
+            {
+              "itemId": "gift_04",
+              "weight": 50
+            },
+            {
+              "itemId": "gift_05",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "outputs": [
+            {
+              "itemId": "gift_04",
+              "weight": 70
+            },
+            {
+              "itemId": "gift_05",
+              "weight": 25
+            },
+            {
+              "itemId": "gift_06",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "gift_04",
+              "weight": 25
+            },
+            {
+              "itemId": "gift_05",
+              "weight": 50
+            },
+            {
+              "itemId": "gift_06",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "outputs": [
+            {
+              "itemId": "gift_05",
+              "weight": 70
+            },
+            {
+              "itemId": "gift_06",
+              "weight": 25
+            },
+            {
+              "itemId": "gift_07",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "gift_05",
+              "weight": 25
+            },
+            {
+              "itemId": "gift_06",
+              "weight": 50
+            },
+            {
+              "itemId": "gift_07",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "outputs": [
+            {
+              "itemId": "gift_06",
+              "weight": 70
+            },
+            {
+              "itemId": "gift_07",
+              "weight": 25
+            },
+            {
+              "itemId": "gift_08",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "gift_06",
+              "weight": 25
+            },
+            {
+              "itemId": "gift_07",
+              "weight": 50
+            },
+            {
+              "itemId": "gift_08",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "outputs": [
+            {
+              "itemId": "gift_07",
+              "weight": 70
+            },
+            {
+              "itemId": "gift_08",
+              "weight": 25
+            },
+            {
+              "itemId": "gift_09",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "gift_07",
+              "weight": 25
+            },
+            {
+              "itemId": "gift_08",
+              "weight": 50
+            },
+            {
+              "itemId": "gift_09",
+              "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "outputs": [
+            {
+              "itemId": "gift_08",
+              "weight": 70
+            },
+            {
+              "itemId": "gift_09",
+              "weight": 25
+            },
+            {
+              "itemId": "gift_10",
+              "weight": 5
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "gift_08",
+              "weight": 25
+            },
+            {
+              "itemId": "gift_09",
+              "weight": 50
+            },
+            {
+              "itemId": "gift_10",
+              "weight": 25
+            }
+          ]
+        }
+      ]
+    },
+    "streakCooldown": {
+      "uses": 60,
+      "durationMs": 20000
+    },
+    "purchaseCoins": 300
+  },
+  {
+    "id": "orange_tree",
+    "displayName": "阳光橘树",
+    "chainId": "fruit",
+    "unlockLevel": 2,
+    "energyCost": 0,
+    "recharge": {
+      "capacity": 10,
+      "legacyCapacity": 3,
+      "intervalMs": 600000
+    },
+    "outputs": [
+      {
+        "itemId": "fruit_01",
+        "weight": 70
+      },
+      {
+        "itemId": "fruit_02",
+        "weight": 25
+      },
+      {
+        "itemId": "fruit_03",
+        "weight": 5
+      }
+    ],
+    "upgrade": {
+      "maxLevel": 8,
+      "rechargeFactor": 0.8,
+      "boostEnergyMultiplier": 2,
+      "levels": [
+        {
+          "level": 2,
+          "outputs": [
+            {
+              "itemId": "fruit_02",
+              "weight": 70
+            },
+            {
+              "itemId": "fruit_03",
+              "weight": 25
+            },
+            {
+              "itemId": "fruit_04",
+              "weight": 5
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "outputs": [
+            {
+              "itemId": "fruit_03",
+              "weight": 70
+            },
+            {
+              "itemId": "fruit_04",
+              "weight": 25
+            },
+            {
+              "itemId": "fruit_05",
+              "weight": 5
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "outputs": [
+            {
+              "itemId": "fruit_04",
+              "weight": 70
+            },
+            {
+              "itemId": "fruit_05",
+              "weight": 25
+            },
+            {
+              "itemId": "fruit_06",
+              "weight": 5
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "outputs": [
+            {
+              "itemId": "fruit_05",
+              "weight": 70
+            },
+            {
+              "itemId": "fruit_06",
+              "weight": 25
+            },
+            {
+              "itemId": "fruit_07",
+              "weight": 5
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "outputs": [
+            {
+              "itemId": "fruit_06",
+              "weight": 70
+            },
+            {
+              "itemId": "fruit_07",
+              "weight": 25
+            },
+            {
+              "itemId": "fruit_08",
+              "weight": 5
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "outputs": [
+            {
+              "itemId": "fruit_07",
+              "weight": 70
+            },
+            {
+              "itemId": "fruit_08",
+              "weight": 25
+            },
+            {
+              "itemId": "fruit_09",
+              "weight": 5
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "outputs": [
+            {
+              "itemId": "fruit_08",
+              "weight": 70
+            },
+            {
+              "itemId": "fruit_09",
+              "weight": 25
+            },
+            {
+              "itemId": "fruit_10",
+              "weight": 5
+            }
+          ]
+        }
+      ]
+    },
+    "purchaseCoins": 150
   }
 ]

@@ -59,12 +59,13 @@ export class EnergyService {
   spend(cost: number):
     | { ok: true; energy: number }
     | { ok: false; reason: 'NOT_ENOUGH_ENERGY' } {
+    const before = this.player.energy;
     const result = spendEnergy(this.player.energy, cost);
     if (!result.ok) return result;
     this.player.energy = result.energy;
     // Spending should push lastEnergyAt forward only if we were at max
     // (standard energy timer starts after first spend from full).
-    if (this.player.energy === this.player.maxEnergy - cost && this.player.lastEnergyAt === 0) {
+    if (before >= this.player.maxEnergy && this.player.energy < this.player.maxEnergy) {
       this.player.lastEnergyAt = this.clock.now();
     }
     this.bus.emit('ENERGY_CHANGED', {
@@ -77,10 +78,7 @@ export class EnergyService {
 
   add(amount: number): void {
     const before = this.player.energy;
-    this.player.energy = Math.min(
-      this.player.maxEnergy,
-      this.player.energy + amount,
-    );
+    this.player.energy = Math.min(Number.MAX_SAFE_INTEGER, this.player.energy + Math.max(0, Math.floor(amount)));
     const delta = this.player.energy - before;
     if (delta !== 0) {
       this.bus.emit('ENERGY_CHANGED', {

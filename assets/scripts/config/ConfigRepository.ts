@@ -22,7 +22,7 @@ import wishesJson from '../../resources/config/wishes.json';
 import levelRewardsJson from '../../resources/config/level_rewards.json';
 import adventuresJson from '../../resources/config/adventures.json';
 import smallDatesJson from '../../resources/config/small_dates.json';
-import { circuitState, requirementsBaseCost, type AdventureChapter, type SmallDateDefinition } from '../core/play/types';
+import { circuitState, requirementsBaseCost, type AdventureChapter, type PuzzleDefinition, type SmallDateDefinition } from '../core/play/types';
 import { collectUnlockChains } from '../core/progression/progression';
 
 export type ConfigBundle = {
@@ -45,6 +45,56 @@ export type ConfigValidationIssue = {
   message: string;
 };
 
+function nonEmptyText(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function validPuzzleDefinition(value: unknown): value is PuzzleDefinition {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const puzzle = value as Record<string, unknown>;
+  if (puzzle.kind === 'find') {
+    const hotspots = puzzle.hotspots;
+    return typeof puzzle.solution === 'string' && puzzle.solution.length === 4 && Array.from(puzzle.solution).every((digit) => digit >= '0' && digit <= '9')
+      && Array.isArray(hotspots) && hotspots.length === 3
+      && new Set(hotspots.map((hotspot) => hotspot && typeof hotspot === 'object' ? (hotspot as Record<string, unknown>).id : undefined)).size === hotspots.length
+      && hotspots.every((hotspot) => {
+        if (!hotspot || typeof hotspot !== 'object' || Array.isArray(hotspot)) return false;
+        const entry = hotspot as Record<string, unknown>;
+        return typeof entry.id === 'string' && /^[a-z][a-z0-9_]*$/.test(entry.id)
+          && nonEmptyText(entry.label) && nonEmptyText(entry.clue)
+          && Number.isFinite(entry.x) && Number.isFinite(entry.y);
+      });
+  }
+  if (puzzle.kind === 'sequence') {
+    const tiles = puzzle.tiles, solution = puzzle.solution;
+    return Array.isArray(tiles) && tiles.length === 4 && Array.isArray(solution) && solution.length === tiles.length
+      && new Set(tiles.map((tile) => tile && typeof tile === 'object' ? (tile as Record<string, unknown>).id : undefined)).size === tiles.length
+      && new Set(solution).size === solution.length
+      && tiles.every((tile) => {
+        if (!tile || typeof tile !== 'object' || Array.isArray(tile)) return false;
+        const entry = tile as Record<string, unknown>;
+        return typeof entry.id === 'string' && /^[a-z][a-z0-9_]*$/.test(entry.id)
+          && nonEmptyText(entry.label) && nonEmptyText(entry.clue) && solution.includes(entry.id);
+      })
+      && solution.every((id) => tiles.some((tile) => (tile as Record<string, unknown>).id === id));
+  }
+  if (puzzle.kind === 'circuit') {
+    const columns = puzzle.columns, rows = puzzle.rows, ports = puzzle.ports;
+    const initial = puzzle.initial, solution = puzzle.solution;
+    const start = puzzle.start, end = puzzle.end;
+    if (columns !== 3 || rows !== 3 || !Array.isArray(ports) || ports.length !== 9
+      || !Array.isArray(initial) || initial.length !== 9 || !Array.isArray(solution) || solution.length !== 9
+      || ![...initial, ...solution].every((rotation) => Number.isInteger(rotation) && (rotation as number) >= 0 && (rotation as number) < 4)
+      || !ports.every((cell) => Array.isArray(cell) && cell.length === 2
+        && new Set(cell).size === 2 && cell.every((port) => Number.isInteger(port) && port >= 0 && port < 4))
+      || !Number.isInteger(start) || (start as number) < 0 || (start as number) >= 9
+      || !Number.isInteger(end) || (end as number) < 0 || (end as number) >= 9) return false;
+    const circuit = value as Extract<PuzzleDefinition, { kind: 'circuit' }>;
+    return circuitState(circuit, circuit.solution).solved && !circuitState(circuit, circuit.initial).solved;
+  }
+  return false;
+}
+
 export function loadConfigBundle(): ConfigBundle {
   const game = gameJson as GameConfig;
   const items = itemsJson as ItemDefinition[];
@@ -66,6 +116,20 @@ export function loadConfigBundle(): ConfigBundle {
 export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
   const issues: ConfigValidationIssue[] = [];
   const { game, items, catalog, generators, orders, progression, memories, furniture, wishes, levelRewards } = bundle;
+  const couple = (game as unknown as { couple?: unknown }).couple;
+  if (couple && typeof couple === 'object' && !Array.isArray(couple)
+    && Object.prototype.hasOwnProperty.call(couple, 'gift')) {
+    const gift = (couple as Record<string, unknown>).gift;
+    if (!gift || typeof gift !== 'object' || Array.isArray(gift)) {
+      issues.push({ level: 'error', message: 'Couple gift must be a non-null object' });
+    } else {
+      for (const field of ['title', 'salutation', 'body', 'signoff', 'signature', 'coverMessage']) {
+        if (Object.prototype.hasOwnProperty.call(gift, field) && typeof (gift as Record<string, unknown>)[field] !== 'string') {
+          issues.push({ level: 'error', message: `Couple gift ${field} must be a string` });
+        }
+      }
+    }
+  }
 
   const seen = new Set<string>();
   for (const item of items) {
@@ -73,6 +137,7 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
       issues.push({ level: 'error', message: `Duplicate item id: ${item.id}` });
     }
     seen.add(item.id);
+    if (item.maxUses !== undefined && (item.chainId !== 'scissors' || !Number.isSafeInteger(item.maxUses) || item.maxUses <= 0)) issues.push({ level: 'error', message: `Item ${item.id} invalid tool uses` });
     if (item.level < 1) {
       issues.push({ level: 'error', message: `Item ${item.id} level < 1` });
     }
@@ -116,6 +181,25 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
   }
 
   for (const gen of generators) {
+    if (!Number.isSafeInteger(gen.purchaseCoins) || gen.purchaseCoins <= 0) issues.push({ level: 'error', message: `Generator ${gen.id} purchase price invalid` });
+    if (gen.recharge && (!Number.isInteger(gen.recharge.capacity) || gen.recharge.capacity < 1 || !Number.isFinite(gen.recharge.intervalMs) || gen.recharge.intervalMs <= 0 || gen.energyCost !== 0)) issues.push({ level: 'error', message: `Generator ${gen.id} recharge invalid` });
+    if (gen.recharge?.legacyCapacity !== undefined && (!Number.isSafeInteger(gen.recharge.legacyCapacity) || gen.recharge.legacyCapacity < 1 || gen.recharge.legacyCapacity > gen.recharge.capacity)) issues.push({ level: 'error', message: `Generator ${gen.id} legacy recharge capacity invalid` });
+    if (gen.streakCooldown && (gen.recharge || !Number.isSafeInteger(gen.streakCooldown.uses) || gen.streakCooldown.uses < 1 || !Number.isSafeInteger(gen.streakCooldown.durationMs) || gen.streakCooldown.durationMs <= 0)) issues.push({ level: 'error', message: `Generator ${gen.id} cooldown invalid` });
+    if (gen.upgrade) {
+      const upgrade = gen.upgrade;
+      const validOutputs = (outputs: GeneratorDefinition['outputs'], minLevel: number): boolean => Array.isArray(outputs) && outputs.length > 0
+        && outputs.every((output) => {
+          const item = catalog.get(output.itemId);
+          return item?.chainId === gen.chainId && item.level >= minLevel && item.level <= Math.min(12, minLevel + 2) && Number.isFinite(output.weight) && output.weight > 0;
+        });
+      if (!Number.isSafeInteger(upgrade.maxLevel) || upgrade.maxLevel < 2 || upgrade.maxLevel > 8 || !Number.isFinite(upgrade.rechargeFactor) || upgrade.rechargeFactor <= 0 || upgrade.rechargeFactor > 1
+        || !Number.isSafeInteger(upgrade.boostEnergyMultiplier) || upgrade.boostEnergyMultiplier < 2 || !Array.isArray(upgrade.levels)
+        || upgrade.levels.length !== upgrade.maxLevel - 1 || upgrade.levels.some((entry, index) => entry.level !== index + 2 || !validOutputs(entry.outputs, entry.level)
+          || (gen.energyCost > 0 && (!entry.boostOutputs || !validOutputs(entry.boostOutputs, entry.level)))
+          || (entry.boostOutputs !== undefined && !validOutputs(entry.boostOutputs, entry.level)))) {
+        issues.push({ level: 'error', message: `Generator ${gen.id} upgrade invalid` });
+      }
+    }
     if (!byChain.has(gen.chainId)) {
       issues.push({
         level: 'error',
@@ -132,6 +216,10 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
           message: `Generator ${gen.id} output missing item ${out.itemId}`,
         });
       }
+      const outputDefinition = catalog.get(out.itemId);
+      if (outputDefinition && (outputDefinition.chainId !== gen.chainId || (gen.upgrade && outputDefinition.level > 3))) {
+        issues.push({ level: 'error', message: `Generator ${gen.id} base output invalid: ${out.itemId}` });
+      }
       if (out.weight <= 0) {
         issues.push({
           level: 'warn',
@@ -143,7 +231,9 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
 
   for (const order of orders) {
     if (order.requirements.length < game.orders.minRequirements ||
-        order.requirements.length > game.orders.maxRequirements) {
+        order.requirements.length > game.orders.maxRequirements ||
+        order.requirements.some((requirement) => !Number.isSafeInteger(requirement.count) || requirement.count < 1) ||
+        order.requirements.reduce((sum, requirement) => sum + requirement.count, 0) > 2) {
       issues.push({
         level: 'error',
         message: `Order ${order.id} requirement count out of range`,
@@ -182,9 +272,57 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
   if (game.board.rows * game.board.columns <= 0) {
     issues.push({ level: 'error', message: 'Board size invalid' });
   }
+  if (!game.collection || !Array.isArray(game.collection.chainIds) || !game.collection.chainIds.length
+    || new Set(game.collection.chainIds).size !== game.collection.chainIds.length
+    || game.collection.chainIds.some((id) => !byChain.has(id))
+    || !Number.isSafeInteger(game.collection.energyPerChain) || game.collection.energyPerChain <= 0
+    || !Number.isSafeInteger(game.collection.maxEnergyCap) || game.collection.maxEnergyCap < 1) issues.push({ level: 'error', message: 'Collection configuration invalid' });
+  if (!Array.isArray(game.generationBonusDrops) || game.generationBonusDrops.some((drop) => (drop.generatorId !== '*' && !generators.some((gen) => gen.id === drop.generatorId))
+    || !catalog.has(drop.itemId) || !Number.isFinite(drop.chance) || drop.chance < 0 || drop.chance > 1 || !Number.isSafeInteger(drop.minLevel) || drop.minLevel < 1)) issues.push({ level: 'error', message: 'Generation bonus drops invalid' });
+  if (items.filter((item) => item.wildcard).length !== 1 || items.some((item) => item.wildcard && (item.nextItemId || item.wildcardEligible))) issues.push({ level: 'error', message: 'Wildcard item invalid' });
+  if (!game.board.unlocks?.length || game.board.unlocks.some((u, i, all) => !Number.isInteger(u.level) || !Number.isInteger(u.rows) || !Number.isInteger(u.columns) || u.level < 1 || u.rows < 1 || u.columns < 1 || u.rows > game.board.rows || u.columns > game.board.columns || (i > 0 && (u.level <= all[i - 1].level || u.rows < all[i - 1].rows || u.columns < all[i - 1].columns)))) issues.push({ level: 'error', message: 'Board unlocks invalid' });
+  const rewards = game.rewards;
+  if (!rewards || !Number.isFinite(rewards.chestDropChance) || rewards.chestDropChance < 0 || rewards.chestDropChance > 1 || !Number.isInteger(rewards.discoveryCoins) || rewards.discoveryCoins < 0 || !Array.isArray(rewards.chestLoot) || !rewards.chestLoot.length || rewards.chestLoot.some((entry) => !catalog.has(entry.itemId) || !Number.isFinite(entry.weight) || entry.weight <= 0) || !Array.isArray(rewards.exchangeOffers) || !rewards.exchangeOffers.length || rewards.exchangeOffers.some((entry) => !entry.id || !Number.isInteger(entry.diamonds) || entry.diamonds <= 0 || !Number.isInteger(entry.energy) || entry.energy <= 0) || !Array.isArray(rewards.checkIn) || rewards.checkIn.length !== 7 || rewards.checkIn.some((entry) => [entry.coins, entry.energy, entry.diamonds].some((n) => !Number.isInteger(n) || n < 0))) issues.push({ level: 'error', message: 'Rewards configuration invalid' });
+  const chestItems = items.filter((item) => item.chainId === 'treasure_chest').sort((a, b) => a.level - b.level);
+  for (const chainId of ['coin', 'energy', 'diamond']) {
+    const supply = items.filter((item) => item.chainId === chainId).sort((a, b) => a.level - b.level);
+    if (supply.length !== 5 || supply.some((item, index) => item.level !== index + 1
+      || item.id !== `${chainId}_0${index + 1}` || item.nextItemId !== supply[index + 1]?.id
+      || (index === 4 ? item.maxLevel !== true : item.maxLevel === true)
+      || !Number.isSafeInteger(item.useValue) || (item.useValue ?? 0) <= 0
+      || (index > 0 && (item.useValue ?? 0) <= 2 * (supply[index - 1].useValue ?? 0)))) {
+      issues.push({ level: 'error', message: `Supply chain ${chainId} invalid` });
+    }
+  }
+  if (chestItems.length !== 5 || chestItems.some((item, index) => item.level !== index + 1
+    || item.id !== (index === 0 ? 'treasure_chest' : `treasure_chest_0${index + 1}`)
+    || item.maxLevel !== (index === 4) || item.nextItemId !== chestItems[index + 1]?.id || item.wildcardEligible === true)) {
+    issues.push({ level: 'error', message: 'Treasure chest chain invalid' });
+  }
+  const validChestLoot = (loot: unknown): boolean => Array.isArray(loot) && loot.length > 0
+    && loot.every((entry) => entry && typeof entry === 'object' && typeof entry.itemId === 'string'
+      && ['coin', 'energy', 'diamond'].includes(catalog.get(entry.itemId)?.chainId ?? '')
+      && Number.isFinite(entry.weight) && entry.weight > 0);
+  if (!rewards || !validChestLoot(rewards.chestLoot) || !Array.isArray(rewards.chestLevels) || rewards.chestLevels.length !== 5
+    || rewards.chestLevels.some((entry, index) => !entry || entry.level !== index + 1 || !Number.isSafeInteger(entry.count)
+      || entry.count < 1 || entry.count > 32 || (index > 0 && entry.loot === undefined) || !validChestLoot(entry.loot ?? rewards.chestLoot))) {
+    issues.push({ level: 'error', message: 'Treasure chest rewards invalid' });
+  }
+  if (!Number.isSafeInteger(game.orders.refreshCooldownMs) || game.orders.refreshCooldownMs <= 0 || !Number.isSafeInteger(game.orders.refreshDiamondCost) || game.orders.refreshDiamondCost <= 0) issues.push({ level: 'error', message: 'Order refresh configuration invalid' });
+  if (!game.generatorRestore || !Number.isSafeInteger(game.generatorRestore.cooldownCost) || game.generatorRestore.cooldownCost < 1
+    || !Number.isSafeInteger(game.generatorRestore.chargeCost) || game.generatorRestore.chargeCost < 1) issues.push({ level: 'error', message: 'Generator restore configuration invalid' });
+  const daily = game.rewards?.dailyTasks;
+  if (!Array.isArray(daily) || daily.length !== 3 || new Set(daily.map((task) => task.id)).size !== daily.length || daily.some((task) => !/^[a-z][a-z0-9_]*$/.test(task.id) || !['orders', 'merges', 'specific'].includes(task.kind) || !task.title || !Number.isSafeInteger(task.target) || task.target <= 0 || !task.reward || [task.reward.coins, task.reward.xp, task.reward.energy, task.reward.diamonds].some((n) => !Number.isSafeInteger(n) || n < 0)) || new Set(daily.map((task) => task.kind)).size !== 3) issues.push({ level: 'error', message: 'Daily tasks configuration invalid' });
   if (game.energy.recoverIntervalMs <= 0) {
     issues.push({ level: 'error', message: 'Energy recoverIntervalMs invalid' });
   }
+  if (game.energy.maxByLevel && (game.energy.maxByLevel.length !== progression.levels.length || game.energy.maxByLevel.some((n, i, a) => !Number.isSafeInteger(n) || n < 1 || n > 1000 || (i > 0 && n < a[i - 1])))) issues.push({ level: 'error', message: 'Energy capacity curve invalid' });
+  const dynamicOrders = game.orders.dynamic;
+  if (dynamicOrders && ([dynamicOrders.twoItemChance, dynamicOrders.rareChance, dynamicOrders.urgentChance].some((n) => !Number.isFinite(n) || n < 0 || n > 1)
+    || !Number.isSafeInteger(dynamicOrders.urgentDurationMs) || dynamicOrders.urgentDurationMs <= 0
+    || !Number.isSafeInteger(dynamicOrders.rewardMultiplierMaxLevel) || dynamicOrders.rewardMultiplierMaxLevel < 1
+    || !Number.isFinite(dynamicOrders.rewardMultiplierMin) || !Number.isFinite(dynamicOrders.rewardMultiplierMax)
+    || dynamicOrders.rewardMultiplierMin <= 0 || dynamicOrders.rewardMultiplierMax < dynamicOrders.rewardMultiplierMin)) issues.push({ level: 'error', message: 'Dynamic order configuration invalid' });
 
   for (const [name, values] of [
     ['memory', memories],
@@ -200,11 +338,8 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
   if (memories.length === 0) {
     issues.push({ level: 'error', message: 'Memory content must not be empty' });
   }
-  if (furniture.length !== 10 || wishes.length !== 10) {
-    issues.push({ level: 'error', message: 'Life content must have 10 furniture items and wishes' });
-  }
-  if (furniture.reduce((n, f) => n + f.decorPoints, 0) !== 50) {
-    issues.push({ level: 'error', message: 'Furniture decor points must total 50' });
+  if (furniture.length < 10 || wishes.length !== 10) {
+    issues.push({ level: 'error', message: 'Life content must have at least 10 furniture items and 10 wishes' });
   }
   for (const memory of memories) {
     if (memory.artMode !== undefined && !['cover', 'contain'].includes(memory.artMode)) {
@@ -229,7 +364,7 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
     if (item.coinCost < 0 || item.unlockLevel < 1 || item.decorPoints <= 0) {
       issues.push({ level: 'error', message: `Furniture ${item.id} invalid` });
     }
-    if (!['living', 'bedroom', 'garden'].includes(item.room)
+    if (!['living', 'bedroom', 'garden', 'study', 'terrace', 'pool'].includes(item.room)
       || !item.placement
       || ![item.placement.x, item.placement.y, item.placement.width, item.placement.height].every(Number.isFinite)
       || item.placement.width <= 0 || item.placement.height <= 0) {
@@ -243,6 +378,10 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
   }
   if (levelRewards.default.coinsPerLevel < 0 || levelRewards.default.heartsPerLevel < 0 || levelRewards.default.xp < 0) {
     issues.push({ level: 'error', message: 'Default level reward invalid' });
+  }
+  if (levelRewards.generatorRotation && (new Set(levelRewards.generatorRotation).size !== levelRewards.generatorRotation.length
+    || levelRewards.generatorRotation.some((id) => !generators.some((generator) => generator.id === id)))) {
+    issues.push({ level: 'error', message: 'Level generator reward rotation invalid' });
   }
   const specialLevels = new Set<number>();
   for (const reward of levelRewards.special) {
@@ -297,7 +436,25 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
         && Number.isInteger(p.start) && p.start >= 0 && p.start < 9 && Number.isInteger(p.end) && p.end >= 0 && p.end < 9;
       if (puzzleOk) puzzleOk = circuitState(p, p.solution).solved && !circuitState(p, p.initial).solved;
     }
-    if (!baseOk || !puzzleOk) issues.push({ level: 'error', message: `Adventure ${c.id} invalid` });
+    let variantsOk = c.replayVariants === undefined || Array.isArray(c.replayVariants);
+    const variantIds = new Set<string>(['classic']);
+    if (Array.isArray(c.replayVariants)) {
+      for (const candidate of c.replayVariants) {
+        if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) { variantsOk = false; continue; }
+        const variant = candidate as unknown as Record<string, unknown>;
+        const id = variant.id;
+        const variantPuzzle = variant.puzzle;
+        const variantPuzzleValid = validPuzzleDefinition(variantPuzzle);
+        const sameKind = !puzzleOk || (variantPuzzleValid && variantPuzzle.kind === p.kind);
+        const hints = variant.hints;
+        const valid = typeof id === 'string' && /^[a-z][a-z0-9_]*$/.test(id) && !variantIds.has(id)
+          && nonEmptyText(variant.instruction) && Array.isArray(hints) && hints.length === 3
+          && hints.every(nonEmptyText) && variantPuzzleValid && sameKind;
+        if (typeof id === 'string') variantIds.add(id);
+        if (!valid) variantsOk = false;
+      }
+    }
+    if (!baseOk || !puzzleOk || !variantsOk) issues.push({ level: 'error', message: `Adventure ${c.id} invalid` });
   }
 
   if (bundle.smallDates.length < 4) {
@@ -314,6 +471,7 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
       && typeof date.memoryId === 'string' && date.memoryId.length > 0
       && Number.isInteger(date.minLevel) && date.minLevel >= 1 && date.minLevel <= 18
       && date.requirements.length > 0
+      && date.requirements.reduce((sum, requirement) => sum + requirement.count, 0) <= 2
       && date.requirements.every((r) => {
         const def = catalog.get(r.itemId);
         return !!def && def.level <= 3 && Number.isInteger(r.count) && r.count > 0;

@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "scope": "polish",
+  "checks": [
+    "polish: four navigation states, safe areas, tabbed menus and furniture controls at 320/375/430"
+  ],
+  "exceptions": [],
+  "testedBuildDigest": "60a8e22268303ec4163d40826a932e596a4dbc5eb96d1de2bd75562c7473e546",
+  "version": "1.3.0",
+  "output": "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T11-13-24-301Z-ockhqU"
+}

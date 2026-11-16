@@ -19,9 +19,12 @@ export function photoPage(paths: readonly string[], requestedPage: number) {
 }
 
 /** Leave the status bar and bottom navigation outside the life-page content. */
+export const LIFE_TOP_RESERVED = 156;
+export const LIFE_BOTTOM_RESERVED = 144;
+
 export function lifePageLayout(width: number, height: number) {
-  const top = height / 2 - 144;
-  const bottom = -height / 2 + 104;
+  const top = height / 2 - LIFE_TOP_RESERVED;
+  const bottom = -height / 2 + LIFE_BOTTOM_RESERVED;
   return { y: (top + bottom) / 2, scale: Math.min(1, (top - bottom) / 1000, (width - 24) / 710) };
 }
 
@@ -29,7 +32,7 @@ export function journalLayout(width: number, height: number) {
   const scale = lifePageLayout(width, height).scale;
   const compact = scale < 0.94;
   return { compact, perPage: compact ? 1 : 4,
-    extra: compact ? 0 : Math.max(0, ((height - 248) / scale - 1000) / 2) };
+    extra: compact ? 0 : Math.max(0, ((height - LIFE_TOP_RESERVED - LIFE_BOTTOM_RESERVED) / scale - 1000) / 2) };
 }
 
 export function fitPhoto(imageWidth: number, imageHeight: number, width: number, height: number) {

@@ -19,7 +19,7 @@ export type EnergyRecoverResult = {
 
 export function recoverEnergy(input: EnergyRecoverInput): EnergyRecoverResult {
   const maxEnergy = Math.max(0, input.maxEnergy);
-  let energy = clampInt(input.energy, 0, maxEnergy);
+  let energy = clampInt(input.energy, 0, Number.MAX_SAFE_INTEGER);
   const interval = Math.max(1, input.recoverIntervalMs);
   const now = Number.isFinite(input.now) ? input.now : input.lastEnergyAt;
   const last = Number.isFinite(input.lastEnergyAt)
@@ -28,7 +28,7 @@ export function recoverEnergy(input: EnergyRecoverInput): EnergyRecoverResult {
 
   if (energy >= maxEnergy) {
     return {
-      energy: maxEnergy,
+      energy,
       maxEnergy,
       lastEnergyAt: now,
       recovered: 0,

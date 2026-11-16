@@ -32,7 +32,21 @@ export type ChapterProgress = PuzzleProgress & {
   step: number;
   claimed: boolean;
 };
-export type ReplayProgress = PuzzleProgress;
+export type ReplayProgress = PuzzleProgress & {
+  /** Stable config key for this run; never reselect it when resuming. */
+  variantId: string;
+};
+export type ReplayStats = {
+  started: number;
+  solved: number;
+  skipped: number;
+  /** Sum of hints from terminal replay runs only; active-run hints stay on ReplayProgress. */
+  totalHints: number;
+  bestSolvedHints: number | null;
+  /** v4 saves retained only the latest run, so their earlier history is unknowable. */
+  legacyHistoryIncomplete: boolean;
+};
+export type ReplaySummary = ReplayStats;
 export type SmallDateProgress = {
   currentId: string;
   rotation: number;
@@ -44,6 +58,8 @@ export type PlayState = {
   chapters: Record<string, ChapterProgress>;
   /** Free practice progress kept apart from the claimed chapter state. */
   replays: Record<string, ReplayProgress>;
+  /** Per-chapter aggregates; the latest run remains in replays. */
+  replayStats: Record<string, ReplayStats>;
   /** Current repeatable small-date order and its rotation counter. */
   smallDate: SmallDateProgress;
 };
@@ -51,12 +67,38 @@ export type PuzzleDefinition =
   | { kind: 'find'; hotspots: Array<{ id: string; label: string; x: number; y: number; clue: string }>; solution: string }
   | { kind: 'sequence'; tiles: Array<{ id: string; label: string; clue: string }>; solution: string[] }
   | { kind: 'circuit'; columns: number; rows: number; ports: number[][]; initial: number[]; solution: number[]; start: number; end: number };
+export type ReplayPuzzleVariant = {
+  id: string;
+  puzzle: PuzzleDefinition;
+  instruction: string;
+  hints: string[];
+};
+export type PuzzleDefinitionView = {
+  puzzle: PuzzleDefinition;
+  instruction: string;
+  hints: string[];
+  variantId: string;
+};
 export type AdventureChapter = {
   id: string; memoryId: string; title: string; intro: string; unlockLevel: number;
   steps: Array<{ title: string; requirements: OrderRequirement[]; note: string }>;
   instruction: string; hints: string[]; puzzle: PuzzleDefinition;
+  replayVariants?: ReplayPuzzleVariant[];
   reward: { coins: number; hearts: number; energy: number; scissors: number };
   souvenir: { title: string; artItemId: string; room: 'living' | 'bedroom' | 'garden'; x: number; y: number };
+};
+export type ChapterAvailability = {
+  available: boolean;
+  requiredLevel: number;
+  currentLevel: number;
+  previousChapter?: { id: string; title: string; claimed: boolean };
+};
+export type JourneyProgress = {
+  completed: number;
+  total: number;
+  nextChapter: AdventureChapter | null;
+  nextProgress: ChapterProgress | null;
+  availability: ChapterAvailability | null;
 };
 /** A repeatable, low-cost date found in the independent small-date entry. */
 export type SmallDateDefinition = {
@@ -75,8 +117,12 @@ export function createChapterProgress(): ChapterProgress {
   return { step: 0, found: [], selected: [], rotations: [], code: '', hints: 0, outcome: 'playing', claimed: false };
 }
 
-export function createReplayProgress(): ReplayProgress {
-  return { found: [], selected: [], rotations: [], code: '', hints: 0, outcome: 'playing' };
+export function createReplayProgress(variantId = 'classic'): ReplayProgress {
+  return { found: [], selected: [], rotations: [], code: '', hints: 0, outcome: 'playing', variantId };
+}
+
+export function createReplayStats(): ReplayStats {
+  return { started: 0, solved: 0, skipped: 0, totalHints: 0, bestSolvedHints: null, legacyHistoryIncomplete: false };
 }
 
 export function createSmallDateProgress(): SmallDateProgress {

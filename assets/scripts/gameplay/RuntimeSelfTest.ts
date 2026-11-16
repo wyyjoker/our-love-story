@@ -49,7 +49,7 @@ export function runRuntimeSelfTest(logger: GameLogger = new GameLogger(true)): b
     // move + swap smoke via board service
     const board = game.board.getBoard();
     const from = board.cells.findIndex((c) => c.item);
-    const empty = board.cells.find((c) => !c.item)?.index ?? 0;
+    const empty = board.cells.find((c) => !c.locked && !c.item)?.index ?? 0;
     if (from >= 0) {
       const moved = game.dropItem(from, empty);
       if (!moved.ok) throw new Error('move failed');

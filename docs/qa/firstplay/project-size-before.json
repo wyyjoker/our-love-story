@@ -1,0 +1,47 @@
+[
+  {
+    "name": "temp",
+    "bytes": 10122240191,
+    "files": 48231
+  },
+  {
+    "name": "library",
+    "bytes": 50188699,
+    "files": 673
+  },
+  {
+    "name": "build",
+    "bytes": 16871388,
+    "files": 204
+  },
+  {
+    "name": "releases",
+    "bytes": 41813484,
+    "files": 312
+  },
+  {
+    "name": "docs",
+    "bytes": 9361979,
+    "files": 115
+  },
+  {
+    "name": "assets",
+    "bytes": 14713346,
+    "files": 359
+  },
+  {
+    "name": "node_modules",
+    "bytes": 81463380,
+    "files": 1057
+  },
+  {
+    "name": "local",
+    "bytes": 71237,
+    "files": 30
+  },
+  {
+    "name": ".creator",
+    "bytes": 108,
+    "files": 1
+  }
+]

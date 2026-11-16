@@ -26,6 +26,16 @@ export class GameController {
         return { toast: '棋盘满啦～\n先合成一些物品吧', tone: 'warn' };
       case 'NOT_ENOUGH_ENERGY':
         return { toast: '体力不足啦～\n休息一下再回来吧', tone: 'warn' };
+      case 'GENERATOR_COOLDOWN': {
+        const remaining = this.game.getGeneratorStatus(generatorId)?.remainingCooldownMs ?? 0;
+        return { toast: `生成器正在休息，${Math.ceil(remaining / 1000)} 秒后恢复`, tone: 'info' };
+      }
+      case 'NO_CHARGES':
+        return { toast: '果实正在恢复，稍后再来采摘吧', tone: 'info' };
+      case 'BOOST_UNAVAILABLE':
+        return { toast: '先合并升级生成器，再开启强化产出', tone: 'info' };
+      case 'IN_PROGRESS':
+        return { toast: '正在生成，请稍候', tone: 'info' };
       case 'LOCKED': {
         const gen = this.game.generators.get(generatorId);
         const lv = gen?.unlockLevel ?? 3;
@@ -38,7 +48,7 @@ export class GameController {
 
   onDrop(from: number, to: number | null): UIMessage & {
     ok: boolean;
-    kind?: 'MOVE' | 'MERGE' | 'SWAP';
+    kind?: 'MOVE' | 'MERGE' | 'SWAP' | 'SPLIT';
   } {
     const cells = this.game.board.getBoard().cells;
     const source = cells[from]?.item;
@@ -49,11 +59,12 @@ export class GameController {
     if (!result.ok) {
       return { ok: false };
     }
+    if (result.kind === 'SPLIT') return { ok: true, kind: 'SPLIT', toast: '拆分完成 · 剪刀使用1次', tone: 'success' };
     if (result.kind === 'MERGE') {
       return { ok: true, kind: 'MERGE', toast: '合成成功！', tone: 'success' };
     }
     if (result.kind === 'SWAP' && maxPair) {
-      return { ok: true, kind: 'SWAP', toast: '已经是最高等级啦，可以留给订单使用', tone: 'info' };
+      return { ok: true, kind: 'SWAP', toast: definition?.maxUses ? '剪刀已满级，可继续使用剩余次数' : '已经是最高等级啦，可以留给订单使用', tone: 'info' };
     }
     return { ok: true, kind: result.kind };
   }

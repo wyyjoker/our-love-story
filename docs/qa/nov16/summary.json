@@ -1,0 +1,33 @@
+{
+  "runs": {
+    "full": {
+      "passed": true,
+      "checks": 48,
+      "exceptions": 0,
+      "testedBuildDigest": "60a8e22268303ec4163d40826a932e596a4dbc5eb96d1de2bd75562c7473e546"
+    },
+    "chestflow": {
+      "passed": true,
+      "checks": 7,
+      "exceptions": 0,
+      "testedBuildDigest": "60a8e22268303ec4163d40826a932e596a4dbc5eb96d1de2bd75562c7473e546"
+    },
+    "polish": {
+      "passed": true,
+      "checks": 1,
+      "exceptions": 0,
+      "testedBuildDigest": "60a8e22268303ec4163d40826a932e596a4dbc5eb96d1de2bd75562c7473e546"
+    },
+    "boardfill": {
+      "passed": true,
+      "checks": 1,
+      "exceptions": 0,
+      "testedBuildDigest": "60a8e22268303ec4163d40826a932e596a4dbc5eb96d1de2bd75562c7473e546"
+    }
+  },
+  "fresh": {
+    "elapsedMs": 55155,
+    "actions": 43,
+    "naturalOrders": 12
+  }
+}

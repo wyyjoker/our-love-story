@@ -1,0 +1,186 @@
+[
+  {
+    "id": "furniture_expansion_sheet",
+    "file": "assets/game_art/furniture_expansion_sheet.png",
+    "bytes": 334270,
+    "width": 1024,
+    "height": 1024,
+    "alpha": true
+  },
+  {
+    "id": "treasure_sheet",
+    "file": "assets/game_art/treasure_sheet.png",
+    "bytes": 269903,
+    "width": 1024,
+    "height": 768,
+    "alpha": true
+  },
+  {
+    "id": "home_study",
+    "file": "assets/game_art/home_study.jpg",
+    "bytes": 104986,
+    "width": 720,
+    "height": 1280,
+    "alpha": false
+  },
+  {
+    "id": "home_terrace",
+    "file": "assets/game_art/home_terrace.jpg",
+    "bytes": 112162,
+    "width": 720,
+    "height": 1280,
+    "alpha": false
+  },
+  {
+    "id": "home_pool",
+    "file": "assets/game_art/home_pool.jpg",
+    "bytes": 138363,
+    "width": 720,
+    "height": 1280,
+    "alpha": false
+  },
+  {
+    "id": "pool_furniture_sheet",
+    "file": "assets/game_art/pool_furniture_sheet.png",
+    "bytes": 173301,
+    "width": 1536,
+    "height": 512,
+    "alpha": true
+  },
+  {
+    "id": "story_29_certificate",
+    "file": "assets/game_art/story_29_certificate.jpg",
+    "bytes": 76269,
+    "width": 640,
+    "height": 640,
+    "alpha": false
+  },
+  {
+    "id": "story_30_thanksgiving",
+    "file": "assets/game_art/story_30_thanksgiving.jpg",
+    "bytes": 84763,
+    "width": 640,
+    "height": 640,
+    "alpha": false
+  },
+  {
+    "id": "story_31_zhoushan_bonfire",
+    "file": "assets/game_art/story_31_zhoushan_bonfire.jpg",
+    "bytes": 77785,
+    "width": 640,
+    "height": 640,
+    "alpha": false
+  },
+  {
+    "id": "story_32_qinwang_palace",
+    "file": "assets/game_art/story_32_qinwang_palace.jpg",
+    "bytes": 75819,
+    "width": 640,
+    "height": 640,
+    "alpha": false
+  },
+  {
+    "id": "story_33_hengdian_hot_spring",
+    "file": "assets/game_art/story_33_hengdian_hot_spring.jpg",
+    "bytes": 82665,
+    "width": 640,
+    "height": 640,
+    "alpha": false
+  },
+  {
+    "id": "story_34_huangshan_trip",
+    "file": "assets/game_art/story_34_huangshan_trip.jpg",
+    "bytes": 104325,
+    "width": 640,
+    "height": 640,
+    "alpha": false
+  },
+  {
+    "id": "story_35_qiandao_lake",
+    "file": "assets/game_art/story_35_qiandao_lake.jpg",
+    "bytes": 92426,
+    "width": 640,
+    "height": 640,
+    "alpha": false
+  },
+  {
+    "id": "story_36_wangchen_pavilion",
+    "file": "assets/game_art/story_36_wangchen_pavilion.jpg",
+    "bytes": 99780,
+    "width": 640,
+    "height": 640,
+    "alpha": false
+  },
+  {
+    "id": "story_37_shanghai_departure",
+    "file": "assets/game_art/story_37_shanghai_departure.jpg",
+    "bytes": 83613,
+    "width": 640,
+    "height": 640,
+    "alpha": false
+  },
+  {
+    "id": "story_38_nanhu_boat",
+    "file": "assets/game_art/story_38_nanhu_boat.jpg",
+    "bytes": 90194,
+    "width": 640,
+    "height": 640,
+    "alpha": false
+  },
+  {
+    "id": "story_39_hengdian_family",
+    "file": "assets/game_art/story_39_hengdian_family.jpg",
+    "bytes": 84080,
+    "width": 640,
+    "height": 640,
+    "alpha": false
+  },
+  {
+    "id": "story_40_wedding_mv",
+    "file": "assets/game_art/story_40_wedding_mv.jpg",
+    "bytes": 88451,
+    "width": 640,
+    "height": 640,
+    "alpha": false
+  },
+  {
+    "id": "story_41_concert",
+    "file": "assets/game_art/story_41_concert.jpg",
+    "bytes": 61863,
+    "width": 640,
+    "height": 640,
+    "alpha": false
+  },
+  {
+    "id": "story_42_xian_terracotta",
+    "file": "assets/game_art/story_42_xian_terracotta.jpg",
+    "bytes": 80066,
+    "width": 640,
+    "height": 640,
+    "alpha": false
+  },
+  {
+    "id": "orange_tree",
+    "file": "assets/game_art/orange_tree.png",
+    "bytes": 53625,
+    "width": 384,
+    "height": 415,
+    "alpha": true
+  },
+  {
+    "id": "fruit_sheet",
+    "file": "assets/game_art/fruit_sheet.png",
+    "bytes": 204831,
+    "width": 1024,
+    "height": 512,
+    "alpha": true
+  },
+  {
+    "id": "special_sheet",
+    "file": "assets/game_art/special_sheet.png",
+    "bytes": 264836,
+    "width": 1024,
+    "height": 1024,
+    "alpha": true
+  }
+]

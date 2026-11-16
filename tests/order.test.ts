@@ -17,6 +17,7 @@ function makePlayer(): PlayerState {
     level: 1,
     xp: 0,
     coins: 0,
+    diamonds: 0,
     hearts: 0,
     energy: 50,
     maxEnergy: 50,
@@ -132,7 +133,10 @@ describe('OrderService', () => {
   });
 
   it('deducts correct items (lowest index first)', () => {
-    const { orders, board } = setup();
+    const { orders, board, player } = setup();
+    player.level = 6;
+    const original = orders.getOrders().find((order) => order.uid === 'ord2')!;
+    orders.hydrate([{ ...original, requirements: [{ itemId: 'flower_01', count: 2 }] }], []);
     // place flower_01 at 0 and 5, coffee_02 at 1
     board.placeAt(0, 'flower_01');
     board.placeAt(5, 'flower_01');

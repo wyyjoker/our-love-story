@@ -1,0 +1,861 @@
+﻿{
+    "projectRoot":  "E:\\A-game",
+    "apply":  false,
+    "processCheckAvailable":  true,
+    "profileCount":  106,
+    "bytesBefore":  9697785696,
+    "bytesAfter":  9697785696,
+    "freedBytes":  0,
+    "deletedCount":  0,
+    "skippedCount":  0,
+    "records":  [
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T12-26-42-919Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  195222403,
+                        "bytesAfter":  195222403,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T12-35-39-528Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  195268876,
+                        "bytesAfter":  195268876,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T13-18-32-420Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  106619520,
+                        "bytesAfter":  106619520,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T13-26-53-327Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  195252832,
+                        "bytesAfter":  195252832,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T13-54-20-630Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  136438947,
+                        "bytesAfter":  136438947,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T14-00-22-235Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  139834281,
+                        "bytesAfter":  139834281,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T14-07-14-218Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  81073529,
+                        "bytesAfter":  81073529,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T14-08-06-984Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  195464696,
+                        "bytesAfter":  195464696,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T15-59-19-311Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  72768887,
+                        "bytesAfter":  72768887,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-00-16-302Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  73110994,
+                        "bytesAfter":  73110994,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-02-16-160Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  191267383,
+                        "bytesAfter":  191267383,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-08-59-096Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  72794113,
+                        "bytesAfter":  72794113,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-09-39-034Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  107371824,
+                        "bytesAfter":  107371824,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-12-54-912Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  193064293,
+                        "bytesAfter":  193064293,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-22-32-661Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  75082979,
+                        "bytesAfter":  75082979,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-29-29-078Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  196655065,
+                        "bytesAfter":  196655065,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-41-11-525Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  73153730,
+                        "bytesAfter":  73153730,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-45-08-047Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  87392097,
+                        "bytesAfter":  87392097,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-47-14-707Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  88399635,
+                        "bytesAfter":  88399635,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-49-39-321Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  29528864,
+                        "bytesAfter":  29528864,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-50-05-325Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  29483981,
+                        "bytesAfter":  29483981,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-50-30-178Z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  106255832,
+                        "bytesAfter":  106255832,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-53-19-804Z-3amhdh\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  78578529,
+                        "bytesAfter":  78578529,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-54-30-837Z-vTd3lD\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  78560677,
+                        "bytesAfter":  78560677,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-56-23-271Z-AplkxB\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  27569577,
+                        "bytesAfter":  27569577,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-57-47-166Z-FMPRqW\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  73103381,
+                        "bytesAfter":  73103381,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-57-47-167Z-aZ00qA\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  78546253,
+                        "bytesAfter":  78546253,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T16-59-12-470Z-O7BNl9\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  78579113,
+                        "bytesAfter":  78579113,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T17-01-32-018Z-821gmo\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  78743100,
+                        "bytesAfter":  78743100,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T17-01-32-019Z-avLOsZ\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  198400635,
+                        "bytesAfter":  198400635,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T17-44-43-884Z-JHGzbu\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  74718010,
+                        "bytesAfter":  74718010,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T17-45-37-804Z-F38jLJ\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  74732770,
+                        "bytesAfter":  74732770,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T17-49-38-420Z-yJVIaf\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  74918183,
+                        "bytesAfter":  74918183,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T17-53-17-891Z-Qc3t8Y\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  74897176,
+                        "bytesAfter":  74897176,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T17-54-41-053Z-zZdIzQ\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  196214487,
+                        "bytesAfter":  196214487,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T18-05-34-943Z-szrV3X\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  112429791,
+                        "bytesAfter":  112429791,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T18-09-57-232Z-3CKwPm\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  198433448,
+                        "bytesAfter":  198433448,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T18-09-57-269Z-Y8PTkK\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  76638103,
+                        "bytesAfter":  76638103,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T23-59-10-095Z-6KRTLO\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  30574353,
+                        "bytesAfter":  30574353,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T23-59-10-095Z-Ndh0lH\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  30057005,
+                        "bytesAfter":  30057005,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T23-59-49-579Z-cG3gAz\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  74062001,
+                        "bytesAfter":  74062001,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-13T23-59-49-631Z-5zGWMh\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  75497228,
+                        "bytesAfter":  75497228,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-14T00-00-48-127Z-fAiD3t\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  75016935,
+                        "bytesAfter":  75016935,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-36-21-791Z-HJaSpV\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  76584778,
+                        "bytesAfter":  76584778,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-36-21-792Z-LlLvwr\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  122568298,
+                        "bytesAfter":  122568298,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-36-21-792Z-tinhEG\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  31111617,
+                        "bytesAfter":  31111617,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-37-20-487Z-1ltYLu\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  78739474,
+                        "bytesAfter":  78739474,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-45-28-050Z-jEe395\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  76581057,
+                        "bytesAfter":  76581057,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-45-28-050Z-YEYXZJ\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  149888273,
+                        "bytesAfter":  149888273,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-45-28-071Z-90KAeL\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  80864048,
+                        "bytesAfter":  80864048,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-47-50-825Z-IB59b7\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  108850250,
+                        "bytesAfter":  108850250,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-56-07-576Z-arCO60\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  153410380,
+                        "bytesAfter":  153410380,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-56-07-590Z-YTMZ5I\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  121267451,
+                        "bytesAfter":  121267451,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-56-07-605Z-ih4lia\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  122254165,
+                        "bytesAfter":  122254165,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T10-56-07-609Z-ww9lad\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  156191899,
+                        "bytesAfter":  156191899,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T11-00-20-353Z-EYAYEV\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  189619685,
+                        "bytesAfter":  189619685,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T11-00-20-353Z-XUqPg8\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  141935855,
+                        "bytesAfter":  141935855,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T11-09-51-640Z-WVunJW\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  199993036,
+                        "bytesAfter":  199993036,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T11-09-51-651Z-zOiKZx\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  111921750,
+                        "bytesAfter":  111921750,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T11-13-24-301Z-7ViC0w\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  75156469,
+                        "bytesAfter":  75156469,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T11-13-24-301Z-ockhqU\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  75911149,
+                        "bytesAfter":  75911149,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-05-54-075Z-5asIfx\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  74791847,
+                        "bytesAfter":  74791847,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-06-04-231Z-qO8Ffx\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  34407224,
+                        "bytesAfter":  34407224,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-09-30-831Z-MBniRJ\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  74949037,
+                        "bytesAfter":  74949037,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-09-41-187Z-il46Wl\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  33019201,
+                        "bytesAfter":  33019201,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-11-24-310Z-VkTYUN\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  74793444,
+                        "bytesAfter":  74793444,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-12-33-806Z-jW1nMa\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  74696088,
+                        "bytesAfter":  74696088,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-12-33-822Z-NptM4a\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  197952084,
+                        "bytesAfter":  197952084,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-25-04-827Z-0D5r4G\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  74751691,
+                        "bytesAfter":  74751691,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-25-04-837Z-OBb3m1\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  199858683,
+                        "bytesAfter":  199858683,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-25-04-865Z-9a2gjM\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  1968806,
+                        "bytesAfter":  1968806,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-25-52-791Z-LHvhcz\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  42165213,
+                        "bytesAfter":  42165213,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T12-26-15-866Z-P6bZDO\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  75420051,
+                        "bytesAfter":  75420051,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-02-05-475Z-nRcCpu\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  75566576,
+                        "bytesAfter":  75566576,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-02-15-791Z-ARNrgA\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  74935898,
+                        "bytesAfter":  74935898,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-11-01-291Z-3Gi6ZP\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  30498475,
+                        "bytesAfter":  30498475,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-11-01-295Z-OOmvnP\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  32310819,
+                        "bytesAfter":  32310819,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-11-01-297Z-nXoXKy\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  106891881,
+                        "bytesAfter":  106891881,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-16-32-452Z-KpfsyE\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  40936140,
+                        "bytesAfter":  40936140,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-16-32-454Z-wmz13a\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  30221328,
+                        "bytesAfter":  30221328,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-16-32-455Z-6JuBnU\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  35082894,
+                        "bytesAfter":  35082894,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-18-27-770Z-e2lnz5\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  34787050,
+                        "bytesAfter":  34787050,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-23-51-751Z-JRrxWc\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  141966509,
+                        "bytesAfter":  141966509,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-23-51-765Z-Ef4L3b\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  35426038,
+                        "bytesAfter":  35426038,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-23-51-770Z-lpW3Nd\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  34937166,
+                        "bytesAfter":  34937166,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-54-39-012Z-kiTb4K\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  35216395,
+                        "bytesAfter":  35216395,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-54-49-416Z-gAYz2z\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  39858154,
+                        "bytesAfter":  39858154,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-59-42-048Z-Rs7MlE\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  74921246,
+                        "bytesAfter":  74921246,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-59-42-055Z-FQjpUl\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  35319270,
+                        "bytesAfter":  35319270,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T13-59-42-056Z-1IRNor\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  30867217,
+                        "bytesAfter":  30867217,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-00-39-798Z-OTf4r9\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  41547282,
+                        "bytesAfter":  41547282,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-01-03-255Z-3XC41R\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  73431909,
+                        "bytesAfter":  73431909,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-02-55-033Z-IvuKcZ\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  108084249,
+                        "bytesAfter":  108084249,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-04-27-050Z-5OL7Oi\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  37480784,
+                        "bytesAfter":  37480784,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-14-12-428Z-o98VXv\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  80907742,
+                        "bytesAfter":  80907742,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-14-12-428Z-R70OPQ\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  194177092,
+                        "bytesAfter":  194177092,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-14-12-436Z-fUa8B8\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  34920550,
+                        "bytesAfter":  34920550,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-16-12-051Z-Tx8C8o\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  34636892,
+                        "bytesAfter":  34636892,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-16-12-060Z-IsEWoB\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  77069522,
+                        "bytesAfter":  77069522,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T14-26-20-298Z-QcEbSQ\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  132857486,
+                        "bytesAfter":  132857486,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T15-57-37-687Z-ItdsoH\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  73869232,
+                        "bytesAfter":  73869232,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T16-20-19-947Z-VHNrJU\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  2324663,
+                        "bytesAfter":  2324663,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T16-20-50-541Z-Uq4QVX\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  46947935,
+                        "bytesAfter":  46947935,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T16-24-06-399Z-ACxTNC\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  70860882,
+                        "bytesAfter":  70860882,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T16-30-00-751Z-5dqyaF\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  70751994,
+                        "bytesAfter":  70751994,
+                        "freedBytes":  0,
+                        "error":  ""
+                    },
+                    {
+                        "path":  "E:\\A-game\\temp\\cocos-ui-qa-2026-11-16T16-31-31-512Z-yGhaGS\\browser-profile",
+                        "status":  "planned",
+                        "bytesBefore":  194775907,
+                        "bytesAfter":  194775907,
+                        "freedBytes":  0,
+                        "error":  ""
+                    }
+                ]
+}

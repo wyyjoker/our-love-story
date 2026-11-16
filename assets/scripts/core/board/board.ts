@@ -40,7 +40,7 @@ export function isValidIndex(index: number, rows: number, columns: number): bool
 
 export function findFirstEmptyIndex(board: BoardState): number | null {
   for (const cell of board.cells) {
-    if (!cell.item) return cell.index;
+    if (!cell.locked && !cell.item) return cell.index;
   }
   return null;
 }
@@ -59,6 +59,7 @@ export function cloneBoard(board: BoardState): BoardState {
     columns: board.columns,
     cells: board.cells.map((cell) => ({
       index: cell.index,
+      locked: cell.locked,
       item: cell.item ? { ...cell.item } : undefined,
     })),
   };
