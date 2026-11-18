@@ -1,5 +1,5 @@
-import { assetManager, AssetManager, ImageAsset, isValid, Node, Rect, Size, Sprite, SpriteFrame, Texture2D } from 'cc';
-import { ensureTransform } from './CocosTheme';
+import { assetManager, AssetManager, Graphics, ImageAsset, isValid, Node, Rect, Size, Sprite, SpriteFrame, Texture2D } from 'cc';
+import { createUiNode, ensureTransform, hexColor, paintRoundRect } from './CocosTheme';
 import { cropPhoto, fitPhoto } from '../../presentation/UiSafety';
 import type { FurnitureDefinition } from '../../core/types';
 
@@ -41,6 +41,28 @@ function loadSheet(name: string): Promise<Texture2D | null> {
   sheets.set(name, promise);
   void promise.then((texture) => { if (!texture) sheets.delete(name); });
   return promise;
+}
+
+/** Original material sprites; only the quiet centre stretches, never UI text or controls. */
+export function applyMaterialFrame(parent: Node, material: 'paper' | 'wood' | 'backpack', width: number, height: number, borderScale = 1): void {
+  let node = parent.getChildByName('MaterialFrame');
+  if (!node) { node = createUiNode('MaterialFrame'); parent.addChild(node); node.setSiblingIndex(0); node.pauseSystemEvents(true); }
+  const target = node;
+  const sheet = material === 'wood' ? 'ui_oak_tray' : material === 'backpack' ? 'ui_backpack_frame' : 'ui_cream_panel';
+  target.setScale(borderScale,borderScale,1);
+  applyArt(target, { sheet }, width/borderScale, height/borderScale, ready => {
+    if (!ready || !isValid(target, true)) return;
+    const sprite = target.getComponent(Sprite)!, frame = sprite.spriteFrame!;
+    frame.insetLeft = Math.round(frame.rect.width * (material === 'backpack' ? .13 : .10));
+    frame.insetRight = frame.insetLeft;
+    frame.insetTop = Math.round(frame.rect.height * (material === 'backpack' ? .19 : .09));
+    frame.insetBottom = Math.round(frame.rect.height * .09);
+    sprite.type = Sprite.Type.SLICED;
+  });
+}
+
+export function customerBustArt(index: number): ArtCell {
+  return { sheet: 'customer_busts_sheet', index: ((index % 3) + 3) % 3, columns: 3, rows: 1, preserveAspect: true };
 }
 
 export function applyArt(node: Node, art: ArtCell, width: number, height: number, onReady?: (ok: boolean) => void): void {
@@ -88,6 +110,8 @@ export function applyArt(node: Node, art: ArtCell, width: number, height: number
 }
 
 export function itemArt(definitionId: string): ArtCell | null {
+  const producer = /^generator_(.+)_0[1-8]$/.exec(definitionId);
+  if (producer) return generatorArt(producer[1]);
   if (/^scissors_0[1-5]$/.test(definitionId)) return { sheet: 'scissors_backpack_sheet', index: Number(definitionId.slice(-1)) - 1, columns: 3, rows: 2, preserveAspect: true };
   const sugarMatch = /^sugar_(0[1-3])$/.exec(definitionId);
   if (sugarMatch) return { sheet: 'special_sheet', index: Number(sugarMatch[1]) - 1, columns: 2, rows: 2 };
@@ -153,10 +177,25 @@ export function furnitureArt(index: number): ArtCell {
 
 /** Keeps the original ten irregular furniture crops and maps new items to the 4x4 expansion atlas. */
 export function furnitureArtFor(definition: Pick<FurnitureDefinition, 'id' | 'art'>, index: number): ArtCell {
+  const wall = definition.art.startsWith('wall:') ? definition.art.slice(5) : '';
+  const prints: Record<string, ArtCell> = {
+    ...Object.fromEntries(['rose', 'tulip', 'orange', 'coffee', 'garden', 'terrace'].map((name, artIndex) =>
+      [name, { sheet: 'wall_paintings_sheet', index: artIndex, columns: 3, rows: 2, cropToFill: true } satisfies ArtCell])),
+  };
+  if (wall && prints[wall]) return prints[wall];
   const poolMatch = /^pool:(\d+)$/.exec(definition.art);
   if (poolMatch) return { sheet: 'pool_furniture_sheet', index: Number(poolMatch[1]), columns: 4, rows: 1, preserveAspect: true };
   if (index < 10) return furnitureArt(index);
   return { sheet: 'furniture_expansion_sheet', index: index - 10, columns: 4, rows: 4, preserveAspect: true };
+}
+export function applyFurnitureArt(node: Node, definition: FurnitureDefinition, index: number, width: number, height: number): void {
+  if (!definition.art.startsWith('wall:')) { applyArt(node, furnitureArtFor(definition, index), width, height); return; }
+  ensureTransform(node, width, height);
+  const ink = node.getComponent(Graphics) ?? node.addComponent(Graphics);
+  paintRoundRect(ink, width, height, 4, hexColor('#FFF8E8'), hexColor(definition.id.includes('garden') || definition.id.includes('coffee') ? '#A67B4D' : '#D1A685'), 10);
+  applyMaterialFrame(node, 'wood', width, height, .28);
+  const image = createUiNode('WallPaintingImage_' + definition.id); node.addChild(image);
+  applyArt(image, furnitureArtFor(definition, index), width - 26, height - 26); image.pauseSystemEvents(true);
 }
 
 export function applyLocalPhoto(node: Node, path: string, width: number, height: number, onStatus?: (status: 'ready' | 'failed') => void): void {

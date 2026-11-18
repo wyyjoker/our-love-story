@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "scope": "paced",
+  "checks": [
+    "20 minutes of live-clock paced touch play with a fresh save"
+  ],
+  "exceptions": [],
+  "testedBuildDigest": "7ac49d73826cd619b2fa45d444cc947570257d5e555678af43dfafb5875a1e21",
+  "version": "1.3.0",
+  "output": "E:\\A-game\\temp\\cocos-ui-qa-2026-11-18T01-49-27-533Z-HmbaMs"
+}

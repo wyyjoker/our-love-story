@@ -1,7 +1,7 @@
 /**
  * CocosCellView — one board cell shell (highlight states for drop).
  */
-import { Node, Graphics, Vec3, tween, Color, UIOpacity, Label } from 'cc';
+import { Node, Graphics, Vec3, tween, Tween, Color, UIOpacity, Label } from 'cc';
 import {
   CocosTheme,
   createUiNode,
@@ -27,6 +27,10 @@ export class CocosCellView {
   private size = 64;
   private width = 64;
   private height = 64;
+  private highlight = 'none';
+  private orderMark: Node | null = null;
+  private orderReady: boolean | null = null;
+  private traceMark: Node | null = null;
 
   constructor(parent: Node, index: number, width: number, height = width) {
     this.index = index;
@@ -42,7 +46,7 @@ export class CocosCellView {
     this.lockedOverlay = createUiNode('LockedOverlay');
     this.node.addChild(this.lockedOverlay);
     ensureTransform(this.lockedOverlay, width - 4, height - 4);
-    paintRoundRect(this.lockedOverlay.addComponent(Graphics), width - 4, height - 4, 10, hexColor('#E9DCCF', 240), hexColor('#F9F1E7'), 1);
+    paintRoundRect(this.lockedOverlay.addComponent(Graphics), width - 4, height - 4, 8, hexColor('#EDE5D8', 210), hexColor('#F9F4EA'), 1);
     const lock = createUiNode('CellLockIcon'); this.lockedOverlay.addChild(lock); lock.setPosition(0, size * 0.06, 0);
     const glyph = lock.addComponent(Graphics); const unit = size * 0.13;
     glyph.strokeColor = hexColor('#B7A391'); glyph.lineWidth = Math.max(1.5, size * 0.025);
@@ -72,17 +76,17 @@ export class CocosCellView {
   private paintIdle(): void {
     paintRoundRect(
       this.g,
-      this.width - 4,
-      this.height - 4,
-      10,
-      alpha(hexColor('#F2E6DE'), 225),
-      hexColor('#FFFFFF'),
+      this.width - 2,
+      this.height - 2,
+      7,
+      alpha(hexColor(this.orderReady === null ? '#F8EDDB' : this.orderReady ? '#D3E3BD' : '#E0E9D0'), 235),
+      hexColor('#E5D7C3'),
     );
   }
 
-  private paintHighlight(kind: 'move' | 'merge'): void {
+  private paintHighlight(kind: 'move' | 'merge' | 'candidate' | 'invalid'): void {
     const fill =
-      kind === 'merge'
+      kind === 'invalid' ? alpha(hexColor('#EAA4A4'), 120) : kind === 'merge'
         ? alpha(CocosTheme.accent(), 80)
         : alpha(CocosTheme.primary(), 60);
     paintRoundRect(
@@ -91,8 +95,8 @@ export class CocosCellView {
       this.height - 4,
       10,
       fill,
-      CocosTheme.primary(),
-      2,
+      kind === 'candidate' ? hexColor('#A2B995') : kind === 'invalid' ? hexColor('#C86E6E') : CocosTheme.primary(),
+      kind === 'merge' ? 4 : 2,
     );
     if (kind === 'merge') {
       tween(this.node)
@@ -102,13 +106,42 @@ export class CocosCellView {
     }
   }
 
-  setHighlight(mode: 'none' | 'move' | 'merge'): void {
+  setHighlight(mode: 'none' | 'move' | 'merge' | 'candidate' | 'invalid'): void {
+    if (this.highlight === mode) return;
+    this.highlight = mode; Tween.stopAllByTarget(this.node);
     if (mode === 'none') {
       this.paintIdle();
       this.node.setScale(1, 1, 1);
       return;
     }
     this.paintHighlight(mode);
+  }
+  setOrderMark(ready: boolean | null): void {
+    this.orderReady = ready;
+    if (this.highlight === 'none') this.paintIdle();
+    if (!this.orderMark && ready !== null) {
+      this.orderMark = createUiNode('OrderNeedBadge'); this.node.addChild(this.orderMark);
+      const span = Math.max(25, this.size * .43);
+      ensureTransform(this.orderMark, span, span);
+      this.orderMark.setPosition(this.width / 2 - span * .49 - 2, -this.height / 2 + span * .43 + 3, 0);
+      this.orderMark.addComponent(Graphics);
+      this.orderMark.pauseSystemEvents(true);
+    }
+    if (!this.orderMark) return;
+    this.orderMark.active = ready !== null; this.orderMark.setSiblingIndex(this.node.children.length - 1);
+    if (ready !== null) {
+      const span = Math.max(25, this.size * .43), graphics = this.orderMark.getComponent(Graphics)!; graphics.clear();
+      const stroke = (colour: string, thickness: number): void => {
+        graphics.strokeColor = hexColor(colour); graphics.lineWidth = thickness;
+        graphics.moveTo(-span * .40, 0); graphics.lineTo(-span * .10, -span * .27); graphics.lineTo(span * .43, span * .32); graphics.stroke();
+      };
+      stroke('#FFFCF0', span * .28); stroke(ready ? '#72A34E' : '#8CAC69', span * .17);
+    }
+  }
+  setTracked(mode: 'exact' | 'precursor' | null): void {
+    if (!this.traceMark && mode) { this.traceMark = createUiNode('OrderTraceOutline'); this.node.addChild(this.traceMark); this.traceMark.pauseSystemEvents(true); }
+    if (!this.traceMark) return; this.traceMark.active = !!mode;
+    if (mode) paintRoundRect(this.traceMark.getComponent(Graphics) ?? this.traceMark.addComponent(Graphics), this.width - 3, this.height - 3, 10, hexColor('#FFFFFF', 0), hexColor(mode === 'exact' ? '#648F69' : '#D69A74'), 3);
   }
 
   setItem(vm: ItemVm | null): void {

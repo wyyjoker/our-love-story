@@ -10,8 +10,8 @@ describe('isolated review save', () => {
     const bundle = loadConfigBundle();
     const data = createDemoSave(bundle, 1000);
     expect(data.player).toMatchObject({ level: 12, xp: 3620, energy: 86, coins: 12460, hearts: 520 });
-    expect(data.board).toHaveLength(42);
-    expect(new Set(data.board.flatMap((cell) => cell.item ? [cell.item.definitionId] : [])).size).toBe(41);
+    expect(data.board).toHaveLength(63);
+    expect(data.board.filter(cell => cell.item && bundle.catalog.get(cell.item.definitionId)?.generator)).toHaveLength(6);
     const game = createGameContext({ storage: createDemoStorage(bundle, 1000), clock: new FakeClockService(1000) });
     expect(new GameViewMapper(bundle).mapStatus(game.player, 1000, bundle.game.energy.recoverIntervalMs).xpText).toBe('XP 320 / 600');
     expect(game.life.pendingLevelRewards()).toEqual([]);
@@ -29,7 +29,7 @@ describe('isolated review save', () => {
     const before = storage.getItem(bundle.game.saveKey);
     const preview = createGameContext({ storage: createDemoStorage(bundle, 1000), clock, saveDebounceMs: 0 });
     expect(preview.dropItem(0, 1).ok).toBe(true);
-    preview.spawnFromGenerator('coffee_machine');
+    expect(preview.spawnFromGenerator('coffee_machine').ok).toBe(true);
     preview.save(); preview.flushSave();
     expect(storage.getItem(bundle.game.saveKey)).toBe(before);
     const restored = createGameContext({ storage, clock });

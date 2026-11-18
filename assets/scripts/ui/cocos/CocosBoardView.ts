@@ -10,7 +10,7 @@ import type { BoardVm, ItemVm } from '../../presentation/GameViewMapper';
 import type { DropResolve } from '../../core/types';
 import { CocosCellView } from './CocosCellView';
 import { CocosItemView } from './CocosItemView';
-import { applyArt, itemArt, openedChestArt } from './CocosArt';
+import { applyArt, applyMaterialFrame, itemArt, openedChestArt } from './CocosArt';
 import {
   CocosTheme,
   createUiNode,
@@ -22,8 +22,10 @@ import {
 } from './CocosTheme';
 
 export type BoardDeps = {
+  layout?: { cellSize: number; gap: number; toolbarHeight: number };
   previewDrop: (from: number, to: number | null) => DropResolve;
-  onDrop: (from: number, to: number | null) => void;
+  onDrop: (from: number, to: number | null) => boolean;
+  dropWarning?: (from: number, to: number | null) => string | null;
   dragThreshold: number;
   onDragStart?: () => void;
   onDragFinished?: () => void;
@@ -31,8 +33,9 @@ export type BoardDeps = {
   onOpenTools?: () => void;
   onOpenBackpack?: () => void;
   onOpenOrangeTree?: () => void;
-  onStore?: (index: number, uid: string) => void;
+  onStore?: (index: number, uid: string) => boolean;
   onItemTap?: (index: number) => void;
+  onItemLongPress?: (index: number) => void;
 };
 
 export class CocosBoardView {
@@ -52,7 +55,13 @@ export class CocosBoardView {
   private camera: Camera | null = null;
   private goalLabel: Label | null = null;
   private backpackLabel: Label | null = null;
+  private backpackTarget: Node | null = null;
+  private footerGoal: Label | null = null;
   private readonly chestEffects = new Set<Node>();
+  private backpackFull = false;
+  private backpackText = '0/6';
+  private readonly tracked = new Map<number, 'exact' | 'precursor'>();
+  private orderHints = new Map<number, boolean>();
 
   private drag: {
     fromIndex: number;
@@ -60,6 +69,7 @@ export class CocosBoardView {
     startUI: Vec2;
     active: boolean;
     ghost: Node | null;
+    startedAt: number;
   } | null = null;
 
   private dragLayer: Node | null = null;
@@ -97,6 +107,11 @@ export class CocosBoardView {
   setDragLayer(layer: Node): void {
     this.dragLayer = layer;
   }
+  setBackpackTarget(node: Node): void {
+    this.backpackTarget = node;
+    this.backpackLabel = node.getChildByName('BoardBackpackLabel')?.getComponent(Label) ?? null;
+  }
+  setFooterGoal(label: Label): void { this.footerGoal = label; }
 
   setCamera(camera: Camera | null): void {
     this.camera = camera;
@@ -108,16 +123,9 @@ export class CocosBoardView {
   }
 
   private layoutCells(): void {
-    // Keep one clear objective row above the grid, then devote all remaining
-    // height to the seven-row board. Width always fills all six columns;
-    // shorter screens use wider tiles rather than empty side gutters.
-    const toolbarHeight = 72;
-    this.gap = this.boardH < 600 ? 4 : 6;
-    this.cellWidth = Math.max(1, (this.boardW - 16 - (this.columns - 1) * this.gap) / this.columns);
-    this.cellHeight = Math.max(1, Math.min(
-      this.cellWidth,
-      (this.boardH - toolbarHeight - 18 - (this.rows - 1) * this.gap) / this.rows,
-    ));
+    this.gap = this.deps.layout?.gap ?? 2;
+    this.cellWidth = this.deps.layout?.cellSize ?? Math.max(1,(this.boardW-16-(this.columns-1)*this.gap)/this.columns);
+    this.cellHeight = this.cellWidth;
     this.cellSize = Math.min(this.cellWidth, this.cellHeight);
     const totalW = this.columns * this.cellWidth + (this.columns - 1) * this.gap;
     const totalH = this.rows * this.cellHeight + (this.rows - 1) * this.gap;
@@ -125,9 +133,10 @@ export class CocosBoardView {
     const paperY = -this.boardH / 2 + paperH / 2 + 2;
     const paper = createUiNode('BoardPaper');
     this.node.addChild(paper);
-    ensureTransform(paper, this.boardW, paperH);
+    ensureTransform(paper, totalW + 16, paperH);
     paper.setPosition(0, paperY, 0);
-    paintRoundRect(paper.addComponent(Graphics), this.boardW, paperH, 22, hexColor('#FFF4E9', 244), hexColor('#FFFFFF'), 2);
+    paintRoundRect(paper.addComponent(Graphics), totalW+16, paperH, 22, hexColor('#FFF4E9'), hexColor('#D8B68E'), 2);
+    applyMaterialFrame(paper, 'wood', totalW+28, paperH+12);
     this.gridLeft = -totalW / 2;
     this.gridTop = paperY + totalH / 2;
     const originX = this.gridLeft + this.cellWidth / 2;
@@ -160,10 +169,12 @@ export class CocosBoardView {
   }
 
   private buildToolbar(): void {
-    const height = 64, topY = this.boardH / 2 - height / 2 - 2;
-    const summaryWidth = this.boardW - 174;
+    const height = this.deps.layout?.toolbarHeight ?? 52;
+    if (!height) return;
+    const topY = this.boardH / 2 - height / 2 - 2;
+    const summaryWidth = this.boardW - 88;
     const summary = createUiNode('BoardSummary'); this.node.addChild(summary);
-    ensureTransform(summary, summaryWidth, height); summary.setPosition(-87, topY, 0);
+    ensureTransform(summary, summaryWidth, height); summary.setPosition(-44, topY, 0);
     paintRoundRect(summary.addComponent(Graphics), summaryWidth, height, 22, hexColor('#FFF9F1'), hexColor('#E9D6C8'), 1);
     const adventure = createUiNode('OpenAdventure'); summary.addChild(adventure);
     ensureTransform(adventure, summaryWidth - 78, height); adventure.setPosition(-39, 0, 0);
@@ -176,22 +187,13 @@ export class CocosBoardView {
     adventure.addComponent(Button); adventure.on(Button.EventType.CLICK, () => this.deps.onOpenAdventure?.());
     this.addOrangeTreeNav(summary, summaryWidth / 2 - 38, 0, 64, 48);
 
-    const bag = createUiNode('BoardBackpackButton'); this.node.addChild(bag);
-    ensureTransform(bag, 80, height); bag.setPosition(this.boardW / 2 - 126, topY, 0);
-    paintRoundRect(bag.addComponent(Graphics), 80, height, 20, hexColor('#FFF8EF'), hexColor('#E6CFC2'), 1);
-    const art = createUiNode('BackpackDropIcon'); bag.addChild(art); art.setPosition(0, 6, 0);
-    applyArt(art, { sheet: 'scissors_backpack_sheet', index: 5, columns: 3, rows: 2, preserveAspect: true }, 60, 56);
-    const count = createUiNode('BackpackCount'); bag.addChild(count); count.setPosition(18, -21, 0);
-    paintRoundRect(count.addComponent(Graphics), 48, 26, 13, hexColor('#FFFFFF'), hexColor('#E6CFC2'), 1);
-    this.backpackLabel = makeLabel('0/6', 18, hexColor('#825A54'), true);
-    this.backpackLabel.node.name = 'BoardBackpackLabel'; count.addChild(this.backpackLabel.node); ensureTransform(this.backpackLabel.node, 44, 24);
     const supplies = createUiNode('OpenTools'); this.node.addChild(supplies);
     ensureTransform(supplies, 78, height); supplies.setPosition(this.boardW / 2 - 40, topY, 0);
     paintRoundRect(supplies.addComponent(Graphics), 78, height, 20, hexColor('#FFF8EF'), hexColor('#E6CFC2'), 1);
     const gift = createUiNode('SupplyShortcutArt'); supplies.addChild(gift); gift.setPosition(0, 10, 0);
     const giftArt = itemArt('treasure_chest'); if (giftArt) applyArt(gift, { ...giftArt, preserveAspect: true }, 42, 38);
     const caption = makeLabel('补给', 19, hexColor('#825A54'), true); supplies.addChild(caption.node); ensureTransform(caption.node, 64, 25); caption.node.setPosition(0, -21, 0);
-    for (const [node, tap] of [[bag, this.deps.onOpenBackpack], [supplies, this.deps.onOpenTools]] as const) {
+    for (const [node, tap] of [[supplies, this.deps.onOpenTools]] as const) {
       node.addComponent(Button); node.addComponent(BlockInputEvents);
       let intentionalTap = false;
       node.on(Node.EventType.TOUCH_START, () => { intentionalTap = this.drag === null; });
@@ -201,15 +203,26 @@ export class CocosBoardView {
   }
 
   shortcutAnchor(name: 'BoardBackpackButton' | 'OpenTools'): Vec3 | null {
+    if (name === 'BoardBackpackButton') return this.backpackTarget?.worldPosition.clone() ?? null;
     return this.node.getChildByName(name)?.worldPosition.clone() ?? null;
   }
 
   setBackpackUsage(used: number, capacity: number): void {
-    if (this.backpackLabel) this.backpackLabel.string = `${used}/${capacity}`;
+    this.backpackFull = used >= capacity; this.backpackText = `${used}/${capacity}`;
+    if (this.backpackLabel) this.backpackLabel.string = this.backpackText;
+  }
+  setOrderHints(hints: Array<{ index: number; ready: boolean }>): void {
+    this.orderHints = new Map(hints.map(hint => [hint.index, hint.ready]));
+    for (const cell of this.cells) cell.setOrderMark(this.orderHints.get(cell.index) ?? null);
+  }
+  trackOrder(exact: readonly number[], precursors: readonly number[]): void {
+    this.tracked.clear(); precursors.forEach(index => this.tracked.set(index, 'precursor')); exact.forEach(index => this.tracked.set(index, 'exact'));
+    for (const cell of this.cells) cell.setTracked(this.tracked.get(cell.index) ?? null);
   }
 
   setGoalText(text: string): void {
     if (this.goalLabel) this.goalLabel.string = text;
+    else if (this.footerGoal) this.footerGoal.string = text;
   }
 
   /** Bind the full gesture on one node so MOVE/END arrive at the same target as START. */
@@ -319,6 +332,7 @@ export class CocosBoardView {
       startUI: this.uiPos(e),
       active: false,
       ghost: null,
+      startedAt: Date.now(),
     };
   }
 
@@ -345,12 +359,21 @@ export class CocosBoardView {
     const drag = this.drag;
     const to = this.resolveIndex(e);
     this.drag = null;
+    let returnToSource = false;
     try {
-      if (drag.active && this.overBackpack(e)) this.deps.onStore?.(drag.fromIndex, drag.uid);
-      else if (drag.active) this.deps.onDrop(drag.fromIndex, to);
+      if (drag.active && this.overBackpack(e)) returnToSource = !this.deps.onStore?.(drag.fromIndex, drag.uid);
+      else if (drag.active) returnToSource = !this.deps.onDrop(drag.fromIndex, to);
+      else if (Date.now() - drag.startedAt >= 450) this.deps.onItemLongPress?.(drag.fromIndex);
       else this.deps.onItemTap?.(drag.fromIndex);
     } finally {
-      drag.ghost?.destroy();
+      const ghost = drag.ghost;
+      if (returnToSource && ghost && isValid(ghost, true)) {
+        ghost.getChildByName('OrderDragWarning')?.destroy();
+        const layer = ghost.parent?.getComponent(UITransform);
+        const target = layer?.convertToNodeSpaceAR(this.cells[drag.fromIndex].node.worldPosition) ?? this.cells[drag.fromIndex].node.position.clone();
+        this.chestEffects.add(ghost); ghost.once(Node.EventType.NODE_DESTROYED, () => { this.chestEffects.delete(ghost); Tween.stopAllByTarget(ghost); });
+        tween(ghost).to(.18, { position: target, scale: new Vec3(1, 1, 1) }, { easing: 'quadOut' }).call(() => ghost.destroy()).start();
+      } else ghost?.destroy();
       this.cells[drag.fromIndex]?.setSourceDim(false);
       this.clearHighlights();
       this.deps.onDragFinished?.();
@@ -381,6 +404,8 @@ export class CocosBoardView {
     const uid = source?.itemView?.uid;
     const vm = uid ? this.pendingVm?.get(uid) : undefined;
     if (vm) item.render(vm);
+    const warning = makeLabel('', 23, hexColor('#A05C36'), true); warning.node.name = 'OrderDragWarning'; ghost.addChild(warning.node);
+    ensureTransform(warning.node, 320, 64); warning.node.setPosition(0, -size / 2 - 36, 0); warning.overflow = Label.Overflow.SHRINK; warning.enableWrapText = true; warning.node.active = false;
     // The floating image follows the pointer but must not become its hit target.
     ghost.pauseSystemEvents(true);
     this.drag.ghost = ghost;
@@ -399,25 +424,25 @@ export class CocosBoardView {
 
   private highlightTarget(e: EventTouch | EventMouse, to: number | null): void {
     if (!this.drag) return;
-    this.clearHighlights();
     const index = to ?? this.resolveIndex(e);
-    if (index === null || index < 0 || index === this.drag.fromIndex) return;
-    const preview = this.deps.previewDrop(this.drag.fromIndex, index);
-    const cell = this.cells[index];
-    if (!cell || cell.isLocked) return;
-    if (preview.kind === 'MERGE' || preview.kind === 'SPLIT') cell.setHighlight('merge');
-    else if (preview.kind === 'MOVE' || preview.kind === 'SWAP') {
-      cell.setHighlight('move');
+    for (const cell of this.cells) {
+      if (cell.index === this.drag.fromIndex || cell.isLocked) { cell.setHighlight('none'); continue; }
+      const preview = this.deps.previewDrop(this.drag.fromIndex, cell.index);
+      const mergeable = preview.kind === 'MERGE' || preview.kind === 'SPLIT';
+      cell.setHighlight(cell.index === index ? mergeable ? 'merge' : preview.kind === 'MOVE' || preview.kind === 'SWAP' ? 'move' : 'invalid' : mergeable ? 'candidate' : 'none');
     }
+    const warning = this.drag.ghost?.getChildByName('OrderDragWarning')?.getComponent(Label);
+    if (warning) { warning.string = this.overBackpack(e) ? '' : this.deps.dropWarning?.(this.drag.fromIndex, index) ?? ''; warning.node.active = !!warning.string; }
   }
 
   private paintBackpack(hover: boolean): void {
-    const node = this.node.getChildByName('BoardBackpackButton'); const tr = node?.getComponent(UITransform), ink = node?.getComponent(Graphics);
-    if (tr && ink) paintRoundRect(ink, tr.width, tr.height, tr.height / 2, hexColor(hover ? '#DFECCD' : '#FFF8EF'), hexColor(hover ? '#9DBA8E' : '#E6CFC2'), hover ? 2 : 1);
+    const node = this.backpackTarget; const tr = node?.getComponent(UITransform), ink = node?.getComponent(Graphics);
+    if (tr && ink) paintRoundRect(ink, tr.width, tr.height, tr.height / 2, hexColor(hover ? this.backpackFull ? '#F9DDDA' : '#DFECCD' : '#FFF8EF'), hexColor(hover ? this.backpackFull ? '#C77C75' : '#9DBA8E' : '#E6CFC2'), hover ? 2 : 1);
+    if (this.backpackLabel) this.backpackLabel.string = hover && this.backpackFull ? '已满' : this.backpackText;
   }
 
   private overBackpack(event: EventTouch | EventMouse): boolean {
-    const node = this.node.getChildByName('BoardBackpackButton'); const tr = node?.getComponent(UITransform);
+    const node = this.backpackTarget; const tr = node?.getComponent(UITransform);
     if (!node || !tr) return false;
     const p = tr.convertToNodeSpaceAR(this.uiToWorld(event.getUILocation(), event));
     const icon = node.getChildByName('BackpackDropIcon')?.getComponent(UITransform);
@@ -449,6 +474,7 @@ export class CocosBoardView {
       cell.setLocked(lockedIndices.has(cell.index), unlockLevels[cell.index] ?? null);
       const item = byCell.get(cell.index) ?? null;
       cell.setItem(item);
+      cell.setTracked(this.tracked.get(cell.index) ?? null); cell.setOrderMark(this.orderHints.get(cell.index) ?? null);
       if (item && cell.itemView && !this.boundItemNodes.has(cell.itemView.node)) {
         // Item sits above cell — bind full gesture on the item node too
         this.bindNodeTouch(cell.itemView.node, cell.index);
@@ -465,16 +491,32 @@ export class CocosBoardView {
     this.cells[index]?.playSpawnPop();
   }
 
-  playChestOpen(index: number, level: number, loot: ReadonlyArray<{ uid: string; definitionId: string; cellIndex: number | null }>): void {
+  get isChestOpening(): boolean {
+    for (const effect of this.chestEffects) {
+      if (effect.name === 'ChestOpenBurst' && isValid(effect, true)) return true;
+    }
+    return false;
+  }
+
+  playChestOpen(index: number, level: number, loot: ReadonlyArray<{ uid: string; definitionId: string; cellIndex: number | null }>, onFinished: () => void): void {
     const source = this.cells[index]; if (!source) return;
     const effect = createUiNode('ChestOpenBurst'); this.node.addChild(effect);
     this.chestEffects.add(effect);
     const origin = source.node.position.clone();
+    const gridRight = this.gridLeft + this.columns * this.cellWidth + (this.columns - 1) * this.gap;
+    const gridBottom = this.gridTop - this.rows * this.cellHeight - (this.rows - 1) * this.gap;
+    const insideGrid = (x: number, y: number, inset: number): Vec3 => new Vec3(
+      Math.max(this.gridLeft + inset, Math.min(gridRight - inset, x)),
+      Math.max(gridBottom + inset, Math.min(this.gridTop - inset, y)),
+      0,
+    );
+    const celebration = insideGrid(origin.x, origin.y, this.cellSize * 0.88 + 5);
     effect.once(Node.EventType.NODE_DESTROYED, () => {
       this.chestEffects.delete(effect); Tween.stopAllByTarget(effect);
       for (const child of effect.children) Tween.stopAllByTarget(child);
+      onFinished();
     });
-    const glow = createUiNode('ChestOpenGlow'); effect.addChild(glow); glow.setPosition(origin);
+    const glow = createUiNode('ChestOpenGlow'); effect.addChild(glow); glow.setPosition(celebration);
     const ink = glow.addComponent(Graphics); ink.fillColor = hexColor('#F7DED3', 180); ink.circle(0, 0, this.cellSize * 0.7); ink.fill();
     for (let i = 0; i < 10; i += 1) {
       const angle = i * Math.PI / 5, radius = this.cellSize * 0.88;
@@ -482,12 +524,12 @@ export class CocosBoardView {
       const x = Math.cos(angle) * radius, y = Math.sin(angle) * radius;
       ink.moveTo(x, y + 5); ink.lineTo(x + 3, y); ink.lineTo(x, y - 5); ink.lineTo(x - 3, y); ink.close(); ink.fill();
     }
-    const opened = createUiNode('OpenedChest'); effect.addChild(opened); opened.setPosition(origin);
+    const opened = createUiNode('OpenedChest'); effect.addChild(opened); opened.setPosition(celebration);
     applyArt(opened, { ...openedChestArt(), preserveAspect: true }, this.cellSize * 1.25, this.cellSize * 1.25);
     opened.setScale(0.45, 0.45, 1); tween(opened).to(0.16, { scale: new Vec3(1.06, 1.06, 1) }).to(0.12, { scale: new Vec3(1, 1, 1) }).delay(0.45).to(0.14, { scale: new Vec3(0, 0, 1) }).start();
     const inBox = loot.filter((entry) => entry.cellIndex === null).length;
     const summary = createUiNode('ChestLootSummary'); effect.addChild(summary);
-    const summaryY = this.gridTop - (this.rows * this.cellHeight + (this.rows - 1) * this.gap) + 40;
+    const summaryY = gridBottom + 40;
     summary.setPosition(0, summaryY, 0); ensureTransform(summary, Math.min(560, this.boardW - 16), 62);
     paintRoundRect(summary.addComponent(Graphics), Math.min(560, this.boardW - 16), 62, 24, hexColor(RewardPalette.paper), hexColor(RewardPalette.edge), 1.5);
     const caption = makeLabel(`Lv${level} 宝箱 · 随机获得 ${loot.length} 件补给${inBox ? `\n${inBox} 件已放入恢复箱` : ''}`, 23, hexColor('#9A6746'), true);
@@ -497,7 +539,8 @@ export class CocosBoardView {
       const art = itemArt(entry.definitionId); if (art) applyArt(icon, { ...art, preserveAspect: true }, this.cellSize * 0.7, this.cellSize * 0.7);
       icon.setPosition(origin); icon.setScale(0.25, 0.25, 1); icon.pauseSystemEvents(true);
       const angle = -Math.PI / 2 + i * Math.PI * 2 / Math.min(8, loot.length);
-      const bounce = new Vec3(origin.x + Math.cos(angle) * this.cellSize * 0.8, origin.y + Math.sin(angle) * this.cellSize * 0.8, 0);
+      const bounce = insideGrid(celebration.x + Math.cos(angle) * this.cellSize * 0.8,
+        celebration.y + Math.sin(angle) * this.cellSize * 0.8, this.cellSize * 0.42);
       const destination = entry.cellIndex === null ? this.node.getChildByName('OpenTools')?.position.clone() ?? origin : this.cells[entry.cellIndex]?.node.position.clone() ?? origin;
       tween(icon).delay(i * 0.055).to(0.18, { position: bounce, scale: new Vec3(1.2, 1.2, 1) }).to(0.34, { position: destination, scale: new Vec3(0.85, 0.85, 1) }).to(0.1, { scale: new Vec3(0, 0, 1) }).start();
     }

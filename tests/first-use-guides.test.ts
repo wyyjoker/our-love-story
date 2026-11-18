@@ -14,7 +14,7 @@ describe('one-time first-use guides', () => {
   it('keeps basic onboarding ahead of optional tools and waits until space is useful', () => {
     const g=fixture().open();g.debugClearBoard();g.debugSpawn('treasure_chest');expect(g.getFirstUseGuide()).toBeUndefined();
     g.tutorial.firstOrderCompleted=true;expect(g.getFirstUseGuide()).toMatchObject({hint:'chest',sourceIndex:0});
-    g.debugClearBoard();for(let i=0;i<5;i++)g.debugSpawn('coffee_01');expect(g.getFirstUseGuide()).toBeUndefined();
+    g.debugClearBoard();for(let i=0;i<4;i++)g.debugSpawn('coffee_01');expect(g.getFirstUseGuide()).toBeUndefined();
     g.debugSpawn('coffee_01');expect(g.getFirstUseGuide()).toMatchObject({hint:'backpack'});
   });
   it('completes backpack on a successful store, persists, and does not mark a failed store', () => {

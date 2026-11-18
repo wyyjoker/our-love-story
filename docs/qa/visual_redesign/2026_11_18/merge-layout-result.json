@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "scope": "watercolor",
+  "checks": [
+    "horizontal chrome, original busts, service trays, square 7x9 board and explicit delivery at 320",
+    "horizontal chrome, original busts, service trays, square 7x9 board and explicit delivery at 375",
+    "horizontal chrome, original busts, service trays, square 7x9 board and explicit delivery at 430",
+    "no uncaught Cocos exceptions in watercolor layout"
+  ],
+  "exceptions": [],
+  "testedBuildDigest": "1959924dc3ae374a73a8e16616cd1aa2a8a0bcdb239b44622a64bbb7320241fc",
+  "version": "1.3.0",
+  "output": "E:\\A-game\\temp\\cocos-ui-qa-2026-11-18T01-17-13-600Z-hyKR2R"
+}

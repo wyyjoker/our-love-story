@@ -20,7 +20,7 @@ import {
   createReplayStats,
   createSmallDateProgress,
 } from '../core/play/types';
-import { cloneBoard } from '../core/board/board';
+import { cloneBoard, cloneItem } from '../core/board/board';
 import type { ConfigBundle } from '../config/ConfigRepository';
 import type { GameEventBus } from '../events/GameEventBus';
 import type { IdGenerator } from '../infrastructure/IdService';
@@ -49,6 +49,8 @@ export class PlayService {
     const loaded = JSON.parse(JSON.stringify(state)) as Partial<PlayState>;
     this.data = {
       warehouse: Array.isArray(loaded.warehouse) ? loaded.warehouse : [],
+      warehouseCapacity: Math.max(bundle.game.toolbox.warehouseSlots, Math.min(bundle.game.toolbox.backpackExpansion.maxSlots,
+        Number.isSafeInteger(loaded.warehouseCapacity) ? loaded.warehouseCapacity! : 0)),
       scissors: typeof loaded.scissors === 'number' ? loaded.scissors : bundle.game.toolbox.startingScissors,
       chapters: loaded.chapters && typeof loaded.chapters === 'object' ? loaded.chapters : {},
       replays: loaded.replays && typeof loaded.replays === 'object' ? loaded.replays : {},
@@ -97,6 +99,17 @@ export class PlayService {
     this.ensureSmallDate();
   }
   get state(): PlayState { return JSON.parse(JSON.stringify(this.data)) as PlayState; }
+
+  getStoredGenerator(generatorId: string): { uid: string; level: number } | undefined {
+    let best: { uid: string; level: number } | undefined;
+    for (const item of this.data.warehouse) {
+      const definition = this.bundle.catalog.get(item.definitionId);
+      if (definition?.generator?.id === generatorId && (!best || definition.level > best.level)) {
+        best = { uid: item.uid, level: definition.level };
+      }
+    }
+    return best;
+  }
   progress(id: string): ChapterProgress {
     const chapter = this.bundle.adventures.find((entry) => entry.id === id);
     return { ...createChapterProgress(), ...this.state.chapters[id], ...(chapter ? { step: chapter.steps.length } : {}) };
@@ -188,10 +201,10 @@ export class PlayService {
   store(index: number): PlayResult {
     const item = this.board.getBoard().cells[index]?.item;
     if (!item || this.board.getBoard().cells[index]?.locked) return { ok: false, reason: 'INVALID' };
-    if (this.data.warehouse.length >= this.bundle.game.toolbox.warehouseSlots) return { ok: false, reason: 'WAREHOUSE_FULL' };
+    if (this.data.warehouse.length >= this.warehouseCapacity) return { ok: false, reason: 'WAREHOUSE_FULL' };
     const next = cloneBoard(this.board.getBoard());
     next.cells[index].item = undefined;
-    this.data.warehouse.push({ ...item });
+    this.data.warehouse.push(cloneItem(item));
     this.board.replaceBoard(next, 'tool');
     return this.changed('warehouse');
   }
@@ -201,9 +214,17 @@ export class PlayService {
     const next = cloneBoard(this.board.getBoard());
     const empty = next.cells.find((cell) => !cell.locked && !cell.item);
     if (!empty) return { ok: false, reason: 'BOARD_FULL' };
-    empty.item = { ...this.data.warehouse[at] };
+    empty.item = cloneItem(this.data.warehouse[at]);
     this.data.warehouse.splice(at, 1);
     this.board.replaceBoard(next, 'tool');
+    return this.changed('warehouse');
+  }
+  get warehouseCapacity(): number { return this.data.warehouseCapacity ?? this.bundle.game.toolbox.warehouseSlots; }
+
+  /** GameContext validates and charges the diamond quote before calling this. */
+  expandWarehouse(expectedCapacity: number): PlayResult {
+    if (expectedCapacity !== this.warehouseCapacity || this.warehouseCapacity >= this.bundle.game.toolbox.backpackExpansion.maxSlots) return { ok: false, reason: 'INVALID' };
+    this.data.warehouseCapacity = this.warehouseCapacity + 1;
     return this.changed('warehouse');
   }
   takeScissors(): PlayResult {
@@ -216,7 +237,7 @@ export class PlayService {
   split(index: number): PlayResult {
     const item = this.board.getBoard().cells[index]?.item;
     const previous = item && Array.from(this.bundle.catalog.values()).find((d) => d.nextItemId === item.definitionId);
-    if (!item || !previous || this.bundle.catalog.get(item.definitionId)?.maxUses || this.board.getBoard().cells[index]?.locked) return { ok: false, reason: 'CANNOT_SPLIT' };
+    if (!item || !previous || this.bundle.catalog.get(item.definitionId)?.maxUses || this.bundle.catalog.get(item.definitionId)?.generator || this.board.getBoard().cells[index]?.locked) return { ok: false, reason: 'CANNOT_SPLIT' };
     if (this.data.scissors <= 0) return { ok: false, reason: 'NO_SCISSORS' };
     const next = cloneBoard(this.board.getBoard());
     const empty = next.cells.find((cell) => !cell.locked && !cell.item);

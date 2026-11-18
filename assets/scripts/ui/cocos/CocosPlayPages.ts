@@ -2,8 +2,8 @@ import { BlockInputEvents, Button, Graphics, Label, Node, tween, UIOpacity, Vec3
 import type { GameContext } from '../../gameplay/GameContext';
 import type { AdventureChapter, PlayResult, ReplayProgress } from '../../core/play/types';
 import type { UiRoots } from './UiFactory';
-import { applyArt, itemArt } from './CocosArt';
-import { CocosTheme, createUiNode, ensureOpacity, ensureTransform, hexColor, makeLabel, paintRoundRect } from './CocosTheme';
+import { applyArt, applyMaterialFrame, itemArt } from './CocosArt';
+import { CocosTheme, createUiNode, ensureOpacity, ensureTransform, hexColor, makeLabel, paintRoundRect, paintTactileButton, pressButton } from './CocosTheme';
 
 function text(parent: Node, value: string, x: number, y: number, width = 590, height = 48, size = 24, color = '#825A54'): Label {
   const l = makeLabel(value, size, hexColor(color));
@@ -14,12 +14,14 @@ function text(parent: Node, value: string, x: number, y: number, width = 590, he
 function box(parent: Node, name: string, x: number, y: number, width: number, height: number, fill = '#FFF0E9'): Node {
   const n = createUiNode(name); parent.addChild(n); ensureTransform(n, width, height); n.setPosition(x, y, 0);
   paintRoundRect(n.addComponent(Graphics), width, height, 20, hexColor(fill), hexColor('#EDD9CD'), 1);
+  if (width >= 300 && height >= 160 && !name.includes('Shield')) applyMaterialFrame(n, 'paper', width, height);
   return n;
 }
 function button(parent: Node, name: string, caption: string, x: number, y: number, width: number, height: number, tap: () => void, selected = false): Node {
   const n = box(parent, name, x, y, width, height, selected ? '#E993A3' : '#FFFDF6');
+  paintTactileButton(n.getComponent(Graphics)!,width,height,selected?'rose':'cream');
   text(n, caption, 0, 0, width - 14, height - 6, 23, selected ? '#FFFFFF' : '#825A54');
-  n.addComponent(Button); n.on(Button.EventType.CLICK, tap); return n;
+  pressButton(n); n.on(Button.EventType.CLICK, tap); return n;
 }
 const failures: Record<Exclude<PlayResult, { ok: true }>['reason'], string> = {
   LOCKED: '达到本章要求的等级即可开启', NOT_READY: '还没准备齐，先把所需物品放回棋盘吧',
@@ -41,6 +43,8 @@ export class CocosPlayPages {
   private hubPage = 0;
   readonly hubPageSize = 2;
   private skipping = false;
+  private selectedWarehouseUid: string | null = null;
+  private backpackExpansionQuote: { capacity: number; cost: number } | null = null;
   constructor(private readonly game: GameContext, private readonly roots: UiRoots,
     private readonly toast: (message: string) => void, private readonly changed: () => void,
     private readonly readMemory: (id: string) => void, private readonly clearToast: () => void, private readonly goMerge: () => void,
@@ -58,8 +62,9 @@ export class CocosPlayPages {
     this.hubPage = Math.max(0, Math.floor(nextIndex / this.hubPageSize));
     this.render(); this.changed();
   }
-  openTools(_focus?: number): void {
+  openTools(focusUid?: string): void {
     this.clearToast();
+    this.selectedWarehouseUid = focusUid ?? null; this.backpackExpansionQuote = null;
     this.screen = 'tools'; this.root.active = true;
     this.render(); this.changed();
   }
@@ -141,10 +146,10 @@ export class CocosPlayPages {
     }
     return reasons.length ? reasons.join(separator) : '现在可以开启';
   }
-  private picture(parent: Node, memoryId: string, width: number, height: number, x: number, y: number): Node {
+  private picture(parent: Node, memoryId: string, width: number, height: number, x: number, y: number, focusY?: number): Node {
     const memory = this.game.bundle.memories.find((m) => m.id === memoryId)!;
     const n = createUiNode('AdventureIllustration'); parent.addChild(n); n.setPosition(x, y, 0);
-    applyArt(n, { sheet: memory.art.split('#')[0], cropToFill: true, cropFocusY: memory.artFocusY ?? .2 }, width, height);
+    applyArt(n, { sheet: memory.art.split('#')[0], cropToFill: true, cropFocusY: focusY ?? memory.artFocusY ?? .2 }, width, height);
     return n;
   }
   private hub(panel: Node): void {
@@ -244,38 +249,79 @@ export class CocosPlayPages {
     text(panel, '备好心意，就出发吧 · 完成后还有下一场约会', 0, -430, 620, 36, 20);
   }
   private renderBackpack(): void {
-    const state = this.game.play.state, capacity = this.game.config.toolbox.warehouseSlots;
-    const panel = box(this.root, 'PlayPanel', 0, 0, 690, 660, '#FFF8F1');
-    const scale = Math.min(1, (this.roots.designHeight - 80) / 660, (this.roots.designWidth - 28) / 690);
+    const state = this.game.play.state, status = this.game.getBackpackStatus();
+    const panel = box(this.root, 'PlayPanel', 0, 0, 690, 1080, '#C79D75');
+    const scale = Math.min(1, (this.roots.designHeight - 80) / 1080, (this.roots.designWidth - 28) / 690);
     panel.setScale(scale, scale, 1);
-    panel.setPosition(0, -this.roots.designHeight / 2 + 330 * scale + 18, 0);
-    const handle = box(panel, 'BackpackHandle', 0, 313, 72, 6, '#E4CCC1');
-    handle.pauseSystemEvents(true);
-    const bag = createUiNode('BackpackHeaderArt'); panel.addChild(bag); bag.setPosition(-277, 263, 0);
+    panel.getComponent(Graphics)!.clear(); applyMaterialFrame(panel, 'backpack', 690, 1080);
+    const bag = createUiNode('BackpackHeaderArt'); panel.addChild(bag); bag.setPosition(-266, 449, 0);
     applyArt(bag, { sheet:'scissors_backpack_sheet', index:5, columns:3, rows:2, preserveAspect:true }, 62, 66);
-    text(panel, '随身背包', -100, 269, 300, 48, 32);
-    button(panel, 'PlayClose', '关闭', 270, 271, 104, 64, () => this.close());
-    text(panel, `收纳 ${state.warehouse.length}/${capacity}`, -166, 215, 260, 34, 24, '#A66567');
-    text(panel, '点物品取回 · 从棋盘拖入背包收纳', 0, 181, 620, 28, 20, '#A48071');
-    for (let i = 0; i < capacity; i++) {
+    text(panel, '随身背包', -58, 449, 320, 46, 31).node.name = 'BackpackTitle';
+    button(panel, 'PlayClose', '×', 278, 449, 64, 64, () => this.close());
+    text(panel, `${status.used}/${status.capacity} 格  ·  最多36格`, -96, 389, 400, 32, 24, '#A66567');
+    text(panel, `◆ ${this.game.player.diamonds}`, 216, 389, 172, 32, 24, '#9775A8');
+    for (let i = 0; i < status.maxCapacity; i++) {
       const item = state.warehouse[i];
-      const slot = button(panel, 'Warehouse_' + i, item ? '' : '空位', -210 + i % 3 * 210, 86 - Math.floor(i / 3) * 160, 198, 146,
-        () => { if (item) this.action('withdraw', item.uid); else this.toast('将棋盘物品拖到背包图标即可收纳'); });
-      if (!item) continue;
+      const locked = i >= status.capacity, next = i === status.capacity;
+      const slot = button(panel, 'Warehouse_' + i, locked && next ? '◆\n扩容' : '', -250 + i % 6 * 100, 318 - Math.floor(i / 6) * 100, 94, 94,
+        () => {
+          if (locked) { if (next) this.requestBackpackExpansion(); else this.toast('逐格扩容，下一格可用钻石解锁'); return; }
+          if (item) { this.selectedWarehouseUid = item.uid; this.render(); }
+          else this.toast('把棋盘上的物品或生成器拖到背包图标即可收纳');
+        }, !!item && item.uid === this.selectedWarehouseUid);
+      paintRoundRect(slot.getComponent(Graphics)!, 94, 94, 12,
+        hexColor(item?.uid === this.selectedWarehouseUid ? '#F7DDD6' : locked ? '#F1E7D8' : '#FFF7E8'), hexColor(next ? '#D9978C' : '#DECAB2'), next ? 2 : 1);
+      if (locked && !next) {
+        const lock = createUiNode('BackpackSlotLock'); slot.addChild(lock); const glyph = lock.addComponent(Graphics);
+        glyph.strokeColor = hexColor('#B89973'); glyph.lineWidth = 2.5; glyph.roundRect(-7, 0, 14, 19, 7); glyph.stroke();
+        glyph.fillColor = hexColor('#C6AA84'); glyph.roundRect(-11, -11, 22, 18, 3); glyph.fill();
+        glyph.fillColor = hexColor('#FAF1E3'); glyph.circle(0, -1, 2); glyph.fill(); lock.pauseSystemEvents(true);
+      }
+      if (locked) { ensureOpacity(slot).opacity = next ? 255 : 130; continue; }
+      if (!item) { text(slot, '·', 0, 0, 60, 60, 30, '#CFBBA4'); continue; }
       const definition = this.game.bundle.catalog.get(item.definitionId);
-      const icon = createUiNode('StoredItem'); slot.addChild(icon); icon.setPosition(-46, 7, 0);
-      const art = itemArt(item.definitionId); if (art) applyArt(icon, { ...art, preserveAspect:true }, 90, 92);
-      text(slot, definition?.displayName ?? '物品', 48, 31, 94, 52, 22);
-      text(slot, definition?.maxUses ? `${item.remainingUses ?? definition.maxUses}次可用` : `Lv${definition?.level ?? '—'}`, 48, -9, 92, 28, 20, '#A8786D');
-      text(slot, '点击取回', 48, -43, 94, 28, 20, '#B45E68');
+      const icon = createUiNode('StoredItem'); slot.addChild(icon); icon.setPosition(0, 8, 0);
+      const art = itemArt(item.definitionId); if (art) applyArt(icon, { ...art, preserveAspect:true }, 70, 62);
+      text(slot, definition?.maxUses ? `余${item.remainingUses ?? definition.maxUses}次` : `Lv.${definition?.level ?? '—'}`, 0, -31, 88, 26, 18, '#A8786D');
     }
-    const stock = box(panel, 'ScissorsStockCard', 0, -217, 620, 120, '#F6EEE4');
+    const selected = state.warehouse.find(item => item.uid === this.selectedWarehouseUid);
+    const definition = selected && this.game.bundle.catalog.get(selected.definitionId);
+    const selection = box(panel, 'BackpackSelectedItem', 0, -262, 612, 54, '#F9EDDD');
+    text(selection, definition?.generator ? `${definition.displayName} · Lv.${definition.level}` : definition?.displayName ?? '选择物品后取回棋盘', -84, 0, 400, 44, 24);
+    button(selection, 'BackpackWithdraw', '取回', 222, 0, 130, 52, () => { if (selected) this.action('withdraw', selected.uid); }, !!selected)
+      .getComponent(Button)!.interactable = !!selected;
+    const expand = button(panel, 'BackpackExpand', status.nextCost === null ? '已达到36格上限' : `扩容1格   ◆ ${status.nextCost}`, 0, -332, 612, 68,
+      () => this.requestBackpackExpansion(), status.affordable);
+    expand.getComponent(Button)!.interactable = status.nextCost !== null && status.affordable;
+    if (!status.affordable) ensureOpacity(expand).opacity = 160;
+    text(panel, status.nextCost === null ? '收纳空间已全部解锁' : status.affordable ? '费用逐格递增 · 确认后消耗钻石' : '钻石不足 · 任务与宝箱可获得钻石', 0, -383, 620, 30, 20, '#A48071');
+    const stock = box(panel, 'ScissorsStockCard', 0, -440, 612, 72, '#F6EEE4');
     const scissors = createUiNode('ScissorsStockArt'); stock.addChild(scissors); scissors.setPosition(-253, 0, 0);
-    const scissorsArt = itemArt('scissors_01'); if (scissorsArt) applyArt(scissors, { ...scissorsArt, preserveAspect:true }, 74, 74);
-    text(stock, `待取剪刀 ×${state.scissors}`, -83, 20, 250, 38, 25);
-    text(stock, '取出后拖到2级以上物品', -83, -23, 260, 32, 19, '#A48071');
-    button(stock, 'TakeScissors', state.scissors ? '取出1级剪刀' : '库存已取完', 178, 0, 214, 66, () => this.action('take_scissors', ''), state.scissors > 0).getComponent(Button)!.interactable = state.scissors > 0;
-    text(panel, '探索与七日签到可补充剪刀 · 用完即消失', 0, -306, 620, 28, 20, '#A48071');
+    const scissorsArt = itemArt('scissors_01'); if (scissorsArt) applyArt(scissors, { ...scissorsArt, preserveAspect:true }, 62, 62);
+    text(stock, `待取剪刀 ×${state.scissors}`, -83, 0, 250, 38, 24);
+    button(stock, 'TakeScissors', state.scissors ? '取出剪刀' : '库存已取完', 190, 0, 184, 58, () => this.action('take_scissors', ''), state.scissors > 0).getComponent(Button)!.interactable = state.scissors > 0;
+    text(panel, '物品与生成器均可收纳 · 取回棋盘后使用', 0, -492, 596, 26, 20, '#8B6B56');
+    if (this.backpackExpansionQuote) this.renderBackpackExpansion(panel);
+  }
+  private requestBackpackExpansion(): void {
+    const status = this.game.getBackpackStatus();
+    if (status.nextCost === null) { this.toast('背包已达到36格上限'); return; }
+    if (!status.affordable) { this.toast('钻石不足，可从任务和宝箱获得'); return; }
+    this.backpackExpansionQuote = { capacity: status.capacity, cost: status.nextCost }; this.render();
+  }
+  private renderBackpackExpansion(panel: Node): void {
+    const quote = this.backpackExpansionQuote!;
+    const shield = box(panel, 'BackpackExpandShield', 0, 0, 690, 1080, '#735747'); ensureOpacity(shield).opacity = 130; shield.addComponent(BlockInputEvents);
+    const dialog = box(panel, 'BackpackExpandConfirm', 0, 30, 566, 300, '#FFF7E9'); dialog.addComponent(BlockInputEvents);
+    text(dialog, '扩充随身背包', 0, 99, 520, 48, 31);
+    text(dialog, `${quote.capacity}格 → ${quote.capacity + 1}格  ·  消耗 ◆ ${quote.cost}`, 0, 30, 520, 52, 25);
+    text(dialog, '确认后立即增加一个可收纳空位', 0, -20, 520, 34, 20, '#A48071');
+    button(dialog, 'BackpackExpandCancel', '再想想', -128, -93, 222, 62, () => { this.backpackExpansionQuote = null; this.render(); });
+    button(dialog, 'BackpackExpandConfirmButton', '确认扩容', 128, -93, 222, 62, () => {
+      const result = this.game.expandBackpack(quote.capacity, quote.cost); this.backpackExpansionQuote = null;
+      this.toast(result.ok ? `背包已扩至${result.capacity}格` : result.reason === 'NOT_ENOUGH_DIAMONDS' ? '钻石不足，未扣除钻石' : result.reason === 'MAX_CAPACITY' ? '已达到36格上限' : '扩容状态已更新，请重新确认');
+      this.render(); this.changed();
+    }, true);
   }
   private chapter(panel: Node): void {
     const chapter = this.definition(); if (!chapter) return;
@@ -319,7 +365,7 @@ export class CocosPlayPages {
     else if (definition.puzzle.kind === 'sequence') this.sequencePuzzle(panel, chapter);
     else this.circuitPuzzle(panel, chapter);
     const hint = hints > 0 ? definition.hints[hints - 1] : '需要帮助时可以免费查看提示，尝试错误不会扣体力。';
-    text(panel, hint, 0, -283, 610, 90, 21);
+    text(panel, hint, 0, -289, 610, 70, 21);
     button(panel, 'PuzzleHint', `提示 ${hints}/${definition.hints.length}`, -206, -365, 182, 54, () => this.action('hint', chapter.id));
     button(panel, 'PuzzleCheck', replay ? '检查练习' : '检查答案', 0, -365, 192, 54, () => this.action('solve', chapter.id), true);
     button(panel, 'PuzzleReset', '重置机关', 206, -365, 182, 54, () => this.puzzle('reset'));
@@ -349,30 +395,60 @@ export class CocosPlayPages {
     if (puzzle?.kind !== 'sequence') return;
     const p = this.game.play.puzzleProgress(chapter.id);
     puzzle.tiles.forEach((tile, i) => {
+      const selectedAt = p.selected.indexOf(tile.id);
       const card = button(panel, 'Letter_' + tile.id, '', i % 2 ? 156 : -156, i < 2 ? 144 : -13, 294, 140,
-        () => this.puzzle('select', tile.id), p.selected.includes(tile.id));
-      text(card, tile.label, 0, 31, 270, 44, 28, p.selected.includes(tile.id) ? '#FFFFFF' : '#825A54');
-      text(card, tile.clue, 0, -30, 263, 65, 21, p.selected.includes(tile.id) ? '#FFFFFF' : '#825A54');
+        () => this.puzzle('select', tile.id), selectedAt >= 0);
+      const fold = createUiNode('EnvelopeFold');
+      card.addChild(fold);
+      const ink = fold.addComponent(Graphics);
+      ink.strokeColor = hexColor(selectedAt >= 0 ? '#FFF0E4' : '#E2C9AB', 180);
+      ink.lineWidth = 2;
+      ink.moveTo(-133, 51); ink.lineTo(0, -2); ink.lineTo(133, 51); ink.stroke();
+      const seal = createUiNode('LetterSeal');
+      card.addChild(seal); seal.setPosition(-108, 28, 0);
+      const wax = seal.addComponent(Graphics);
+      wax.fillColor = hexColor(selectedAt >= 0 ? '#AD6475' : '#DE9DA0');
+      wax.circle(0, 0, 19); wax.fill();
+      text(seal, selectedAt >= 0 ? String(selectedAt + 1) : '♥', 0, 0, 34, 34, 21, '#FFF9EA');
+      const color = selectedAt >= 0 ? '#FFFDF4' : '#825A54';
+      text(card, tile.label, 20, 31, 196, 44, 28, color);
+      text(card, tile.clue, 0, -34, 263, 59, 21, color);
     });
-    const tiles = puzzle.tiles;
-    text(panel, p.selected.length ? p.selected.map((id) => tiles.find((t) => t.id === id)?.label).join(' → ') : '依次选择四封信', 0, -157, 610, 88, 25);
-    text(panel, '点击已经选过的信，可从那里重新排列', 0, -220, 590, 40, 20);
+    const slotWidth = Math.min(136, 570 / puzzle.tiles.length - 8);
+    puzzle.tiles.forEach((_, index) => {
+      const tile = puzzle.tiles.find(entry => entry.id === p.selected[index]);
+      const x = (index - (puzzle.tiles.length - 1) / 2) * (slotWidth + 8);
+      const slot = box(panel, 'LetterSequenceSlot_' + index, x, -155, slotWidth, 68, tile ? '#F1DBCB' : '#FBF1DE');
+      text(slot, tile?.label ?? String(index + 1), 0, 0, slotWidth - 12, 48, tile ? 21 : 25, tile ? '#854D50' : '#BB9E7F');
+    });
+    text(panel, p.selected.length ? '轻点已选信件可从那一封重新排列' : '依次点信封，把心意放进下面的顺序格',
+      0, -220, 590, 40, 20);
   }
   private circuitPuzzle(panel: Node, chapter: AdventureChapter): void {
     const puzzle = this.game.play.puzzleDefinition(chapter.id)?.puzzle;
     if (puzzle?.kind !== 'circuit') return;
     const circuit = this.game.play.circuit(chapter.id); if (!circuit) return;
-    text(panel, '入口 →                         → 爱心', 0, 222, 550, 36, 21);
-    text(panel, '入 →', -263, 133 - Math.floor(puzzle.start / puzzle.columns) * 140, 74, 44, 24);
-    text(panel, '→ ♥', 263, 133 - Math.floor(puzzle.end / puzzle.columns) * 140, 74, 44, 24);
+    this.picture(panel, chapter.memoryId, 596, 52, 0, 216, .02);
+    const rowY = (index: number) => 123 - Math.floor(index / puzzle.columns) * 134;
+    text(panel, '入 →', -263, rowY(puzzle.start), 74, 44, 24, '#947045');
+    text(panel, '→ ♥', 263, rowY(puzzle.end), 74, 44, 24, '#B4626A');
     circuit.ports.forEach((ports, index) => {
       const lit = circuit.lit.includes(index);
-      const tile = button(panel, 'Circuit_' + index, '', -150 + index % puzzle.columns * 150, 133 - Math.floor(index / puzzle.columns) * 140, 130, 124,
-        () => this.puzzle('rotate', String(index)), lit);
+      const x = (index % puzzle.columns - (puzzle.columns - 1) / 2) * 150;
+      const tile = button(panel, 'Circuit_' + index, '', x, rowY(index), 132, 122,
+        () => this.puzzle('rotate', String(index)));
+      paintRoundRect(tile.getComponent(Graphics)!, 132, 122, 16,
+        hexColor(lit ? '#EEF1D9' : '#FFF4DD'), hexColor(lit ? '#A9B88B' : '#DFC29E'), 2);
       const wire = createUiNode('CircuitWire'); tile.addChild(wire);
-      const g = wire.addComponent(Graphics); g.lineWidth = 15; g.strokeColor = hexColor(lit ? '#FFE797' : '#9D8F86');
-      for (const port of ports) { g.moveTo(0, 0); g.lineTo([0, 60, 0, -60][port], [57, 0, -57, 0][port]); g.stroke(); }
-      g.fillColor = hexColor('#FFF9EF'); g.circle(0, 0, 10); g.fill();
+      const ink = wire.addComponent(Graphics);
+      for (const [lineWidth, color] of [[21, lit ? '#9CAE75' : '#B4A38C'], [13, lit ? '#F4DC8E' : '#CEC1AE'], [4, lit ? '#FFF4C8' : '#ECE1D1']] as const) {
+        ink.lineWidth = lineWidth; ink.strokeColor = hexColor(color);
+        for (const port of ports) {
+          ink.moveTo(0, 0); ink.lineTo([0, 64, 0, -64][port], [59, 0, -59, 0][port]); ink.stroke();
+        }
+      }
+      ink.fillColor = hexColor(lit ? '#FFF6D1' : '#F7E8CE');
+      ink.circle(0, 0, 10); ink.fill();
     });
     const corner = (index: number): string => {
       const row = Math.floor(index / puzzle.columns), column = index % puzzle.columns;
@@ -380,14 +456,15 @@ export class CocosPlayPages {
       const horizontal = column === 0 ? '左' : column === puzzle.columns - 1 ? '右' : '';
       return `${vertical}${horizontal}` || '入口';
     };
-    text(panel, `${corner(puzzle.start)}连入 · ${corner(puzzle.end)}连出 · 点格子旋转`, 0, -219, 590, 40, 21);
+    text(panel, `${corner(puzzle.start)}连入 · ${corner(puzzle.end)}连出 · 点格子旋转`, 0, -232, 590, 36, 21);
   }
   private completed(panel: Node, chapter: AdventureChapter): void {
     const p = this.game.play.progress(chapter.id);
     this.picture(panel, chapter.memoryId, 590, 260, 0, 177);
     text(panel, p.claimed ? '这段回忆和纪念物，已经珍藏 ♥' : '心意已送达，这一页回忆为你展开 ♥', 0, 0, 610, 50, 27);
     const r = chapter.reward;
-    text(panel, `金币 +${r.coins} · 爱心 +${r.hearts} · 体力 +${r.energy}（至上限）\n剪刀 +${r.scissors} · ${p.claimed ? '一次性奖励已领取' : '完成后可领取一次'}`, 0, -65, 610, 72, 22);
+    const gift=r.generator,extra=gift?`${this.game.generators.get(gift.generatorId)?.displayName??'生成器'} Lv${gift.level} ×${gift.count}`:p.claimed?'一次性奖励已领取':'完成后可领取一次';
+    text(panel, `金币 +${r.coins} · 爱心 +${r.hearts} · 体力 +${r.energy}\n剪刀 +${r.scissors} · ${extra}`, 0, -65, 610, 72, 22);
     text(panel, `家园纪念：${chapter.souvenir.title}`, 0, -125, 600, 40, 23);
     if (p.claimed) {
       const journey = this.game.play.journeyProgress();

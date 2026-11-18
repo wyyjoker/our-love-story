@@ -17,10 +17,12 @@ import {
   createEmptyBoard,
   findFirstEmptyIndex,
   isBoardFull,
+  cloneItem,
 } from '../core/board/board';
 import type { ItemCatalog } from '../core/item/catalog';
 import type { GameEventBus } from '../events/GameEventBus';
 import type { IdGenerator } from '../infrastructure/IdService';
+import type { ClockService } from '../infrastructure/ClockService';
 
 export type SpawnOnBoardResult =
   | { ok: true; item: ItemInstance; cellIndex: number }
@@ -50,6 +52,7 @@ export class BoardService {
     rows: number,
     columns: number,
     initial?: BoardState | BoardState['cells'],
+    private readonly clock?: ClockService,
   ) {
     if (initial && 'cells' in initial && 'rows' in initial) {
       this.board = initial;
@@ -59,7 +62,7 @@ export class BoardService {
         columns,
         cells: initial.map((c) => ({
           ...c,
-          item: c.item ? { ...c.item } : undefined,
+          item: c.item ? cloneItem(c.item) : undefined,
         })),
       };
     } else {
@@ -116,7 +119,7 @@ export class BoardService {
 
   tryDrop(from: number, to: number | null): DropItemResult {
     const nextUid = this.ids.next();
-    const result = applyDrop(this.board, this.catalog, from, to, nextUid);
+    const result = applyDrop(this.board, this.catalog, from, to, nextUid, this.clock?.now() ?? 0);
     if (!result.ok) return result;
 
     this.board = result.board;
@@ -162,11 +165,17 @@ export class BoardService {
     if (index === null) {
       return { ok: false, reason: 'BOARD_FULL' };
     }
-    const item: ItemInstance = { uid: this.ids.next(), definitionId };
+    return this.placeInstanceAt(index, { uid: this.ids.next(), definitionId })!;
+  }
+
+  placeInstanceAt(index: number, item: ItemInstance): SpawnOnBoardResult | null {
+    const cell = this.board.cells[index];
+    if (!cell || cell.locked || cell.item) return null;
+    item = cloneItem(item);
     this.board.cells[index].item = item;
     this.bus.emit('ITEM_SPAWNED', {
       uid: item.uid,
-      definitionId,
+      definitionId: item.definitionId,
       cellIndex: index,
     });
     this.bus.emit('BOARD_CHANGED', { reason: 'spawn' });
@@ -192,24 +201,21 @@ export class BoardService {
     return getOrderProgress(this.board, order);
   }
 
-  clearBoard(): void {
+  clearBoard(preserveGenerators = true): void {
     for (const cell of this.board.cells) {
+      if (preserveGenerators && cell.item && this.catalog.get(cell.item.definitionId)?.generator) continue;
       cell.item = undefined;
     }
     this.bus.emit('BOARD_CHANGED', { reason: 'debug' });
   }
 
-  placeAt(index: number, definitionId: string): ItemInstance | null {
+  placeAt(index: number, definitionId: string, generatorState?: ItemInstance['generatorState']): ItemInstance | null {
     if (index < 0 || index >= this.board.cells.length) return null;
     if (this.board.cells[index].item || this.board.cells[index].locked) return null;
     const item: ItemInstance = { uid: this.ids.next(), definitionId };
-    this.board.cells[index].item = item;
-    this.bus.emit('ITEM_SPAWNED', {
-      uid: item.uid,
-      definitionId,
-      cellIndex: index,
-    });
-    this.bus.emit('BOARD_CHANGED', { reason: 'debug' });
-    return item;
+    const rules = this.catalog.get(definitionId)?.generator;
+    if (rules) item.generatorState = generatorState ? { ...generatorState } : { remainingUses: rules.capacity, recoveryAt: this.clock?.now() ?? 0, cooldownUntil: null, boosted: false };
+    const placed = this.placeInstanceAt(index, item);
+    return placed?.ok ? placed.item : null;
   }
 }

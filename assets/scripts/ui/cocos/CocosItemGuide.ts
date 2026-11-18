@@ -1,9 +1,9 @@
-import { BlockInputEvents, Button, Graphics, Label, Mask, Node, ScrollView } from 'cc';
-import type { GameContext } from '../../gameplay/GameContext';
+import { BlockInputEvents, Button, Graphics, Label, Mask, Node, ScrollView, UITransform } from 'cc';
+import type { BoardItemSale, GameContext } from '../../gameplay/GameContext';
 import type { ItemVm } from '../../presentation/GameViewMapper';
 import type { UiRoots } from './UiFactory';
-import { applyArt, itemArt } from './CocosArt';
-import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect } from './CocosTheme';
+import { applyArt, applyMaterialFrame, itemArt } from './CocosArt';
+import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect, paintTactileButton, pressButton } from './CocosTheme';
 
 function text(parent: Node, value: string, x: number, y: number, width: number, height: number, size: number, color = CocosTheme.textPrimary(), bold = false): Label {
   const label = makeLabel(value, size, color, bold);
@@ -25,10 +25,16 @@ export class CocosItemGuide {
   private readonly chainLayer: Node;
   private readonly chainContent: Node;
   private readonly toolsLabel: Label;
+  private readonly tools: Node;
+  private readonly saleButton: Node;
+  private readonly saleLabel: Label;
   private readonly chainCaption: Label;
+  private saleQuote: Extract<BoardItemSale, { ok: true }> | null = null;
+  private saleDialog: Node | null = null;
   private consumable = false;
 
-  constructor(private readonly game: GameContext, roots: UiRoots, private readonly openTools: () => void, private readonly onClose?: () => void, private readonly openRewards?: () => void) {
+  constructor(private readonly game: GameContext, roots: UiRoots, private readonly openTools: () => void, private readonly onClose?: () => void,
+    private readonly openRewards?: () => void, private readonly saleFeedback?: (result: BoardItemSale) => void) {
     this.root = createUiNode('ItemGuideOverlay');
     roots.modalLayer.addChild(this.root);
     ensureTransform(this.root, roots.designWidth, roots.designHeight);
@@ -42,6 +48,7 @@ export class CocosItemGuide {
     ensureTransform(this.panel, 700, 900);
     this.panel.setScale(scale, scale, 1);
     paintRoundRect(this.panel.addComponent(Graphics), 700, 900, 30, hexColor('#FFF8F1'), hexColor('#EDD9CD'), 2);
+    applyMaterialFrame(this.panel,'paper',700,900,.70);
 
     text(this.panel, '物品图鉴', -105, 405, 410, 54, 32, hexColor('#68423A'), true);
     const close = createUiNode('ItemGuideClose');
@@ -68,6 +75,7 @@ export class CocosItemGuide {
     this.goalLabel = text(this.panel, '', 0, -210, 640, 60, 23, hexColor('#9A6C55'), true);
 
     const tools = createUiNode('ItemGuideTools');
+    this.tools = tools;
     this.panel.addChild(tools);
     ensureTransform(tools, 310, 70);
     tools.setPosition(0, -350, 0);
@@ -75,9 +83,17 @@ export class CocosItemGuide {
     this.toolsLabel = text(tools, '打开背包与剪刀', 0, 0, 290, 58, 24, hexColor('#FFFFFF'), true);
     tools.addComponent(Button);
     tools.on(Button.EventType.CLICK, () => { this.root.active = false; if (this.consumable && this.openRewards) this.openRewards(); else this.openTools(); });
+    this.saleButton = this.saleAction(this.panel, 'ItemGuideSell', '', 162, -350, 260, () => this.openSaleConfirmation());
+    this.saleLabel = this.saleButton.getComponentInChildren(Label)!;
   }
 
   open(item: ItemVm): void {
+    this.closeSaleConfirmation();
+    const quote = this.game.quoteBoardItemSale(item.cellIndex, item.uid);
+    this.saleQuote = quote.ok ? quote : null;
+    this.saleButton.active = quote.ok;
+    this.saleLabel.string = quote.ok ? `出售 · ${quote.coins} 金币` : '';
+    this.tools.setPosition(quote.ok ? -136 : 0, -350, 0);
     this.consumable = ['coin','energy','diamond','treasure_chest'].includes(item.chainId);
     this.toolsLabel.string = this.consumable ? '打开补给' : '打开背包与剪刀';
     const isCurrentDiscovered = this.game.isItemDiscovered(item.definitionId);
@@ -109,7 +125,7 @@ export class CocosItemGuide {
     this.stepLabel.string = `当前是第 ${item.level} 级；从一级开始合成约需 ${2 ** (item.level - 1)} 个基础物品。`;
     this.sourceLabel.string = generator
       ? generator.id === 'orange_tree'
-        ? `获取来源：${generator.displayName}（不消耗体力；每 ${Math.floor((generator.recharge?.intervalMs ?? 600000) / 60000)} 分钟恢复1次，最多 ${generator.recharge?.capacity ?? 3} 次；Lv${generator.unlockLevel} 解锁）`
+        ? `获取来源：${generator.displayName}（不消耗体力；每 ${Math.floor((generator.recharge?.intervalMs ?? 60000) / 60000)} 分钟恢复1次，最多 ${generator.recharge?.capacity ?? 10} 次；Lv${generator.unlockLevel} 解锁）`
         : `获取来源：${generator.displayName}（每次消耗 ${generator.energyCost} 点体力；Lv${generator.unlockLevel} 解锁）`
       : '获取来源：合成或完成订单获得';
     const date = this.game.play.smallDateOrder();
@@ -131,9 +147,9 @@ export class CocosItemGuide {
       const lootCount = this.game.config.rewards.chestLevels.find((entry) => entry.level === item.level)?.count ?? 2;
       this.stepLabel.string = item.level < 5 ? '两个同级宝箱可合成更高一级，最高 Lv5。' : '这是最高级宝箱，已不能继续合成。';
       this.sourceLabel.string = '获取来源：升级礼包、普通物品成功合成时随机掉落';
-      this.goalLabel.string = `点一下宝箱，随机弹出 ${lootCount} 件补给；放不下的进入恢复箱`;
+      this.goalLabel.string = `确认打开后随机获得 ${lootCount} 件补给；放不下的进入恢复箱`;
     } else if (this.consumable) {
-      this.stepLabel.string = item.level >= 5 ? '已达最高 Lv5，点一下即可使用。' : '两个同级补给可合成升级，最高 Lv5；点一下即可使用。';
+      this.stepLabel.string = item.level >= 5 ? '已达最高 Lv5，确认后可使用。' : '两个同级补给可合成升级，最高 Lv5；轻点查看详情，确认后使用。';
       this.sourceLabel.string = '获取来源：打开宝箱；相同等级的补给可以合成升级';
       this.goalLabel.string = item.chainId === 'energy' ? '使用后增加体力，奖励可超过自然上限' : item.chainId === 'diamond' ? '使用后存入钻石余额，可兑换体力或恢复生成器' : '使用后存入金币余额，可购买家具';
     }
@@ -168,14 +184,54 @@ export class CocosItemGuide {
     this.root.active = true;
   }
 
-  openChain(chainId: string): void {
-    const chain = this.game.bundle.items.filter((entry) => entry.chainId === chainId).sort((a, b) => a.level - b.level);
-    const definition = chain.find((entry) => this.game.isItemDiscovered(entry.id)) ?? chain[0];
-    if (!definition) return;
+  openDiscovered(definitionId: string): void {
+    const definition = this.game.bundle.catalog.get(definitionId);
+    if (!definition || !this.game.isItemDiscovered(definitionId)) return;
     this.open({ uid: '', cellIndex: -1, definitionId: definition.id, displayName: definition.displayName,
       chainId: definition.chainId, level: definition.level, code: '', discovered: true });
   }
 
-  close(): void { this.root.active = false; this.onClose?.(); }
+  private saleAction(parent: Node, name: string, caption: string, x: number, y: number, width: number, onClick: () => void, primary = false): Node {
+    const action = createUiNode(name); parent.addChild(action); ensureTransform(action, width, 70);
+    action.setPosition(x, y, 0);
+    paintTactileButton(action.addComponent(Graphics), width, 70, primary ? 'rose' : 'cream');
+    text(action, caption, 0, 0, width - 16, 58, 25, hexColor(primary ? '#FFFFFF' : '#8B564A'), true);
+    pressButton(action); action.on(Button.EventType.CLICK, onClick);
+    return action;
+  }
+
+  private openSaleConfirmation(): void {
+    if (!this.saleQuote || this.saleDialog) return;
+    const sale = this.game.quoteBoardItemSale(this.saleQuote.index, this.saleQuote.uid);
+    if (!sale.ok) { this.close(); this.saleFeedback?.(sale); return; }
+    const rootSize = this.root.getComponent(UITransform)!.contentSize;
+    const overlay = createUiNode('SellItemConfirmOverlay');
+    this.saleDialog = overlay; this.root.addChild(overlay); ensureTransform(overlay, rootSize.width, rootSize.height);
+    overlay.addComponent(BlockInputEvents);
+    paintRoundRect(overlay.addComponent(Graphics), rootSize.width, rootSize.height, 0, hexColor('#362B2B', 146));
+    const card = createUiNode('SellItemConfirmCard'); overlay.addChild(card); ensureTransform(card, 600, 390);
+    const scale = Math.min(1, (rootSize.width - 44) / 600, (rootSize.height - 56) / 390);
+    card.setScale(scale, scale, 1);
+    paintRoundRect(card.addComponent(Graphics), 600, 390, 28, hexColor('#FFF5E9'), hexColor('#E2C6AA'), 2);
+    applyMaterialFrame(card, 'paper', 600, 390, .62);
+    const definition = this.game.bundle.catalog.get(sale.definitionId);
+    const name = this.game.isItemDiscovered(sale.definitionId) ? definition?.displayName ?? '当前物品' : '当前物品';
+    text(card, '出售这件物品？', 0, 135, 550, 58, 32, hexColor('#765044'), true);
+    text(card, `${name}  ·  +${sale.coins} 金币`, 0, 59, 536, 48, 28, hexColor('#A4744B'), true);
+    const warning = text(card, sale.breaksReadyOrder ? '这件物品已为订单备齐。出售后，订单会重新缺货。' : '出售后会腾出一格，物品无法取回。',
+      0, -28, 500, 64, 23, hexColor(sale.breaksReadyOrder ? '#A24E48' : '#886B58'));
+    warning.node.name = 'SaleOrderWarning';
+    this.saleAction(card, 'SellItemCancel', '返回', -137, -132, 220, () => this.closeSaleConfirmation());
+    this.saleAction(card, 'SellItemConfirm', '确认出售', 128, -132, 244, () => {
+      if (this.saleDialog !== overlay) return;
+      const result = this.game.sellBoardItem(sale.index, sale.uid);
+      this.close(); this.saleFeedback?.(result);
+    }, true);
+  }
+  private closeSaleConfirmation(): void {
+    if (!this.saleDialog) return;
+    this.saleDialog.removeFromParent(); this.saleDialog.destroy(); this.saleDialog = null;
+  }
+  close(): void { this.closeSaleConfirmation(); this.root.active = false; this.onClose?.(); }
   get isOpen(): boolean { return this.root.active; }
 }

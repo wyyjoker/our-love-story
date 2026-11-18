@@ -18,7 +18,7 @@ export async function applyStartupBranding(root, buildDir, platform, options = {
     if (options.notBefore != null && statSync(path).mtimeMs < options.notBefore - 2000) throw new Error(`构建产物不是本次生成: ${path}`);
   }
   const templates = join(root, 'build-templates/startup');
-  const source = join(root, 'assets/game_art/cover_background.jpg');
+  const source = join(root, 'assets/game_art/cover_garden.jpg');
   const settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
   if (!settings.splashScreen || typeof settings.splashScreen !== 'object') throw new Error('构建设置缺少 splashScreen');
   const startup = readFileSync(primary, 'utf8');
@@ -47,7 +47,7 @@ export async function applyStartupBranding(root, buildDir, platform, options = {
     }
   }
   // Validate all inputs and image size before changing the build output.
-  const image = await sharp(source).resize({ width: 360, height: 640, fit: 'cover' }).jpeg({ quality: 62, mozjpeg: true }).toBuffer();
+  const image = await sharp(source).resize({ width: 360, height: 640, fit: 'cover' }).jpeg({ quality: 50, mozjpeg: true }).toBuffer();
   if (image.length > MAX_IMAGE_BYTES) throw new Error(`启动图超过 30 KiB: ${image.length}`);
   settings.splashScreen.totalTime = 0;
   settings.splashScreen.logo = { type: 'none', base64: '' };

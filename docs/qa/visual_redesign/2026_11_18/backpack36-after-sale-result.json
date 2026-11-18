@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "scope": "backpack36",
+  "checks": [
+    "36-slot backpack, selection, withdraw, reviewed expansion, no double spend and restart at 320",
+    "36-slot backpack, selection, withdraw, reviewed expansion, no double spend and restart at 375",
+    "36-slot backpack, selection, withdraw, reviewed expansion, no double spend and restart at 430",
+    "maximum capacity and insufficient diamonds stay read-only with no runtime exceptions"
+  ],
+  "exceptions": [],
+  "testedBuildDigest": "31bd965d6bcfecb75ca1f31b0b6d4e7cc63540f055cd1d9833b54a05864fd90c",
+  "version": "1.3.0",
+  "output": "E:\\A-game\\temp\\cocos-ui-qa-2026-11-18T02-49-21-184Z-krAL1Z"
+}

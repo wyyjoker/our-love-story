@@ -1,7 +1,8 @@
 import { BlockInputEvents, Button, Graphics, Label, Node } from 'cc';
 import type { GameContext } from '../../gameplay/GameContext';
 import type { UiRoots } from './UiFactory';
-import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect } from './CocosTheme';
+import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect, paintTactileButton, pressButton } from './CocosTheme';
+import { applyMaterialFrame } from './CocosArt';
 
 function label(parent: Node, value: string, x: number, y: number, width: number, height: number, size: number, color = CocosTheme.textPrimary(), bold = false): void {
   const view = makeLabel(value, size, color, bold);
@@ -33,13 +34,14 @@ export class CocosSettingsPanel {
     const scale = Math.min(1, (roots.designWidth - 32) / 580, (roots.designHeight - 48) / 580);
     panel.setScale(scale, scale, 1);
     paintRoundRect(panel.addComponent(Graphics), 580, 580, 28, hexColor('#FFF8F1'), hexColor('#EDD9CD'), 2);
+    applyMaterialFrame(panel,'paper',580,580,.65);
     label(panel, '声音与触感', 0, 198, 390, 56, 32, hexColor('#68423A'), true);
     label(panel, '细腻轻柔，不打扰故事阅读', 0, 151, 470, 36, 20, hexColor('#9A7770'));
 
     const soundRow = createUiNode('SoundSettingsRow');
     panel.addChild(soundRow);
     ensureTransform(soundRow, 500, 90);
-    soundRow.setPosition(0, 45, 0);
+    soundRow.setPosition(0, 60, 0);
     paintRoundRect(soundRow.addComponent(Graphics), 500, 90, 22, hexColor('#FFFDF8'), hexColor('#F0DED5'), 1);
     label(soundRow, '合成与交付音效', -85, 0, 300, 44, 23, hexColor('#68423A'), true);
     this.soundValue = this.makeToggle(soundRow, 'SoundToggle', 170, () => this.toggle('soundEnabled'));
@@ -48,24 +50,24 @@ export class CocosSettingsPanel {
     const vibrationRow = createUiNode('VibrationSettingsRow');
     panel.addChild(vibrationRow);
     ensureTransform(vibrationRow, 500, 90);
-    vibrationRow.setPosition(0, -65, 0);
+    vibrationRow.setPosition(0, -40, 0);
     paintRoundRect(vibrationRow.addComponent(Graphics), 500, 90, 22, hexColor('#FFFDF8'), hexColor('#F0DED5'), 1);
     label(vibrationRow, '轻微震动反馈', -85, 0, 300, 44, 23, hexColor('#68423A'), true);
     this.vibrationValue = this.makeToggle(vibrationRow, 'VibrationToggle', 170, () => this.toggle('vibrationEnabled'));
     this.vibrationLabel = this.findToggleLabel(this.vibrationValue);
 
-    const preview = createUiNode('PreviewFeedback'); panel.addChild(preview); ensureTransform(preview, 320, 68); preview.setPosition(0, -133, 0);
-    paintRoundRect(preview.addComponent(Graphics), 320, 68, 24, hexColor('#F6DDD1'));
+    const preview = createUiNode('PreviewFeedback'); panel.addChild(preview); ensureTransform(preview, 320, 58); preview.setPosition(0, -137, 0);
+    paintTactileButton(preview.addComponent(Graphics),320,58,'cream');
     label(preview, '试听音效与试震', 0, 0, 300, 54, 24, hexColor('#805A50'), true);
-    preview.addComponent(Button); preview.on(Button.EventType.CLICK, () => previewFeedback?.());
-    label(panel, '按当前开关试听；震动需要设备支持。', 0, -193, 510, 38, 21, hexColor('#9A7770'));
+    pressButton(preview); preview.on(Button.EventType.CLICK, () => previewFeedback?.());
+    label(panel, '按当前开关试听；震动需要设备支持。', 0, -188, 510, 30, 20, hexColor('#9A7770'));
     const close = createUiNode('SettingsClose');
     panel.addChild(close);
     ensureTransform(close, 240, 68);
-    close.setPosition(0, -245, 0);
-    paintRoundRect(close.addComponent(Graphics), 240, 68, 24, CocosTheme.primary());
+    close.setPosition(0, -242, 0);
+    paintTactileButton(close.addComponent(Graphics),240,64,'rose');
     label(close, '完成', 0, 0, 160, 48, 23, hexColor('#FFFFFF'), true);
-    close.addComponent(Button);
+    pressButton(close);
     close.on(Button.EventType.CLICK, () => this.close());
     this.renderValues();
   }

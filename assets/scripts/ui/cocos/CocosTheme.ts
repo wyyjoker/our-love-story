@@ -1,7 +1,7 @@
 /**
  * Cocos color + layout helpers. Single place for theme → cc.Color.
  */
-import { Color, UIOpacity, UITransform, Node, Label, Graphics, Layers } from 'cc';
+import { Button, Color, UIOpacity, UITransform, Node, Label, Graphics, Layers } from 'cc';
 import { Theme } from '../Theme';
 
 export function hexColor(hex: string, alpha = 255): Color {
@@ -97,6 +97,22 @@ export function ensureOpacity(node: Node): UIOpacity {
   let op = node.getComponent(UIOpacity);
   if (!op) op = node.addComponent(UIOpacity);
   return op;
+}
+
+/** Shared shallow paper buttons, lit from the upper left like the cottage art. */
+export function paintTactileButton(g:Graphics,width:number,height:number,tone:'rose'|'cream'|'sage'|'gold'='cream',enabled=true):void {
+  const colors={rose:{fill:'#DFA0AD',edge:'#C98796',light:'#FFE8E7'},cream:{fill:'#FFF2DF',edge:'#D9C2A5',light:'#FFFFFF'},
+    sage:{fill:'#DCE7CC',edge:'#B7C7A3',light:'#FBF9E6'},gold:{fill:'#F2DFB7',edge:'#D6B882',light:'#FFF8DB'}};
+  const palette=enabled?colors[tone]:{fill:'#EAE2D6',edge:'#D7CABC',light:'#F6F0E7'};
+  const radius=Math.min(23,height/2);g.clear();
+  g.fillColor=hexColor('#70513B',enabled?30:14);g.roundRect(-width/2,-height/2-3,width,height,radius);g.fill();
+  g.fillColor=hexColor(palette.fill);g.strokeColor=hexColor(palette.edge);g.lineWidth=1.5;g.roundRect(-width/2,-height/2,width,height,radius);g.fill();g.stroke();
+  g.strokeColor=hexColor(palette.light,160);g.lineWidth=2;g.moveTo(-width/2+18,height/2-6);g.lineTo(width/2-18,height/2-6);g.stroke();
+}
+
+export function pressButton(node:Node):Button {
+  const button=node.getComponent(Button)??node.addComponent(Button);
+  button.transition=Button.Transition.SCALE;button.zoomScale=.975;button.duration=.07;return button;
 }
 
 export function createUiNode(name: string): Node {

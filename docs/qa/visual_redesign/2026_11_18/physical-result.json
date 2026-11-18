@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "scope": "physical",
+  "checks": [
+    "physical producer tap, hold, board merge, boost, bag rejection and restart at 320",
+    "physical producer tap, hold, board merge, boost, bag rejection and restart at 375",
+    "physical producer tap, hold, board merge, boost, bag rejection and restart at 430",
+    "no uncaught runtime exceptions in physical producer flow"
+  ],
+  "exceptions": [],
+  "testedBuildDigest": "f9b38edefaea13ad7d8d17e0a94e8bf55aef5d1c8c6e552a0476232377f9134f",
+  "version": "1.3.0",
+  "output": "E:\\A-game\\temp\\cocos-ui-qa-2026-11-17T19-13-40-473Z-68R4Kd"
+}

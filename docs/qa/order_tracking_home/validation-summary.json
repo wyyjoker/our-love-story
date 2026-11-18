@@ -1,0 +1,38 @@
+{
+  "version": "1.3.0",
+  "coreTests": 351,
+  "coreFiles": 49,
+  "toolTests": 9,
+  "webBuildDigest": "4f9ccc8aa4d57ed4370863c67b90b4f35c05aeda3053a54487514c980abf0af5",
+  "uiRuns": [
+    {
+      "scope": "ordertracking",
+      "checks": 15,
+      "passed": true,
+      "exceptions": 0
+    },
+    {
+      "scope": "full",
+      "checks": 48,
+      "passed": true,
+      "exceptions": 0
+    },
+    {
+      "scope": "firstuse",
+      "checks": 5,
+      "passed": true,
+      "exceptions": 0
+    },
+    {
+      "scope": "chestflow",
+      "checks": 7,
+      "passed": true,
+      "exceptions": 0
+    }
+  ],
+  "phoneRetested": false,
+  "uploaded": false,
+  "committed": false,
+  "wechatMainBytes": 1716909,
+  "wechatMainLimitBytes": 4000000
+}

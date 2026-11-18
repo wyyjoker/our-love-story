@@ -17,8 +17,8 @@ describe('drop feedback', () => {
     const game = createGameContext({ deterministic: true });
     const controller = new GameController(game);
     expect(controller.onDrop(0, null)).toEqual({ ok: false });
-    expect(controller.onDrop(0, 7)).toEqual({ ok: true, kind: 'MOVE' });
-    expect(controller.onDrop(7, 1)).toMatchObject({ ok: true, kind: 'MERGE', toast: '合成成功！' });
+    expect(controller.onDrop(0, 9)).toEqual({ ok: true, kind: 'MOVE' });
+    expect(controller.onDrop(9, 1)).toMatchObject({ ok: true, kind: 'MERGE', toast: '合成成功！' });
     game.flushSave();
   });
 });

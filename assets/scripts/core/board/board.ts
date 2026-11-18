@@ -60,7 +60,11 @@ export function cloneBoard(board: BoardState): BoardState {
     cells: board.cells.map((cell) => ({
       index: cell.index,
       locked: cell.locked,
-      item: cell.item ? { ...cell.item } : undefined,
+      item: cell.item ? cloneItem(cell.item) : undefined,
     })),
   };
+}
+
+export function cloneItem(item: ItemInstance): ItemInstance {
+  return { ...item, ...(item.generatorState ? { generatorState: { ...item.generatorState } } : {}) };
 }

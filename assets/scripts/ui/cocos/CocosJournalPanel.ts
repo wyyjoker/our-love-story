@@ -2,16 +2,16 @@ import { BlockInputEvents, Button, EditBox, Graphics, Label, Node, ScrollView, M
 import type { GameContext } from '../../gameplay/GameContext';
 import type { UiRoots } from './UiFactory';
 import { chooseJournalPhoto } from '../../platform/cocos/CocosPhotoService';
-import { applyLocalPhoto } from './CocosArt';
-import { createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect } from './CocosTheme';
+import { applyLocalPhoto, applyMaterialFrame } from './CocosArt';
+import { createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect, paintTactileButton, pressButton } from './CocosTheme';
 
 function text(parent: Node, value: string, x: number, y: number, width: number, height: number, size = 22): Label {
   const l = makeLabel(value, size, hexColor('#79564D')); parent.addChild(l.node); ensureTransform(l.node, width, height); l.node.setPosition(x,y,0); l.enableWrapText = true; l.overflow = Label.Overflow.SHRINK; return l;
 }
 function button(parent: Node, name: string, caption: string, x: number, y: number, w: number, h: number, action: () => void): Node {
   const n = createUiNode(name); parent.addChild(n); ensureTransform(n,w,h); n.setPosition(x,y,0);
-  paintRoundRect(n.addComponent(Graphics),w,h,22,hexColor('#E997A7'));
-  text(n,caption,0,0,w-12,h-6,24).color=hexColor('#FFFFFF'); n.addComponent(Button); n.on(Button.EventType.CLICK,action); return n;
+  paintTactileButton(n.addComponent(Graphics),w,h,'rose');
+  text(n,caption,0,0,w-12,h-6,24).color=hexColor('#FFFFFF'); pressButton(n); n.on(Button.EventType.CLICK,action); return n;
 }
 
 /** A personal diary is separate from the authored story memories. */
@@ -35,6 +35,7 @@ export class CocosJournalPanel {
     this.panel=createUiNode('JournalPanel'); this.root.addChild(this.panel); ensureTransform(this.panel,680,1040);
     const scale=Math.min(1,(roots.designHeight-30)/1040,(roots.designWidth-24)/680); this.panel.setScale(scale,scale,1);
     paintRoundRect(this.panel.addComponent(Graphics),680,1040,30,hexColor('#FFF8F1'),hexColor('#EDD9CD'),2);
+    applyMaterialFrame(this.panel,'paper',680,1040,.70);
     const heading=text(this.panel,'今日日记',-110,465,360,58,33); heading.isBold=true;
     button(this.panel,'JournalClose','关闭',265,465,104,68,()=>this.close());
     this.status=text(this.panel,'',0,402,610,62,23);

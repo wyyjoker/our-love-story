@@ -1,5 +1,5 @@
 /**
- * CocosGameView — composes status/orders/board/dock/toast/tutorial/levelup/debug.
+ * CocosGameView — composes status/orders/board/footer/toast/tutorial/levelup/debug.
  * Merge/spawn VFX come from EventBus only (no double animation).
  */
 import { BlockInputEvents, Button, Camera, Graphics, Label, Node, UITransform, Vec3 } from 'cc';
@@ -17,7 +17,6 @@ import { CocosRewardEffects, type DeliveryItem } from './CocosRewardEffects';
 import { CocosStatusBar } from './CocosStatusBar';
 import { CocosOrderPanel } from './CocosOrderPanel';
 import { CocosBoardView } from './CocosBoardView';
-import { CocosGeneratorDock } from './CocosGeneratorDock';
 import { CocosToastView, ToastMessages } from './CocosToastView';
 import { CocosTutorialView } from './CocosTutorialView';
 import { CocosLevelUpView } from './CocosLevelUpView';
@@ -30,7 +29,10 @@ import { CocosRewardsPanel } from './CocosRewardsPanel';
 import { CocosGeneratorWorkshop } from './CocosGeneratorWorkshop';
 import { CocosJournalPanel } from './CocosJournalPanel';
 import { CocosFeedback } from '../../platform/cocos/CocosFeedback';
-import { applyArt } from './CocosArt';
+import { CocosOrderGuide } from './CocosOrderGuide';
+import { CocosSupplyInspect } from './CocosSupplyInspect';
+import { CocosReadyOrderNotice } from './CocosReadyOrderNotice';
+import { applyArt, applyMaterialFrame } from './CocosArt';
 import { captureHomePhoto } from '../../platform/cocos/CocosPhotoService';
 import {
   CocosTheme,
@@ -51,7 +53,6 @@ export class CocosGameView {
   private status: CocosStatusBar;
   private orders: CocosOrderPanel;
   private board: CocosBoardView;
-  private dock: CocosGeneratorDock;
   private toast: CocosToastView;
   private tutorial: CocosTutorialView;
   private levelUp: CocosLevelUpView;
@@ -69,6 +70,12 @@ export class CocosGameView {
   private pendingLoadNotice: string | null;
   private capturing = false;
   private generatorRestoreDialog: Node | null = null;
+  private orderGuide: CocosOrderGuide;
+  private supplyInspect: CocosSupplyInspect;
+  private readyNotice: CocosReadyOrderNotice;
+  private readyOrderIds = new Set<string>();
+  private pendingReadyIds = new Set<string>();
+  private trackedOrder: { uid: string; itemId: string } | null = null;
 
   constructor(
     private readonly game: GameContext,
@@ -98,7 +105,7 @@ export class CocosGameView {
     const statusSize = sizeOf(roots.statusSlot, dw, Math.round(dh * 0.09));
     const ordersSize = sizeOf(roots.ordersSlot, dw, Math.round(dh * 0.16));
     const boardSize = sizeOf(roots.boardSlot, dw, Math.round(dh * 0.5));
-    const dockSize = sizeOf(roots.dockSlot, dw, Math.round(dh * 0.14));
+    const footerSize = sizeOf(roots.mergeFooter, dw, Math.round(dh * 0.14));
 
     this.status = new CocosStatusBar(
       roots.statusSlot,
@@ -111,6 +118,7 @@ export class CocosGameView {
       demoPreview,
       () => this.openSettings(),
       () => this.openRewards('checkin'),
+      () => this.openGeneratorWorkshop(),
     );
     this.orders = new CocosOrderPanel(
       roots.ordersSlot,
@@ -124,41 +132,40 @@ export class CocosGameView {
       game.gameConfig.board.rows,
       game.gameConfig.board.columns,
       {
+        layout: roots.mergeLayout,
         dragThreshold: game.gameConfig.dragThresholdPx,
         previewDrop: (from, to) => game.board.previewDrop(from, to),
         onDrop: (from, to) => this.handleDrop(from, to),
+        dropWarning: (from, to) => this.game.getDropOrderWarning(from, to),
         onDragStart: () => this.tutorial?.hide(),
         onDragFinished: () => this.renderTutorial(),
         onOpenAdventure: () => this.playPages.openHub(),
         onOpenTools: () => this.openRewards(),
         onOpenBackpack: () => { this.hideTutorialAndClearToast(); this.playPages.openTools(); },
-        onOpenOrangeTree: () => this.dock.scrollToOrangeTree(),
+        onOpenOrangeTree: () => this.focusProducer('orange_tree'),
         onStore: (index, uid) => {
-          if (game.board.getBoard().cells[index]?.item?.uid !== uid) { this.toast.show('物品已变化，请重新拖动', 'warn'); return; }
+          if (game.board.getBoard().cells[index]?.item?.uid !== uid) { this.toast.show('物品已变化，请重新拖动', 'warn'); return false; }
           const result = game.playAction('store', String(index));
           this.toast.show(result.ok ? '已收进背包' : result.reason === 'WAREHOUSE_FULL' ? '背包已满，先取回一些物品' : '暂时无法收纳', result.ok ? 'success' : 'warn');
-          if (result.ok) this.feedback.play('reward'); this.renderAll();
+          if (result.ok) this.feedback.play('reward'); this.renderAll(); return result.ok;
         },
-        onItemTap: (index) => this.openItemGuide(index),
+        onItemTap: (index) => this.tapBoardItem(index),
+        onItemLongPress: (index) => { const item=game.board.getBoard().cells[index]?.item; if(item && game.bundle.catalog.get(item.definitionId)?.generator) this.openGeneratorWorkshop(item.uid); else this.openItemGuide(index); },
       },
     );
     this.board.setDragLayer(roots.dragLayer);
     this.board.setCamera(roots.camera.getComponent(Camera));
 
-    this.dock = new CocosGeneratorDock(
-      roots.dockSlot,
-      dockSize.width,
-      dockSize.height,
-    );
+    this.buildMergeFooter(footerSize.width, footerSize.height);
     this.toast = new CocosToastView(roots.toastLayer, dw, dh);
     this.effects = new CocosRewardEffects(roots.dragLayer, dh);
     this.rewards = new CocosRewardsPanel(game, roots, (message, success) => {
       this.toast.show(message, success ? 'success' : 'warn');
       if (success) this.feedback.play('reward');
-    }, () => this.renderTutorial(), () => this.playPages?.openTools(), () => this.openGeneratorWorkshop(), () => this.openJournal(), (chainId) => {
+    }, () => this.renderTutorial(), () => this.playPages?.openTools(), () => this.openGeneratorWorkshop(), () => this.openJournal(), (definitionId) => {
       this.hideTutorialAndClearToast();
-      this.itemGuide.openChain(chainId);
-    }, (index, uid) => this.openChest(index, uid));
+      this.itemGuide.openDiscovered(definitionId);
+    }, (index, uid) => this.openSupplyInspect(index, uid));
     this.tutorial = new CocosTutorialView(roots.tutorialLayer, dw, dh, (hint) => game.acknowledgeFirstUseHint(hint));
     this.levelUp = new CocosLevelUpView(roots.rewardLayer, dw, dh);
 
@@ -184,14 +191,9 @@ export class CocosGameView {
         this.toast.show(message, success ? 'success' : 'warn');
         if (success) this.feedback.play('merge');
       },
-      (id) => {
-        this.generatorWorkshop.close();
-        const result = game.spawnFromGenerator(id, true);
-        if (!result.ok && (result.reason === 'GENERATOR_COOLDOWN' || result.reason === 'NO_CHARGES')) this.openGeneratorRestore(id);
-        else if (!result.ok) this.toast.show(result.reason === 'NOT_ENOUGH_ENERGY' ? '体力不足，无法强化生成' : result.reason === 'BOARD_FULL' ? ToastMessages.boardFull : '强化生成暂时不可用', 'warn');
-        else { this.feedback.play('merge'); this.dock.popMatching(id); }
-        this.renderAll();
-      }, () => this.renderTutorial(), (id) => this.openGeneratorRestore(id));
+      () => this.renderTutorial(), (id) => this.openGeneratorRestore(id),
+      () => this.openRewards(),
+      () => this.playPages.openTools());
     this.journal = new CocosJournalPanel(game, roots,
       (message, success) => {
         this.toast.show(message, success ? 'success' : 'warn');
@@ -199,9 +201,21 @@ export class CocosGameView {
       },
       () => this.renderTutorial());
     this.settings = new CocosSettingsPanel(game, roots, () => this.renderTutorial(), () => this.feedback.play('merge'));
-    this.itemGuide = new CocosItemGuide(game, roots, () => this.playPages.openTools(), () => this.renderTutorial(), () => this.openRewards());
+    this.itemGuide = new CocosItemGuide(game, roots, () => this.playPages.openTools(), () => this.renderTutorial(), () => this.openRewards(), (result) => {
+      if (result.ok) this.feedback.play('reward');
+      this.toast.show(result.ok ? `已出售 · 金币 +${result.coins}` : '物品已变化，未出售', result.ok ? 'success' : 'warn');
+    });
+    this.orderGuide = new CocosOrderGuide(game, roots, (uid, itemId, generator, storedUid) => {
+      this.trackedOrder = { uid, itemId };
+      if (storedUid) this.playPages.openTools(storedUid);
+      else if (generator) this.focusProducer(generator);
+      this.renderOrders();
+    }, () => this.renderTutorial());
+    this.supplyInspect = new CocosSupplyInspect(game, roots,
+      (index, uid, definitionId) => this.consumeSupply(index, uid, definitionId),
+      index => this.openPlainItemGuide(index), () => this.renderTutorial());
 
-    this.orders.bind((uid) => {
+    const deliver = (uid: string): void => {
       if (this.deliveries.has(uid)) return;
       game.refreshOrderClock();
       const order = game.orders.getOrders().find((entry) => entry.uid === uid);
@@ -221,30 +235,12 @@ export class CocosGameView {
         if (msg.toast) this.toast.show(msg.toast, msg.tone ?? 'warn');
       }
       this.renderAll();
+    };
+    this.readyNotice = new CocosReadyOrderNotice(roots, deliver, () => this.updateReadyNotice());
+    this.orders.bind(deliver, (uid, itemId) => {
+      this.hideTutorialAndClearToast(); this.readyNotice.hide();
+      if (!this.orderGuide.open(uid, itemId)) this.toast.show('订单已经变化，请查看新订单', 'warn');
     });
-    this.dock.bind((id) => {
-      const status = game.getGeneratorStatus(id);
-      if (status?.unlocked && (status.remainingCooldownMs > 0 || status.charges === 0)) {
-        this.openGeneratorRestore(id); return;
-      }
-      const beforeEnergy = game.player.energy;
-      if (id === 'orange_tree') {
-        const result = game.spawnFromGenerator(id);
-        if (!result.ok) {
-          this.toast.show(result.reason === 'NO_CHARGES'
-            ? '橘树正在恢复，请稍后再来'
-            : result.reason === 'LOCKED'
-              ? '达到 Lv2 后解锁'
-              : result.reason === 'BOARD_FULL' ? ToastMessages.boardFull : '橘树暂时无法采摘', 'warn');
-        } else { this.feedback.play('merge'); this.dock.popMatching(id); }
-      } else {
-        const msg = this.controller.onPointerTapGenerator(id);
-        if (msg.toast) this.toast.show(msg.toast, msg.tone ?? 'warn');
-        if (game.player.energy < beforeEnergy) { this.feedback.play('merge'); this.dock.popMatching(id); }
-      }
-      this.renderAll();
-    });
-
     this.storagePanel = createUiNode('StorageNotice');
     roots.toastLayer.addChild(this.storagePanel);
     ensureTransform(this.storagePanel, dw, dh);
@@ -324,7 +320,7 @@ export class CocosGameView {
   }
 
   private showNextReward(): void {
-    if (this.disposed || this.levelUp.isShowing || this.deliveries.size > 0 || this.levelRewardInFlight
+    if (this.disposed || this.levelUp.isShowing || this.deliveries.size > 0 || this.levelRewardInFlight || this.board.isChestOpening
       || this.rewards?.isOpen || this.settings?.isOpen || this.itemGuide?.isOpen || this.generatorWorkshop?.isOpen || this.journal?.isOpen) return;
     const level = this.game.life.pendingLevelRewards()[0];
     if (!level) return;
@@ -348,7 +344,7 @@ export class CocosGameView {
     });
   }
 
-  private handleDrop(from: number, to: number | null): void {
+  private handleDrop(from: number, to: number | null): boolean {
     const source = this.game.board.getBoard().cells[from]?.item;
     const tool = source && this.game.bundle.catalog.get(source.definitionId)?.maxUses;
     const result = this.controller.onDrop(from, to);
@@ -359,6 +355,7 @@ export class CocosGameView {
     }
     this.renderAll();
     this.renderTutorial();
+    return result.ok;
   }
 
   private subscribe(bus: GameEventBus): void {
@@ -419,7 +416,8 @@ export class CocosGameView {
     this.unsubs.push(bus.on('DAILY_TASKS_CHANGED', () => this.rewards.refresh()));
     this.unsubs.push(bus.on('COLLECTION_CHANGED', () => this.rewards.refresh()));
     this.unsubs.push(bus.on('GENERATOR_CHANGED', () => {
-      this.renderDock();
+      this.renderStatus();
+      this.renderBoard();
       this.generatorWorkshop.render();
     }));
     this.unsubs.push(bus.on('DISCOVERY_CHANGED', (payload) => {
@@ -442,6 +440,7 @@ export class CocosGameView {
   }
 
   private cancelRewardPresentation(): void {
+    this.readyNotice?.hide(); this.pendingReadyIds.clear();
     this.effects.clear(); this.orders.cancelDeliveries(); this.deliveries.clear();
     this.status.clearRewardHolds(); this.levelRewardInFlight = false;
   }
@@ -449,16 +448,28 @@ export class CocosGameView {
   private openItemGuide(index: number): void {
     this.hideTutorialAndClearToast();
     const item = this.mapper.mapBoard(this.game.board.getBoard()).items.find((entry) => entry.cellIndex === index);
-    if (item?.chainId === 'treasure_chest') { this.openChest(index, item.uid); return; }
-    if (item && ['coin', 'energy', 'diamond'].includes(item.chainId)) {
-      const result = this.game.useBoardItem(index, item.uid);
+    if (item && ['treasure_chest', 'coin', 'energy', 'diamond'].includes(item.chainId)) { this.openSupplyInspect(index, item.uid); return; }
+    this.openPlainItemGuide(index);
+  }
+  private openPlainItemGuide(index: number): void {
+    const item = this.mapper.mapBoard(this.game.board.getBoard()).items.find(entry => entry.cellIndex === index);
+    if (item) item.discovered = this.game.isItemDiscovered(item.definitionId);
+    if (item) this.itemGuide.open(item);
+  }
+  private openSupplyInspect(index: number, uid: string): void {
+    this.hideTutorialAndClearToast(); if (!this.supplyInspect.open(index, uid)) this.toast.show('物品已经变化，请重新选择', 'warn');
+  }
+  private consumeSupply(index: number, uid: string, definitionId: string): void {
+    const current = this.game.board.getBoard().cells[index]?.item;
+    if (!current || current.uid !== uid || current.definitionId !== definitionId) { this.toast.show('物品已变化，没有消耗任何物品', 'warn'); return; }
+    const item = this.mapper.mapBoard(this.game.board.getBoard()).items.find(entry => entry.cellIndex === index)!;
+    if (item.chainId === 'treasure_chest') { this.openChest(index, uid); return; }
+    {
+      const result = this.game.useBoardItem(index, uid);
       if (!result.ok) { this.toast.show('物品已经变化，请重新选择', 'warn'); return; }
       this.renderAll(); this.tutorial.hide(); this.toast.clear(); this.feedback.play('reward');
       this.board.playResourceUse(index, item.definitionId, result.amount, item.chainId === 'energy' ? '体力' : item.chainId === 'coin' ? '金币' : '钻石');
-      return;
     }
-    if (item) item.discovered = this.game.isItemDiscovered(item.definitionId);
-    if (item) this.itemGuide.open(item);
   }
 
   private openChest(index: number, uid: string): void {
@@ -468,9 +479,11 @@ export class CocosGameView {
     this.hideTutorialAndClearToast();
     const result = this.game.useBoardItem(index, uid);
     if (!result.ok) { this.toast.show('宝箱已经变化，请重新选择', 'warn'); return; }
-    this.renderAll(); this.tutorial.hide(); this.toast.clear();
+    this.board.playChestOpen(index, definition.level, result.loot ?? [], () => {
+      if (!this.disposed) this.renderTutorial();
+    });
+    this.renderAll(); this.toast.clear();
     this.feedback.play('reward');
-    this.board.playChestOpen(index, definition.level, result.loot ?? []);
   }
 
   private openGeneratorRestore(id: string): void {
@@ -510,6 +523,7 @@ export class CocosGameView {
   }
 
   private hideTutorialAndClearToast(): void {
+    this.readyNotice?.hide();
     this.tutorial.hide();
     this.toast.clear();
   }
@@ -519,9 +533,59 @@ export class CocosGameView {
     this.rewards.open(tab);
   }
 
-  private openGeneratorWorkshop(): void {
+
+  private buildMergeFooter(width: number, height: number): void {
+    const root = this.roots.mergeFooter;
+    applyMaterialFrame(root, 'paper', width, height);
+    const makeAction=(name:string,x:number,title:string,action:()=>void):Node=>{
+      const node=createUiNode(name);root.addChild(node);ensureTransform(node,104,104);node.setPosition(x,0,0);
+      paintRoundRect(node.addComponent(Graphics),100,96,24,hexColor('#FFF8EB'),hexColor('#DEC5AF'),1);
+      const label=makeLabel(title,22,hexColor('#825A54'),true);node.addChild(label.node);ensureTransform(label.node,94,28);label.node.setPosition(0,-30,0);
+      node.addComponent(Button);node.on(Button.EventType.CLICK,action);return node;
+    };
+    const bag=makeAction('BoardBackpackButton',-width/2+62,'背包',()=>{this.hideTutorialAndClearToast();this.playPages.openTools();});
+    const icon=createUiNode('BackpackDropIcon');bag.addChild(icon);icon.setPosition(0,13,0);
+    applyArt(icon,{sheet:'scissors_backpack_sheet',index:5,columns:3,rows:2,preserveAspect:true},68,60);
+    const count=makeLabel('0/6',18,hexColor('#825A54'),true);count.node.name='BoardBackpackLabel';bag.addChild(count.node);ensureTransform(count.node,50,24);count.node.setPosition(25,36,0);
+    this.board.setBackpackTarget(bag);
+    const home=makeAction('MergeHomeButton',width/2-62,'家园',()=>this.lifePages.setPage('home'));
+    const house=createUiNode('HomeArt');home.addChild(house);house.setPosition(0,13,0);
+    applyArt(house,{sheet:'navigation_illustrated_sheet',index:3,columns:2,rows:2,preserveAspect:true},66,60);
+    const caption=makeLabel('点击生成器产出\n拖动相同物品合成',23,hexColor('#8B6B56'));caption.node.name='MergeItemInfo';root.addChild(caption.node);ensureTransform(caption.node,width-256,88);caption.enableWrapText=true;caption.lineHeight=32;caption.overflow=Label.Overflow.SHRINK;
+    if (this.roots.mergeLayout.toolbarHeight === 0) {
+      caption.node.addComponent(Button);
+      caption.node.on(Button.EventType.CLICK, () => this.playPages.openHub());
+    }
+    this.board.setFooterGoal(caption);
+  }
+
+  private focusProducer(key: string): void {
+    const status=this.game.getGeneratorStatus(key);
+    const cell=this.game.board.getBoard().cells.find(c=>c.item?.uid===status?.uid);
+    if(cell) this.board.markSpawn(cell.index);
+    else if(this.entered)this.toast.show(this.game.generators.getRewards().length?'生成器奖励待领取，请打开商店':'生成器尚未获得','warn');
+  }
+
+  private tapBoardItem(index: number): void {
+    const item=this.game.board.getBoard().cells[index]?.item;
+    if(!item)return;
+    const def=this.game.bundle.catalog.get(item.definitionId);
+    const caption=this.roots.mergeFooter.getChildByName('MergeItemInfo')?.getComponent(Label);
+    if(caption && this.roots.mergeLayout.toolbarHeight > 0 && def) {
+      caption.string = def.displayName + ' · Lv' + def.level + (def.generator ? '\n长按查看等级与冷却' : '');
+    }
+    if(!def?.generator){this.openItemGuide(index);return;}
+    const result=this.game.spawnFromGenerator(item.uid);
+    if(!result.ok){
+      if(result.reason==='GENERATOR_COOLDOWN'||result.reason==='NO_CHARGES')this.openGeneratorRestore(item.uid);
+      else this.toast.show(result.reason==='NOT_ENOUGH_ENERGY'?'体力不足，点击顶部体力获取补给':result.reason==='BOARD_FULL'?ToastMessages.boardFull:'这台生成器暂时无法产出','warn');
+    }else{this.feedback.play('merge');this.focusProducer(item.uid);}
+    this.renderAll();
+  }
+
+  private openGeneratorWorkshop(uid?: string): void {
     this.hideTutorialAndClearToast();
-    this.generatorWorkshop.open();
+    this.generatorWorkshop.open(uid);
   }
 
   private openJournal(): void {
@@ -553,7 +617,6 @@ export class CocosGameView {
     this.renderStatus();
     this.renderBoard();
     this.renderOrders();
-    this.renderDock();
     this.renderTutorial();
     this.lifePages.render();
   }
@@ -561,7 +624,7 @@ export class CocosGameView {
   renderClock(): void {
     this.game.refreshOrderClock();
     this.renderStatus();
-    this.dock.refreshClock((id) => this.game.getGeneratorStatus(id));
+    this.renderBoard();
     this.generatorWorkshop.refreshClock();
     this.renderOrders();
   }
@@ -569,11 +632,12 @@ export class CocosGameView {
   private renderStatus(): void {
     this.status.render(this.statusVm());
     this.status.setCheckInAvailable(this.game.getCheckInStatus().canClaim);
-    this.board.setBackpackUsage(this.game.play.state.warehouse.length, this.game.config.toolbox.warehouseSlots);
+    this.status.setShopRewardCount(this.game.generators.getRewards().reduce((sum,reward)=>sum+reward.count,0));
+    this.board.setBackpackUsage(this.game.play.state.warehouse.length, this.game.play.warehouseCapacity);
   }
 
   private renderBoard(): void {
-    const vm = this.mapper.mapBoard(this.game.board.getBoard());
+    const vm = this.mapper.mapBoard(this.game.board.getBoard(), this.game.clock.now());
     for (const item of vm.items) item.discovered = this.game.isItemDiscovered(item.definitionId);
     this.board.render(vm);
   }
@@ -581,6 +645,21 @@ export class CocosGameView {
   private renderOrders(): void {
     const orders = this.orderVms();
     this.orders.render(orders, this.game.clock.now());
+    this.board.setOrderHints(this.game.getOrderBoardHints());
+    const ready = new Set(orders.filter(order => order.ready && !this.deliveries.has(order.uid)).map(order => order.uid));
+    if (this.entered) for (const uid of ready) if (!this.readyOrderIds.has(uid)) this.pendingReadyIds.add(uid);
+    this.readyOrderIds = ready;
+    for (const uid of this.pendingReadyIds) if (!ready.has(uid)) this.pendingReadyIds.delete(uid);
+    if (this.readyNotice?.orderUid && !ready.has(this.readyNotice.orderUid)) this.readyNotice.hide();
+    this.updateReadyNotice();
+    if (this.trackedOrder) {
+      const tracked = this.game.getOrderTracking(this.trackedOrder.uid, this.trackedOrder.itemId);
+      if (tracked.ok) {
+        const g = tracked.guide; this.board.trackOrder(g.matchingIndices, g.precursorIndices);
+        this.board.setGoalText(`订单备货 · ${g.name} ${Math.min(g.have, g.count)}/${g.count}${g.missing ? '' : ' · 已备齐，请交付'}`); return;
+      }
+      this.trackedOrder = null; this.board.trackOrder([], []);
+    }
     const date = this.game.play.smallDateOrder();
     if (date) {
       const have = date.requirements.filter((requirement) => requirement.done).length;
@@ -594,26 +673,28 @@ export class CocosGameView {
     }
   }
 
-  private renderDock(): void {
-    this.dock.render(
-      this.mapper.mapGenerators(this.game.bundle.generators, this.game.player),
-      this.game.getGeneratorStatus('orange_tree'),
-      (id) => this.game.getGeneratorStatus(id),
-    );
-  }
 
   private renderTutorial(): void {
+    this.updateReadyNotice();
     if (this.entered) this.showNextReward();
-    if (!this.entered || this.lifePages.currentPage !== 'merge' || this.levelUp.isShowing || this.levelRewardInFlight || this.deliveries.size > 0 || this.playPages?.isOpen || this.rewards?.isOpen || this.itemGuide?.isOpen || this.settings?.isOpen || this.generatorWorkshop?.isOpen || this.journal?.isOpen) {
+    if (!this.entered || this.lifePages.currentPage !== 'merge' || this.levelUp.isShowing || this.levelRewardInFlight || this.board.isChestOpening || this.deliveries.size > 0 || this.playPages?.isOpen || this.rewards?.isOpen || this.itemGuide?.isOpen || this.orderGuide?.isOpen || this.supplyInspect?.isOpen || this.readyNotice?.orderUid || this.settings?.isOpen || this.generatorWorkshop?.isOpen || this.journal?.isOpen) {
       this.tutorial.hide();
       return;
     }
     const t = this.game.tutorial;
     const stats = this.game.life.state.stats;
     if (!t.generatorClicked && stats.spawns === 0 && !t.firstMergeCompleted && stats.merges === 0) {
-      this.tutorial.show('点一下咖啡机吧～');
-      const generator = this.dock.hintPosition(this.game.bundle.generators[0].id);
-      if (generator) this.tutorial.showGesture(generator, generator, '', 80);
+      const firstGenerator = this.game.bundle.generators[0].id;
+      const cell = this.game.board.getBoard().cells.find(c => c.item && this.game.bundle.catalog.get(c.item.definitionId)?.generator?.id === firstGenerator);
+      const anchor = cell && this.board.hintAnchor(cell.index);
+      if (anchor) {
+        this.tutorial.show('点一下咖啡机吧～');
+        this.tutorial.showGesture(anchor.position, anchor.position, '', anchor.size);
+      } else if (this.game.play.getStoredGenerator(firstGenerator)) {
+        this.tutorial.show('先从背包取回咖啡机');
+        const bag = this.board.shortcutAnchor('BoardBackpackButton');
+        if (bag) this.tutorial.showGesture(bag, bag);
+      }
       return;
     }
     if (!t.firstMergeCompleted && stats.merges === 0) {
@@ -646,7 +727,7 @@ export class CocosGameView {
         const target = guide.targetIndex === undefined ? null : this.board.hintAnchor(guide.targetIndex);
         if (source && target) this.tutorial.showGesture(source.position, target.position, this.game.board.getBoard().cells[guide.sourceIndex!].item?.definitionId, source.size);
       } else {
-        this.tutorial.show(source ? '轻点宝箱开补给，相同宝箱可合成' : '补给里取出宝箱，再轻点打开', 'chest');
+        this.tutorial.show(source ? '轻点宝箱查看，确认后打开；同级可合成' : '补给里取出宝箱，再轻点查看', 'chest');
         const target = source?.position ?? this.board.shortcutAnchor('OpenTools');
         if (target) this.tutorial.showGesture(target, target, '', source?.size ?? 64);
       }
@@ -655,7 +736,20 @@ export class CocosGameView {
     this.tutorial.hide();
   }
 
+  private updateReadyNotice(): void {
+    if (!this.readyNotice) return;
+    const learningToMerge = !this.game.tutorial.firstMergeCompleted && this.game.life.state.stats.merges === 0;
+    const blocked = !this.entered || this.disposed || this.lifePages.currentPage !== 'merge' || this.levelUp.isShowing || this.levelRewardInFlight || this.deliveries.size > 0
+      || this.board.isChestOpening || learningToMerge || this.playPages?.isOpen || this.rewards?.isOpen || this.itemGuide?.isOpen || this.orderGuide?.isOpen || this.supplyInspect?.isOpen || this.settings?.isOpen || this.generatorWorkshop?.isOpen || this.journal?.isOpen || !!this.generatorRestoreDialog;
+    if (blocked) { this.readyNotice.hide(); return; }
+    if (this.readyNotice.orderUid) return;
+    const orders = this.orderVms().filter(order => order.ready && this.pendingReadyIds.has(order.uid));
+    const next = orders[0]; if (!next) return;
+    this.pendingReadyIds.delete(next.uid); this.tutorial.hide(); this.readyNotice.show(next, orders.length - 1);
+  }
+
   dispose(): void {
+    this.readyNotice?.hide();
     this.disposed = true; this.effects.dispose(); this.orders.cancelDeliveries();
     this.generatorRestoreDialog?.destroy(); this.generatorRestoreDialog = null;
     for (const u of this.unsubs) u();

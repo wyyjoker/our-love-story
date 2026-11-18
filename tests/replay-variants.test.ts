@@ -84,7 +84,7 @@ function mutableBundle(): ConfigBundle {
 describe('replay variants: live actions and isolation', () => {
   it('starts a fresh save with no invented history and permits a Lv1 small date', () => {
     const f = fixture();
-    expect(f.game.buildSaveData().version).toBe(8);
+    expect(f.game.buildSaveData().version).toBe(9);
     expect(f.game.play.state.replays).toEqual({});
     expect(f.game.play.state.replayStats).toEqual({});
     expect(f.game.play.replaySummary('zhoushan')).toEqual(zeroStats);
@@ -254,11 +254,16 @@ describe('replay save v4 to v5 and malformed v5 normalization', () => {
       totalHints: outcome === 'playing' ? 0 : 2, bestSolvedHints: outcome === 'solved' ? 2 : null, legacyHistoryIncomplete: true };
     expect(restored.play.replaySummary('zhoushan')).toEqual(expected);
     expect(restored.play.replayProgress('zhoushan')).toMatchObject({ variantId: 'classic', found: ['calendar'], code: '09', hints: 2, outcome });
-    expect(restored.buildSaveData().version).toBe(8);
+    expect(restored.buildSaveData().version).toBe(9);
     expect(restored.player).toEqual(legacy.player);
     expect(restored.preferences).toEqual(legacy.preferences);
     expect(restored.life.state).toEqual({ ...legacy.life, unlockedMemoryIds: [...legacy.life.unlockedMemoryIds, 'zhoushan_bonfire'] });
-    expect(restored.buildSaveData().board).toEqual(legacy.board);
+    const newBoard=restored.buildSaveData().board;
+    for(const cell of legacy.board)if(cell.item)expect(newBoard[cell.index].item).toEqual(cell.item);
+    const oldIds=new Set(legacy.board.flatMap(cell=>cell.item?[cell.item.uid]:[]));
+    const added=newBoard.flatMap(cell=>cell.item&&!oldIds.has(cell.item.uid)?[cell.item]:[]);
+    expect(added).toHaveLength(1);expect(added[0].definitionId).toBe('generator_coffee_machine_01');
+    expect(restored.generators.getBoardState().grantedSourceIds).toContain('wish_first_merges');
     expect(restored.buildSaveData().activeOrders).toEqual(legacy.activeOrders);
     expect(restored.play.state.warehouse).toEqual(legacy.play.warehouse);
     expect(restored.play.state.scissors).toBe(legacy.play.scissors);

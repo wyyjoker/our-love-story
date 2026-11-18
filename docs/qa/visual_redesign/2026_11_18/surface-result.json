@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "scope": "surfaces",
+  "checks": [
+    "paper materials and tactile controls across cover, settings, four supply tabs, journal, bag, guide, home/editor, memories, wishes and journey"
+  ],
+  "exceptions": [],
+  "testedBuildDigest": "31bd965d6bcfecb75ca1f31b0b6d4e7cc63540f055cd1d9833b54a05864fd90c",
+  "version": "1.3.0",
+  "output": "E:\\A-game\\temp\\cocos-ui-qa-2026-11-18T02-47-55-660Z-C5Y7Ct"
+}

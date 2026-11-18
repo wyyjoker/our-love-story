@@ -1,6 +1,6 @@
 /**
  * Runtime UI hierarchy factory.
- * Widget-pinned layout so Status/Orders/Board/Dock follow the real Canvas size
+ * Widget-pinned layout so Status/Orders/Board/Footer follow the real Canvas size
  * (Canvas component resizes to visible size — do not assume 750x1334 node size).
  * Overlay layers are pass-through (0x0 hit) so they never block Board input.
  */
@@ -16,7 +16,7 @@ import {
 } from 'cc';
 import { createUiNode, ensureTransform, setLayerTree } from './CocosTheme';
 import type { SafeInsets } from '../../platform/cocos/CocosSafeArea';
-import { safeContentRect } from '../../presentation/UiSafety';
+import { mergePageLayout, safeContentRect } from '../../presentation/UiSafety';
 
 export type UiRoots = {
   camera: Node;
@@ -27,7 +27,7 @@ export type UiRoots = {
   statusSlot: Node;
   ordersSlot: Node;
   boardSlot: Node;
-  dockSlot: Node;
+  mergeFooter: Node;
   navLayer: Node;
   dragLayer: Node;
   toastLayer: Node;
@@ -38,14 +38,12 @@ export type UiRoots = {
   coverLayer: Node;
   designWidth: number;
   designHeight: number;
+  mergeLayout: ReturnType<typeof mergePageLayout>;
 };
 
 export const DESIGN_W = 750;
 export const DESIGN_H = 1334;
 
-const TOP_BAR_H = 124;
-const ORDERS_H = 264;
-const DOCK_H = 104;
 export const NAV_H = 112;
 const EDGE = 12;
 const GAP = 8;
@@ -132,9 +130,9 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
 
   const insetTop = 12;
   const insetBottom = 8;
-  const compactChrome = layoutH < 1250;
-  const dockHeight = compactChrome ? DOCK_H : 152;
-  const orderHeight = compactChrome ? 208 : ORDERS_H;
+  const mergeLayout = mergePageLayout(layoutW, layoutH);
+  const footerHeight = mergeLayout.footerHeight;
+  const orderHeight = mergeLayout.orderHeight;
 
   const background = createUiNode('Background');
   canvas.addChild(background);
@@ -145,21 +143,21 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
   ensureTransform(safeArea, layoutW, layoutH);
   safeArea.setPosition(safe.x, safe.y, 0);
 
-  // Board first (under), then dock, then orders, then status (top chrome)
-  const boardTop = insetTop + TOP_BAR_H + GAP + orderHeight + GAP;
-  const boardBottom = insetBottom + EDGE + dockHeight + GAP + NAV_H;
+  // Board first (under), then footer, then orders, then status (top chrome)
+  const boardTop = mergeLayout.boardTop;
+  const boardBottom = mergeLayout.boardBottom;
 
   const boardSlot = createUiNode('BoardPanel');
   safeArea.addChild(boardSlot);
   pinFill(boardSlot, boardTop, boardBottom);
 
-  const dockSlot = createUiNode('GeneratorDock');
-  safeArea.addChild(dockSlot);
-  pinBox(dockSlot, dockHeight, { bottom: insetBottom + EDGE + NAV_H });
+  const mergeFooter = createUiNode('MergeFooter');
+  safeArea.addChild(mergeFooter);
+  pinBox(mergeFooter, footerHeight, { bottom: insetBottom + EDGE });
 
   const ordersSlot = createUiNode('OrderPanel');
   safeArea.addChild(ordersSlot);
-  pinBox(ordersSlot, orderHeight, { top: insetTop + TOP_BAR_H + GAP });
+  pinBox(ordersSlot, orderHeight, { top: mergeLayout.orderTop });
 
   const contentLayer = createUiNode('PageContentLayer');
   safeArea.addChild(contentLayer);
@@ -167,7 +165,7 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
 
   const statusSlot = createUiNode('StatusBar');
   safeArea.addChild(statusSlot);
-  pinBox(statusSlot, TOP_BAR_H, { top: insetTop });
+  pinBox(statusSlot, mergeLayout.statusHeight, { top: insetTop });
 
   const navLayer = createUiNode('NavigationLayer');
   safeArea.addChild(navLayer);
@@ -206,7 +204,7 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
   setLayerTree(canvas, Layers.Enum.UI_2D);
 
   // Force alignment after hierarchy is complete
-  for (const n of [background, boardSlot, dockSlot, ordersSlot, statusSlot]) {
+  for (const n of [background, boardSlot, mergeFooter, ordersSlot, statusSlot]) {
     n.getComponent(Widget)?.updateAlignment();
   }
 
@@ -216,7 +214,7 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
     status: statusSlot.getComponent(UITransform)?.height,
     orders: ordersSlot.getComponent(UITransform)?.height,
     board: boardSlot.getComponent(UITransform)?.height,
-    dock: dockSlot.getComponent(UITransform)?.height,
+    footer: mergeFooter.getComponent(UITransform)?.height,
   });
 
   return {
@@ -228,7 +226,7 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
     statusSlot,
     ordersSlot,
     boardSlot,
-    dockSlot,
+    mergeFooter,
     navLayer,
     dragLayer,
     toastLayer,
@@ -239,6 +237,7 @@ export function buildUiTree(insets: SafeInsets): UiRoots {
     coverLayer,
     designWidth: layoutW,
     designHeight: layoutH,
+    mergeLayout,
   };
 }
 

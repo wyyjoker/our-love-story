@@ -54,6 +54,8 @@ export type SmallDateProgress = {
 };
 export type PlayState = {
   warehouse: ItemInstance[];
+  /** Purchased usable slots; optional only for pre-expansion saves. */
+  warehouseCapacity?: number;
   scissors: number;
   chapters: Record<string, ChapterProgress>;
   /** Free practice progress kept apart from the claimed chapter state. */
@@ -84,7 +86,7 @@ export type AdventureChapter = {
   steps: Array<{ title: string; requirements: OrderRequirement[]; note: string }>;
   instruction: string; hints: string[]; puzzle: PuzzleDefinition;
   replayVariants?: ReplayPuzzleVariant[];
-  reward: { coins: number; hearts: number; energy: number; scissors: number };
+  reward: { coins: number; hearts: number; energy: number; scissors: number; generator?: import('../types').GeneratorGift };
   souvenir: { title: string; artItemId: string; room: 'living' | 'bedroom' | 'garden'; x: number; y: number };
 };
 export type ChapterAvailability = {

@@ -1,7 +1,7 @@
 import { RewardPalette } from './CocosRewardEffects';
 import { Button, Graphics, Label, Node, Tween, tween, Vec3 } from 'cc';
-import { applyArt, generatorArt } from './CocosArt';
-import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect } from './CocosTheme';
+import { applyArt, applyMaterialFrame, generatorArt } from './CocosArt';
+import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect, paintTactileButton, pressButton } from './CocosTheme';
 
 export class CocosLevelUpView {
   readonly node: Node;
@@ -33,6 +33,7 @@ export class CocosLevelUpView {
     this.node.addChild(this.card);
     ensureTransform(this.card, 630, 790);
     paintRoundRect(this.card.addComponent(Graphics), 630, 790, 38, hexColor(RewardPalette.paper), hexColor(RewardPalette.edge), 1.5);
+    applyMaterialFrame(this.card,'paper',630,790,.70);
     const ribbon = createUiNode('RewardRibbon');
     this.card.addChild(ribbon);
     ribbon.setPosition(0, 310, 0);
@@ -101,11 +102,11 @@ export class CocosLevelUpView {
     this.card.addChild(this.claim);
     ensureTransform(this.claim, 400, 76);
     this.claim.setPosition(0, -325, 0);
-    paintRoundRect(this.claim.addComponent(Graphics), 400, 76, 38, hexColor(RewardPalette.coral));
+    paintTactileButton(this.claim.addComponent(Graphics),400,76,'rose');
     const caption = makeLabel('领取这份心意  ♥', 28, CocosTheme.surface(), true);
     this.claim.addChild(caption.node);
     ensureTransform(caption.node, 370, 66);
-    this.claim.addComponent(Button);
+    pressButton(this.claim);
     this.claim.on(Button.EventType.CLICK, () => {
       const callback = this.onClaim;
       this.onClaim = null;

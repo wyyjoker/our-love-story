@@ -52,7 +52,7 @@ describe('life content loop', () => {
     const saved = storage();
     const game = createGameContext({ storage: saved, deterministic: true });
     game.debugAddXp(7650); game.debugAddCoins(20000);
-    expect(game.bundle.furniture).toHaveLength(30);
+    expect(game.bundle.furniture).toHaveLength(36);
     expect(new Set(game.bundle.furniture.map((item) => item.room))).toEqual(new Set(['living', 'bedroom', 'garden', 'study', 'terrace', 'pool']));
     for (const item of game.bundle.furniture) expect(game.buyFurniture(item.id).ok).toBe(true);
     expect(game.life.getDecorPoints()).toBe(game.bundle.furniture.reduce((total, item) => total + item.decorPoints, 0));

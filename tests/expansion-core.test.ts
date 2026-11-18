@@ -16,13 +16,13 @@ function fixture() {
 describe('expansion rules', () => {
   it('opens the rectangle by level and rejects locked-cell paths', () => {
     const g = fixture().open(); const b = g.board.getBoard();
-    expect(b.cells.filter((c) => !c.locked).map((c) => c.index)).toEqual([0,1,2,6,7,8,12,13,14]);
+    expect(b.cells.filter((c) => !c.locked).map((c) => c.index)).toEqual([0,1,2,7,8,9,14,15,16]);
     expect(g.board.getLockedUnlockLevel(3)).toBe(2);
     expect(g.dropItem(0,3).ok).toBe(false); expect(g.board.placeAt(3, 'coffee_01')).toBeNull();
     expect(g.playAction('store', '3').ok).toBe(false); expect(g.playAction('split', '3').ok).toBe(false);
     g.debugAddXp(50); expect(g.board.getBoard().cells[3].locked).toBe(false);
   });
-  it('migrates every legacy UID into 42 open cells or inbox and preserves anniversary rights', () => {
+  it('migrates every legacy UID into 63 open cells or inbox and preserves anniversary rights', () => {
     const f = fixture(); const cfg = loadConfigBundle().game; const old = createDefaultSaveData(cfg, 0);
     old.version = 5; old.board = Array.from({ length: 81 }, (_, index) => ({ index, item: { uid: `legacy_${index}`, definitionId: 'coffee_03' } }));
     old.life.unlockedMemoryIds = ['anniversary']; old.player.coins = 71; old.player.energy = 32;
@@ -30,7 +30,7 @@ describe('expansion rules', () => {
     expect(f.values.get(`${cfg.saveKey}:backup`)).toBe(raw);
     expect(g.board.getBoard().cells.every((c) => !c.locked)).toBe(true);
     const all = [...g.board.getBoard().cells.flatMap((c) => c.item ? [c.item.uid] : []), ...g.rewardInbox.map((i) => i.uid)];
-    expect(new Set(all).size).toBe(81); expect(g.rewardInbox).toHaveLength(39);
+    expect(new Set(all).size).toBe(81); expect(g.rewardInbox).toHaveLength(18);
     expect(g.player).toMatchObject({ coins: 71, energy: 32 });
     expect(g.life.state.unlockedMemoryIds).toEqual(expect.arrayContaining(['anniversary', 'marriage_registration', 'wedding_thanksgiving']));
     expect(g.claimInboxItem('legacy_80')).toEqual({ ok: false, reason: 'BOARD_FULL' });
@@ -43,12 +43,12 @@ describe('expansion rules', () => {
     g.board.placeAt(0, 'coffee_01'); g.board.placeAt(1, 'coffee_01');
     expect(g.isItemDiscovered('coffee_02')).toBe(false); expect(g.dropItem(0,1).ok).toBe(true);
     expect(g.player.coins).toBe(10); expect(g.isItemDiscovered('coffee_02')).toBe(true);
-    g.board.placeAt(0, 'coffee_01'); g.board.placeAt(6, 'coffee_01'); g.dropItem(0,6); expect(g.player.coins).toBe(10);
+    g.board.placeAt(0, 'coffee_01'); g.board.placeAt(7, 'coffee_01'); g.dropItem(0,7); expect(g.player.coins).toBe(10);
     expect(f.open().isItemDiscovered('coffee_02')).toBe(true);
     const h = createGameContext({ deterministic: true, random: new FixedRandomService([0]) }); h.board.clearBoard();
     h.board.placeAt(0, 'coin_01'); h.board.placeAt(1, 'coin_01'); h.dropItem(0,1);
     expect(h.board.getBoard().cells.some((c) => c.item?.definitionId === 'treasure_chest')).toBe(false);
-    h.board.placeAt(0, 'coffee_01'); h.board.placeAt(6, 'coffee_01'); h.dropItem(0,6);
+    h.board.placeAt(0, 'coffee_01'); h.board.placeAt(7, 'coffee_01'); h.dropItem(0,7);
     expect(h.board.getBoard().cells.some((c) => c.item?.definitionId === 'treasure_chest')).toBe(true);
   });
   it('opens a full-board chest without losing loot and consumes all tiers safely', () => {

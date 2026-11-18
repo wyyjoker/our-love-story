@@ -15,12 +15,18 @@ export type ItemDefinition = {
   wildcardEligible?: boolean;
   wildcard?: boolean;
   icon?: string;
+  generator?: GeneratorItemRules;
 };
+
+/** Compiled from JSON generator configuration for one physical producer tier. */
+export type GeneratorItemRules = { id: string; capacity: number; recoveryIntervalMs: number; cooldownMs: number; mergeRemainingRatio?: number };
+export type GeneratorItemState = { remainingUses: number; recoveryAt: number; cooldownUntil: number | null; boosted: boolean };
 
 export type ItemInstance = {
   uid: string;
   definitionId: string;
   remainingUses?: number;
+  generatorState?: GeneratorItemState;
 };
 
 export type BoardPosition = {
@@ -58,6 +64,7 @@ export type OrderRequirement = {
 };
 
 export type OrderDynamicConfig = {
+  pacedSlots?: boolean;
   twoItemChance: number;
   rareChance: number;
   urgentChance: number;
@@ -68,6 +75,7 @@ export type OrderDynamicConfig = {
 };
 
 export type ActiveOrder = {
+  pace?: 'quick' | 'regular' | 'goal';
   longTerm?: boolean;
   urgentUntil?: number;
   urgentBaseCoins?: number;
@@ -127,6 +135,7 @@ export type FurnitureDefinition = {
 export type WishMetric = 'spawns' | 'merges' | 'orders' | 'level' | 'memories' | 'furniture' | 'decor';
 
 export type WishDefinition = {
+  generatorReward?: GeneratorGift;
   id: string;
   title: string;
   metric: WishMetric;
@@ -159,6 +168,9 @@ export type GamePreferences = {
 
 export type GeneratorChargeState = { charges: number; lastRecoveryAt: number; capacity?: number };
 export type GeneratorCooldownState = { streak: number; cooldownStartedAt: number | null };
+export type GeneratorGift = { generatorId: string; level: number; count: number };
+export type GeneratorReward = { id: string; generatorId: string; level: number; count: number; source: 'legacy' | 'unlock' | 'level_reward' | 'wish_reward' | 'chapter_reward'; state?: GeneratorItemState };
+export type GeneratorBoardState = { ready: boolean; entitlements: string[]; rewards: GeneratorReward[]; grantedSourceIds?: string[] };
 
 export type SaveData = {
   version: number;
@@ -166,6 +178,7 @@ export type SaveData = {
   preferences: GamePreferences;
   player: PlayerState;
   board: BoardCellState[];
+  boardSize?: { rows: number; columns: number };
   legacyBoardEntitlement: boolean;
   retainedOpenCellIndices?: number[];
   rewardInbox: ItemInstance[];
@@ -175,6 +188,7 @@ export type SaveData = {
   generatorCharges?: Record<string, GeneratorChargeState>;
   generatorInventory?: Record<string, number[]>;
   generatorCooldowns?: Record<string, GeneratorCooldownState>;
+  generatorBoard?: GeneratorBoardState;
   claimedCollectionIds?: string[];
   orderRefreshAt?: Array<number | null>;
   dailyTasks?: { day: number; targetItemId: string; progress: Record<string, number>; claimedIds: string[] };
@@ -193,7 +207,7 @@ export type GameConfig = {
   gameTitle: string;
   saveKey: string;
   saveVersion: number;
-  toolbox: { warehouseSlots: number; startingScissors: number };
+  toolbox: { warehouseSlots: number; startingScissors: number; backpackExpansion: { maxSlots: number; baseDiamondCost: number; stepDiamondCost: number } };
   board: { rows: number; columns: number; unlocks: Array<{ level: number; rows: number; columns: number }> };
   rewards: { discoveryCoins: number; chestDropChance: number; chestLoot: Array<{ itemId: string; weight: number }>; chestLevels: Array<{ level: number; count: number; loot?: Array<{ itemId: string; weight: number }> }>; exchangeOffers: Array<{ id: string; diamonds: number; energy: number }>; checkIn: Array<{ coins: number; energy: number; diamonds: number; itemId?: string }>; dailyTasks: Array<{ id: string; kind: 'orders' | 'merges' | 'specific'; title: string; target: number; reward: { coins: number; xp: number; energy: number; diamonds: number } }> };
   energy: {
@@ -247,7 +261,7 @@ export type GeneratorDefinition = {
   purchaseCoins: number;
   recharge?: { capacity: number; intervalMs: number; legacyCapacity?: number };
   streakCooldown?: { uses: number; durationMs: number };
-  upgrade?: { maxLevel: number; rechargeFactor: number; boostEnergyMultiplier: number; levels: Array<{ level: number; outputs: GeneratorOutput[]; boostOutputs?: GeneratorOutput[] }> };
+  upgrade?: { maxLevel: number; rechargeFactor: number; boostEnergyMultiplier: number; mergeRemainingRatio?: number; levels: Array<{ level: number; outputs: GeneratorOutput[]; boostOutputs?: GeneratorOutput[] }> };
   outputs: GeneratorOutput[];
 };
 

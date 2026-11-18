@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "scope": "firstuse",
+  "checks": [
+    "backpack guide waits for entry, accepts real drag, clears on completion and never returns after restart",
+    "scissors guide clears immediately on a successful split without spending another charge",
+    "chest guide dismisses across restart without opening the chest; real tap still opens random supplies",
+    "optional guides expire after six seconds and routine redraws do not restart their timer",
+    "Lv2 mixed coffee and orange order keeps both requirements, delivers and persists without replacement UI"
+  ],
+  "exceptions": [],
+  "testedBuildDigest": "4f9ccc8aa4d57ed4370863c67b90b4f35c05aeda3053a54487514c980abf0af5",
+  "version": "1.3.0",
+  "output": "E:\\A-game\\temp\\cocos-ui-qa-2026-11-17T14-48-50-451Z-dXMfbw"
+}

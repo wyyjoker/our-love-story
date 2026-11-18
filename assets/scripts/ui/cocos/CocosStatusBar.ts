@@ -1,7 +1,7 @@
 import { Button, Graphics, Label, Node, Tween, tween, Vec3 } from 'cc';
 import type { StatusVm } from '../../presentation/GameViewMapper';
 import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect } from './CocosTheme';
-import { applyArt } from './CocosArt';
+import { applyArt, generatorArt, itemArt } from './CocosArt';
 import { RewardArrivalLedger, type RewardAmounts, type RewardKind } from './RewardUiMath';
 
 type ResourceKind = 'energy' | 'coins' | 'diamonds' | 'hearts';
@@ -31,121 +31,78 @@ export class CocosStatusBar {
   private checkInLabel: Label | null = null;
   private checkInDot: Node | null = null;
   private sectionLabel!: Label;
+  private shopRewardBadge!: Node;
+  private shopRewardCount!: Label;
   private readonly xpWidth = 146;
 
-  constructor(parent: Node, width: number, height: number, onResourceTip?: (kind: ResourceKind) => void, demoPreview = false, onSettings?: () => void, onCheckIn?: () => void) {
+  constructor(parent: Node, width: number, height: number, onResourceTip?: (kind: ResourceKind) => void, demoPreview = false, onSettings?: () => void, onCheckIn?: () => void, onShop?: () => void) {
     this.node = createUiNode('StatusBarView');
     parent.addChild(this.node);
     ensureTransform(this.node, width, height);
-    this.build(width, onResourceTip, demoPreview, onSettings, onCheckIn);
+    this.build(width, height, onResourceTip, demoPreview, onSettings, onCheckIn, onShop);
   }
 
-  private build(width: number, onResourceTip?: (kind: ResourceKind) => void, demoPreview = false, onSettings?: () => void, onCheckIn?: () => void): void {
-    const leftX = -width / 2 + 100;
-    const rightX = width / 2 - 116;
-    paintRoundRect(this.node.addComponent(Graphics), width, 124, 24, hexColor('#FFF8F0', 241), hexColor('#EADBD0'), 1);
-    const levelCard = createUiNode('LevelCard');
-    this.node.addChild(levelCard);
-    ensureTransform(levelCard, 188, 116);
-    levelCard.setPosition(leftX, 0, 0);
-    paintRoundRect(levelCard.addComponent(Graphics), 188, 116, 25, hexColor('#FFFAF3', 245), hexColor('#F2DCD3'), 2);
-    const home = createUiNode('HomeBrandIcon');
-    levelCard.addChild(home);
-    home.setPosition(-66, 29, 0);
-    applyArt(home, { sheet: 'game_icon', preserveAspect: true }, 50, 50);
-    this.levelLabel = text(levelCard, 'Lv.1', 5, 29, 29, 100, hexColor('#60423D'), true);
-    const bar = createUiNode('XpBar');
-    levelCard.addChild(bar);
-    ensureTransform(bar, this.xpWidth, 14);
-    bar.setPosition(0, -5, 0);
-    paintRoundRect(bar.addComponent(Graphics), this.xpWidth, 14, 7, hexColor('#E8DBD6'));
-    const fill = createUiNode('XpFill');
-    bar.addChild(fill);
-    ensureTransform(fill, this.xpWidth, 14);
-    this.xpBar = fill.addComponent(Graphics);
-    this.xpLabel = text(levelCard, '0/50', 0, -23, 16, 130, hexColor('#8E6D68'));
-    const hearts = createUiNode('LevelHearts');
-    levelCard.addChild(hearts);
-    ensureTransform(hearts, 160, 28);
-    hearts.setPosition(0, -42, 0);
-    text(hearts, '♥', -39, 0, 23, 28, hexColor('#E77789'), true);
-    this.heartsLabel = text(hearts, '0', 22, 0, 21, 92, hexColor('#A65B69'), true);
-    this.heartsLabel.node.name = 'HeartsValue';
-    hearts.addComponent(Button);
-    hearts.on(Button.EventType.CLICK, () => onResourceTip?.('hearts'));
 
-    const title = createUiNode('Title');
-    this.node.addChild(title);
-    ensureTransform(title, 270, 116); title.setPosition(-20, 0, 0);
-    this.sectionLabel = text(title, '合成小屋', 0, 27, 29, 254, hexColor('#68423A'), true);
-    if (onCheckIn) {
-      const daily = createUiNode('DailyCheckInButton'); title.addChild(daily);
-      ensureTransform(daily, 176, 48); daily.setPosition(-28, -29, 0);
-      paintRoundRect(daily.addComponent(Graphics), 176, 48, 22, hexColor('#FFF2DC'), hexColor('#E8CDA4'), 1);
-      const calendar = createUiNode('CheckInCalendar'); daily.addChild(calendar); calendar.setPosition(-62, 0, 0);
-      const ink = calendar.addComponent(Graphics); ink.lineWidth = 2.5; ink.strokeColor = hexColor('#B58058');
-      ink.roundRect(-12, -12, 24, 24, 4); ink.moveTo(-12, 5); ink.lineTo(12, 5);
-      ink.moveTo(-6, 10); ink.lineTo(-6, 16); ink.moveTo(6, 10); ink.lineTo(6, 16);
-      ink.moveTo(-5, -3); ink.lineTo(-1, -7); ink.lineTo(7, 1); ink.stroke();
-      this.checkInLabel = text(daily, '每日签到', 10, 0, 22, 126, hexColor('#9E704E'), true);
-      this.checkInDot = createUiNode('CheckInAvailable'); daily.addChild(this.checkInDot); this.checkInDot.setPosition(75, 18, 0);
-      const dot = this.checkInDot.addComponent(Graphics); dot.fillColor = hexColor('#E17A8E'); dot.circle(0, 0, 7); dot.fill();
-      daily.addComponent(Button); daily.on(Button.EventType.CLICK, onCheckIn);
-    } else text(title, demoPreview ? '演示存档 · 不保存进度' : '我们的浪漫小屋  ♡', -8, -22, 18, 260, hexColor('#B37678'));
-    if (onSettings) {
-      const settings = createUiNode('SettingsButton');
-      title.addChild(settings);
-      ensureTransform(settings, 52, 52);
-      settings.setPosition(105, -29, 0);
-      paintRoundRect(settings.addComponent(Graphics), 44, 44, 20, hexColor('#FFF9F3'), hexColor('#EADBD4'), 1);
-      text(settings, '⚙', 0, 0, 26, 40, hexColor('#805A50'), true);
-      settings.addComponent(Button);
-      settings.on(Button.EventType.CLICK, onSettings);
-    }
+  private build(width: number, height: number, onResourceTip?: (kind: ResourceKind) => void, demoPreview = false, onSettings?: () => void, onCheckIn?: () => void, onShop?: () => void): void {
+    const compact=height<120, cardHeight=height-4;
+    const levelCard=createUiNode('LevelCard');this.node.addChild(levelCard);ensureTransform(levelCard,158,cardHeight);levelCard.setPosition(-width/2+80,0,0);
+    paintRoundRect(levelCard.addComponent(Graphics),158,cardHeight,24,hexColor('#FFF8E9',240),hexColor('#DDC4A5'),1);
+    const avatar=createUiNode('PlayerAvatar');levelCard.addChild(avatar);avatar.setPosition(-43,compact?18:28,0);
+    const size=compact?42:64;ensureTransform(avatar,size,size);
+    const ring=avatar.addComponent(Graphics);ring.fillColor=hexColor('#F4DFC4');ring.strokeColor=hexColor('#CDA577');ring.lineWidth=2;ring.circle(0,0,size/2);ring.fill();ring.stroke();
+    const face=createUiNode('PlayerAvatarArt');avatar.addChild(face);
+    applyArt(face,{sheet:'customer_busts_sheet',region:{x:70,y:10,width:230,height:216},preserveAspect:true},size-4,size-4);
+    this.levelLabel=text(levelCard,'Lv.1',32,compact?18:32,compact?24:28,77,hexColor('#664A3B'),true);
+    const bar=createUiNode('XpBar');levelCard.addChild(bar);ensureTransform(bar,this.xpWidth,16);bar.setPosition(0,compact?-12:-14,0);
+    paintRoundRect(bar.addComponent(Graphics),this.xpWidth,16,8,hexColor('#E7D8BE'));
+    const fill=createUiNode('XpFill');bar.addChild(fill);ensureTransform(fill,this.xpWidth,16);this.xpBar=fill.addComponent(Graphics);
+    this.xpLabel=text(bar,'0/50',0,0,15,this.xpWidth-6,hexColor('#654A37'),true);
+    const hearts=createUiNode('LevelHearts');levelCard.addChild(hearts);ensureTransform(hearts,142,28);hearts.setPosition(0,compact?-32:-45,0);
+    text(hearts,'♥',-43,0,22,28,hexColor('#DA8392'),true);this.heartsLabel=text(hearts,'0',18,0,21,98,hexColor('#A05C69'),true);this.heartsLabel.node.name='HeartsValue';
+    hearts.addComponent(Button);hearts.on(Button.EventType.CLICK,()=>onResourceTip?.('hearts'));
 
-    const right = createUiNode('Resources');
-    this.node.addChild(right);
-    ensureTransform(right, 220, 116);
-    right.setPosition(rightX, 0, 0);
-    const rows: Array<{ y: number; icon: string; kind: Exclude<ResourceKind, 'hearts'>; color: string }> = [
-      { y: 39, icon: '⚡', kind: 'energy', color: '#EFB348' },
-      { y: 0, icon: '★', kind: 'coins', color: '#E8AD46' },
-      { y: -39, icon: '◆', kind: 'diamonds', color: '#9A84CB' },
-    ];
-    for (const row of rows) {
-      const pill = createUiNode(`${row.kind}Pill`);
-      right.addChild(pill);
-      ensureTransform(pill, 220, 36);
-      pill.setPosition(0, row.y, 0);
-      paintRoundRect(pill.addComponent(Graphics), 220, 36, 18, hexColor('#FFF9F3', 240), hexColor('#EADBD4'), 1);
-      if (row.kind === 'diamonds') {
-        const gem = createUiNode('DiamondIcon'); pill.addChild(gem);
-        gem.setPosition(-92, 0, 0);
-        ensureTransform(gem, 34, 30);
-        const facets = gem.addComponent(Graphics); facets.lineWidth = 1.5;
-        facets.fillColor = hexColor('#C9B3EB'); facets.strokeColor = hexColor('#9275BD');
-        facets.moveTo(-15, 5); facets.lineTo(-8, 13); facets.lineTo(8, 13); facets.lineTo(15, 5); facets.lineTo(0, -14); facets.close(); facets.fill(); facets.stroke();
-        facets.moveTo(-15, 5); facets.lineTo(15, 5); facets.moveTo(-5, 5); facets.lineTo(0, -14); facets.lineTo(5, 5);
-        facets.moveTo(-8, 13); facets.lineTo(-5, 5); facets.lineTo(5, 5); facets.lineTo(8, 13); facets.stroke();
-      } else text(pill, row.icon, -92, 0, 27, 32, hexColor(row.color), true);
-      const plus = createUiNode(`${row.kind}Plus`);
-      pill.addChild(plus);
-      ensureTransform(plus, 44, 38);
-      plus.setPosition(94, 0, 0);
-      paintRoundRect(plus.addComponent(Graphics), 36, 36, 18, hexColor('#7A9D74'));
-      text(plus, '+', 0, 0, 29, 32, hexColor('#FFFFFF'), true);
-      plus.addComponent(Button);
-      plus.on(Button.EventType.CLICK, () => onResourceTip?.(row.kind));
-    }
-    this.energyLabel = text(right, '100/100', -1, 39, 23, 148, hexColor('#60423D'), true);
-    this.coinsLabel = text(right, '0', -1, 0, 23, 148, hexColor('#60423D'), true);
-    this.coinsLabel.node.name = 'CoinsValue';
-    this.levelLabel.node.name = 'LevelValue'; this.xpLabel.node.name = 'XpValue';
-    this.diamondsLabel = text(right, '0', -1, -39, 23, 148, hexColor('#60423D'), true);
-    this.diamondsLabel.node.name = 'DiamondsValue';
-    this.energyCdLabel = text(right, '', -1, 25, 11, 90, hexColor('#977A71'));
-    ensureTransform(this.energyCdLabel.node, 90, 12);
-    this.energyLabel.node.setPosition(-1, 44, 0); ensureTransform(this.energyLabel.node, 148, 24);
+    const resourceLeft=-width/2+174, resourceWidth=width-186, gap=8, pillWidth=(resourceWidth-2*gap)/3;
+    const rowY=height/2-(compact?23:30), pillHeight=compact?42:52;
+    const right=createUiNode('Resources');this.node.addChild(right);ensureTransform(right,resourceWidth,pillHeight);
+    const values:Partial<Record<ResourceKind,Label>>={};
+    const kinds=['energy','coins','diamonds'] as const;
+    kinds.forEach((kind,index)=>{
+      const pill=createUiNode(kind+'Pill');right.addChild(pill);ensureTransform(pill,pillWidth,pillHeight);
+      pill.setPosition(resourceLeft+pillWidth/2+index*(pillWidth+gap),rowY,0);
+      paintRoundRect(pill.addComponent(Graphics),pillWidth,pillHeight,pillHeight/2,hexColor('#FFF6E4',248),hexColor('#CCB58A'),1.5);
+      const shine=createUiNode('ResourceHighlight');pill.addChild(shine);shine.setPosition(0,pillHeight/2-6,0);
+      paintRoundRect(shine.addComponent(Graphics),pillWidth-26,3,1.5,hexColor('#FFFFFF',155));
+      const icon=createUiNode(kind+'Icon');pill.addChild(icon);icon.setPosition(-pillWidth/2+21,0,0);
+      if(kind==='energy') text(icon,'⚡',0,0,32,36,hexColor('#E2AA39'),true);
+      else applyArt(icon,{...itemArt(kind==='coins'?'coin_02':'diamond_02')!,preserveAspect:true},35,35);
+      const number=text(pill,'0',-1,kind==='energy'?7:0,compact?24:26,pillWidth-66,hexColor('#684A36'),true);
+      number.node.name=kind==='coins'?'CoinsValue':kind==='diamonds'?'DiamondsValue':'EnergyValue';values[kind]=number;
+      const plus=createUiNode(kind+'Plus');pill.addChild(plus);ensureTransform(plus,46,pillHeight);
+      plus.setPosition(pillWidth/2-19,0,0);const ink=plus.addComponent(Graphics);
+      ink.fillColor=hexColor('#8CA477');ink.strokeColor=hexColor('#F9F6DF');ink.lineWidth=1.5;ink.circle(0,0,compact?15:18);ink.fill();ink.stroke();
+      text(plus,'+',0,0,compact?25:29,32,hexColor('#FFFFFF'),true);
+      plus.addComponent(Button);plus.on(Button.EventType.CLICK,()=>onResourceTip?.(kind));
+      if(kind==='energy'){this.energyCdLabel=text(pill,'',-2,compact?-13:-14,11,pillWidth-60,hexColor('#9A8062'));this.energyCdLabel.node.name='EnergyCountdown';}
+    });
+    this.energyLabel=values.energy!;this.coinsLabel=values.coins!;this.diamondsLabel=values.diamonds!;
+    this.levelLabel.node.name='LevelValue';this.xpLabel.node.name='XpValue';
+    const actionY=-height/2+(compact?23:31);
+    this.sectionLabel=text(this.node,demoPreview?'演示小屋':'合成小屋',resourceLeft+52,actionY,compact?19:23,104,hexColor('#7B5542'),true);
+    const daily=createUiNode('DailyCheckInButton');this.node.addChild(daily);ensureTransform(daily,140,compact?42:54);daily.setPosition(resourceLeft+186,actionY,0);
+    paintRoundRect(daily.addComponent(Graphics),140,compact?40:50,20,hexColor('#FFF0D8'),hexColor('#E2C69D'),1);
+    this.checkInLabel=text(daily,'每日签到',0,0,compact?19:22,128,hexColor('#AA7853'),true);
+    this.checkInDot=createUiNode('CheckInAvailable');daily.addChild(this.checkInDot);this.checkInDot.setPosition(60,17,0);const dot=this.checkInDot.addComponent(Graphics);dot.fillColor=hexColor('#DC8593');dot.circle(0,0,5);dot.fill();
+    daily.addComponent(Button);daily.on(Button.EventType.CLICK,()=>onCheckIn?.());
+    const settings=createUiNode('SettingsButton');this.node.addChild(settings);ensureTransform(settings,52,compact?44:56);settings.setPosition(width/2-204,actionY,0);
+    paintRoundRect(settings.addComponent(Graphics),44,44,22,hexColor('#FFF6E7'),hexColor('#D4B895'),1);text(settings,'⚙',0,0,28,40,hexColor('#977052'),true);
+    settings.addComponent(Button);settings.on(Button.EventType.CLICK,()=>onSettings?.());
+    const shop=createUiNode('ShopButton');this.node.addChild(shop);ensureTransform(shop,158,compact?44:58);shop.setPosition(width/2-84,actionY,0);
+    paintRoundRect(shop.addComponent(Graphics),154,compact?42:54,18,hexColor('#F5E4CA'),hexColor('#CCAD83'),1.5);
+    const basket=createUiNode('ShopBasketArt');shop.addChild(basket);basket.setPosition(-46,2,0);const art=generatorArt('flower_basket');if(art)applyArt(basket,art,48,48);
+    text(shop,'商店',8,0,25,82,hexColor('#805238'),true);shop.addComponent(Button);shop.on(Button.EventType.CLICK,()=>onShop?.());
+    this.shopRewardBadge=createUiNode('ShopRewardsBadge');shop.addChild(this.shopRewardBadge);this.shopRewardBadge.setPosition(64,0,0);ensureTransform(this.shopRewardBadge,23,23);
+    const badge=this.shopRewardBadge.addComponent(Graphics);badge.fillColor=hexColor('#D98C99');badge.circle(0,0,11);badge.fill();
+    this.shopRewardCount=text(this.shopRewardBadge,'0',0,0,14,22,hexColor('#FFFFFF'),true);this.shopRewardBadge.active=false;
   }
 
   setSectionTitle(title: string): void {
@@ -156,6 +113,7 @@ export class CocosStatusBar {
     if (this.checkInDot) this.checkInDot.active = available;
     if (this.checkInLabel) this.checkInLabel.string = available ? '每日签到' : '今日已签到';
   }
+  setShopRewardCount(count:number):void{this.shopRewardBadge.active=count>0;this.shopRewardCount.string=count>99?'99+':String(count);}
 
   render(vm: StatusVm): void {
     this.latestVm = vm;
@@ -166,14 +124,14 @@ export class CocosStatusBar {
     };
     this.levelLabel.string = `Lv.${vm.level}`;
     this.xpLabel.string = vm.xpText.replace(/^XP /, '');
-    this.energyLabel.string = vm.energyText;
-    this.energyCdLabel.string = vm.energyCountdownText;
+    this.energyLabel.string = String(vm.energy);
+    this.energyCdLabel.string = `/${vm.maxEnergy}${vm.energyCountdownText?' · '+vm.energyCountdownText:''}`;
     this.coinsLabel.string = vm.coinsText;
     this.heartsLabel.string = vm.heartsText;
     this.diamondsLabel.string = vm.diamondsText;
     const filled = Math.max(2, this.xpWidth * vm.xpRatio);
     this.xpBar.node.setPosition((filled - this.xpWidth) / 2, 0, 0);
-    paintRoundRect(this.xpBar, filled, 14, 7, hexColor('#E88694'));
+    paintRoundRect(this.xpBar, filled, 16, 8, hexColor('#A3B07C'));
   }
 
   pulseEnergy(): void {

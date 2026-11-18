@@ -33,6 +33,7 @@ export type SaveServiceOptions = {
   legacyStarterFurnitureId?: string;
   energyCaps?: readonly number[];
   collection?: GameConfig['collection'];
+  backpack?: { initialSlots: number; maxSlots: number };
 };
 
 export class SaveService {
@@ -149,7 +150,7 @@ export class SaveService {
 
     let repaired = parsed.version !== this.options.version;
     const defaults = this.options.createDefault();
-    if (Object.keys(defaults).some((key) => !(key in parsed))) repaired = true;
+    if (Object.keys(defaults).some((key) => !(key in parsed) && !['generatorInventory', 'generatorCharges', 'generatorCooldowns'].includes(key))) repaired = true;
     const version = typeof parsed.version === 'number' ? parsed.version : 0;
 
     if (version < 1) {
@@ -167,13 +168,18 @@ export class SaveService {
     const collectionBonus = claimedCollectionIds.length * (this.options.collection?.energyPerChain ?? 0);
     const player = this.mergePlayer(parsed.player, defaults.player, version, collectionBonus);
     const overflow: import('../core/types').ItemInstance[] = [];
-    const boardCells = this.mergeBoard(parsed.board, defaults.board, version, overflow);
+    const boardCells = this.mergeBoard(parsed.board, defaults.board, defaults.boardSize?.columns ?? 6, parsed.boardSize, overflow);
     if (!boardCells) return null;
-    const retainedOpenCellIndices = new Set<number>(Array.isArray(parsed.retainedOpenCellIndices)
-      ? parsed.retainedOpenCellIndices.filter((index): index is number => Number.isInteger(index) && index >= 0 && index < defaults.board.length)
-      : []);
+    const sourceColumns = this.sourceBoardColumns(parsed.board, parsed.boardSize) || defaults.boardSize?.columns || 6;
+    const targetColumns = defaults.boardSize?.columns ?? 6;
+    const retainedOpenCellIndices = new Set<number>();
+    for (const index of Array.isArray(parsed.retainedOpenCellIndices) ? parsed.retainedOpenCellIndices : []) {
+      if (!Number.isInteger(index) || index < 0 || !Array.isArray(parsed.board) || index >= parsed.board.length) continue;
+      const row = Math.floor(index / sourceColumns), column = index % sourceColumns;
+      if (column < targetColumns && row < defaults.board.length / targetColumns) retainedOpenCellIndices.add(row * targetColumns + column);
+    }
     // Old saves keep access to occupied cells, but empty legacy cells now follow level unlocks.
-    if (version < 7) for (const cell of boardCells) if (cell.item) retainedOpenCellIndices.add(cell.index);
+    if (version < 9) for (const cell of boardCells) if (cell.item) retainedOpenCellIndices.add(cell.index);
 
     const activeOrders = Array.isArray(parsed.activeOrders)
       ? parsed.activeOrders.filter(isActiveOrder)
@@ -234,6 +240,7 @@ export class SaveService {
         typeof parsed.savedAt === 'number' ? parsed.savedAt : this.options.clock.now(),
       player,
       board: boardCells,
+      boardSize: defaults.boardSize ? { ...defaults.boardSize } : undefined,
       legacyBoardEntitlement: version < 6 || parsed.legacyBoardEntitlement === true,
       retainedOpenCellIndices: Array.from(retainedOpenCellIndices).sort((a, b) => a - b),
       rewardInbox: [...overflow, ...inbox],
@@ -242,6 +249,7 @@ export class SaveService {
       generatorCharges: this.mergeGeneratorCharges(parsed.generatorCharges),
       generatorInventory: this.mergeGeneratorInventory(parsed.generatorInventory),
       generatorCooldowns: this.mergeGeneratorCooldowns(parsed.generatorCooldowns),
+      generatorBoard: this.mergeGeneratorBoard(parsed.generatorBoard),
       claimedCollectionIds,
       orderRefreshAt: Array.isArray(parsed.orderRefreshAt) ? parsed.orderRefreshAt.map((v) => typeof v === 'number' && Number.isFinite(v) ? v : null) : [],
       dailyTasks: this.mergeDailyTasks(parsed.dailyTasks),
@@ -256,6 +264,13 @@ export class SaveService {
       preferences: this.mergePreferences(parsed.preferences, defaults.preferences),
       play: this.mergePlay(parsed.play, defaults.play, boardCells, version),
     };
+
+    const maxSlots = this.options.backpack?.maxSlots ?? 36;
+    if (data.play.warehouse.length > maxSlots) {
+      data.rewardInbox.push(...data.play.warehouse.splice(maxSlots));
+      repaired = true;
+    }
+    data.play.warehouseCapacity = Math.max(data.play.warehouse.length, data.play.warehouseCapacity ?? this.options.backpack?.initialSlots ?? 6);
 
     return { data, repaired };
   }
@@ -301,12 +316,20 @@ export class SaveService {
     };
   }
 
-  private mergeBoard(raw: unknown, fallback: BoardCellState[], version: number, overflow: import('../core/types').ItemInstance[]): BoardCellState[] | null {
+  private sourceBoardColumns(raw: unknown, size: SaveData['boardSize']): number {
+    if (!Array.isArray(raw)) return 0;
+    if (size && typeof size === 'object' && Number.isSafeInteger(size.rows) && Number.isSafeInteger(size.columns)
+      && size.rows > 0 && size.columns > 0 && size.rows * size.columns === raw.length) return size.columns;
+    if (raw.length === 81) return 9;
+    if (raw.length === 63) return 7;
+    if (raw.length === 48 || raw.length === 42) return 6;
+    return 0;
+  }
+
+  private mergeBoard(raw: unknown, fallback: BoardCellState[], columns: number, size: SaveData['boardSize'], overflow: import('../core/types').ItemInstance[]): BoardCellState[] | null {
     if (!Array.isArray(raw)) return fallback.map((c) => ({ ...c, item: c.item ? { ...c.item } : undefined }));
-    const oldWidth = version < 6 && raw.length === 81 ? 9
-      : version < 6 && raw.length === 63 ? 7
-        : version < 7 && raw.length === 48 ? 6 : 0;
-    if (raw.length !== fallback.length && !oldWidth) return null;
+    const oldWidth = this.sourceBoardColumns(raw, size) || (raw.length === fallback.length ? columns : 0);
+    if (!oldWidth) return null;
     const cells: BoardCellState[] = fallback.map((c) => ({ index: c.index }));
     for (let i = 0; i < raw.length; i += 1) {
       const cell = raw[i] as Partial<BoardCellState> | null;
@@ -314,9 +337,8 @@ export class SaveService {
       if (!cell.item) continue;
       if (typeof cell.item.uid !== 'string' || typeof cell.item.definitionId !== 'string') return null;
       const item = { ...cell.item, uid: cell.item.uid, definitionId: cell.item.definitionId };
-      const row = oldWidth ? Math.floor(i / oldWidth) : Math.floor(i / 6);
-      const column = oldWidth ? i % oldWidth : i % 6;
-      if (row < fallback.length / 6 && column < 6) cells[row * 6 + column].item = item;
+      const row = Math.floor(i / oldWidth), column = i % oldWidth;
+      if (row < fallback.length / columns && column < columns) cells[row * columns + column].item = item;
       else overflow.push(item);
     }
     return cells;
@@ -340,6 +362,19 @@ export class SaveService {
       if (Number.isSafeInteger(state.streak) && (state.streak ?? -1) >= 0 && (state.cooldownStartedAt === null || (typeof state.cooldownStartedAt === 'number' && Number.isFinite(state.cooldownStartedAt)))) result[id] = { streak: state.streak!, cooldownStartedAt: state.cooldownStartedAt! };
     }
     return result;
+  }
+
+  private mergeGeneratorBoard(raw: SaveData['generatorBoard']): SaveData['generatorBoard'] {
+    if (!raw || typeof raw !== 'object' || raw.ready !== true) return undefined;
+    const validId = (value: unknown): value is string => typeof value === 'string' && /^[a-z][a-z0-9_]*$/.test(value);
+    const seen = new Set<string>();
+    const rewards = (Array.isArray(raw.rewards) ? raw.rewards : []).filter(r => r && typeof r === 'object' && validId(r.id) && validId(r.generatorId)
+      && Number.isSafeInteger(r.level) && r.level >= 1 && r.level <= 8 && Number.isSafeInteger(r.count) && r.count > 0
+      && ['legacy', 'unlock', 'level_reward', 'wish_reward', 'chapter_reward'].includes(r.source) && !seen.has(r.id) && !!seen.add(r.id));
+    return { ready: true, entitlements: Array.isArray(raw.entitlements) ? Array.from(new Set(raw.entitlements.filter(validId))) : [],
+      grantedSourceIds:Array.isArray(raw.grantedSourceIds)?Array.from(new Set(raw.grantedSourceIds.filter(validId))):[],
+      rewards: rewards.map(r => ({ id: r.id, generatorId: r.generatorId, level: r.level, count: r.count, source: r.source,
+        ...(r.state && typeof r.state === 'object' ? { state: { ...r.state } } : {}) })) };
   }
 
   private mergeGeneratorInventory(raw: unknown): Record<string, number[]> {
@@ -461,6 +496,8 @@ export class SaveService {
     };
     return {
       warehouse,
+      warehouseCapacity: Math.max(this.options.backpack?.initialSlots ?? fallback.warehouseCapacity ?? 6,
+        Math.min(this.options.backpack?.maxSlots ?? 36, Number.isSafeInteger(p.warehouseCapacity) ? p.warehouseCapacity! : 0)),
       scissors: Math.max(0, Math.floor(num(p.scissors, fallback.scissors))),
       chapters,
       replays,
@@ -578,6 +615,7 @@ export function createDefaultSaveData(config: GameConfig, savedAt: number): Save
     player,
     play: {
       warehouse: [],
+      warehouseCapacity: config.toolbox.warehouseSlots,
       scissors: config.toolbox.startingScissors,
       chapters: {},
       replays: {},
@@ -585,6 +623,7 @@ export function createDefaultSaveData(config: GameConfig, savedAt: number): Save
       smallDate: { currentId: '', rotation: 0, completed: 0 },
     },
     board,
+    boardSize: { rows, columns },
     legacyBoardEntitlement: false,
     retainedOpenCellIndices: [],
     rewardInbox: [],

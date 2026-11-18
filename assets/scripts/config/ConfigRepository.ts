@@ -10,6 +10,7 @@ import type {
   LevelRewardConfig,
 } from '../core/types';
 import { createItemCatalog, type ItemCatalog } from '../core/item/catalog';
+import { generatorItemDefinitions } from '../core/generator/generatorItems';
 
 import gameJson from '../../resources/config/game.json';
 import itemsJson from '../../resources/config/items.json';
@@ -97,7 +98,7 @@ function validPuzzleDefinition(value: unknown): value is PuzzleDefinition {
 
 export function loadConfigBundle(): ConfigBundle {
   const game = gameJson as GameConfig;
-  const items = itemsJson as ItemDefinition[];
+  const items = [...itemsJson as ItemDefinition[], ...generatorItemDefinitions(generatorsJson as GeneratorDefinition[])];
   const generators = generatorsJson as GeneratorDefinition[];
   const orders = ordersJson as OrderTemplate[];
   const progression = progressionJson as ProgressionConfig;
@@ -193,6 +194,7 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
           return item?.chainId === gen.chainId && item.level >= minLevel && item.level <= Math.min(12, minLevel + 2) && Number.isFinite(output.weight) && output.weight > 0;
         });
       if (!Number.isSafeInteger(upgrade.maxLevel) || upgrade.maxLevel < 2 || upgrade.maxLevel > 8 || !Number.isFinite(upgrade.rechargeFactor) || upgrade.rechargeFactor <= 0 || upgrade.rechargeFactor > 1
+        || (upgrade.mergeRemainingRatio!==undefined&&(!Number.isFinite(upgrade.mergeRemainingRatio)||upgrade.mergeRemainingRatio<=0||upgrade.mergeRemainingRatio>.5))
         || !Number.isSafeInteger(upgrade.boostEnergyMultiplier) || upgrade.boostEnergyMultiplier < 2 || !Array.isArray(upgrade.levels)
         || upgrade.levels.length !== upgrade.maxLevel - 1 || upgrade.levels.some((entry, index) => entry.level !== index + 2 || !validOutputs(entry.outputs, entry.level)
           || (gen.energyCost > 0 && (!entry.boostOutputs || !validOutputs(entry.boostOutputs, entry.level)))
@@ -318,6 +320,7 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
   }
   if (game.energy.maxByLevel && (game.energy.maxByLevel.length !== progression.levels.length || game.energy.maxByLevel.some((n, i, a) => !Number.isSafeInteger(n) || n < 1 || n > 1000 || (i > 0 && n < a[i - 1])))) issues.push({ level: 'error', message: 'Energy capacity curve invalid' });
   const dynamicOrders = game.orders.dynamic;
+  if (dynamicOrders?.pacedSlots !== undefined && typeof dynamicOrders.pacedSlots !== 'boolean') issues.push({ level: 'error', message: 'Order pacing flag must be boolean' });
   if (dynamicOrders && ([dynamicOrders.twoItemChance, dynamicOrders.rareChance, dynamicOrders.urgentChance].some((n) => !Number.isFinite(n) || n < 0 || n > 1)
     || !Number.isSafeInteger(dynamicOrders.urgentDurationMs) || dynamicOrders.urgentDurationMs <= 0
     || !Number.isSafeInteger(dynamicOrders.rewardMultiplierMaxLevel) || dynamicOrders.rewardMultiplierMaxLevel < 1
@@ -371,8 +374,11 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
       issues.push({ level: 'error', message: `Furniture ${item.id} placement invalid` });
     }
   }
+  const validGeneratorGift=(gift:import('../core/types').GeneratorGift|undefined):boolean=>gift===undefined||!!gift
+    &&generators.some(g=>g.id===gift.generatorId&&Number.isSafeInteger(gift.level)&&gift.level>=1&&gift.level<=(g.upgrade?.maxLevel??1))
+    &&Number.isSafeInteger(gift.count)&&gift.count>=1&&gift.count<=8;
   for (const wish of wishes) {
-    if (wish.target <= 0 || wish.rewardCoins < 0 || wish.rewardHearts < 0) {
+    if (wish.target <= 0 || wish.rewardCoins < 0 || wish.rewardHearts < 0 || !validGeneratorGift(wish.generatorReward)) {
       issues.push({ level: 'error', message: `Wish ${wish.id} invalid` });
     }
   }
@@ -393,6 +399,12 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
 
   if (!Number.isInteger(game.toolbox?.warehouseSlots) || game.toolbox.warehouseSlots < 1 || game.toolbox.warehouseSlots > 6
     || !Number.isInteger(game.toolbox.startingScissors) || game.toolbox.startingScissors < 0) issues.push({ level: 'error', message: 'Toolbox config invalid' });
+  const backpack = game.toolbox?.backpackExpansion;
+  if (!backpack || !Number.isSafeInteger(backpack.maxSlots) || backpack.maxSlots !== 36
+    || backpack.maxSlots < game.toolbox.warehouseSlots || !Number.isSafeInteger(backpack.baseDiamondCost) || backpack.baseDiamondCost < 1
+    || !Number.isSafeInteger(backpack.stepDiamondCost) || backpack.stepDiamondCost < 1) {
+    issues.push({ level: 'error', message: 'Backpack expansion config invalid' });
+  }
   const chapterIds = new Set<string>();
   const chapterMemoryIds = new Set<string>();
   const souvenirKeys = new Set<string>();
@@ -408,7 +420,8 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
       && c.steps.length === 2 && c.hints.length === 3
       && c.hints.every((hint) => typeof hint === 'string' && hint.trim().length > 0)
       && Number.isInteger(c.unlockLevel) && c.unlockLevel >= 1 && c.unlockLevel <= 18
-      && Object.values(c.reward).every((n) => Number.isInteger(n) && n >= 0) && catalog.has(c.souvenir.artItemId)
+      && [c.reward.coins,c.reward.hearts,c.reward.energy,c.reward.scissors].every((n) => Number.isInteger(n) && n >= 0)
+      && validGeneratorGift(c.reward.generator) && catalog.has(c.souvenir.artItemId)
       && ['living', 'bedroom', 'garden'].includes(c.souvenir.room)
       && typeof c.souvenir.title === 'string' && c.souvenir.title.trim().length > 0
       && Number.isFinite(c.souvenir.x) && Number.isFinite(c.souvenir.y) && !souvenirKeys.has(souvenirKey)

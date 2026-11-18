@@ -57,12 +57,12 @@ describe('generator upgrades', () => {
   it('shortens orange recovery without granting partial elapsed time twice, and persists cooldown', () => {
     const f=fixture(); const g=f.open(); g.debugAddXp(50); g.debugClearBoard();
     const treeConfig=g.generators.get('orange_tree')!, interval=treeConfig.recharge!.intervalMs, capacity=treeConfig.recharge!.capacity;
-    expect(g.spawnFromGenerator('orange_tree').ok).toBe(true); f.clock.advance(300000);
+    expect(g.spawnFromGenerator('orange_tree').ok).toBe(true); f.clock.advance(interval / 2);
     g.generators.grantLevelReward(2,['orange_tree']); expect(g.mergeGenerators('orange_tree',1).ok).toBe(true);
     const upgradedInterval=Math.round(interval*treeConfig.upgrade!.rechargeFactor);
-    expect(g.getGeneratorStatus('orange_tree')).toMatchObject({level:2,charges:capacity-1,cooldownMs:upgradedInterval,nextRecoveryMs:upgradedInterval/2});
-    expect(f.open().getGeneratorStatus('orange_tree')).toMatchObject({level:2,charges:capacity-1,nextRecoveryMs:upgradedInterval/2});
-    f.clock.advance(upgradedInterval/2); expect(g.getGeneratorStatus('orange_tree')).toMatchObject({charges:capacity,nextRecoveryMs:null});
+    expect(g.getGeneratorStatus('orange_tree')).toMatchObject({level:2,charges:capacity-1,cooldownMs:upgradedInterval,nextRecoveryMs:upgradedInterval});
+    expect(f.open().getGeneratorStatus('orange_tree')).toMatchObject({level:2,charges:capacity-1,nextRecoveryMs:upgradedInterval});
+    f.clock.advance(upgradedInterval); expect(g.getGeneratorStatus('orange_tree')).toMatchObject({charges:capacity,nextRecoveryMs:null});
   });
   it('initializes old saves at one per unlocked generator without inventing past reward gifts', () => {
     const f=fixture(); const cfg=loadConfigBundle().game; const old=createDefaultSaveData(cfg,f.clock.now());
@@ -103,7 +103,7 @@ describe('generator upgrades', () => {
     expect(g.getGeneratorPurchaseQuote('coffee_machine')).toEqual({ok:true,generatorId:'coffee_machine',cost:100});
     expect(g.purchaseGenerator('orange_tree')).toEqual({ok:false,reason:'LOCKED'});
     expect(g.purchaseGenerator('missing')).toEqual({ok:false,reason:'NOT_FOUND'});
-    g.player.coins = 12700;
+    g.debugAddXp(7650); g.debugClearBoard(); g.player.coins = 12700;
     for (let n = 0; n < 127; n++) {
       expect(g.purchaseGenerator('coffee_machine').ok).toBe(true);
       for (let level = 1; level < 8; level++) {
@@ -142,7 +142,7 @@ describe('generator upgrades', () => {
     for (const req of existing.requirements) for (let n = 0; n < req.count; n++) g.debugSpawn(req.itemId);
     g.debugAddXp(50); g.claimLevelReward(2); g.mergeGenerators('coffee_machine', 1);
     expect(g.orders.getOrders().find((order) => order.uid === existing.uid)!.requirements).toEqual(existing.requirements);
-    const save = g.buildSaveData(); save.generatorInventory = { ...save.generatorInventory, coffee_machine: [0,0,0,0,0,0,0,1] };
+    const save = g.buildSaveData(); for (const cell of save.board) if (cell.item && g.bundle.catalog.get(cell.item.definitionId)?.generator?.id === 'coffee_machine') cell.item.definitionId = 'generator_coffee_machine_08';
     f.data.set(loadConfigBundle().game.saveKey, JSON.stringify(save)); const h = f.open();
     const created = h.orders.createNextOrder()!;
     expect(created.requirements.every((req) => {

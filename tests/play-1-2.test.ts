@@ -217,7 +217,7 @@ describe('1.2 free puzzle replays', () => {
     delete (legacy.play as { smallDate?: unknown }).smallDate;
     f.values.set(game.config.saveKey, JSON.stringify(legacy));
     const restored = f.open();
-    expect(restored.config.saveVersion).toBe(8);
+    expect(restored.config.saveVersion).toBe(9);
     expect(restored.play.state.replays).toEqual({});
     expect(restored.play.state.smallDate).toMatchObject({ rotation: 0, completed: 0 });
     expect(restored.play.progress('zhoushan').claimed).toBe(true);
@@ -260,7 +260,7 @@ describe('1.2 repeatable small dates', () => {
     expect(game.player.energy).toBe(energy);
     expect(game.play.state.scissors).toBe(scissors);
     expect(game.life.state.stats.orders).toBe(orders + 1);
-    expect(game.board.getBoard().cells.every((cell) => !cell.item)).toBe(true);
+    expect(game.board.getBoard().cells.every((cell) => !cell.item || !!game.bundle.catalog.get(cell.item.definitionId)?.generator)).toBe(true);
     expect(game.play.state.smallDate).toMatchObject({ rotation: 1, completed: 1 });
     // The token rendered before delivery is now stale even if the level-1 theme repeats.
     expect(game.playAction('small_date', order.token)).toEqual({ ok: false, reason: 'STALE_DATE' });
@@ -282,7 +282,7 @@ describe('1.2 repeatable small dates', () => {
     expect(game.playAction('small_date', first.token)).toEqual({ ok: false, reason: 'STALE_DATE' });
     expect(game.player.coins - coins).toBe(first.template.rewardCoins);
     expect(game.buildSaveData().play.smallDate).toMatchObject({ rotation: 1, completed: 1 });
-    expect(game.board.getBoard().cells.filter((cell) => cell.item)).toHaveLength(first.template.requirements.reduce((n, req) => n + req.count, 0));
+    expect(game.board.getBoard().cells.filter((cell) => cell.item && !game.bundle.catalog.get(cell.item.definitionId)?.generator)).toHaveLength(first.template.requirements.reduce((n, req) => n + req.count, 0));
     // Lv1 now has multiple themes: prepare the newly rendered recipe, not a copy of the first.
     prepareSmallDate(game, second.template.requirements);
     expect(game.playAction('small_date', second.token)).toEqual({ ok: true });
@@ -342,7 +342,7 @@ describe('1.2 repeatable small dates', () => {
     expect(nested).toEqual({ ok: false, reason: 'STALE_DATE' });
     expect(game.player.coins - coins).toBe(order.template.rewardCoins);
     expect(game.play.state.smallDate).toMatchObject({ rotation: 1, completed: 1 });
-    expect(game.board.getBoard().cells.filter((cell) => cell.item))
+    expect(game.board.getBoard().cells.filter((cell) => cell.item && !game.bundle.catalog.get(cell.item.definitionId)?.generator))
       .toHaveLength(order.template.requirements.reduce((n, req) => n + req.count, 0));
   });
 });

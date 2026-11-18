@@ -4,7 +4,7 @@
     "memoryId": "letters",
     "title": "舟山 · 相遇的线索",
     "unlockLevel": 1,
-    "intro": "一起整理回忆册吧。先准备两份旅途心意，再在海边插画里寻找三张线索卡。",
+    "intro": "2023年9月8日，舟山的海风、沙滩和篝火，把我们的故事连在了一起。点击海边画面，找回相遇那天的三张线索卡。",
     "steps": [
       {
         "title": "准备旅途咖啡",
@@ -73,9 +73,27 @@
           "kind": "find",
           "solution": "7314",
           "hotspots": [
-            { "id": "practice_card_a", "label": "练习卡 A", "x": -190, "y": 95, "clue": "练习卡 A：前两位是 73。" },
-            { "id": "practice_card_b", "label": "练习卡 B", "x": 175, "y": 5, "clue": "练习卡 B：后两位是 14。" },
-            { "id": "practice_card_note", "label": "练习说明", "x": -60, "y": -110, "clue": "卡片数字仅用于本次练习，不代表真实日期或回忆事实。" }
+            {
+              "id": "practice_card_a",
+              "label": "练习卡 A",
+              "x": -190,
+              "y": 95,
+              "clue": "练习卡 A：前两位是 73。"
+            },
+            {
+              "id": "practice_card_b",
+              "label": "练习卡 B",
+              "x": 175,
+              "y": 5,
+              "clue": "练习卡 B：后两位是 14。"
+            },
+            {
+              "id": "practice_card_note",
+              "label": "练习说明",
+              "x": -60,
+              "y": -110,
+              "clue": "卡片数字仅用于本次练习，不代表真实日期或回忆事实。"
+            }
           ]
         }
       }
@@ -84,7 +102,12 @@
       "coins": 120,
       "hearts": 50,
       "energy": 20,
-      "scissors": 1
+      "scissors": 1,
+      "generator": {
+        "generatorId": "coffee_machine",
+        "level": 1,
+        "count": 1
+      }
     },
     "souvenir": {
       "title": "初识的心意礼盒",
@@ -99,7 +122,7 @@
     "memoryId": "first_trip",
     "title": "情书 · 把心意排成一句话",
     "unlockLevel": 3,
-    "intro": "把花和咖啡准备好，再从四封代表性的信里，找出这份心意的顺序。",
+    "intro": "相识一百天，心意写成了一百封情书。循着信里的线索，整理那句只想对你说的话。",
     "steps": [
       {
         "title": "为信件挑一朵花",
@@ -171,12 +194,33 @@
         "puzzle": {
           "kind": "sequence",
           "tiles": [
-            { "id": "practice_joy", "label": "小小欢喜", "clue": "我是整句话的收尾，留下轻松的心情。" },
-            { "id": "practice_wish", "label": "愿", "clue": "我是这句话的开头，先说出心愿。" },
-            { "id": "practice_daily", "label": "每天", "clue": "我紧跟着“愿”，说明这份心意会发生在每天。" },
-            { "id": "practice_have", "label": "都有", "clue": "我接在“每天”后面，连接时间和结果。" }
+            {
+              "id": "practice_joy",
+              "label": "小小欢喜",
+              "clue": "我是整句话的收尾，留下轻松的心情。"
+            },
+            {
+              "id": "practice_wish",
+              "label": "愿",
+              "clue": "我是这句话的开头，先说出心愿。"
+            },
+            {
+              "id": "practice_daily",
+              "label": "每天",
+              "clue": "我紧跟着“愿”，说明这份心意会发生在每天。"
+            },
+            {
+              "id": "practice_have",
+              "label": "都有",
+              "clue": "我接在“每天”后面，连接时间和结果。"
+            }
           ],
-          "solution": ["practice_wish", "practice_daily", "practice_have", "practice_joy"]
+          "solution": [
+            "practice_wish",
+            "practice_daily",
+            "practice_have",
+            "practice_joy"
+          ]
         }
       }
     ],
@@ -199,7 +243,7 @@
     "memoryId": "rainy_day",
     "title": "南山塔 · 点亮心意",
     "unlockLevel": 5,
-    "intro": "准备好甜点和花束，再点亮这张为回忆册设计的灯光卡。",
+    "intro": "2024年10月3日，在首尔南山塔许下未来的约定。转动灯光，让那一晚的心意重新亮起。",
     "steps": [
       {
         "title": "准备旅行甜点",
@@ -310,9 +354,66 @@
           "rows": 3,
           "start": 0,
           "end": 8,
-          "ports": [[1, 3], [1, 3], [2, 3], [1, 2], [1, 3], [0, 3], [0, 1], [1, 3], [1, 3]],
-          "initial": [1, 0, 2, 3, 1, 2, 0, 3, 1],
-          "solution": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+          "ports": [
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "initial": [
+            1,
+            0,
+            2,
+            3,
+            1,
+            2,
+            0,
+            3,
+            1
+          ],
+          "solution": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
         }
       }
     ],
@@ -335,7 +436,7 @@
     "memoryId": "night_view",
     "title": "横店 · 一起跨年",
     "unlockLevel": 6,
-    "intro": "2023 年 12 月 30 日，我们去横店跨年。先准备两件旅途心意，再把回忆册这一页的照片排成一段故事。",
+    "intro": "2023年岁末，我们去了横店、秦王宫、游乐园和温泉。在倒计时里，拼回一起跨年的快乐。",
     "steps": [
       {
         "title": "出发前的一杯热咖啡",
@@ -415,12 +516,33 @@
         "puzzle": {
           "kind": "sequence",
           "tiles": [
-            { "id": "practice_joy", "label": "快乐", "clue": "我在句子结尾，表示一起收获的心情。" },
-            { "id": "practice_together", "label": "一起", "clue": "我是这句话的起点，邀请一起行动。" },
-            { "id": "practice_gather", "label": "收集", "clue": "我接在“慢慢”后面，表示要做的动作。" },
-            { "id": "practice_slowly", "label": "慢慢", "clue": "我紧跟“一起”，说明行动的节奏。" }
+            {
+              "id": "practice_joy",
+              "label": "快乐",
+              "clue": "我在句子结尾，表示一起收获的心情。"
+            },
+            {
+              "id": "practice_together",
+              "label": "一起",
+              "clue": "我是这句话的起点，邀请一起行动。"
+            },
+            {
+              "id": "practice_gather",
+              "label": "收集",
+              "clue": "我接在“慢慢”后面，表示要做的动作。"
+            },
+            {
+              "id": "practice_slowly",
+              "label": "慢慢",
+              "clue": "我紧跟“一起”，说明行动的节奏。"
+            }
           ],
-          "solution": ["practice_together", "practice_slowly", "practice_gather", "practice_joy"]
+          "solution": [
+            "practice_together",
+            "practice_slowly",
+            "practice_gather",
+            "practice_joy"
+          ]
         }
       }
     ],
@@ -428,7 +550,12 @@
       "coins": 300,
       "hearts": 150,
       "energy": 30,
-      "scissors": 2
+      "scissors": 2,
+      "generator": {
+        "generatorId": "flower_basket",
+        "level": 1,
+        "count": 1
+      }
     },
     "souvenir": {
       "title": "跨年行程纪念票",
@@ -443,7 +570,7 @@
     "memoryId": "lijiang_wedding",
     "title": "丽江 · 第一套婚纱照",
     "unlockLevel": 8,
-    "intro": "2026 年 5 月 22 日，我们去丽江拍婚纱照。准备好出发的心意，再在画面里找回那天的日期密码。",
+    "intro": "2026年5月22日，我们去丽江拍婚纱照。把湖泊、公路、敞篷车和雪山的线索，排成属于我们的旅途。",
     "steps": [
       {
         "title": "清晨的拿铁",
@@ -520,9 +647,27 @@
           "kind": "find",
           "solution": "2468",
           "hotspots": [
-            { "id": "practice_card_a", "label": "练习卡 A", "x": -180, "y": 80, "clue": "练习卡 A：前两位是 24。" },
-            { "id": "practice_card_b", "label": "练习卡 B", "x": 160, "y": 20, "clue": "练习卡 B：后两位是 68。" },
-            { "id": "practice_card_note", "label": "练习说明", "x": -50, "y": -110, "clue": "这组号码只属于练习，不代表日期或真实回忆。" }
+            {
+              "id": "practice_card_a",
+              "label": "练习卡 A",
+              "x": -180,
+              "y": 80,
+              "clue": "练习卡 A：前两位是 24。"
+            },
+            {
+              "id": "practice_card_b",
+              "label": "练习卡 B",
+              "x": 160,
+              "y": 20,
+              "clue": "练习卡 B：后两位是 68。"
+            },
+            {
+              "id": "practice_card_note",
+              "label": "练习说明",
+              "x": -50,
+              "y": -110,
+              "clue": "这组号码只属于练习，不代表日期或真实回忆。"
+            }
           ]
         }
       }
@@ -531,7 +676,12 @@
       "coins": 360,
       "hearts": 180,
       "energy": 35,
-      "scissors": 2
+      "scissors": 2,
+      "generator": {
+        "generatorId": "dessert_oven",
+        "level": 1,
+        "count": 1
+      }
     },
     "souvenir": {
       "title": "丽江旅拍花束",
@@ -546,7 +696,7 @@
     "memoryId": "anniversary",
     "title": "乐清 · 草坪婚礼",
     "unlockLevel": 10,
-    "intro": "2026 年 10 月 3 日，我们在乐清办草坪婚礼。准备好花门与誓言，再把草坪上的灯串点亮。",
+    "intro": "2026年10月3日，乐清的草坪上，我们办了婚礼。循着花与光的线索，把这一天珍藏进小屋。",
     "steps": [
       {
         "title": "草坪上的花门",
@@ -665,9 +815,66 @@
           "rows": 3,
           "start": 0,
           "end": 8,
-          "ports": [[3, 1], [3, 1], [3, 2], [0, 2], [1, 3], [0, 2], [0, 1], [0, 2], [0, 1]],
-          "initial": [1, 2, 0, 3, 1, 2, 0, 3, 1],
-          "solution": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+          "ports": [
+            [
+              3,
+              1
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "initial": [
+            1,
+            2,
+            0,
+            3,
+            1,
+            2,
+            0,
+            3,
+            1
+          ],
+          "solution": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
         }
       }
     ],
@@ -675,7 +882,12 @@
       "coins": 450,
       "hearts": 220,
       "energy": 40,
-      "scissors": 3
+      "scissors": 3,
+      "generator": {
+        "generatorId": "gift_box",
+        "level": 1,
+        "count": 1
+      }
     },
     "souvenir": {
       "title": "草坪婚礼的誓言卡",

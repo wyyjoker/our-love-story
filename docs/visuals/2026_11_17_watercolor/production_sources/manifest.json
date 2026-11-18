@@ -1,0 +1,57 @@
+{
+  "phase": "production_sprites",
+  "generated": "2026-11-18",
+  "assets": [
+    {
+      "id": "ui_cream_panel",
+      "file": "ui_cream_panel.png",
+      "asset": "ui_cream_panel.png",
+      "width": 512,
+      "height": 768,
+      "palette": true,
+      "source_file": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a0ce29-5da7-7433-8169-05b103df7cf8\\exec-b1949536-2a1c-4d3b-9f11-401f2637c580.png",
+      "prompt": "Production GAME ASSET, not a screenshot. Use the attached original romantic cottage screenshot ONLY as a watercolor/palette reference. Generate a SINGLE EMPTY cream handmade-paper panel sprite for a premium Chinese mobile game. Portrait rectangle about3:4, centered, all four gently rounded corners and entireoutlinevisible, transparent outside. Warm ivory paper, subtle real watercolor paper fibre, very delicate champagne-gold thin inner rule, shallow embossed cream edges and a tiny warm contactshadow close totheedge. Main center is VERY QUIET near-uniform ivory so Chinese UI text can be drawn on top. Symmetrical frame border with constantthicknessabout7%ofpanelwidth, simple straight inneredges suitablefornine-slice resizing. NO title, letters, numbers, icons, flowers, ribbons, buttons, people, screens, furniture, watermark or UI controls. No darkyellow ageing or brownstains. No contents. Standalone scalable blank material panel with tasteful softness, not a fully decorated ornamental frame. Transparent background."
+    },
+    {
+      "id": "ui_oak_tray",
+      "file": "ui_oak_tray.png",
+      "asset": "ui_oak_tray.png",
+      "width": 512,
+      "height": 512,
+      "palette": true,
+      "source_file": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a0ce29-5da7-7433-8169-05b103df7cf8\\exec-ed0a1758-b739-4a36-9d59-83241257dda9.png",
+      "prompt": "Production GAME ASSET, not a screenshot. Use attached original cottage game screenshot as a style reference. Generate ONE EMPTY light oakwood game-board TRAY FRAME, front-facing orthographic, perfectly rectangular with softlyroundedcorners, approximatelysquare. Transparent outside the frame. Pale warm oak, subtle finewoodgrain flowingaroundstraightframe, top-left softlylit edge, small lower-right contactshadow, soft shallow inner recess. Inside largecentralarea is nearly uniform warm ivory paper, EMPTY, with no grid and noobjects. Frame thickness about5%ofwidth onallsides, uniform straight edges suitablefornine-slice scaling to7by9board. Creamandpaleoakpalette, refined watercolor illustration matchingreference. NO text, numbers, flowers, decorations, buttons, labels, people, furniture, objects, watermark or screenshots. No deep darkcarving or goldmetal. Entire frame visible, centered, standalone transparentasset."
+    },
+    {
+      "id": "ui_backpack_frame",
+      "file": "ui_backpack_frame.png",
+      "asset": "ui_backpack_frame.png",
+      "width": 512,
+      "height": 768,
+      "palette": true,
+      "source_file": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a0ce29-5da7-7433-8169-05b103df7cf8\\exec-bab214ed-4f9f-4d93-af40-b44cb25ad64f.png",
+      "prompt": "Production sprite ASSET for the original cottage game. Redraw ONLY the empty outer leather backpack/case and its cream linen interior from the reference. One standalone portrait front-facing open soft leather backpack/case frame, warm honeytan leather sides, a small handle centered at top, restrained buckles and stitching nearedges, creamlinen center. Transparent OUTSIDE silhouette. Center must be COMPLETELY EMPTY, almost uniform warmivory, NO slots, grid, dividers, items, text, titles, numerals, buttons, icons, ribbons, flowers or gameUI. The straight left/right leather side borders and top/bottom frame should be suitable for 9-slice scaling; keep alldetails within roughlyouter12% ofwidth/height, clearquietcenter. Entireframeincludinghandle visible withgenerous transparentmargin. Refined warmwatercolor cottage style, subtle tactileleather/papergrain and softcontactshadow, no glossyplastic. No screenshot or phonebody, onlyone emptybagframe."
+    },
+    {
+      "id": "customer_busts",
+      "file": "customer_busts.png",
+      "asset": "customer_busts_sheet.png",
+      "width": 1152,
+      "height": 384,
+      "palette": false,
+      "source_file": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a0ce29-5da7-7433-8169-05b103df7cf8\\exec-1c152694-d815-4b06-9166-e080c404746d.png",
+      "prompt": "Production TRANSPARENT SPRITE ATLAS for an original romantic cottage merge game. Use the reference to preserve the exact originalwatercolor characterdesign language. THREE independent friendly ADULT half-body customer busts, arranged in a single horizontal row in THREE EQUAL-WIDTH NONOVERLAPPING CELLS. Left: original smiling brunette adultwoman, loosely tiedbrown hair withsmallflower, cream linen blouse. Middle: original youngadultman, tousledbrownhair, thinroundglasses, sagegreen shirt. Right: original elegant olderadultwoman, silverwavyhairbun, pinklinen blouse. Delicatewarmwatercolor, gentle naturalskin, softconsistentupperleftsunlight, understated affectionateexpressions. Eachbustshow fullhair, head, shoulders, torsoandhands restingatconsistentimaginarycounterheight. Crop atwaistontheSAMEbottomalignment; no actualcounter, no trays, no food, no objects. Keep each character centered inownthird, separatedbycleartransparentgap; never touchingneighbors. No roundedportraitframes, no cardbackgrounds, no circles, no floralornaments, text, labels, numbers, icons or watermark. Transparentbackgroundaroundandbetweenall3busts. Landscape3:1sheet, largeclearindividualsilhouettes, originalillustrations not plasticcartoonorphotography."
+    },
+    {
+      "id": "wall_paintings_sheet",
+      "file": "wall_paintings_sheet.png",
+      "asset": "wall_paintings_sheet.jpg",
+      "width": 1200,
+      "height": 800,
+      "palette": false,
+      "transparent": false,
+      "source_file": "C:\\Users\\Mr.wang\\.codex\\generated_images\\01a0ce29-5da7-7433-8169-05b103df7cf8\\exec-839ad420-2294-43da-8b12-9b70f68a3e30.png",
+      "prompt": "Production WALL-PAINTING ATLAS for the original cream watercolor cottage game. SIX ORIGINAL FINISHED MINIATURE WATERCOLOR PAINTINGS, arranged in EXACTLY3equalcolumns by2equalrows, sixequal landscape cells, straight boundaries, full-bleed painted canvasin eachcell with nooutermargin. All6 have soft consistentwarmcreamsunlight and refinedlightbrushdetail. Toprow left: delicate pinkrose botanical bouquet onivorypaper. Toprowmiddle: springpinktulips inaglassvase stilllife. Toprowright: sunnyorangegrove courtyard, small ripeoranges, warmMediterraneanlight. Bottomrowleft: coffeeandbooks byasunlit window, a painted stilllife not a gameitemicon. Bottomrowmiddle: flowergarden onthecoast with a smallwhite lighthouse andbluesky in thedistance. Bottomrowright: tranquil mountainlake seenfromafloweredterraceatgoldensunset. Eachpainting is distinct, balanced, charmingandcomplete. No people, text, numbers, frames, mats, UI, buttons, gameboards, room-within-room screenshots, watermark or camera. Do not place woodenframes aroundcells; gamewillrenderframesseparately. This is one clean6painting textureatlas, not a collage with unevenoverlaps. Landscape3:2 overall, fullbleednearlysquarelandscapecells. Opaque background."
+    }
+  ]
+}

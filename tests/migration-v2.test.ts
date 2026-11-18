@@ -4,7 +4,7 @@ import { FakeClockService } from '../assets/scripts/infrastructure/ClockService'
 import { loadConfigBundle } from '../assets/scripts/config/ConfigRepository';
 import type { StorageAdapter } from '../assets/scripts/infrastructure/PlatformService';
 
-describe('v1 to v2 migration', () => {
+describe('legacy v1 migration', () => {
   it('maps every old cell by row and column and preserves earned resources', () => {
     const game = loadConfigBundle().game;
     const clock = new FakeClockService(1_000_000);
@@ -31,14 +31,14 @@ describe('v1 to v2 migration', () => {
       tutorial: {},
     }));
     const save = new SaveService({
-      storage, clock, saveKey: game.saveKey, version: 2,
+      storage, clock, saveKey: game.saveKey, version: game.saveVersion,
       createDefault: () => createDefaultSaveData(game, clock.now()),
     });
     const loaded = save.load();
     expect(loaded.ok).toBe(true);
     if (!loaded.ok) return;
-    expect(loaded.data.board).toHaveLength(42);
-    expect(loaded.data.board[7].item?.uid).toBe('old-item');
+    expect(loaded.data.board).toHaveLength(63);
+    expect(loaded.data.board[8].item?.uid).toBe('old-item');
     expect(loaded.data.player.energy).toBe(70);
     expect(loaded.data.player.maxEnergy).toBe(100);
     expect(loaded.data.player.coins).toBe(245);

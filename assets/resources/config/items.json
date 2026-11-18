@@ -538,6 +538,7 @@
     "chainId": "sugar",
     "level": 1,
     "displayName": "方糖",
+    "sellValue": 1,
     "wildcardEligible": true,
     "nextItemId": "sugar_02"
   },
@@ -546,6 +547,7 @@
     "chainId": "sugar",
     "level": 2,
     "displayName": "双块方糖",
+    "sellValue": 2,
     "wildcardEligible": true,
     "nextItemId": "sugar_03"
   },
@@ -554,6 +556,7 @@
     "chainId": "sugar",
     "level": 3,
     "displayName": "甜蜜糖罐",
+    "sellValue": 4,
     "wildcardEligible": true
   },
   {
@@ -599,6 +602,7 @@
     "chainId": "coffee",
     "level": 9,
     "displayName": "花语拿铁",
+    "sellValue": 256,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "coffee_10"
@@ -608,6 +612,7 @@
     "chainId": "coffee",
     "level": 10,
     "displayName": "双杯午后茶",
+    "sellValue": 512,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "coffee_11"
@@ -617,6 +622,7 @@
     "chainId": "coffee",
     "level": 11,
     "displayName": "玫瑰咖啡组",
+    "sellValue": 1024,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "coffee_12"
@@ -626,6 +632,7 @@
     "chainId": "coffee",
     "level": 12,
     "displayName": "浪漫咖啡宴",
+    "sellValue": 2048,
     "wildcardEligible": true,
     "maxLevel": true
   },
@@ -634,6 +641,7 @@
     "chainId": "flower",
     "level": 9,
     "displayName": "玫瑰玻璃罩",
+    "sellValue": 256,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "flower_10"
@@ -643,6 +651,7 @@
     "chainId": "flower",
     "level": 10,
     "displayName": "心形花环",
+    "sellValue": 512,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "flower_11"
@@ -652,6 +661,7 @@
     "chainId": "flower",
     "level": 11,
     "displayName": "繁花礼篮",
+    "sellValue": 1024,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "flower_12"
@@ -661,6 +671,7 @@
     "chainId": "flower",
     "level": 12,
     "displayName": "婚礼捧花",
+    "sellValue": 2048,
     "wildcardEligible": true,
     "maxLevel": true
   },
@@ -669,6 +680,7 @@
     "chainId": "dessert",
     "level": 9,
     "displayName": "莓果双层糕",
+    "sellValue": 256,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "dessert_10"
@@ -678,6 +690,7 @@
     "chainId": "dessert",
     "level": 10,
     "displayName": "天鹅泡芙塔",
+    "sellValue": 512,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "dessert_11"
@@ -687,6 +700,7 @@
     "chainId": "dessert",
     "level": 11,
     "displayName": "玫瑰婚礼糕",
+    "sellValue": 1024,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "dessert_12"
@@ -696,6 +710,7 @@
     "chainId": "dessert",
     "level": 12,
     "displayName": "梦幻甜品塔",
+    "sellValue": 2048,
     "wildcardEligible": true,
     "maxLevel": true
   },
@@ -704,6 +719,7 @@
     "chainId": "gift",
     "level": 9,
     "displayName": "珍珠礼匣",
+    "sellValue": 256,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "gift_10"
@@ -713,6 +729,7 @@
     "chainId": "gift",
     "level": 10,
     "displayName": "心形音乐盒",
+    "sellValue": 512,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "gift_11"
@@ -722,6 +739,7 @@
     "chainId": "gift",
     "level": 11,
     "displayName": "求婚戒盒",
+    "sellValue": 1024,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "gift_12"
@@ -731,6 +749,7 @@
     "chainId": "gift",
     "level": 12,
     "displayName": "心意珍藏箱",
+    "sellValue": 2048,
     "wildcardEligible": true,
     "maxLevel": true
   },
@@ -739,6 +758,7 @@
     "chainId": "fruit",
     "level": 9,
     "displayName": "橙花果冻杯",
+    "sellValue": 512,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "fruit_10"
@@ -748,6 +768,7 @@
     "chainId": "fruit",
     "level": 10,
     "displayName": "橙香华夫盘",
+    "sellValue": 1024,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "fruit_11"
@@ -757,6 +778,7 @@
     "chainId": "fruit",
     "level": 11,
     "displayName": "鲜橙庆典糕",
+    "sellValue": 2048,
     "wildcardEligible": true,
     "maxLevel": false,
     "nextItemId": "fruit_12"
@@ -766,6 +788,7 @@
     "chainId": "fruit",
     "level": 12,
     "displayName": "阳光水果宴",
+    "sellValue": 4096,
     "wildcardEligible": true,
     "maxLevel": true
   },

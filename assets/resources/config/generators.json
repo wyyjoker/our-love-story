@@ -241,7 +241,8 @@
             }
           ]
         }
-      ]
+      ],
+      "mergeRemainingRatio": 0.5
     },
     "streakCooldown": {
       "uses": 60,
@@ -491,7 +492,8 @@
             }
           ]
         }
-      ]
+      ],
+      "mergeRemainingRatio": 0.5
     },
     "streakCooldown": {
       "uses": 60,
@@ -741,7 +743,8 @@
             }
           ]
         }
-      ]
+      ],
+      "mergeRemainingRatio": 0.5
     },
     "streakCooldown": {
       "uses": 60,
@@ -991,7 +994,8 @@
             }
           ]
         }
-      ]
+      ],
+      "mergeRemainingRatio": 0.5
     },
     "streakCooldown": {
       "uses": 60,
@@ -1008,7 +1012,7 @@
     "recharge": {
       "capacity": 10,
       "legacyCapacity": 3,
-      "intervalMs": 600000
+      "intervalMs": 60000
     },
     "outputs": [
       {
@@ -1148,7 +1152,8 @@
             }
           ]
         }
-      ]
+      ],
+      "mergeRemainingRatio": 0.5
     },
     "purchaseCoins": 150
   }

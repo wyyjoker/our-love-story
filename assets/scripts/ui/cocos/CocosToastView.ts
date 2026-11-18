@@ -16,7 +16,7 @@ export type ToastTone = 'info' | 'success' | 'warn';
 
 export const ToastMessages = {
   energyLow: '体力不足啦～\n休息一下再回来吧',
-  boardFull: '棋盘满啦～\n先合成一些物品吧',
+  boardFull: '棋盘已满 · 可合成、收纳，或点物品出售',
   locked: (level: number) => `达到 Lv${level} 后解锁`,
   mergeOk: '合成成功！',
   maxLevel: '已经是最高等级啦',

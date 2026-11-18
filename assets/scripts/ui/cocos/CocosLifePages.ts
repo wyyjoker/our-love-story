@@ -1,16 +1,18 @@
-import { BlockInputEvents, Button, Camera, EventTouch, Graphics, Input, Label, Mask, Node, ScrollView, UITransform, Vec3 } from 'cc';
+import { BlockInputEvents, Button, Camera, EventTouch, Graphics, Input, isValid, Label, Mask, Node, ScrollView, Slider, Sprite, UITransform, Vec3 } from 'cc';
 import type { GameContext } from '../../gameplay/GameContext';
 import type { FurnitureDefinition, MemoryDefinition, WishDefinition } from '../../core/types';
 import type { UiRoots } from './UiFactory';
-import { applyArt, applyLocalPhoto, furnitureArtFor, itemArt } from './CocosArt';
-import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect } from './CocosTheme';
+import { applyArt, applyMaterialFrame, applyFurnitureArt, applyLocalPhoto, furnitureArtFor, itemArt } from './CocosArt';
+import { CocosTheme, createUiNode, ensureOpacity, ensureTransform, hexColor, makeLabel, paintRoundRect, paintTactileButton, pressButton } from './CocosTheme';
 import { sizeOf } from './UiFactory';
-import { fitPhoto, journalLayout, lifePageLayout, photoPage, LIFE_BOTTOM_RESERVED } from '../../presentation/UiSafety';
+import { fitPhoto, homeFurnitureLayout, journalLayout, lifePageLayout, photoPage, snapFurniturePlacement, LIFE_BOTTOM_RESERVED } from '../../presentation/UiSafety';
 import { memoryVisibility } from '../../presentation/MemoryVisibility';
+import { constrainFurniturePose, furnitureContainsPoint, furnitureScaleFromProgress, furnitureScaleProgress, FURNITURE_SCALE, rotatedFurnitureSize, type FurniturePose } from '../../presentation/FurnitureEditing';
 
 type Page = 'merge' | 'memories' | 'home';
 type MemoryTab = 'album' | 'diary' | 'timeline' | 'photos';
 type HomeRoom = FurnitureDefinition['room'];
+type FurnitureSceneEntry = { sprite: Node; shadow: Node | null; footOffset: number; wall: boolean; item: FurnitureDefinition; size: { width: number; height: number } };
 
 function label(parent: Node, text: string, x: number, y: number, size = 20, width = 620, color = CocosTheme.textPrimary(), bold = false): Label {
   const result = makeLabel(text, size, color, bold);
@@ -105,10 +107,9 @@ function button(parent: Node, text: string, x: number, y: number, width: number,
   ensureTransform(node, width, height);
   node.setPosition(x, y, 0);
   const g = node.addComponent(Graphics);
-  const fill = tone === 'pink' ? CocosTheme.primary() : tone === 'sage' ? CocosTheme.secondary() : CocosTheme.surface();
-  paintRoundRect(g, width, height, Math.min(22, height / 2), fill, CocosTheme.border(), 1);
+  paintTactileButton(g,width,height,tone==='pink'?'rose':tone);
   label(node, text, 0, 0, Math.min(26, Math.max(23, height * 0.48)), width - 12, tone === 'pink' ? CocosTheme.surface() : CocosTheme.textPrimary(), true);
-  node.addComponent(Button);
+  pressButton(node);
   node.on(Button.EventType.CLICK, onTap);
   return node;
 }
@@ -132,6 +133,7 @@ function paper(parent: Node, name: string, x: number, y: number, width: number, 
   const surface = createUiNode('PaperSurface');
   node.addChild(surface);
   paintRoundRect(surface.addComponent(Graphics), width, height, 13, hexColor(fill), hexColor('#E9D9C8'), 2);
+  applyMaterialFrame(surface,'paper',width,height,Math.min(.7,width/650));
   return node;
 }
 
@@ -154,6 +156,10 @@ export class CocosLifePages {
   private roomPage = 0;
   private arranging = false;
   private selectedFurniture: string | null = null;
+  private previewFurniture: ((id: string, pose: FurniturePose) => void) | null = null;
+  private scaleGesture: { id: string; value: number } | null = null;
+  private scaleCommitTimer: ReturnType<typeof setTimeout> | null = null;
+  private furnitureMessage = '拖动滑条预览，松手保存 · 可撤销本次布置的调整';
   private readonly homeBackdrops: Record<HomeRoom, Node>;
   private readonly pageRoot: Node;
   private readonly navRoot: Node;
@@ -195,6 +201,7 @@ export class CocosLifePages {
     }
 
     this.pageRoot = createUiNode('LifePage');
+    this.pageRoot.once(Node.EventType.NODE_DESTROYED, () => this.cancelScalePreview());
     roots.contentLayer.addChild(this.pageRoot);
     ensureTransform(this.pageRoot, 710, 1000);
     const pageLayout = lifePageLayout(roots.designWidth, roots.designHeight);
@@ -235,17 +242,18 @@ export class CocosLifePages {
   }
 
   setPage(page: Page): void {
+    this.cancelScalePreview();
     this.photoRoot.active = false;
     this.endingRoot.active = false;
     this.taskRoot.active = false;
     this.catalogRoot.active = false;
     this.page = page;
-    if (page !== 'home') { this.arranging = false; this.selectedFurniture = null; }
+    if (page !== 'home') { this.arranging = false; this.selectedFurniture = null; this.game.clearFurnitureEditHistory(); }
     const merge = page === 'merge';
     this.syncHomeBackdrop();
     this.roots.ordersSlot.active = merge;
     this.roots.boardSlot.active = merge;
-    this.roots.dockSlot.active = merge;
+    this.roots.mergeFooter.active = merge;
     this.pageRoot.active = !merge;
     this.render();
     this.onPageChanged();
@@ -341,6 +349,8 @@ export class CocosLifePages {
 
   private renderNav(): void {
     clear(this.navRoot);
+    this.navRoot.active = this.page !== 'merge';
+    if (this.page === 'merge') return;
     const width = this.roots.designWidth - 24;
     const fullSize = sizeOf(this.roots.canvas, this.roots.designWidth, this.roots.designHeight);
     const bottomInset = Math.max(0, fullSize.height / 2 + this.roots.safeArea.position.y - this.roots.designHeight / 2);
@@ -711,7 +721,8 @@ export class CocosLifePages {
     const maxDecor = this.game.bundle.furniture.reduce((sum, item) => sum + item.decorPoints, 0);
     const wished = this.game.life.state.claimedWishIds.length;
     const note = createUiNode('HomeWishNote'); this.pageRoot.addChild(note);
-    ensureTransform(note, 252, 62); note.setPosition(-205, 454 + verticalExtra * .5, 0);
+    const homeLayout = homeFurnitureLayout(this.roots.designWidth, this.roots.designHeight);
+    ensureTransform(note, 252, 62); note.setPosition(-205, homeLayout.tabsY - 74, 0);
     paintRoundRect(note.addComponent(Graphics), 252, 62, 24, hexColor('#FFF8F1', 246), hexColor('#E7CFC3'), 1);
     label(note, `♡ 心愿 ${wished}/10 ›`, 0, 0, 25, 230, hexColor('#8B5358'), true);
     note.addComponent(Button); note.on(Button.EventType.CLICK, () => this.showTasks());
@@ -719,8 +730,8 @@ export class CocosLifePages {
     this.renderRoomTabs();
     const scene = createUiNode('HomeFurnitureScene');
     this.pageRoot.addChild(scene);
-    ensureTransform(scene, 670, 580);
-    scene.setPosition(0, 0, 0);
+    ensureTransform(scene, homeLayout.width, homeLayout.height);
+    scene.setPosition(0, homeLayout.y, 0);
     if (this.homeRoom !== 'garden' && this.homeRoom !== 'pool') {
       const rug = createUiNode('RoomRug');
       scene.addChild(rug);
@@ -740,98 +751,63 @@ export class CocosLifePages {
         const bY = positions[b.item.id] ? (positions[b.item.id].y - 0.5) * 580 : b.item.placement.y;
         return bY - aY;
       });
+    const furnitureLayer = createUiNode('FurnitureLayer'); scene.addChild(furnitureLayer); ensureTransform(furnitureLayer, homeLayout.width, homeLayout.height);
+    const furnitureViews: FurnitureSceneEntry[] = [];
+    const sortDepth = (): void => {
+      furnitureViews.sort((a, b) => Number(b.wall) - Number(a.wall) || (b.sprite.position.y - b.footOffset) - (a.sprite.position.y - a.footOffset));
+      for (const view of furnitureViews) { view.shadow?.setSiblingIndex(furnitureLayer.children.length - 1); view.sprite.setSiblingIndex(furnitureLayer.children.length - 1); }
+      furnitureLayer.getChildByName('FurnitureGestureSurface')?.setSiblingIndex(furnitureLayer.children.length - 1);
+      furnitureLayer.getChildByName('FurnitureSnapGuides')?.setSiblingIndex(furnitureLayer.children.length - 1);
+      furnitureLayer.getChildByName('FurnitureSelectedName')?.setSiblingIndex(furnitureLayer.children.length - 1);
+    };
     for (const { item, index } of placed) {
       const { width, height } = item.placement;
       const position = this.game.life.state.furniturePositions[item.id];
-      const x = position ? (position.x - 0.5) * 670 : item.placement.x;
-      const y = position ? (position.y - 0.5) * 580 : item.placement.y;
+      const x = position ? (position.x - 0.5) * homeLayout.width : item.placement.x;
+      const y = position ? (position.y - 0.5) * homeLayout.height : item.placement.y;
       const art = furnitureArtFor(item, index);
       const bounds = art.region;
       const fitted = bounds ? fitPhoto(bounds.width, bounds.height, width, height) : { width, height };
-      const transform = position ?? { x: item.placement.x / 670 + 0.5, y: item.placement.y / 580 + 0.5 };
+      const transform = position ?? { x: item.placement.x / homeLayout.width + 0.5, y: item.placement.y / homeLayout.height + 0.5 };
       const scale = transform.scale ?? 1;
       const rotation = transform.rotation ?? 0;
       const flipped = transform.flipped ?? false;
       const radians = rotation * Math.PI / 180;
-      const bboxWidth = (Math.abs(fitted.width * Math.cos(radians)) + Math.abs(fitted.height * Math.sin(radians))) * scale;
       const bboxHeight = (Math.abs(fitted.width * Math.sin(radians)) + Math.abs(fitted.height * Math.cos(radians))) * scale;
-      if (item.id !== 'flower_wall') {
-        const shadow = createUiNode('Shadow_' + item.id);
-        scene.addChild(shadow);
+      let shadow: Node | null = null;
+      if (item.id !== 'flower_wall' && !item.art.startsWith('wall:')) {
+        shadow = createUiNode('Shadow_' + item.id);
+        furnitureLayer.addChild(shadow);
         shadow.setPosition(x, y - bboxHeight * 0.46, 0);
         shadow.setScale(scale, scale, 1);
-        shadow.setRotationFromEuler(0, 0, rotation);
         const g = shadow.addComponent(Graphics);
         g.fillColor = hexColor('#725545', 40);
         g.ellipse(0, 0, fitted.width * 0.39, Math.max(6, fitted.width * 0.035)); g.fill();
       }
       const sprite = createUiNode('Placed_' + item.id);
-      scene.addChild(sprite);
+      furnitureLayer.addChild(sprite);
+      furnitureViews.push({ sprite, shadow, footOffset: bboxHeight * .46, wall: item.art.startsWith('wall:') || item.id === 'flower_wall', item, size: fitted });
       sprite.setPosition(x, y, 0);
       sprite.setScale(scale * (flipped ? -1 : 1), scale, 1);
       sprite.setRotationFromEuler(0, 0, rotation);
-      applyArt(sprite, art, width, height);
-      if (this.arranging && this.selectedFurniture === item.id) {
-        const selection = createUiNode(`FurnitureSelection_${item.id}`);
-        sprite.addChild(selection);
-        ensureTransform(selection, fitted.width + 18, fitted.height + 18);
-        const outline = selection.addComponent(Graphics);
-        outline.strokeColor = hexColor('#E67D91');
-        outline.lineWidth = 6;
-        outline.roundRect(-(fitted.width + 18) / 2, -(fitted.height + 18) / 2, fitted.width + 18, fitted.height + 18, 14);
-        outline.stroke();
-      }
-      if (this.arranging) {
-        let positionCommitted = false;
-        let moved = false;
-        let pickup: Vec3 | null = null;
-        const grabOffset = new Vec3();
-        const pointerInScene = (event: EventTouch): Vec3 => {
-          const screen = event.getLocation();
-          const world = new Vec3();
-          const camera = this.roots.camera.getComponent(Camera);
-          if (camera) camera.screenToWorld(new Vec3(screen.x, screen.y, 0), world);
-          else { const ui = event.getUILocation(); world.set(ui.x, ui.y, 0); }
-          return scene.getComponent(UITransform)!.convertToNodeSpaceAR(world);
-        };
-        const commitPosition = (): void => {
-          if (positionCommitted) return;
-          positionCommitted = true;
-          if (!moved) { this.render(); return; }
-          const result = this.game.moveFurniture(item.id, (sprite.position.x + 335) / 670, (sprite.position.y + 290) / 580);
-          this.toast(result.ok ? '位置已保存' : '位置保存失败');
-          this.render();
-        };
-        sprite.on(Node.EventType.TOUCH_START, (event: EventTouch) => {
-          this.selectedFurniture = item.id;
-          pickup = pointerInScene(event);
-          grabOffset.set(pickup.x - sprite.position.x, pickup.y - sprite.position.y, 0);
-        });
-        sprite.on(Node.EventType.TOUCH_MOVE, (event: EventTouch) => {
-          const local = pointerInScene(event);
-          if (pickup && Math.hypot(local.x - pickup.x, local.y - pickup.y) > 6) moved = true;
-          if (!moved) return;
-          const halfWidth = Math.min(335, bboxWidth / 2);
-          const halfHeight = Math.min(290, bboxHeight / 2);
-          sprite.setPosition(Math.max(-335 + halfWidth, Math.min(335 - halfWidth, local.x - grabOffset.x)), Math.max(-290 + halfHeight, Math.min(290 - halfHeight, local.y - grabOffset.y)), 0);
-        });
-        sprite.on(Node.EventType.TOUCH_END, (event: EventTouch) => {
-          event.propagationStopped = true;
-          commitPosition();
-        });
-        sprite.on(Node.EventType.TOUCH_CANCEL, (event: EventTouch) => {
-          event.propagationStopped = true;
-          // Cocos reports a release outside the pickup node as node-level cancel.
-          // Keep that drag; only roll back for an actual OS/input cancellation.
-          if (event.getEventCode() === Input.EventType.TOUCH_END) commitPosition();
-          else if (!positionCommitted) this.render();
-        });
-      }
+      applyFurnitureArt(sprite, item, index, width, height);
     }
+    sortDepth();
+    this.previewFurniture = (id, pose) => {
+      const view = furnitureViews.find(v => v.item.id === id); if (!view) return;
+      const scale = pose.scale ?? 1, rotation = pose.rotation ?? 0;
+      const bounds = rotatedFurnitureSize(view.size.width, view.size.height, scale, rotation);
+      view.footOffset = bounds.height * .46;
+      view.sprite.setPosition((pose.x - .5) * homeLayout.width, (pose.y - .5) * homeLayout.height, 0);
+      view.sprite.setScale(scale * (pose.flipped ? -1 : 1), scale, 1); view.sprite.setRotationFromEuler(0, 0, rotation);
+      view.shadow?.setPosition(view.sprite.position.x, view.sprite.position.y - view.footOffset, 0); view.shadow?.setScale(scale, scale, 1);
+      sortDepth(); this.drawFurnitureSelection(furnitureViews, furnitureLayer, homeLayout);
+    };
+    if (this.arranging) this.bindFurnitureGestures(scene, furnitureLayer, furnitureViews, homeLayout, sortDepth);
     const souvenirs = this.game.bundle.adventures.filter((chapter) => this.game.play.progress(chapter.id).claimed && chapter.souvenir.room === this.homeRoom);
     const hasSouvenir = souvenirs.length > 0;
     const shelf = createUiNode('MemoryShelf'); scene.addChild(shelf);
-    shelf.setPosition(0, -218, 0);
+    shelf.setPosition(0, -homeLayout.height / 2 + 72, 0);
     if (hasSouvenir) {
       paintRoundRect(shelf.addComponent(Graphics), 638, 134, 22, hexColor('#FFF8EF', 242), hexColor('#DDBFA8'), 2);
       label(shelf, '回忆纪念架 · 点击重读故事', 0, 45, 18, 600, hexColor('#9A7163'));
@@ -872,16 +848,16 @@ export class CocosLifePages {
       const pageLayout = lifePageLayout(this.roots.designWidth, this.roots.designHeight);
       const contentBottom = (-this.roots.designHeight / 2 + LIFE_BOTTOM_RESERVED - pageLayout.y) / pageLayout.scale;
       const panelBottom = Math.max(contentBottom + 12, -537 - verticalExtra);
-      const panelTop = panelBottom + 174;
+      const panelTop = panelBottom + 264;
       actionsY = Math.max(normalActionsY, panelTop + 44);
     }
     actions.setPosition(0, actionsY, 0);
-    button(actions, this.arranging ? '完成布置' : '调整位置', -218, 0, 204, 68, () => { this.arranging = !this.arranging; this.selectedFurniture = null; this.render(); }, 'cream');
+    button(actions, this.arranging ? '完成布置' : '调整位置', -218, 0, 204, 68, () => { this.cancelScalePreview(); this.game.clearFurnitureEditHistory(); this.furnitureMessage = '拖动滑条预览，松手保存 · 可撤销本次布置的调整'; this.arranging = !this.arranging; this.selectedFurniture = null; this.render(); }, 'cream');
     const resetOrPhoto = button(actions, this.arranging ? '恢复默认' : '拍照留念', 0, 0, 204, 68, () => {
       if (!this.arranging) { this.takePhoto(); return; }
       if (!this.selectedFurniture) { this.toast('请先点选要恢复的家具'); return; }
       const result = this.game.resetFurniturePosition(this.selectedFurniture);
-      this.toast(result.ok ? '家具位置、大小和方向已恢复默认' : '无法恢复家具默认设置'); this.render();
+      if (result.ok) this.furnitureMessage = '已恢复默认，可撤销'; else this.toast('无法恢复家具默认设置'); this.render();
     }, 'cream');
     if (this.arranging) resetOrPhoto.name = 'FurnitureResetAll';
     button(actions, '布置家具', 218, 0, 204, 68, () => this.showCatalog(), 'pink');
@@ -909,16 +885,113 @@ export class CocosLifePages {
     }
   }
 
+  private drawFurnitureSelection(views: FurnitureSceneEntry[], layer: Node, area: { width: number; height: number }): void {
+    for (const view of views) {
+      const old = view.sprite.getChildByName(`FurnitureSelection_${view.item.id}`); old?.removeFromParent(); old?.destroy();
+    }
+    const old = layer.getChildByName('FurnitureSelectedName'); old?.removeFromParent(); old?.destroy();
+    const view = views.find(entry => entry.item.id === this.selectedFurniture); if (!view) return;
+    const outline = createUiNode(`FurnitureSelection_${view.item.id}`); view.sprite.addChild(outline); outline.pauseSystemEvents(true);
+    paintRoundRect(outline.addComponent(Graphics), view.size.width + 16, view.size.height + 16, 12, hexColor('#FFFFFF', 0), hexColor('#D8678A'), 5);
+    const bounds = rotatedFurnitureSize(view.size.width, view.size.height, Math.abs(view.sprite.scale.x), view.sprite.eulerAngles.z);
+    const name = createUiNode('FurnitureSelectedName'); layer.addChild(name); ensureTransform(name, 220, 38);
+    name.setPosition(Math.max(-area.width / 2 + 112, Math.min(area.width / 2 - 112, view.sprite.position.x)), Math.min(area.height / 2 - 20, view.sprite.position.y + bounds.height / 2 + 26), 0);
+    paintRoundRect(name.addComponent(Graphics), 220, 38, 15, hexColor('#FFF8EF'), hexColor('#D8678A'), 2);
+    label(name, view.item.title, 0, 0, 21, 208, hexColor('#9D5369'), true); name.pauseSystemEvents(true);
+  }
+
+  private showFurniturePicker(candidates: FurnitureSceneEntry[], point: Vec3, scene: Node): void {
+    const panel = createUiNode('FurniturePickList'); this.pageRoot.addChild(panel);
+    const rowHeight = 96, height = 76 + Math.min(4, candidates.length) * rowHeight;
+    ensureTransform(panel, 420, height); panel.addComponent(BlockInputEvents);
+    const local = this.pageRoot.getComponent(UITransform)!.convertToNodeSpaceAR(scene.getComponent(UITransform)!.convertToWorldSpaceAR(point));
+    const area = homeFurnitureLayout(this.roots.designWidth, this.roots.designHeight);
+    panel.setPosition(Math.max(-120, Math.min(120, local.x)), Math.max(-120 + height / 2, Math.min(area.tabsY - 95 - height / 2, local.y)), 0);
+    paintRoundRect(panel.addComponent(Graphics), 420, height, 24, hexColor('#FFF9F0'), hexColor('#E0B4B9'), 2);
+    label(panel, `这里有 ${candidates.length} 件家具`, -35, height / 2 - 31, 23, 310, hexColor('#93616C'), true);
+    const close = button(panel, '×', 174, height / 2 - 31, 54, 52, () => panel.destroy(), 'cream'); close.name = 'FurniturePickClose';
+    const viewport = createUiNode('FurniturePickViewport'); panel.addChild(viewport); ensureTransform(viewport, 388, height - 78); viewport.setPosition(0, -31, 0); viewport.addComponent(Mask);
+    const content = createUiNode('FurniturePickContent'); viewport.addChild(content); ensureTransform(content, 388, candidates.length * rowHeight, .5, 1); content.setPosition(0, (height - 78) / 2, 0);
+    const scroll = viewport.addComponent(ScrollView); scroll.content = content; scroll.horizontal = false; scroll.vertical = true; scroll.elastic = false;
+    candidates.forEach((view, index) => {
+      const entry = button(content, `${this.selectedFurniture === view.item.id ? '✓ ' : ''}${view.item.title}`, 0, -rowHeight / 2 - index * rowHeight, 376, 88, () => { this.selectedFurniture = view.item.id; this.furnitureMessage = '已选中，可拖动或调整大小与方向'; this.render(); }, this.selectedFurniture === view.item.id ? 'pink' : 'cream');
+      entry.name = 'FurniturePick_' + view.item.id;
+    });
+  }
+
+  private bindFurnitureGestures(scene: Node, layer: Node, views: FurnitureSceneEntry[], area: { width: number; height: number }, sortDepth: () => void): void {
+    const surface = createUiNode('FurnitureGestureSurface'); layer.addChild(surface); ensureTransform(surface, area.width, area.height); surface.addComponent(BlockInputEvents);
+    const guides = createUiNode('FurnitureSnapGuides'); layer.addChild(guides); ensureTransform(guides, area.width, area.height); const ink = guides.addComponent(Graphics); guides.pauseSystemEvents(true);
+    let gesture: { view: FurnitureSceneEntry; candidates: FurnitureSceneEntry[]; start: Vec3; offset: Vec3; moved: boolean } | null = null;
+    const pointer = (event: EventTouch): Vec3 => {
+      const screen = event.getLocation(), world = new Vec3(), camera = this.roots.camera.getComponent(Camera);
+      if (camera) camera.screenToWorld(new Vec3(screen.x, screen.y, 0), world); else { const ui = event.getUILocation(); world.set(ui.x, ui.y, 0); }
+      return scene.getComponent(UITransform)!.convertToNodeSpaceAR(world);
+    };
+    const drawGuides = (x: number | null, y: number | null): void => {
+      ink.clear(); guides.active = x !== null || y !== null; ink.strokeColor = hexColor('#DA7C9C', 220); ink.lineWidth = 2;
+      if (x !== null) for (let p = -area.height / 2; p < area.height / 2; p += 20) { ink.moveTo(x, p); ink.lineTo(x, Math.min(p + 11, area.height / 2)); }
+      if (y !== null) for (let p = -area.width / 2; p < area.width / 2; p += 20) { ink.moveTo(p, y); ink.lineTo(Math.min(p + 11, area.width / 2), y); }
+      ink.stroke();
+    };
+    guides.active = false;
+    surface.on(Node.EventType.TOUCH_START, (event: EventTouch) => {
+      this.pageRoot.getChildByName('FurniturePickList')?.destroy();
+      const point = pointer(event);
+      const candidates = [...views].reverse().filter(view => furnitureContainsPoint(point, view.sprite.position, view.size, Math.abs(view.sprite.scale.x), view.sprite.eulerAngles.z));
+      const view = candidates.find(entry => entry.item.id === this.selectedFurniture) ?? candidates[0];
+      if (!view) { gesture = null; this.selectedFurniture = null; this.drawFurnitureSelection(views, layer, area); return; }
+      this.selectedFurniture = view.item.id;
+      gesture = { view, candidates, start: point, offset: new Vec3(point.x - view.sprite.position.x, point.y - view.sprite.position.y), moved: false };
+      this.drawFurnitureSelection(views, layer, area);
+    });
+    surface.on(Node.EventType.TOUCH_MOVE, (event: EventTouch) => {
+      if (!gesture) return; const point = pointer(event), { view, start, offset } = gesture;
+      if (Math.hypot(point.x - start.x, point.y - start.y) > 6) gesture.moved = true;
+      if (!gesture.moved) return;
+      const bounds = rotatedFurnitureSize(view.size.width, view.size.height, Math.abs(view.sprite.scale.x), view.sprite.eulerAngles.z);
+      const others = views.filter(other => other !== view && other.wall === view.wall).map(other => ({ x: other.sprite.position.x, foot: other.sprite.position.y - other.footOffset }));
+      const position = snapFurniturePlacement(point.x - offset.x, point.y - offset.y, bounds.width, bounds.height, others, area);
+      view.sprite.setPosition(position.x, position.y, 0); view.shadow?.setPosition(position.x, position.y - view.footOffset, 0);
+      drawGuides(position.guideX, position.guideY); sortDepth(); this.drawFurnitureSelection(views, layer, area);
+    });
+    const finish = (event: EventTouch, cancel: boolean): void => {
+      const done = gesture; gesture = null; event.propagationStopped = true; drawGuides(null, null);
+      if (!done) { this.render(); return; }
+      if (cancel) { this.render(); return; }
+      if (done.moved) {
+        const result = this.game.moveFurniture(done.view.item.id, done.view.sprite.position.x / area.width + .5, done.view.sprite.position.y / area.height + .5);
+        if (result.ok) this.furnitureMessage = '位置已保存，可撤销上一步'; else this.toast('位置保存失败'); this.render();
+      } else if (done.candidates.length > 1) { this.render(); this.showFurniturePicker(done.candidates, done.start, this.pageRoot.getChildByName('HomeFurnitureScene')!); }
+      else this.render();
+    };
+    surface.on(Node.EventType.TOUCH_END, (event: EventTouch) => finish(event, false));
+    surface.on(Node.EventType.TOUCH_CANCEL, (event: EventTouch) => finish(event, event.getEventCode() !== Input.EventType.TOUCH_END));
+    this.drawFurnitureSelection(views, layer, area);
+  }
+
+  private cancelScalePreview(): void {
+    if (this.scaleCommitTimer !== null) clearTimeout(this.scaleCommitTimer); this.scaleCommitTimer = null; this.scaleGesture = null;
+  }
+
+  private furniturePose(item: FurnitureDefinition, patch: Partial<FurniturePose> = {}) {
+    const area = homeFurnitureLayout(this.roots.designWidth, this.roots.designHeight), saved = this.game.life.state.furniturePositions[item.id];
+    const art = furnitureArtFor(item, this.game.bundle.furniture.findIndex(entry => entry.id === item.id));
+    const size = art.region ? fitPhoto(art.region.width, art.region.height, item.placement.width, item.placement.height) : item.placement;
+    return constrainFurniturePose({ x: saved?.x ?? item.placement.x / area.width + .5, y: saved?.y ?? item.placement.y / area.height + .5,
+      scale: saved?.scale ?? 1, rotation: saved?.rotation ?? 0, flipped: saved?.flipped ?? false, ...patch }, size, area);
+  }
+
   private renderFurnitureTransformControls(verticalExtra: number): void {
     const panel = createUiNode('FurnitureTransformControls');
     this.pageRoot.addChild(panel);
     const pageLayout = lifePageLayout(this.roots.designWidth, this.roots.designHeight);
     const contentBottom = (-this.roots.designHeight / 2 + LIFE_BOTTOM_RESERVED - pageLayout.y) / pageLayout.scale;
     const panelBottom = Math.max(contentBottom + 12, -537 - verticalExtra);
-    const panelCenter = panelBottom + 87;
-    ensureTransform(panel, 664, 174);
+    const panelCenter = panelBottom + 132;
+    ensureTransform(panel, 664, 264);
     panel.setPosition(0, panelCenter, 0);
-    paintRoundRect(panel.addComponent(Graphics), 664, 174, 24, hexColor('#FFF8F1', 246), hexColor('#E7BDB5'), 2);
+    paintRoundRect(panel.addComponent(Graphics), 664, 264, 24, hexColor('#FFF8F1', 246), hexColor('#E7BDB5'), 2);
     const item = this.game.bundle.furniture.find((entry) => entry.id === this.selectedFurniture);
     const saved = item ? this.game.life.state.furniturePositions[item.id] : undefined;
     const scale = saved?.scale ?? 1;
@@ -927,7 +1000,14 @@ export class CocosLifePages {
     const description = item
       ? `${item.title}  ·  ${Math.round(scale * 100)}%  ·  ${rotation}°  ·  ${flipped ? '已翻转' : '未翻转'}`
       : '点选当前房间的一件家具，再拖动或调整大小与方向';
-    label(panel, description, 0, 58, 20, 630, hexColor('#8B5358'), true).node.name = 'FurnitureTransformStatus';
+    const status = label(panel, description, -80, 102, 20, 450, hexColor('#8B5358'), true); status.node.name = 'FurnitureTransformStatus';
+    const undoState = this.game.getFurnitureUndoState(this.homeRoom);
+    const undo = button(panel, '撤销上一步', 250, 102, 144, 58, () => {
+      this.cancelScalePreview(); const result = this.game.undoFurnitureEdit(this.homeRoom);
+      if (result.ok) this.selectedFurniture = result.furnitureId;
+      if (result.ok) this.furnitureMessage = '已撤销上一步'; else this.toast(result.reason === 'STATE_CHANGED' ? '家具状态已变化，不能撤销这一步' : '还没有可以撤销的调整'); this.render();
+    }, 'cream');
+    undo.name = 'FurnitureUndo'; undo.getComponent(Button)!.interactable = !!undoState; ensureOpacity(undo).opacity = undoState ? 255 : 110;
     const selectedTone = item ? 'cream' : 'sage';
     const change = (patch: { scale?: number; rotation?: number; flipped?: boolean }): void => {
       if (!item) { this.toast('请先点选当前房间中已摆放的家具'); return; }
@@ -940,46 +1020,68 @@ export class CocosLifePages {
       { name: 'FurnitureRotateRight', title: '↷\n右转', x: 130, onTap: () => change({ rotation: ((rotation - 15 + 180 + 360) % 360) - 180 }) },
       { name: 'FurnitureFlipHorizontal', title: '⇄\n翻转', x: 260, onTap: () => change({ flipped: !flipped }) },
     ];
+    const controlNodes = new Map<string, Node>();
     controls.forEach(({ name, title, x, onTap }) => {
-      const node = button(panel, title, x, -24, 124, 108, onTap, selectedTone);
+      const node = button(panel, title, x, -64, 124, 88, onTap, selectedTone);
       node.name = name;
+      controlNodes.set(name, node);
       const caption = node.getComponentInChildren(Label);
       if (caption) {
-        caption.fontSize = 32;
-        caption.lineHeight = 36;
-        ensureTransform(caption.node, 112, 92);
+        caption.fontSize = 27;
+        caption.lineHeight = 30;
+        ensureTransform(caption.node, 112, 80);
       }
     });
+    const value = label(panel, `${Math.round(scale * 100)}%`, 254, 32, 26, 124, hexColor('#A35B72'), true); value.node.name = 'FurnitureScaleValue';
+    const sliderNode = createUiNode('FurnitureScaleSlider'); panel.addChild(sliderNode); ensureTransform(sliderNode, 470, 80); sliderNode.setPosition(-65, 32, 0);
+    paintRoundRect(sliderNode.addComponent(Graphics), 470, 12, 6, hexColor('#E9D6CB'));
+    const fill = createUiNode('FurnitureScaleFill'); sliderNode.addChild(fill); const fillInk = fill.addComponent(Graphics);
+    const handle = createUiNode('FurnitureScaleHandle'); sliderNode.addChild(handle); ensureTransform(handle, 76, 76);
+    const thumb = createUiNode('FurnitureScaleThumb'); handle.addChild(thumb); paintRoundRect(thumb.addComponent(Graphics), 48, 58, 20, hexColor('#FFFCF6'), hexColor('#D58099'), 3); thumb.pauseSystemEvents(true);
+    const handleSprite = handle.addComponent(Sprite), slider = sliderNode.addComponent(Slider); slider.enabled = false; slider.handle = handleSprite; slider.direction = Slider.Direction.Horizontal; slider.progress = furnitureScaleProgress(scale);
+    const refresh = (nextScale: number): void => {
+      value.string = `${Math.round(nextScale * 100)}%`;
+      status.string = item ? `${item.title}  ·  ${Math.round(nextScale * 100)}%  ·  ${rotation}°  ·  ${flipped ? '已翻转' : '未翻转'}` : description;
+      const width = Math.max(1, slider.progress * 470); paintRoundRect(fillInk, width, 12, 6, hexColor('#D58099')); fill.setPosition(-235 + width / 2, 0, 0);
+      for (const [name, node] of controlNodes) {
+        const enabled = !!item && !(name === 'FurnitureScaleDown' && nextScale <= FURNITURE_SCALE.min) && !(name === 'FurnitureScaleUp' && nextScale >= FURNITURE_SCALE.max);
+        node.getComponent(Button)!.interactable = enabled; ensureOpacity(node).opacity = enabled ? 255 : 105;
+      }
+    };
+    slider.enabled = !!item; ensureOpacity(sliderNode).opacity = item ? 255 : 105; refresh(scale);
+    label(panel, this.furnitureMessage, 0, -122, 18, 620, hexColor('#A58A7D'));
+    sliderNode.on(Node.EventType.TOUCH_START, () => {
+      if (!item) return; this.cancelScalePreview(); this.scaleGesture = { id: item.id, value: scale };
+    }, undefined, true);
+    sliderNode.on('slide', () => {
+      if (!item || this.scaleGesture?.id !== item.id) return;
+      const next = furnitureScaleFromProgress(slider.progress); this.scaleGesture.value = next;
+      this.previewFurniture?.(item.id, this.furniturePose(item, { scale: next })); refresh(next);
+    });
+    const finish = (cancel: boolean): void => {
+      const pending = this.scaleGesture; this.scaleGesture = null; if (!pending || !item) return;
+      this.scaleCommitTimer = setTimeout(() => {
+        this.scaleCommitTimer = null;
+        if (!isValid(sliderNode, true) || this.page !== 'home' || !this.arranging || this.selectedFurniture !== pending.id) return;
+        if (cancel || Math.abs((this.game.life.state.furniturePositions[pending.id]?.scale ?? 1) - pending.value) < .0001) this.render();
+        else this.updateFurnitureTransform(item, { scale: pending.value });
+      }, 0);
+    };
+    sliderNode.on(Node.EventType.TOUCH_END, () => finish(false), undefined, true);
+    sliderNode.on(Node.EventType.TOUCH_CANCEL, (event: EventTouch) => finish(event.getEventCode() !== Input.EventType.TOUCH_END), undefined, true);
   }
 
   private updateFurnitureTransform(item: FurnitureDefinition, patch: { scale?: number; rotation?: number; flipped?: boolean }): void {
-    const saved = this.game.life.state.furniturePositions[item.id];
-    const x = saved?.x ?? item.placement.x / 670 + 0.5;
-    const y = saved?.y ?? item.placement.y / 580 + 0.5;
-    const scale = patch.scale ?? saved?.scale ?? 1;
-    const rotation = patch.rotation ?? saved?.rotation ?? 0;
-    const art = furnitureArtFor(item, this.game.bundle.furniture.findIndex((entry) => entry.id === item.id));
-    const fitted = art.region ? fitPhoto(art.region.width, art.region.height, item.placement.width, item.placement.height) : { width: item.placement.width, height: item.placement.height };
-    const radians = rotation * Math.PI / 180;
-    const halfWidth = Math.min(335, (Math.abs(fitted.width * Math.cos(radians)) + Math.abs(fitted.height * Math.sin(radians))) * scale / 2);
-    const halfHeight = Math.min(290, (Math.abs(fitted.width * Math.sin(radians)) + Math.abs(fitted.height * Math.cos(radians))) * scale / 2);
-    const currentX = x * 670 - 335;
-    const currentY = y * 580 - 290;
-    const clampedX = Math.max(-335 + halfWidth, Math.min(335 - halfWidth, currentX));
-    const clampedY = Math.max(-290 + halfHeight, Math.min(290 - halfHeight, currentY));
-    const result = this.game.setFurnitureTransform(item.id, {
-      ...patch,
-      x: (clampedX + 335) / 670,
-      y: (clampedY + 290) / 580,
-    });
-    this.toast(result.ok ? '家具方向与大小已保存' : result.reason === 'NOT_READY' ? '调整未完成，请重试' : '这件家具当前无法调整');
+    const result = this.game.setFurnitureTransform(item.id, this.furniturePose(item, patch));
+    if (result.ok) this.furnitureMessage = '大小与方向已保存，可撤销'; else this.toast(result.reason === 'NOT_READY' ? '调整未完成，请重试' : '这件家具当前无法调整');
     this.render();
   }
 
   private renderRoomTabs(): void {
     const tabs = createUiNode('HomeRoomTabs');
     this.pageRoot.addChild(tabs);
-    tabs.setPosition(0, 370 + Math.max(0, (this.roots.designHeight - 1334) * 0.17), 0);
+    ensureTransform(tabs, 620, 78);
+    tabs.setPosition(0, homeFurnitureLayout(this.roots.designWidth, this.roots.designHeight).tabsY, 0);
     const rooms: Array<[HomeRoom, string]> = [['living', '客厅'], ['bedroom', '卧室'], ['garden', '花园'], ['study', '书房'], ['terrace', '露台'], ['pool', '泳池']];
     const visible = rooms.slice(this.roomPage * 3, this.roomPage * 3 + 3);
     paintRoundRect(tabs.addComponent(Graphics), 620, 78, 30, hexColor('#FFF8EE', 240), hexColor('#E6D0BE'), 2);
@@ -1006,14 +1108,16 @@ export class CocosLifePages {
 
   private modalPanel(root: Node, name: string): Node {
     clear(root);
-    paintRoundRect(root.getComponent(Graphics) ?? root.addComponent(Graphics), this.roots.designWidth, this.roots.designHeight, 0, hexColor('#362B2B', 160));
+    const furniture=name==='FurniturePanel',height=furniture?620:914;
+    paintRoundRect(root.getComponent(Graphics) ?? root.addComponent(Graphics), this.roots.designWidth, this.roots.designHeight, 0, hexColor('#362B2B', furniture?65:160));
     const panel = createUiNode(name);
     root.addChild(panel);
-    ensureTransform(panel, 690, 914);
-    const scale = Math.min(1, (this.roots.designHeight - 150) / 914, (this.roots.designWidth - 28) / 690);
+    ensureTransform(panel, 690, height);
+    const scale = Math.min(1, (this.roots.designHeight - 150) / height, (this.roots.designWidth - 28) / 690);
     panel.setScale(scale, scale, 1);
-    if (name === 'FurniturePanel') panel.setPosition(0, -this.roots.designHeight / 2 + 457 * scale + 18, 0);
-    paintRoundRect(panel.addComponent(Graphics), 690, 914, 30, hexColor('#FFF9F3'), hexColor('#F5D7CD'), 3);
+    if (furniture) panel.setPosition(0,-this.roots.designHeight/2+height*scale/2+126,0);
+    paintRoundRect(panel.addComponent(Graphics),690,height,30,hexColor('#FFF9F3'),hexColor('#F5D7CD'),2);
+    applyMaterialFrame(panel,'paper',690,height,.70);
     return panel;
   }
 
@@ -1058,8 +1162,10 @@ export class CocosLifePages {
     ensureTransform(card, 626, 132);
     card.setPosition(0, y, 0);
     paintRoundRect(card.addComponent(Graphics), 626, 132, 20, claimed ? hexColor('#F2EFE5') : hexColor('#FFF0EA'), hexColor('#F1D9D0'));
-    label(card, wish.title, -128, 35, 23, 315, CocosTheme.textPrimary(), true);
-    label(card, progress + '/' + wish.target + '  ·  金币+' + wish.rewardCoins + '  爱心+' + wish.rewardHearts, -105, -5, 22, 360, CocosTheme.textSecondary());
+    label(card, wish.title, -139, 35, 23, 290, CocosTheme.textPrimary(), true);
+    label(card, progress + '/' + wish.target, 86, 35, 19, 90, CocosTheme.textSecondary());
+    label(card, '金币 +' + wish.rewardCoins + ' · 爱心 +' + wish.rewardHearts, -105, wish.generatorReward?5:-5, 21, 360, CocosTheme.textSecondary());
+    if(wish.generatorReward){const gift=wish.generatorReward,name=this.game.generators.get(gift.generatorId)?.displayName??'生成器';label(card,name+' Lv'+gift.level+' ×'+gift.count,-105,-24,19,360,hexColor('#A37B45'));}
     const track = createUiNode('WishProgress'); card.addChild(track); track.setPosition(-105, -44, 0);
     paintRoundRect(track.addComponent(Graphics), 358, 10, 5, hexColor('#EAD8CF'));
     if (progress > 0) {
@@ -1086,14 +1192,14 @@ export class CocosLifePages {
 
   private renderCatalog(): void {
     const panel = this.modalPanel(this.catalogRoot, 'FurniturePanel');
-    label(panel, '布置我们的小屋', -75, 390, 31, 470, hexColor('#8B5358'), true);
-    label(panel, '挑选家具，摆进喜欢的房间', 0, 345, 22, 580, CocosTheme.textSecondary());
-    button(panel, '关闭', 275, 395, 100, 68, () => {
+    label(panel,'家具与壁画目录',-70,270,31,470,hexColor('#8B5358'),true);
+    label(panel,'挑选家具，摆进喜欢的房间',0,218,20,580,CocosTheme.textSecondary());
+    button(panel, '关闭', 275, 270, 100, 64, () => {
       this.catalogRoot.active = false;
       this.renderNav();
     });
-    const categories = ['全部', '客厅', '卧室', '花园', '书房', '露台', '泳池'];
-    categories.forEach((name, index) => button(panel, name, -270 + index * 90, 289, 84, 64, () => {
+    const categories = ['全部', '客厅', '卧室', '花园', '书房', '露台', '泳池', '壁画'];
+    categories.forEach((name, index) => button(panel, name,-240+(index%4)*160,164-Math.floor(index/4)*68,148,58, () => {
       this.category = name;
       this.furniturePage = 0;
       this.renderCatalog();
@@ -1103,21 +1209,21 @@ export class CocosLifePages {
     this.furniturePage = Math.min(this.furniturePage, pages - 1);
     filtered.slice(this.furniturePage * 4, this.furniturePage * 4 + 4).forEach((item, offset) => {
       const index = this.game.bundle.furniture.findIndex((entry) => entry.id === item.id);
-      this.furnitureCard(panel, item, index, offset % 2 === 0 ? -157 : 157, offset < 2 ? 117 : -159);
+      this.furnitureCard(panel,item,index,-246+offset*164,-88);
     });
     if (filtered.length === 0) label(panel, '这里暂时没有家具', 0, 0, 23, 450, CocosTheme.textSecondary());
     if (pages > 1) {
-      button(panel, '‹', -145, -392, 128, 64, () => {
+      button(panel, '‹', -145, -278, 114, 52, () => {
         this.furniturePage = (this.furniturePage - 1 + pages) % pages;
         this.renderCatalog();
       });
-      label(panel, (this.furniturePage + 1) + ' / ' + pages, 0, -392, 20, 90, CocosTheme.textSecondary());
-      button(panel, '›', 145, -392, 128, 64, () => {
+      label(panel, (this.furniturePage + 1) + ' / ' + pages, 0, -278, 20, 90, CocosTheme.textSecondary());
+      button(panel, '›', 145, -278, 114, 52, () => {
         this.furniturePage = (this.furniturePage + 1) % pages;
         this.renderCatalog();
       });
     } else {
-      label(panel, '共 ' + filtered.length + ' 件家具', 0, -392, 20, 240, CocosTheme.textSecondary());
+      label(panel, '共 ' + filtered.length + ' 件家具', 0, -278, 20, 240, CocosTheme.textSecondary());
     }
   }
 
@@ -1127,16 +1233,17 @@ export class CocosLifePages {
     const locked = this.game.player.level < item.unlockLevel;
     const card = createUiNode('Furniture_' + item.id);
     parent.addChild(card);
-    ensureTransform(card, 298, 258);
+    ensureTransform(card,154,300);
     card.setPosition(x, y, 0);
-    paintRoundRect(card.addComponent(Graphics), 298, 258, 22, CocosTheme.surface(), CocosTheme.border(), 2);
+    paintRoundRect(card.addComponent(Graphics),154,300,18,hexColor('#FFF4E3'),hexColor(placed?'#B3C299':'#E2CBB0'),placed?2:1);
     const icon = createUiNode('FurnitureArt');
     card.addChild(icon);
-    icon.setPosition(0, 44, 0);
-    applyArt(icon, furnitureArtFor(item, index), 228, 144);
-    label(card, item.title, 0, -43, 25, 276, CocosTheme.textPrimary(), true);
-    const action = locked ? 'Lv' + item.unlockLevel + ' 解锁' : owned ? placed ? '收起' : '摆放' : '金币 ' + item.coinCost;
-    button(card, action, 0, -91, 244, 64, () => {
+    icon.setPosition(0,73,0);ensureOpacity(icon).opacity=locked?150:255;
+    applyFurnitureArt(icon,item,index,item.art.startsWith('wall:')?112:138,138);
+    label(card,item.title,0,-18,22,146,CocosTheme.textPrimary(),true);
+    label(card,locked?'Lv'+item.unlockLevel+' 解锁':owned?'装修 +'+item.decorPoints:'金币 '+item.coinCost,0,-61,16,146,CocosTheme.textSecondary());
+    const action=locked?'未解锁':owned?placed?'收起':'摆放':'购买';
+    button(card,action,0,-112,136,54, () => {
       if (locked) { this.toast('达到 Lv' + item.unlockLevel + ' 后解锁'); return; }
       const result = owned ? this.game.placeFurniture(item.id) : this.game.buyFurniture(item.id);
       if (result.ok) {
@@ -1148,6 +1255,6 @@ export class CocosLifePages {
       } else {
         this.toast('金币不足，完成订单和心愿可获得');
       }
-    }, owned && placed ? 'sage' : 'pink');
+    },locked?'cream':owned&&placed?'sage':'pink');
   }
 }

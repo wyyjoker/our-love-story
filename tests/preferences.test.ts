@@ -45,7 +45,7 @@ describe('saved feedback preferences', () => {
     const loaded = save.load();
     expect(loaded.ok).toBe(true);
     if (!loaded.ok) return;
-    expect(loaded.data.version).toBe(8);
+    expect(loaded.data.version).toBe(9);
     expect(loaded.data.preferences).toEqual({ soundEnabled: true, vibrationEnabled: true });
     expect(loaded.data.player.coins).toBe(37);
     expect(loaded.notice).toBe('MIGRATED');

@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "scope": "chestflow",
+  "checks": [
+    "order delivery controls across three sizes and configured generator streak limit",
+    "all six level-eligible adventures open directly without consuming items or claiming earlier chapters",
+    "orange tree ten free touch picks, exhausted rejection and explicit paid restore",
+    "purchase directly onto the board and drag-merge generators with level-appropriate main output",
+    "highest generator main output respects its level and level-12 items do not merge",
+    "five chest levels merge, open by touch, reject reused UID and preserve overflow",
+    "all 15 supply levels require explicit use and grant configured rewards once with level 5 merge ceiling"
+  ],
+  "exceptions": [],
+  "testedBuildDigest": "3b2453a4f2120f4d0f3f636fd5835ca519b40489f6030f55438a62a52ea99407",
+  "version": "1.3.0",
+  "output": "E:\\A-game\\temp\\cocos-ui-qa-2026-11-18T02-11-19-538Z-aUVwyF"
+}

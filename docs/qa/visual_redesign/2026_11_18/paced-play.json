@@ -1,0 +1,3329 @@
+{
+  "durationMs": 1200000,
+  "realClock": true,
+  "simulatedHumanPacing": true,
+  "actions": [
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "merge 咖啡豆",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "merge 咖啡豆",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "merge 咖啡豆",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "merge 郁金香花苞",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "merge 郁金香花苞",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn flower_basket",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "merge 咖啡豆",
+    "spawn coffee_machine",
+    "merge 精选咖啡豆",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "merge 咖啡豆",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn dessert_oven",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "merge 郁金香花苞",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "merge 咖啡豆",
+    "spawn coffee_machine",
+    "merge 精选咖啡豆",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn dessert_oven",
+    "merge 牛角包",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "merge 咖啡豆",
+    "merge 精选咖啡豆",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "merge 郁金香花苞",
+    "spawn flower_basket",
+    "spawn coffee_machine",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "merge 咖啡豆",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "merge 牛角包",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "merge 咖啡豆",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn flower_basket",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "claim daily task orders_3",
+    "claim daily task merges_10",
+    "claim daily task specific_2",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "merge 咖啡豆",
+    "spawn flower_basket",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn dessert_oven",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "merge 郁金香花苞",
+    "spawn coffee_machine",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "merge 郁金香花苞",
+    "spawn coffee_machine",
+    "spawn flower_basket",
+    "use treasure_chest",
+    "use energy_01",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn dessert_oven",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "merge 郁金香花苞",
+    "use treasure_chest",
+    "claim story chapter love_letters",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "merge 咖啡豆",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "merge 咖啡豆",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "merge 郁金香花苞",
+    "spawn gift_box",
+    "spawn gift_box",
+    "spawn gift_box",
+    "claim story chapter namsan",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn gift_box",
+    "spawn gift_box",
+    "spawn gift_box",
+    "spawn coffee_machine",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "merge 郁金香花苞",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn dessert_oven",
+    "spawn gift_box",
+    "spawn gift_box",
+    "merge 蝴蝶结",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn gift_box",
+    "spawn gift_box",
+    "spawn flower_basket",
+    "spawn dessert_oven",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "merge 咖啡豆",
+    "spawn coffee_machine",
+    "spawn coffee_machine",
+    "merge 咖啡豆",
+    "claim story chapter hengdian_newyear",
+    "spawn coffee_machine",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "wait 10s for flower_basket cooldown",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "spawn flower_basket",
+    "merge 郁金香花苞"
+  ],
+  "snapshots": [
+    {
+      "elapsedMs": 64906,
+      "reason": "fresh start, first delivery, check-in and opening chapter",
+      "level": 1,
+      "xp": 10,
+      "energy": 119,
+      "coins": 163,
+      "empty": 4,
+      "backpack": 0,
+      "stats": {
+        "spawns": 1,
+        "merges": 1,
+        "orders": 1
+      },
+      "orange": {
+        "uid": null,
+        "unlocked": false,
+        "level": 0,
+        "maxLevel": 8,
+        "inventory": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 0,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 0,
+        "capacity": 0,
+        "charges": null,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_02",
+              "count": 1
+            }
+          ],
+          "ready": true
+        },
+        {
+          "needs": [
+            {
+              "itemId": "coffee_01",
+              "count": 1
+            }
+          ],
+          "ready": true
+        },
+        {
+          "needs": [
+            {
+              "itemId": "coffee_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 67401,
+      "reason": "orders in progress",
+      "level": 1,
+      "xp": 20,
+      "energy": 119,
+      "coins": 166,
+      "empty": 5,
+      "backpack": 0,
+      "stats": {
+        "spawns": 1,
+        "merges": 1,
+        "orders": 2
+      },
+      "orange": {
+        "uid": null,
+        "unlocked": false,
+        "level": 0,
+        "maxLevel": 8,
+        "inventory": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 0,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 0,
+        "capacity": 0,
+        "charges": null,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_02",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "coffee_01",
+              "count": 1
+            }
+          ],
+          "ready": true
+        },
+        {
+          "needs": [
+            {
+              "itemId": "coffee_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 106680,
+      "reason": "orders in progress",
+      "level": 2,
+      "xp": 74,
+      "energy": 113,
+      "coins": 223,
+      "empty": 8,
+      "backpack": 0,
+      "stats": {
+        "spawns": 7,
+        "merges": 3,
+        "orders": 7
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "coffee_02",
+              "count": 2
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "coffee_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 139970,
+      "reason": "orders in progress",
+      "level": 2,
+      "xp": 120,
+      "energy": 107,
+      "coins": 236,
+      "empty": 8,
+      "backpack": 0,
+      "stats": {
+        "spawns": 13,
+        "merges": 3,
+        "orders": 12
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "coffee_02",
+              "count": 2
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "coffee_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 181732,
+      "reason": "orders in progress",
+      "level": 4,
+      "xp": 462,
+      "energy": 98,
+      "coins": 529,
+      "empty": 11,
+      "backpack": 0,
+      "stats": {
+        "spawns": 22,
+        "merges": 4,
+        "orders": 16
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "flower_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "coffee_02",
+              "count": 2
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "coffee_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 212628,
+      "reason": "orders in progress",
+      "level": 4,
+      "xp": 498,
+      "energy": 92,
+      "coins": 539,
+      "empty": 10,
+      "backpack": 0,
+      "stats": {
+        "spawns": 28,
+        "merges": 4,
+        "orders": 20
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_01",
+              "count": 1
+            },
+            {
+              "itemId": "coffee_02",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "coffee_02",
+              "count": 2
+            }
+          ],
+          "ready": true
+        },
+        {
+          "needs": [
+            {
+              "itemId": "coffee_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 242895,
+      "reason": "orders in progress",
+      "level": 5,
+      "xp": 556,
+      "energy": 87,
+      "coins": 668,
+      "empty": 15,
+      "backpack": 0,
+      "stats": {
+        "spawns": 33,
+        "merges": 5,
+        "orders": 24
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "flower_02",
+              "count": 1
+            },
+            {
+              "itemId": "dessert_02",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "coffee_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 274726,
+      "reason": "orders in progress",
+      "level": 5,
+      "xp": 604,
+      "energy": 81,
+      "coins": 683,
+      "empty": 15,
+      "backpack": 0,
+      "stats": {
+        "spawns": 39,
+        "merges": 6,
+        "orders": 28
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "dessert_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "coffee_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 306977,
+      "reason": "orders in progress",
+      "level": 5,
+      "xp": 640,
+      "energy": 74,
+      "coins": 707,
+      "empty": 14,
+      "backpack": 0,
+      "stats": {
+        "spawns": 46,
+        "merges": 8,
+        "orders": 31
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "dessert_02",
+              "count": 1
+            }
+          ],
+          "ready": true
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 343188,
+      "reason": "orders in progress",
+      "level": 5,
+      "xp": 690,
+      "energy": 68,
+      "coins": 723,
+      "empty": 15,
+      "backpack": 0,
+      "stats": {
+        "spawns": 52,
+        "merges": 9,
+        "orders": 36
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "flower_02",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 375813,
+      "reason": "orders in progress",
+      "level": 5,
+      "xp": 732,
+      "energy": 60,
+      "coins": 740,
+      "empty": 12,
+      "backpack": 0,
+      "stats": {
+        "spawns": 60,
+        "merges": 12,
+        "orders": 38
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "dessert_02",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 409703,
+      "reason": "orders in progress",
+      "level": 6,
+      "xp": 782,
+      "energy": 54,
+      "coins": 886,
+      "empty": 16,
+      "backpack": 0,
+      "stats": {
+        "spawns": 66,
+        "merges": 13,
+        "orders": 42
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_03",
+              "count": 1
+            },
+            {
+              "itemId": "dessert_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 443671,
+      "reason": "orders in progress",
+      "level": 6,
+      "xp": 818,
+      "energy": 46,
+      "coins": 899,
+      "empty": 15,
+      "backpack": 0,
+      "stats": {
+        "spawns": 74,
+        "merges": 15,
+        "orders": 45
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "dessert_02",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 479916,
+      "reason": "orders in progress",
+      "level": 6,
+      "xp": 870,
+      "energy": 40,
+      "coins": 916,
+      "empty": 16,
+      "backpack": 0,
+      "stats": {
+        "spawns": 80,
+        "merges": 16,
+        "orders": 50
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 519539,
+      "reason": "orders in progress",
+      "level": 6,
+      "xp": 918,
+      "energy": 31,
+      "coins": 930,
+      "empty": 14,
+      "backpack": 0,
+      "stats": {
+        "spawns": 89,
+        "merges": 18,
+        "orders": 54
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "flower_01",
+              "count": 1
+            },
+            {
+              "itemId": "dessert_02",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 551726,
+      "reason": "orders in progress",
+      "level": 6,
+      "xp": 956,
+      "energy": 23,
+      "coins": 942,
+      "empty": 12,
+      "backpack": 0,
+      "stats": {
+        "spawns": 97,
+        "merges": 18,
+        "orders": 58
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_02",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 590900,
+      "reason": "orders in progress",
+      "level": 6,
+      "xp": 1006,
+      "energy": 15,
+      "coins": 958,
+      "empty": 12,
+      "backpack": 0,
+      "stats": {
+        "spawns": 105,
+        "merges": 19,
+        "orders": 63
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_02",
+              "count": 1
+            },
+            {
+              "itemId": "dessert_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 604112,
+      "reason": "used a task reward or board supply to replenish energy",
+      "level": 7,
+      "xp": 1056,
+      "energy": 40,
+      "coins": 1223,
+      "empty": 11,
+      "backpack": 0,
+      "stats": {
+        "spawns": 105,
+        "merges": 19,
+        "orders": 63
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_02",
+              "count": 1
+            },
+            {
+              "itemId": "dessert_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 625858,
+      "reason": "orders in progress",
+      "level": 7,
+      "xp": 1078,
+      "energy": 33,
+      "coins": 1231,
+      "empty": 8,
+      "backpack": 0,
+      "stats": {
+        "spawns": 112,
+        "merges": 19,
+        "orders": 65
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "flower_02",
+              "count": 1
+            }
+          ],
+          "ready": true
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 659524,
+      "reason": "orders in progress",
+      "level": 7,
+      "xp": 1124,
+      "energy": 28,
+      "coins": 1244,
+      "empty": 9,
+      "backpack": 0,
+      "stats": {
+        "spawns": 117,
+        "merges": 20,
+        "orders": 70
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_03",
+              "count": 1
+            },
+            {
+              "itemId": "dessert_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 695120,
+      "reason": "orders in progress",
+      "level": 7,
+      "xp": 1180,
+      "energy": 22,
+      "coins": 1265,
+      "empty": 11,
+      "backpack": 0,
+      "stats": {
+        "spawns": 123,
+        "merges": 21,
+        "orders": 75
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "flower_02",
+              "count": 1
+            }
+          ],
+          "ready": true
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 729953,
+      "reason": "used a task reward or board supply to replenish energy",
+      "level": 7,
+      "xp": 1242,
+      "energy": 17,
+      "coins": 1286,
+      "empty": 11,
+      "backpack": 0,
+      "stats": {
+        "spawns": 128,
+        "merges": 22,
+        "orders": 79
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_02",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 733727,
+      "reason": "used a task reward or board supply to replenish energy",
+      "level": 7,
+      "xp": 1242,
+      "energy": 22,
+      "coins": 1286,
+      "empty": 12,
+      "backpack": 0,
+      "stats": {
+        "spawns": 128,
+        "merges": 22,
+        "orders": 79
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_02",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 741860,
+      "reason": "orders in progress",
+      "level": 7,
+      "xp": 1252,
+      "energy": 20,
+      "coins": 1289,
+      "empty": 11,
+      "backpack": 0,
+      "stats": {
+        "spawns": 130,
+        "merges": 22,
+        "orders": 80
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "dessert_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 766549,
+      "reason": "used a task reward or board supply to replenish energy",
+      "level": 7,
+      "xp": 1270,
+      "energy": 17,
+      "coins": 1294,
+      "empty": 10,
+      "backpack": 0,
+      "stats": {
+        "spawns": 133,
+        "merges": 23,
+        "orders": 82
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_01",
+              "count": 1
+            }
+          ],
+          "ready": true
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 783285,
+      "reason": "used a task reward or board supply to replenish energy",
+      "level": 7,
+      "xp": 1270,
+      "energy": 42,
+      "coins": 1474,
+      "empty": 10,
+      "backpack": 0,
+      "stats": {
+        "spawns": 133,
+        "merges": 23,
+        "orders": 82
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_01",
+              "count": 1
+            }
+          ],
+          "ready": true
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 785773,
+      "reason": "orders in progress",
+      "level": 7,
+      "xp": 1278,
+      "energy": 42,
+      "coins": 1476,
+      "empty": 11,
+      "backpack": 0,
+      "stats": {
+        "spawns": 133,
+        "merges": 23,
+        "orders": 83
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "dessert_02",
+              "count": 1
+            }
+          ],
+          "ready": true
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 825227,
+      "reason": "orders in progress",
+      "level": 7,
+      "xp": 1320,
+      "energy": 33,
+      "coins": 1490,
+      "empty": 9,
+      "backpack": 0,
+      "stats": {
+        "spawns": 142,
+        "merges": 25,
+        "orders": 87
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "flower_01",
+              "count": 1
+            }
+          ],
+          "ready": true
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 857944,
+      "reason": "orders in progress",
+      "level": 7,
+      "xp": 1378,
+      "energy": 28,
+      "coins": 1513,
+      "empty": 10,
+      "backpack": 0,
+      "stats": {
+        "spawns": 148,
+        "merges": 25,
+        "orders": 92
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "dessert_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 894892,
+      "reason": "orders in progress",
+      "level": 8,
+      "xp": 1424,
+      "energy": 20,
+      "coins": 1686,
+      "empty": 12,
+      "backpack": 0,
+      "stats": {
+        "spawns": 156,
+        "merges": 26,
+        "orders": 96
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "gift_02",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 968237,
+      "reason": "used a task reward or board supply to replenish energy",
+      "level": 8,
+      "xp": 1442,
+      "energy": 47,
+      "coins": 1931,
+      "empty": 11,
+      "backpack": 0,
+      "stats": {
+        "spawns": 159,
+        "merges": 26,
+        "orders": 98
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "dessert_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 974423,
+      "reason": "orders in progress",
+      "level": 8,
+      "xp": 1450,
+      "energy": 46,
+      "coins": 1933,
+      "empty": 11,
+      "backpack": 0,
+      "stats": {
+        "spawns": 160,
+        "merges": 26,
+        "orders": 99
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 1009034,
+      "reason": "orders in progress",
+      "level": 8,
+      "xp": 1518,
+      "energy": 39,
+      "coins": 1959,
+      "empty": 11,
+      "backpack": 0,
+      "stats": {
+        "spawns": 167,
+        "merges": 26,
+        "orders": 104
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 1042506,
+      "reason": "orders in progress",
+      "level": 8,
+      "xp": 1580,
+      "energy": 35,
+      "coins": 1976,
+      "empty": 13,
+      "backpack": 0,
+      "stats": {
+        "spawns": 171,
+        "merges": 26,
+        "orders": 110
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 1079754,
+      "reason": "orders in progress",
+      "level": 8,
+      "xp": 1642,
+      "energy": 28,
+      "coins": 1997,
+      "empty": 13,
+      "backpack": 0,
+      "stats": {
+        "spawns": 178,
+        "merges": 27,
+        "orders": 115
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "dessert_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 1112766,
+      "reason": "orders in progress",
+      "level": 8,
+      "xp": 1690,
+      "energy": 21,
+      "coins": 2022,
+      "empty": 13,
+      "backpack": 0,
+      "stats": {
+        "spawns": 185,
+        "merges": 28,
+        "orders": 119
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "flower_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 1159142,
+      "reason": "used a task reward or board supply to replenish energy",
+      "level": 8,
+      "xp": 1720,
+      "energy": 46,
+      "coins": 2332,
+      "empty": 12,
+      "backpack": 0,
+      "stats": {
+        "spawns": 191,
+        "merges": 30,
+        "orders": 122
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_01",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 1165433,
+      "reason": "orders in progress",
+      "level": 8,
+      "xp": 1736,
+      "energy": 45,
+      "coins": 2336,
+      "empty": 12,
+      "backpack": 0,
+      "stats": {
+        "spawns": 192,
+        "merges": 30,
+        "orders": 123
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "flower_02",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 1200436,
+      "reason": "orders in progress",
+      "level": 8,
+      "xp": 1768,
+      "energy": 40,
+      "coins": 2347,
+      "empty": 11,
+      "backpack": 0,
+      "stats": {
+        "spawns": 197,
+        "merges": 31,
+        "orders": 126
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_02",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    },
+    {
+      "elapsedMs": 1200585,
+      "reason": "completed",
+      "level": 8,
+      "xp": 1768,
+      "energy": 40,
+      "coins": 2347,
+      "empty": 11,
+      "backpack": 0,
+      "stats": {
+        "spawns": 197,
+        "merges": 31,
+        "orders": 126
+      },
+      "orange": {
+        "uid": "id_mwlf8tnl_b_5orur",
+        "unlocked": true,
+        "level": 1,
+        "maxLevel": 8,
+        "inventory": [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "energyCost": 0,
+        "boostAvailable": false,
+        "boosted": false,
+        "boostEnergyCost": null,
+        "cooldownMs": 60000,
+        "streak": 0,
+        "streakLimit": 0,
+        "remainingCooldownMs": 0,
+        "remainingUses": 10,
+        "capacity": 10,
+        "charges": 10,
+        "maxCharges": 10,
+        "nextRecoveryMs": null
+      },
+      "orders": [
+        {
+          "needs": [
+            {
+              "itemId": "coffee_02",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "fruit_03",
+              "count": 1
+            },
+            {
+              "itemId": "flower_03",
+              "count": 1
+            }
+          ],
+          "ready": false
+        },
+        {
+          "needs": [
+            {
+              "itemId": "flower_04",
+              "count": 1
+            }
+          ],
+          "ready": false
+        }
+      ]
+    }
+  ]
+}

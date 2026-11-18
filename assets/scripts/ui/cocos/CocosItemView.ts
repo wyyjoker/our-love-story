@@ -11,6 +11,7 @@ import {
   ensureTransform,
   makeLabel,
   paintRoundRect,
+  hexColor,
 } from './CocosTheme';
 import { applyArt, itemArt } from './CocosArt';
 
@@ -24,6 +25,8 @@ export class CocosItemView {
   private currentUid = '';
   private artNode: Node;
   private levelBadge: Label;
+  private machineProgress: Graphics;
+  private machineCharge: Label;
 
   constructor(parent: Node, size: number, width = size, height = size) {
     this.size = size;
@@ -42,10 +45,12 @@ export class CocosItemView {
     ensureTransform(this.codeLabel.node, width - 8, height - 4);
     this.codeLabel.overflow = Label.Overflow.SHRINK;
     const badge = createUiNode('ItemLevelBadge'); this.node.addChild(badge);
-    ensureTransform(badge, 42, 22); badge.setPosition(width / 2 - 24, -height / 2 + 13, 0);
-    paintRoundRect(badge.addComponent(Graphics), 42, 22, 10, CocosTheme.surface(), CocosTheme.primary(), 1);
+    ensureTransform(badge, 42, 22); badge.setPosition(-width / 2 + 24, -height / 2 + 13, 0);
+    paintRoundRect(badge.addComponent(Graphics), 42, 22, 10, hexColor('#FFF8E8', 240), CocosTheme.primary(), 1);
     this.levelBadge = makeLabel('', 15, CocosTheme.textPrimary(), true); badge.addChild(this.levelBadge.node);
     ensureTransform(this.levelBadge.node, 40, 20); this.levelBadge.overflow = Label.Overflow.SHRINK;
+    const progress=createUiNode('ProducerCooldown');this.node.addChild(progress);progress.setPosition(0,-height/2+3,0);this.machineProgress=progress.addComponent(Graphics);
+    this.machineCharge=makeLabel('',Math.max(14,Math.floor(size*0.21)),hexColor('#AE7C37'),true);this.node.addChild(this.machineCharge.node);this.machineCharge.node.name='ProducerCharge';ensureTransform(this.machineCharge.node,width-8,22);this.machineCharge.node.setPosition(0,height/2-12,0);this.machineCharge.overflow=Label.Overflow.SHRINK;
   }
 
   get uid(): string {
@@ -54,14 +59,21 @@ export class CocosItemView {
 
   render(vm: ItemVm): void {
     this.currentUid = vm.uid;
-    paintRoundRect(this.g, this.width, this.height, 12, CocosTheme.surface());
+    this.g.clear();
     const art = itemArt(vm.definitionId);
     this.artNode.active = !!art;
     this.codeLabel.node.active = true;
     this.codeLabel.color = CocosTheme.chain(vm.chainId);
     this.codeLabel.string = `${vm.code}`;
-    this.levelBadge.node.parent!.active = ['treasure_chest', 'coin', 'energy', 'diamond', 'scissors'].includes(vm.chainId) || vm.level >= 9;
+    this.levelBadge.node.parent!.active = !!vm.generatorId || ['treasure_chest', 'coin', 'energy', 'diamond', 'scissors'].includes(vm.chainId) || vm.level >= 9;
     this.levelBadge.string = vm.chainId === 'scissors' ? `${vm.remainingUses}次` : `Lv${vm.level}`;
+    this.machineCharge.node.active=!!vm.generatorId;this.machineProgress.clear();
+    if(vm.generatorId){
+      const seconds=Math.ceil((vm.generatorRemainingMs??0)/1000);
+      this.machineCharge.string=seconds ? `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}` : `⚡${vm.remainingUses}`;
+      const width=this.width-14;paintRoundRect(this.machineProgress,width,5,2,hexColor('#DDC9B5'));
+      const fill=Math.max(2,width*(vm.generatorProgress??1));this.machineProgress.fillColor=hexColor('#A6B68D');this.machineProgress.roundRect(-width/2,-2.5,fill,5,2);this.machineProgress.fill();
+    }
     if (art) applyArt(this.artNode, { ...art, preserveAspect: true }, this.size * 0.9, this.size * 0.9,
       (ready) => { this.codeLabel.node.active = !ready; });
     this.node.active = true;

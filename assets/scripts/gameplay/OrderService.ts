@@ -131,6 +131,8 @@ export class OrderService {
   }
 
   createNextOrder(forceTutorial = false, replacingUid?: string): ActiveOrder | null {
+    const slot = replacingUid ? this.getSlot(replacingUid) : this.orders.length;
+    const pace = this.dynamic.pacedSlots ? (['quick', 'regular', 'goal'] as const)[Math.max(0, slot) % 3] : undefined;
     const order = forceTutorial
       ? generateTutorialOrder(this.templates, this.ids.next())
       : generateOrder({
@@ -146,6 +148,7 @@ export class OrderService {
           minimumLevelForChain: this.minimumLevelForChain,
           canProduceItem: this.canProduceItem,
           maxMergeCostForChain: this.maxMergeCostForChain,
+          pace,
           limitedChainIds: this.limitedChainIds,
           random: this.random,
           id: this.ids.next(),

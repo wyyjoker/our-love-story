@@ -43,7 +43,7 @@ describe('playful story and inventory loop', () => {
     const legacyRaw = JSON.stringify(legacy);
     f.values.set(f.game.config.saveKey, legacyRaw);
     const restored = f.open();
-    expect(restored.config.saveVersion).toBe(8);
+    expect(restored.config.saveVersion).toBe(9);
     expect(restored.life.state.unlockedMemoryIds).toEqual(['letters', 'first_trip', 'zhoushan_bonfire']);
     expect(restored.life.state.photoPaths).toEqual(['wxfile://photo']);
     expect(restored.player.coins).toBe(342); expect(restored.player.hearts).toBe(91);
@@ -80,12 +80,12 @@ describe('playful story and inventory loop', () => {
   });
   it('splits every chain level without creating merge value, spending energy or counting a merge', () => {
     const bundle = loadConfigBundle();
-    for (const definition of bundle.items.filter((item) => item.level > 1 && !item.maxUses)) {
+    for (const definition of bundle.items.filter((item) => item.level > 1 && !item.maxUses && !item.generator)) {
       const { game } = fixture(); game.debugClearBoard(); game.debugSpawn(definition.id);
       const uid = game.board.getBoard().cells[0].item!.uid;
       const energy = game.player.energy;
       expect(game.playAction('split', '0').ok).toBe(true);
-      const items = game.board.getBoard().cells.flatMap((c) => c.item ? [c.item] : []);
+      const items = game.board.getBoard().cells.flatMap((c) => c.item && !game.bundle.catalog.get(c.item.definitionId)?.generator ? [c.item] : []);
       expect(items).toHaveLength(2); expect(items[0].uid).toBe(uid); expect(items[1].uid).not.toBe(uid);
       expect(items.map((i) => bundle.catalog.get(i.definitionId)?.level)).toEqual([definition.level - 1, definition.level - 1]);
       expect(game.player.energy).toBe(energy); expect(game.life.state.stats.merges).toBe(0);

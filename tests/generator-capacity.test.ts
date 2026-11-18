@@ -36,7 +36,7 @@ describe('generator capacity and streak migrations', () => {
 
     let game = f.open();
     expect(game.getGeneratorStatus('orange_tree')).toMatchObject({ charges: tree.recharge!.capacity, maxCharges: tree.recharge!.capacity, nextRecoveryMs: null });
-    expect(game.buildSaveData().generatorCharges?.orange_tree).toMatchObject({ capacity: tree.recharge!.capacity, charges: tree.recharge!.capacity });
+    expect(game.buildSaveData().board.find(c=>c.item?.uid===game.getGeneratorStatus('orange_tree')?.uid)?.item?.generatorState).toMatchObject({ remainingUses: tree.recharge!.capacity });
     game = f.open();
     expect(game.getGeneratorStatus('orange_tree')).toMatchObject({ charges: tree.recharge!.capacity, maxCharges: tree.recharge!.capacity, nextRecoveryMs: null });
   });
@@ -58,7 +58,7 @@ describe('generator capacity and streak migrations', () => {
       maxCharges: tree.recharge!.capacity,
       nextRecoveryMs: tree.recharge!.intervalMs - elapsed,
     });
-    expect(game.buildSaveData().generatorCharges?.orange_tree).toMatchObject({ capacity: tree.recharge!.capacity });
+    expect(game.buildSaveData().board.find(c=>c.item?.uid===game.getGeneratorStatus('orange_tree')?.uid)?.item?.generatorState).toMatchObject({ remainingUses: tree.recharge!.capacity - tree.recharge!.legacyCapacity! + legacyCharges });
 
     expect(game.spawnFromGenerator('orange_tree').ok).toBe(true);
     game = f.open();
@@ -83,7 +83,7 @@ describe('generator capacity and streak migrations', () => {
     const limit = coffee.streakCooldown!.uses;
     expect(limit).toBeGreaterThan(oldStreak);
     expect(game.getGeneratorStatus('coffee_machine')).toMatchObject({ streak: oldStreak, streakLimit: limit, remainingCooldownMs: 0 });
-    expect(game.buildSaveData().generatorCooldowns?.coffee_machine).toMatchObject({ streak: oldStreak, cooldownStartedAt: null });
+    expect(game.buildSaveData().board.find(c=>c.item?.uid===game.getGeneratorStatus('coffee_machine')?.uid)?.item?.generatorState).toMatchObject({ remainingUses: limit - oldStreak, cooldownUntil: null });
 
     game.player.energy = game.player.maxEnergy;
     const remainingUses = limit - oldStreak;
@@ -107,6 +107,6 @@ describe('generator capacity and streak migrations', () => {
 
     const game = f.open();
     expect(game.getGeneratorStatus('coffee_machine')).toMatchObject({ streak: 0, streakLimit: coffee.streakCooldown!.uses, remainingCooldownMs: 0 });
-    expect(game.buildSaveData().generatorCooldowns?.coffee_machine).toMatchObject({ streak: 0, cooldownStartedAt: null });
+    expect(game.buildSaveData().board.find(c=>c.item?.uid===game.getGeneratorStatus('coffee_machine')?.uid)?.item?.generatorState).toMatchObject({ remainingUses: coffee.streakCooldown!.uses, cooldownUntil: null });
   });
 });

@@ -1,5 +1,5 @@
 import type { ItemInstance, GameConfig, GamePreferences, LifeState, PlayerState, SaveData, TutorialState, FirstUseHint } from '../core/types';
-import { cloneBoard } from '../core/board/board';
+import { cloneBoard, cloneItem } from '../core/board/board';
 import type { ConfigBundle } from '../config/ConfigRepository';
 import { loadConfigBundle, assertConfigValid } from '../config/ConfigRepository';
 import { GameEventBus } from '../events/GameEventBus';
@@ -27,6 +27,7 @@ import { ProgressionService } from './ProgressionService';
 import { LifeService, type LifeResult } from './LifeService';
 import { PlayService } from './PlayService';
 import { JournalService } from './JournalService';
+import { planOrderRequirement } from '../core/order/tracking';
 
 export type GameContextOptions = {
   config?: ConfigBundle;
@@ -58,6 +59,10 @@ export type GeneratorPurchaseQuote =
   | { ok: true; generatorId: string; cost: number }
   | { ok: false; reason: 'NOT_FOUND' | 'LOCKED' };
 
+export type BoardItemSale =
+  | { ok: true; index: number; uid: string; definitionId: string; coins: number; breaksReadyOrder: boolean }
+  | { ok: false; reason: 'ITEM_CHANGED' | 'NOT_FOR_SALE' };
+
 /**
  * Wires all services. UI talks only to this + EventBus.
  */
@@ -85,6 +90,7 @@ export class GameContext {
   private retainedOpenCellIndices: number[] = [];
   private exchanging = false;
   private purchasingGenerator = false;
+  private expandingBackpack = false;
   private orderRefreshAt: Array<number | null> = [];
   private dailyTasks?: NonNullable<SaveData['dailyTasks']>;
   private checkIn = { lastClaimDay: null as number | null, claims: 0 };
@@ -101,6 +107,7 @@ export class GameContext {
   bootState: BootState = 'BOOT';
   bootError: string | null = null;
   saveFailed = false;
+  private furnitureEdits: Array<{ id: string; before: LifeState['furniturePositions'][string] | undefined; after: LifeState['furniturePositions'][string] | undefined }> = [];
   loadNotice: string | null = null;
 
   constructor(options: GameContextOptions = {}) {
@@ -137,6 +144,7 @@ export class GameContext {
       legacyStarterFurnitureId: this.bundle.furniture[0]?.id,
       energyCaps: this.config.energy.maxByLevel,
       collection: this.config.collection,
+      backpack: { initialSlots: this.config.toolbox.warehouseSlots, maxSlots: this.config.toolbox.backpackExpansion.maxSlots },
       onWrite: (result) => {
         this.saveFailed = !result.ok;
         if (result.ok) this.bus.emit('GAME_SAVED', { savedAt: result.savedAt });
@@ -239,6 +247,7 @@ export class GameContext {
           columns: this.config.board.columns,
           cells: data.board,
         }),
+        this.clock,
       );
 
       this.board.configureUnlocks(this.playerRef.level, this.config.board.unlocks, this.retainedOpenCellIndices);
@@ -272,6 +281,7 @@ export class GameContext {
         this.bus,
       );
 
+      this.play = new PlayService(data.play, this.bundle, this.board, this.ids, this.bus, this.progression, this.energy, this.life, (id) => this.projectProducerItem(id));
       this.generators = new GeneratorService(
         this.bundle.generators,
         this.bundle.catalog,
@@ -283,6 +293,8 @@ export class GameContext {
         data.generatorCharges ?? {},
         data.generatorInventory ?? {},
         data.generatorCooldowns ?? {},
+        data.generatorBoard,
+        (id) => !!this.play.getStoredGenerator(id),
       );
       this.bus.on('LEVEL_UP', () => this.generators.ensureUnlockedCharges());
       this.bus.on('LEVEL_UP', () => this.energy.markRegenPoint());
@@ -312,7 +324,7 @@ export class GameContext {
       );
       this.orders.hydrate(data.activeOrders, data.recentOrderIds ?? []);
       this.orders.ensureFilled();
-      this.play = new PlayService(data.play, this.bundle, this.board, this.ids, this.bus, this.progression, this.energy, this.life, (id) => this.projectProducerItem(id));
+      this.grantConfiguredGeneratorRewards();
       this.journal = new JournalService(data.journal, this.clock, this.energy, () => { this.bus.emit('JOURNAL_CHANGED', {}); this.save(); });
 
       this.bootState = 'RECOVER_ENERGY';
@@ -342,9 +354,10 @@ export class GameContext {
   }
 
   purchaseGenerator(id: string): { ok: true; generatorId: string; cost: number; inventory: number[] }
-    | { ok: false; reason: 'NOT_FOUND' | 'LOCKED' | 'NOT_ENOUGH_COINS' | 'IN_PROGRESS' } {
+    | { ok: false; reason: 'NOT_FOUND' | 'LOCKED' | 'NOT_ENOUGH_COINS' | 'IN_PROGRESS' | 'BOARD_FULL' } {
     if (this.purchasingGenerator) return { ok: false, reason: 'IN_PROGRESS' };
     const quote = this.getGeneratorPurchaseQuote(id); if (!quote.ok) return quote;
+    if (this.board.isFull()) return { ok: false, reason: 'BOARD_FULL' };
     if (this.player.coins < quote.cost) return { ok: false, reason: 'NOT_ENOUGH_COINS' };
     this.purchasingGenerator = true;
     try {
@@ -389,13 +402,21 @@ export class GameContext {
     } finally { this.exchanging = false; }
   }
 
-  spawnFromGenerator(generatorId: string, boost = false): ReturnType<GeneratorService['spawn']> {
+  setGeneratorBoost(uid: string, boosted: boolean): boolean {
+    const changed = this.generators.setBoost(uid, boosted);
+    if (changed) { this.bus.emit('GENERATOR_CHANGED', { generatorId: uid }); this.save(); } return changed;
+  }
+  claimGeneratorReward(id: string): ReturnType<GeneratorService['claimReward']> {
+    const result = this.generators.claimReward(id);
+    if (result.ok) { this.orders.reconcileRequirements(); this.bus.emit('GENERATOR_CHANGED', { generatorId: result.uid }); this.save(); } return result;
+  }
+  spawnFromGenerator(generatorId: string, boost?: boolean): ReturnType<GeneratorService['spawn']> {
     const result = this.generators.spawn(generatorId, boost);
     if (result.ok) {
       const generator = this.generators.get(generatorId);
       const level = this.generators.getStatus(generatorId)?.level ?? 0;
       for (const drop of this.config.generationBonusDrops) {
-        if (!generator || (drop.generatorId !== '*' && drop.generatorId !== generatorId) || level < drop.minLevel || (drop.excludeRecharge && generator.recharge)) continue;
+        if (!generator || (drop.generatorId !== '*' && drop.generatorId !== generator.id) || level < drop.minLevel || (drop.excludeRecharge && generator.recharge)) continue;
         if (this.random.next() < drop.chance) {
           if (!this.board.spawn(drop.itemId).ok) this.enqueue(drop.itemId);
         }
@@ -420,16 +441,99 @@ export class GameContext {
 
   private producerLevel(chainId: string): number {
     const generator = this.bundle.generators.find((entry) => entry.chainId === chainId);
-    return generator ? Math.max(1, this.generators.getStatus(generator.id)?.level ?? 1) : 1;
+    return generator ? Math.max(1, this.ownedGeneratorLevel(generator.id)) : 1;
+  }
+  private ownedGeneratorLevel(id: string): number {
+    const generator = this.generators.get(id);
+    if (!generator || !this.generators.isUnlocked(generator)) return 0;
+    return Math.max(this.generators.getStatus(id)?.level ?? 0, this.play.getStoredGenerator(id)?.level ?? 0);
+  }
+  getOrderTracking(orderUid: string, itemId: string) {
+    const order = this.orders.getOrders().find(entry => entry.uid === orderUid);
+    const requirement = order?.requirements.find(entry => entry.itemId === itemId);
+    const target = requirement && this.bundle.catalog.get(itemId);
+    if (!requirement || !target) return { ok: false, reason: 'ORDER_CHANGED' } as const;
+    const sideDrop = this.config.generationBonusDrops.find(drop => drop.chance > 0 && this.bundle.catalog.get(drop.itemId)?.chainId === target.chainId);
+    const generator = this.bundle.generators.find(entry => entry.chainId === target.chainId)
+      ?? this.bundle.generators.find(entry => entry.id === sideDrop?.generatorId);
+    const status = generator && this.generators.getStatus(generator.id);
+    const stored = generator && this.play.getStoredGenerator(generator.id);
+    const minimumSourceLevel = generator?.chainId === target.chainId ? 1 : sideDrop?.minLevel ?? 1;
+    const live = status?.unlocked && status.level >= minimumSourceLevel ? status : null;
+    const packed = !live && stored && generator && this.generators.isUnlocked(generator) && stored.level >= minimumSourceLevel ? stored : undefined;
+    const floor = generator?.chainId === target.chainId ? live?.level ?? packed?.level ?? 1 : 1;
+    const plan = planOrderRequirement(this.bundle.catalog, this.board.getBoard().cells, requirement, floor)!;
+    const source = generator && (live || packed) ? { id: generator.id, name: generator.displayName, level: live?.level ?? packed!.level,
+      unlocked: !!live, storedUid: packed?.uid, charges: live?.charges ?? null, recoveryMs: live?.remainingCooldownMs || live?.nextRecoveryMs || 0,
+      energyCost: generator.energyCost, sideDrop: generator.chainId !== target.chainId } : null;
+    return { ok: true, guide: { orderUid, ...plan, name: target.displayName, level: target.level, chainId: target.chainId, source,
+      backpackCount: this.play.state.warehouse.filter(item => item.definitionId === itemId).length,
+      path: this.bundle.items.filter(item => item.chainId === target.chainId && item.level >= plan.minimumOutputLevel && item.level <= target.level)
+        .sort((a, b) => a.level - b.level).map(item => ({ id: item.id, level: item.level, name: item.displayName, discovered: this.isItemDiscovered(item.id) })) } } as const;
+  }
+  getOrderBoardHints(): Array<{ index: number; ready: boolean }> {
+    const hints = new Map<number, boolean>();
+    for (const order of this.orders.getOrders()) {
+      const ready = this.orders.canClaim(order.uid);
+      for (const req of order.requirements) {
+        const indices = this.board.getBoard().cells.filter(cell => !cell.locked && cell.item?.definitionId === req.itemId).slice(0, req.count);
+        for (const cell of indices) hints.set(cell.index, ready || (hints.get(cell.index) ?? false));
+      }
+    }
+    return Array.from(hints, ([index, ready]) => ({ index, ready }));
+  }
+  getDropOrderWarning(from: number, to: number | null): string | null {
+    const preview = this.board.previewDrop(from, to);
+    if (to === null || (preview.kind !== 'MERGE' && preview.kind !== 'SPLIT')) return null;
+    const removed = preview.kind === 'SPLIT' ? [to] : [from, to];
+    return this.breaksReadyOrder(removed) ? '订单需要，建议先交付' : null;
+  }
+  private breaksReadyOrder(removed: readonly number[]): boolean {
+    const cells = this.board.getBoard().cells;
+    return this.orders.getOrders().some(order => this.orders.canClaim(order.uid) && order.requirements.some(req => {
+      const available = cells.filter(cell => !cell.locked && cell.item?.definitionId === req.itemId).length;
+      const consumed = removed.filter(index => cells[index]?.item?.definitionId === req.itemId).length;
+      return available - consumed < req.count;
+    }));
+  }
+  quoteBoardItemSale(index: number, expectedUid: string): BoardItemSale {
+    const cell = this.board.getBoard().cells[index];
+    if (!cell || cell.locked || cell.item?.uid !== expectedUid) return { ok: false, reason: 'ITEM_CHANGED' };
+    const definition = this.bundle.catalog.get(cell.item.definitionId);
+    const coins = definition?.sellValue ?? 0;
+    if (!Number.isSafeInteger(coins) || coins <= 0) return { ok: false, reason: 'NOT_FOR_SALE' };
+    return { ok: true, index, uid: expectedUid, definitionId: cell.item.definitionId, coins, breaksReadyOrder: this.breaksReadyOrder([index]) };
+  }
+  sellBoardItem(index: number, expectedUid: string): BoardItemSale {
+    const sale = this.quoteBoardItemSale(index, expectedUid);
+    if (!sale.ok) return sale;
+    this.board.consumeItems([{ cellIndex: sale.index, uid: sale.uid, definitionId: sale.definitionId }]);
+    this.progression.addCoins(sale.coins);
+    this.orders.refreshProgressHints();
+    this.save();
+    return sale;
+  }
+  getSupplyPreview(index: number, expectedUid?: string) {
+    const item = this.board.getBoard().cells[index]?.item;
+    const definition = item && this.bundle.catalog.get(item.definitionId);
+    if (!item || !definition || (expectedUid && item.uid !== expectedUid)) return null;
+    const chest = definition.chainId === 'treasure_chest';
+    if (!chest && !['coin', 'energy', 'diamond'].includes(definition.chainId)) return null;
+    const tier = this.config.rewards.chestLevels.find(entry => entry.level === definition.level);
+    const loot = chest ? (tier?.loot ?? this.config.rewards.chestLoot) : [];
+    return { index, uid: item.uid, itemId: definition.id, name: definition.displayName, level: definition.level,
+      chainId: definition.chainId, chest, amount: definition.useValue ?? 0, lootCount: tier?.count ?? 2,
+      loot: loot.filter(entry => entry.weight > 0).map(entry => {
+        const drop = this.bundle.catalog.get(entry.itemId)!;
+        return { id: drop.id, name: drop.displayName, chainId: drop.chainId, level: drop.level };
+      }) };
   }
   private canProduceOrderItem(id: string): boolean {
     const item = this.bundle.catalog.get(id); if (!item || item.wildcard || item.maxUses) return false;
     const direct = this.bundle.generators.find((generator) => generator.chainId === item.chainId);
-    if (direct) return this.generators.getStatus(direct.id)?.unlocked === true;
-    return this.config.generationBonusDrops.some((drop) => {
-      const source = this.generators.getStatus(drop.generatorId);
-      return drop.chance > 0 && source?.unlocked && source.level >= drop.minLevel && this.bundle.catalog.get(drop.itemId)?.chainId === item.chainId;
-    });
+    if (direct) return this.ownedGeneratorLevel(direct.id) > 0;
+    return this.config.generationBonusDrops.some((drop) => drop.chance > 0 && this.bundle.catalog.get(drop.itemId)?.chainId === item.chainId
+      && this.ownedGeneratorLevel(drop.generatorId) >= drop.minLevel);
   }
   private projectProducerItem(id: string, mergeResult = false): string {
     const item = this.bundle.catalog.get(id); if (!item) return id;
@@ -443,7 +547,9 @@ export class GameContext {
     const result = this.board.tryDrop(from, to);
     if (result.ok && result.kind === 'MERGE') {
       this.life.record('merges');
-      this.handleMerge(result.resultDefinitionId);
+      const producer = this.bundle.catalog.get(result.resultDefinitionId)?.generator;
+      if (producer) { this.orders.reconcileRequirements(); this.ensureDailyTasks(); this.bus.emit('GENERATOR_CHANGED', { generatorId: producer.id }); }
+      else this.handleMerge(result.resultDefinitionId);
       this.recordDaily('merges', result.resultDefinitionId);
       if (!this.tutorialRef.firstMergeCompleted) {
         this.tutorialRef.firstMergeCompleted = true;
@@ -468,6 +574,7 @@ export class GameContext {
             : action === 'small_date' ? this.play.deliverSmallDate(value)
               : this.play.solve(value, action === 'skip');
     if (result.ok) {
+      if(action==='claim')this.grantConfiguredGeneratorRewards();
       if (action === 'store') this.acknowledgeFirstUseHint('backpack');
       if (action === 'split') this.acknowledgeFirstUseHint('scissors');
       if (action === 'split') {
@@ -480,6 +587,31 @@ export class GameContext {
       this.orders.refreshProgressHints(); this.save();
     }
     return result;
+  }
+
+  getBackpackStatus(): { used: number; capacity: number; maxCapacity: number; nextCost: number | null; affordable: boolean } {
+    const rules = this.config.toolbox.backpackExpansion, capacity = this.play.warehouseCapacity;
+    const nextCost = capacity >= rules.maxSlots ? null : rules.baseDiamondCost + (capacity - this.config.toolbox.warehouseSlots) * rules.stepDiamondCost;
+    return { used: this.play.state.warehouse.length, capacity, maxCapacity: rules.maxSlots, nextCost,
+      affordable: nextCost !== null && this.player.diamonds >= nextCost };
+  }
+
+  expandBackpack(expectedCapacity: number, expectedCost: number): { ok: true; capacity: number; cost: number }
+    | { ok: false; reason: 'IN_PROGRESS' | 'STALE_QUOTE' | 'MAX_CAPACITY' | 'NOT_ENOUGH_DIAMONDS' } {
+    if (this.expandingBackpack) return { ok: false, reason: 'IN_PROGRESS' };
+    const quote = this.getBackpackStatus();
+    if (quote.nextCost === null) return { ok: false, reason: 'MAX_CAPACITY' };
+    if (expectedCapacity !== quote.capacity || expectedCost !== quote.nextCost) return { ok: false, reason: 'STALE_QUOTE' };
+    if (!quote.affordable) return { ok: false, reason: 'NOT_ENOUGH_DIAMONDS' };
+    this.expandingBackpack = true;
+    try {
+      this.player.diamonds -= quote.nextCost;
+      const expanded = this.play.expandWarehouse(expectedCapacity);
+      if (!expanded.ok) { this.player.diamonds += quote.nextCost; return { ok: false, reason: 'STALE_QUOTE' }; }
+      this.bus.emit('REWARDS_CHANGED', { reason: 'exchange' });
+      this.save();
+      return { ok: true, capacity: quote.capacity + 1, cost: quote.nextCost };
+    } finally { this.expandingBackpack = false; }
   }
 
   puzzleAction(id: string, action: Parameters<PlayService['act']>[1], value = ''): ReturnType<PlayService['act']> {
@@ -511,7 +643,7 @@ export class GameContext {
       }
     }
     const open = board.cells.filter((cell) => !cell.locked), occupied = open.filter((cell) => cell.item);
-    if (!seen.has('backpack') && occupied.length >= Math.min(6, Math.max(2, open.length - 2)) && this.play.state.warehouse.length < this.config.toolbox.warehouseSlots) {
+    if (!seen.has('backpack') && occupied.length >= Math.min(6, Math.max(2, open.length - 2)) && this.play.state.warehouse.length < this.play.warehouseCapacity) {
       const source = occupied.find((cell) => cell.item && !this.bundle.catalog.get(cell.item.definitionId)?.maxUses);
       if (source) return { hint: 'backpack', sourceIndex: source.index };
     }
@@ -541,8 +673,17 @@ export class GameContext {
 
   claimWish(id: string): LifeResult {
     const result = this.life.claimWish(id);
-    if (result.ok) this.save();
+    if (result.ok) { this.grantConfiguredGeneratorRewards(); this.save(); }
     return result;
+  }
+
+  private grantConfiguredGeneratorRewards(): void {
+    const changed=new Set<string>();
+    for(const wish of this.bundle.wishes)if(wish.generatorReward&&this.life.state.claimedWishIds.includes(wish.id)
+      &&this.generators.grantEarned('wish_'+wish.id,wish.generatorReward,'wish_reward'))changed.add(wish.generatorReward.generatorId);
+    for(const chapter of this.bundle.adventures)if(chapter.reward.generator&&this.play.progress(chapter.id).claimed
+      &&this.generators.grantEarned('chapter_'+chapter.id,chapter.reward.generator,'chapter_reward'))changed.add(chapter.reward.generator.generatorId);
+    if(changed.size){this.orders.reconcileRequirements();for(const generatorId of changed)this.bus.emit('GENERATOR_CHANGED',{generatorId});}
   }
 
   claimLevelReward(level: number): LifeResult {
@@ -619,9 +760,7 @@ export class GameContext {
         ...this.playerRef,
         unlockedChainIds: [...this.playerRef.unlockedChainIds],
       },
-      generatorCharges: this.generators.getChargeStates(),
-      generatorInventory: this.generators.getInventory(),
-      generatorCooldowns: this.generators.getCooldownStates(),
+      generatorBoard: this.generators.getBoardState(),
       claimedCollectionIds: [...this.claimedCollections],
       orderRefreshAt: [...this.orderRefreshAt],
       dailyTasks: this.dailyTasks ? { ...this.dailyTasks, progress: { ...this.dailyTasks.progress }, claimedIds: [...this.dailyTasks.claimedIds] } : undefined,
@@ -634,8 +773,9 @@ export class GameContext {
       checkIn: { ...this.checkIn },
       board: this.board.getBoard().cells.map((c) => ({
         index: c.index,
-        item: c.item ? { ...c.item } : undefined,
+        item: c.item ? cloneItem(c.item) : undefined,
       })),
+      boardSize: { rows: this.board.getRows(), columns: this.board.getColumns() },
       activeOrders: this.orders.getOrders(),
       tutorial: { ...this.tutorialRef },
       preferences: { ...this.preferencesRef },
@@ -750,7 +890,7 @@ export class GameContext {
   }
   private recordBaseAcquisition(id: string, notify = true): void {
     const definition = this.bundle.catalog.get(id);
-    if (!definition || definition.level !== 1 || this.discovered.includes(id)) return;
+    if (!definition || definition.generator || definition.level !== 1 || this.discovered.includes(id)) return;
     this.discovered.push(id);
     if (notify) this.bus.emit('COLLECTION_CHANGED', { chainId: definition.chainId });
   }
@@ -809,7 +949,7 @@ export class GameContext {
     if (!this.bundle.furniture.some((f) => f.id === id)) return { ok: false, reason: 'NOT_FOUND' };
     if (![x, y].every((v) => Number.isFinite(v) && v >= 0 && v <= 1)) return { ok: false, reason: 'NOT_READY' };
     const previous = this.life.state.furniturePositions[id];
-    this.life.state.furniturePositions[id] = { ...previous, x, y }; this.bus.emit('LIFE_CHANGED', { reason: 'furniture' }); this.save(); return { ok: true };
+    this.life.state.furniturePositions[id] = { ...previous, x, y }; this.recordFurnitureEdit(id, previous); this.bus.emit('LIFE_CHANGED', { reason: 'furniture' }); this.save(); return { ok: true };
   }
   setFurnitureTransform(id: string, patch: { x?: number; y?: number; scale?: number; rotation?: number; flipped?: boolean }): LifeResult {
     const furniture = this.bundle.furniture.find((item) => item.id === id);
@@ -832,12 +972,39 @@ export class GameContext {
       rotation: patch.rotation ?? previous.rotation ?? 0,
       flipped: patch.flipped ?? previous.flipped ?? false,
     };
-    this.bus.emit('LIFE_CHANGED', { reason: 'furniture' }); this.save(); return { ok: true };
+    this.recordFurnitureEdit(id, saved); this.bus.emit('LIFE_CHANGED', { reason: 'furniture' }); this.save(); return { ok: true };
   }
   resetFurniturePosition(id: string): LifeResult {
     if (!this.bundle.furniture.some((f) => f.id === id)) return { ok: false, reason: 'NOT_FOUND' };
     if (!this.life.state.ownedFurnitureIds.includes(id)) return { ok: false, reason: 'LOCKED' };
-    delete this.life.state.furniturePositions[id]; this.bus.emit('LIFE_CHANGED', { reason: 'furniture' }); this.save(); return { ok: true };
+    const previous = this.life.state.furniturePositions[id];
+    delete this.life.state.furniturePositions[id]; this.recordFurnitureEdit(id, previous); this.bus.emit('LIFE_CHANGED', { reason: 'furniture' }); this.save(); return { ok: true };
+  }
+  clearFurnitureEditHistory(): void { this.furnitureEdits = []; }
+  private sameFurniturePosition(a: LifeState['furniturePositions'][string] | undefined, b: LifeState['furniturePositions'][string] | undefined): boolean {
+    if (!a || !b) return a === b;
+    return a.x === b.x && a.y === b.y && (a.scale ?? 1) === (b.scale ?? 1) && (a.rotation ?? 0) === (b.rotation ?? 0) && (a.flipped ?? false) === (b.flipped ?? false);
+  }
+  private recordFurnitureEdit(id: string, before: LifeState['furniturePositions'][string] | undefined): void {
+    const after = this.life.state.furniturePositions[id];
+    if (this.sameFurniturePosition(before, after)) return;
+    this.furnitureEdits.push({ id, before: before && { ...before }, after: after && { ...after } });
+    if (this.furnitureEdits.length > 20) this.furnitureEdits.shift();
+  }
+  getFurnitureUndoState(room?: string): { id: string; title: string } | null {
+    for (let i = this.furnitureEdits.length - 1; i >= 0; i--) {
+      const edit = this.furnitureEdits[i], item = this.bundle.furniture.find(entry => entry.id === edit.id);
+      if (item && (!room || item.room === room) && this.life.state.placedFurnitureIds.includes(edit.id)) return { id: edit.id, title: item.title };
+    }
+    return null;
+  }
+  undoFurnitureEdit(room?: string): { ok: true; furnitureId: string } | { ok: false; reason: 'NOT_READY' | 'STATE_CHANGED' } {
+    const next = this.getFurnitureUndoState(room); if (!next) return { ok: false, reason: 'NOT_READY' };
+    const index = this.furnitureEdits.map(edit => edit.id).lastIndexOf(next.id), edit = this.furnitureEdits[index];
+    if (!this.sameFurniturePosition(this.life.state.furniturePositions[edit.id], edit.after)) return { ok: false, reason: 'STATE_CHANGED' };
+    if (edit.before) this.life.state.furniturePositions[edit.id] = { ...edit.before };
+    else delete this.life.state.furniturePositions[edit.id];
+    this.furnitureEdits.splice(index, 1); this.bus.emit('LIFE_CHANGED', { reason: 'furniture' }); this.save(); return { ok: true, furnitureId: edit.id };
   }
   getCheckInStatus(): { day: number; claims: number; cycleIndex: number; canClaim: boolean; nextReward: { coins: number; energy: number; diamonds: number; itemId?: string }; lastClaimDay: number | null } {
     const day = businessDayUtc8(this.clock.now());

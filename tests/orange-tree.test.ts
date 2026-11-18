@@ -20,6 +20,7 @@ const capacity = treeConfig.recharge!.capacity;
 describe('sunshine orange tree', () => {
   it('unlocks at level 2 with configured free picks and does not alter energy or its timer', () => {
     const f = fixture(); const g = f.open();
+    expect(interval).toBe(60_000); expect(g.config.energy.recoverIntervalMs).toBe(240_000);
     expect(g.getGeneratorStatus('orange_tree')).toMatchObject({ unlocked: false, charges: null, maxCharges: capacity, nextRecoveryMs: null });
     expect(g.spawnFromGenerator('orange_tree')).toEqual({ ok: false, reason: 'LOCKED' });
     g.debugAddXp(50); g.debugClearBoard(); const energy = g.player.energy, timestamp = g.player.lastEnergyAt;
@@ -29,13 +30,13 @@ describe('sunshine orange tree', () => {
     expect(g.player.energy).toBe(energy); expect(g.player.lastEnergyAt).toBe(timestamp);
     expect(f.open().getGeneratorStatus('orange_tree')).toMatchObject({ charges: 0, nextRecoveryMs: interval });
   });
-  it('recovers offline one per 10 minutes, preserves partial time and limits capacity', () => {
+  it('recovers offline one per minute, preserves partial time and limits capacity', () => {
     const f = fixture(); let g = f.open(); g.debugAddXp(50); g.debugClearBoard();
     for (let i=0;i<capacity;i++) { expect(g.spawnFromGenerator('orange_tree').ok).toBe(true); g.debugClearBoard(); }
-    f.clock.advance(interval + 120_000); g = f.open();
-    expect(g.getGeneratorStatus('orange_tree')).toMatchObject({ charges: 1, nextRecoveryMs: 480_000 });
+    f.clock.advance(interval + interval / 5); g = f.open();
+    expect(g.getGeneratorStatus('orange_tree')).toMatchObject({ charges: 1, nextRecoveryMs: interval * .8 });
     expect(g.spawnFromGenerator('orange_tree').ok).toBe(true);
-    expect(f.open().getGeneratorStatus('orange_tree')).toMatchObject({ charges: 0, nextRecoveryMs: 480_000 });
+    expect(f.open().getGeneratorStatus('orange_tree')).toMatchObject({ charges: 0, nextRecoveryMs: interval * .8 });
     f.clock.advance(interval * 10); expect(g.getGeneratorStatus('orange_tree')).toMatchObject({ charges: capacity, maxCharges: capacity, nextRecoveryMs: null });
     expect(g.spawnFromGenerator('orange_tree').ok).toBe(true);
     expect(g.getGeneratorStatus('orange_tree')).toMatchObject({ charges: capacity - 1, nextRecoveryMs: interval });

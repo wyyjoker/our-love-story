@@ -7,12 +7,17 @@ import type {
   GeneratorDefinition,
   ItemDefinition,
   PlayerState,
+  ItemInstance,
 } from '../core/types';
+import { generatorAvailability, freshGeneratorState } from '../core/generator/generatorItems';
 import type { OrderProgress } from '../core/board/rules';
 import type { ConfigBundle } from '../config/ConfigRepository';
 import { getXpToNext } from '../core/progression/progression';
 
 export type ItemVm = {
+  generatorId?: string;
+  generatorProgress?: number;
+  generatorRemainingMs?: number;
   remainingUses?: number;
   uid: string;
   discovered?: boolean;
@@ -33,6 +38,7 @@ export type OrderReqVm = {
 };
 
 export type OrderVm = {
+  pace?: ActiveOrder['pace'];
   longTerm?: boolean;
   urgentUntil?: number;
   uid: string;
@@ -153,16 +159,20 @@ export class GameViewMapper {
   }
 
   mapBoard(
-    board: { rows: number; columns: number; cells: Array<{ index: number; locked?: boolean; item?: { uid: string; definitionId: string; remainingUses?: number } }> },
+    board: { rows: number; columns: number; cells: Array<{ index: number; locked?: boolean; item?: ItemInstance }> },
+    nowMs = 0,
   ): BoardVm {
     const items: ItemVm[] = [];
     for (const cell of board.cells) {
       if (!cell.item) continue;
       const def = this.bundle.catalog.get(cell.item.definitionId);
       if (!def) continue;
+      const machine = def.generator && generatorAvailability(def.generator, cell.item.generatorState ?? freshGeneratorState(def.generator, nowMs), nowMs);
+      const remainingMs = machine?.remainingCooldownMs || machine?.nextRecoveryMs || 0;
       items.push({
         uid: cell.item.uid,
-        remainingUses: def.maxUses ? Math.max(0, Math.min(def.maxUses, cell.item.remainingUses ?? def.maxUses)) : undefined,
+        remainingUses: machine?.state.remainingUses ?? (def.maxUses ? Math.max(0, Math.min(def.maxUses, cell.item.remainingUses ?? def.maxUses)) : undefined),
+        ...(def.generator ? { generatorId: def.generator.id, generatorProgress: remainingMs ? Math.max(0,1 - remainingMs / (def.generator.cooldownMs || def.generator.recoveryIntervalMs || 1)) : 1, generatorRemainingMs: remainingMs } : {}),
         definitionId: def.id,
         displayName: def.displayName,
         level: def.level,
@@ -189,6 +199,7 @@ export class GameViewMapper {
     });
     return {
       uid: order.uid,
+      ...(order.pace ? { pace: order.pace } : {}),
       ...(order.longTerm === true ? { longTerm: true } : {}),
       ...(order.urgentUntil !== undefined ? { urgentUntil: order.urgentUntil } : {}),
       requirements,

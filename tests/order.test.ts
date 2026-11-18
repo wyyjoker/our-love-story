@@ -162,7 +162,7 @@ describe('OrderService', () => {
       for (const req of t.requirements) {
         const def = bundle.catalog.get(req.itemId)!;
         expect(player.unlockedChainIds).toContain(def.chainId);
-        expect(def.level).toBeGreaterThanOrEqual(2);
+        expect(def.level).toBeGreaterThanOrEqual(bundle.game.orders.minItemLevel);
         expect(def.level).toBeLessThanOrEqual(5);
       }
     }

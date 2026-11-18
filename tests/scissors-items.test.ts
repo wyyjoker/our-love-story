@@ -44,11 +44,11 @@ describe('physical mergeable scissors', () => {
   });
   it('uses its final charge to free a slot on a full board, and otherwise needs an empty slot', () => {
     const game=fixture().open();game.debugAddXp(7650);game.debugClearBoard();
-    for(let i=0;i<42;i++)game.board.placeAt(i,i===0?'scissors_02':i===1?'coffee_02':'coffee_01');
+    for(let i=0;i<game.board.getBoard().cells.length;i++)game.board.placeAt(i,i===0?'scissors_02':i===1?'coffee_02':'coffee_01');
     const before=game.buildSaveData().board;expect(game.dropItem(0,1).ok).toBe(false);expect(game.buildSaveData().board).toEqual(before);
     game.board.getBoard().cells[0].item!.remainingUses=1;
     expect(game.dropItem(0,1)).toMatchObject({ok:true,kind:'SPLIT'});
-    expect(game.board.getBoard().cells.filter((cell)=>cell.item)).toHaveLength(42);
+    expect(game.board.getBoard().cells.filter((cell)=>cell.item)).toHaveLength(63);
   });
   it('cannot split base objects, locked cells or scissors into extra tools', () => {
     const game=fixture().open();game.debugClearBoard();game.board.placeAt(0,'scissors_03');game.board.placeAt(1,'coffee_01');

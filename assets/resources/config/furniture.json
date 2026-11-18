@@ -478,5 +478,101 @@
     "unlockLevel": 8,
     "decorPoints": 5,
     "art": "pool:3"
+  },
+  {
+    "id": "wall_rose",
+    "title": "玫瑰花语",
+    "category": "壁画",
+    "room": "living",
+    "placement": {
+      "x": -245,
+      "y": 210,
+      "width": 148,
+      "height": 126
+    },
+    "coinCost": 80,
+    "unlockLevel": 1,
+    "decorPoints": 1,
+    "art": "wall:rose"
+  },
+  {
+    "id": "wall_tulip",
+    "title": "郁金香春日",
+    "category": "壁画",
+    "room": "living",
+    "placement": {
+      "x": -65,
+      "y": 210,
+      "width": 148,
+      "height": 126
+    },
+    "coinCost": 80,
+    "unlockLevel": 1,
+    "decorPoints": 1,
+    "art": "wall:tulip"
+  },
+  {
+    "id": "wall_orange",
+    "title": "橘香午后",
+    "category": "壁画",
+    "room": "living",
+    "placement": {
+      "x": 115,
+      "y": 210,
+      "width": 148,
+      "height": 126
+    },
+    "coinCost": 100,
+    "unlockLevel": 2,
+    "decorPoints": 1,
+    "art": "wall:orange"
+  },
+  {
+    "id": "wall_coffee",
+    "title": "咖啡时光",
+    "category": "壁画",
+    "room": "living",
+    "placement": {
+      "x": -245,
+      "y": 65,
+      "width": 148,
+      "height": 126
+    },
+    "coinCost": 100,
+    "unlockLevel": 2,
+    "decorPoints": 1,
+    "art": "wall:coffee"
+  },
+  {
+    "id": "wall_garden",
+    "title": "花园晨光",
+    "category": "壁画",
+    "room": "living",
+    "placement": {
+      "x": -65,
+      "y": 65,
+      "width": 148,
+      "height": 126
+    },
+    "coinCost": 130,
+    "unlockLevel": 3,
+    "decorPoints": 1,
+    "art": "wall:garden"
+  },
+  {
+    "id": "wall_terrace",
+    "title": "露台晚风",
+    "category": "壁画",
+    "room": "living",
+    "placement": {
+      "x": 115,
+      "y": 65,
+      "width": 148,
+      "height": 126
+    },
+    "coinCost": 130,
+    "unlockLevel": 3,
+    "decorPoints": 1,
+    "art": "wall:terrace"
   }
 ]

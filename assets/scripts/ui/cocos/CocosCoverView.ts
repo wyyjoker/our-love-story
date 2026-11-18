@@ -1,6 +1,6 @@
 import { BlockInputEvents, Button, Graphics, Label, Node, tween, UIOpacity } from 'cc';
-import { applyArt } from './CocosArt';
-import { createUiNode, ensureOpacity, ensureTransform, hexColor, makeLabel, paintRoundRect } from './CocosTheme';
+import { applyArt, applyMaterialFrame } from './CocosArt';
+import { createUiNode, ensureOpacity, ensureTransform, hexColor, makeLabel, paintRoundRect, paintTactileButton, pressButton } from './CocosTheme';
 
 /** A quiet, full-screen entry before the interactive game UI. */
 export class CocosCoverView {
@@ -22,16 +22,21 @@ export class CocosCoverView {
     const artWidth = bleed?.width ?? width;
     const artHeight = bleed?.height ?? height;
     illustration.setPosition(bleed?.x ?? 0, bleed?.y ?? 0, 0);
-    applyArt(illustration, { sheet: 'cover_background' }, Math.max(artWidth, artHeight * 750 / 1334), artHeight);
+    const gardenAspect = 787 / 1536;
+    const imageWidth = Math.max(artWidth, artHeight * gardenAspect);
+    applyArt(illustration, { sheet: 'cover_garden' }, imageWidth, imageWidth / gardenAspect);
     illustration.pauseSystemEvents(true);
 
     const titlePanel = createUiNode('CoverTitlePanel');
     this.node.addChild(titlePanel);
-    ensureTransform(titlePanel, Math.min(width - 64, 650), 198);
-    titlePanel.setPosition(0, height * 0.31, 0);
-    paintRoundRect(titlePanel.addComponent(Graphics), Math.min(width - 64, 650), 198, 30, hexColor('#FFF9F0', 214), hexColor('#FFFDF8', 240), 2);
+    const titleWidth = Math.min(width - 64, 620);
+    ensureTransform(titlePanel, titleWidth, 200);
+    titlePanel.setPosition(0, height * 0.28, 0);
+    paintRoundRect(titlePanel.addComponent(Graphics), titleWidth, 200, 36,
+      hexColor('#FFF8EC', 224), hexColor('#FFFCF3', 236), 3);
+    applyMaterialFrame(titlePanel, 'paper', titleWidth, 200, .45);
 
-    const title = makeLabel('我们的浪漫小屋', 52, hexColor('#744940'), true);
+    const title = makeLabel('我们的浪漫小屋', 59, hexColor('#744238'), true);
     titlePanel.addChild(title.node);
     ensureTransform(title.node, Math.min(width - 92, 610), 72);
     title.overflow = Label.Overflow.SHRINK;
@@ -57,18 +62,18 @@ export class CocosCoverView {
       dedication.enableWrapText = true;
       dedication.overflow = Label.Overflow.SHRINK;
       dedication.lineHeight = 36;
-      dedication.node.setPosition(0, height * 0.31 - 172, 0);
+      dedication.node.setPosition(0, height * 0.28 - 165, 0);
     }
 
     const start = createUiNode('EnterGame');
     this.node.addChild(start);
-    ensureTransform(start, 380, 86);
-    start.setPosition(0, -height * 0.31, 0);
-    paintRoundRect(start.addComponent(Graphics), 380, 86, 43, hexColor('#E9899B'), hexColor('#FFF9F5'), 4);
-    const startLabel = makeLabel(hasProgress ? '继续我们的小屋  ›' : '开始布置小屋  ›', 31, hexColor('#FFFFFF'), true);
+    ensureTransform(start, 380, 94);
+    start.setPosition(0, -height * 0.36, 0);
+    paintTactileButton(start.addComponent(Graphics), 380, 94, 'rose');
+    const startLabel = makeLabel(hasProgress ? '回到我们的小屋  ›' : '进入我们的小屋  ›', 32, hexColor('#FFFFFF'), true);
     start.addChild(startLabel.node);
     ensureTransform(startLabel.node, 350, 68);
-    start.addComponent(Button);
+    pressButton(start);
     start.on(Button.EventType.CLICK, () => {
       if (this.entering) return;
       this.entering = true;

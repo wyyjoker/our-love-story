@@ -9,14 +9,15 @@ function fixture() {
  const storage={getItem:(k:string)=>values.get(k)??null,setItem:(k:string,v:string)=>{values.set(k,v);},removeItem:(k:string)=>{values.delete(k);}};
  const open=()=>createGameContext({storage,clock,deterministic:true,saveDebounceMs:0});return {values,open,clock};
 }
-describe('6 by 7 board and v7 migration',()=>{
- it('starts with exactly the upper-left 3 by 3 and opens all 42 at level 10',()=>{
+describe('7 by 9 board and legacy migration',()=>{
+ it('starts with the upper-left 3 by 3, retains the old 42 at Lv10 and opens all 63 by Lv18',()=>{
   const g=fixture().open(),board=g.board.getBoard();
-  expect([board.columns,board.rows,board.cells.length]).toEqual([6,7,42]);
-  expect(board.cells.filter((c)=>!c.locked).map((c)=>c.index)).toEqual([0,1,2,6,7,8,12,13,14]);
-  expect(g.board.getLockedUnlockLevel(41)).toBe(10);
+  expect([board.columns,board.rows,board.cells.length]).toEqual([7,9,63]);
+  expect(board.cells.filter((c)=>!c.locked).map((c)=>c.index)).toEqual([0,1,2,7,8,9,14,15,16]);
+  expect(g.board.getLockedUnlockLevel(62)).toBe(18);
   expect(g.board.placeAt(3,'coffee_01')).toBeNull(); expect(g.dropItem(0,3).ok).toBe(false);
-  g.debugAddXp(2250); expect(g.player.level).toBe(10); expect(g.board.getBoard().cells.every((c)=>!c.locked)).toBe(true);
+  g.debugAddXp(2250); expect(g.player.level).toBe(10); expect(g.board.getBoard().cells.filter((c)=>!c.locked)).toHaveLength(42);
+  g.debugAddXp(5400); expect(g.player.level).toBe(18); expect(g.board.getBoard().cells.every((c)=>!c.locked)).toBe(true);
  });
  it('prevents swap, merge, split and withdraw into locked cells',()=>{
   const g=fixture().open();g.debugClearBoard();g.board.placeAt(0,'coffee_02');
@@ -40,11 +41,12 @@ describe('6 by 7 board and v7 migration',()=>{
   old.life.unlockedMemoryIds=['letters'];old.life.photoPaths=['wxfile://retained'];
   old.life.furniturePositions={sofa:{x:0.2,y:0.4,scale:1.2,rotation:45,flipped:true}};
   const raw=JSON.stringify(old);f.values.set(b.game.saveKey,raw);const g=f.open();
-  expect(f.values.get(`${b.game.saveKey}:backup`)).toBe(raw);expect(g.board.getBoard().cells).toHaveLength(42);
-  const ids=[...g.board.getBoard().cells.flatMap((cell)=>cell.item?[cell.item.uid]:[]),...g.rewardInbox.map((item)=>item.uid)];
+  expect(f.values.get(`${b.game.saveKey}:backup`)).toBe(raw);expect(g.board.getBoard().cells).toHaveLength(63);
+  const ids=[...g.board.getBoard().cells.flatMap((cell)=>cell.item&&!g.bundle.catalog.get(cell.item.definitionId)?.generator?[cell.item.uid]:[]),...g.rewardInbox.map((item)=>item.uid)];
   expect(ids.sort()).toEqual(['old_0','old_3','old_40','old_42','old_47','old_inbox'].sort());
-  expect(g.board.getBoard().cells[3].locked).toBe(false);expect(g.board.getBoard().cells[40].locked).toBe(false);
-  expect(g.board.getBoard().cells[4].locked).toBe(true);expect(g.board.getBoard().cells[41].locked).toBe(true);
+  expect(g.board.getBoard().cells[3].locked).toBe(false);expect(g.board.getBoard().cells[46].locked).toBe(false);
+  expect(g.board.getBoard().cells[49].item?.uid).toBe('old_42');expect(g.board.getBoard().cells[54].item?.uid).toBe('old_47');
+  expect(g.board.getBoard().cells[4].locked).toBe(true);expect(g.board.getBoard().cells[47].locked).toBe(true);
   expect(g.life.state.furniturePositions.sofa).toEqual(old.life.furniturePositions.sofa);
   expect(g.life.state.photoPaths).toEqual(old.life.photoPaths);expect(g.player).toMatchObject({coins:91,energy:72});
   expect(g.isItemDiscovered('gift_07')).toBe(true);

@@ -48,6 +48,7 @@ export function resolveDrop(
 
   const tool = catalog.get(source.definitionId), targetDefinition = catalog.get(target.definitionId);
   if (tool?.maxUses && targetDefinition?.chainId !== tool.chainId) {
+    if (targetDefinition?.generator) return { kind: 'CANCEL' };
     const uses = remainingToolUses(source, tool);
     const previous = Array.from(catalog.values()).find((item) => item.nextItemId === target.definitionId);
     if (uses <= 0 || !previous || targetDefinition?.maxUses || (uses > 1 && !board.cells.some((cell) => !cell.locked && !cell.item))) return { kind: 'CANCEL' };
@@ -82,6 +83,7 @@ export function applyDrop(
   from: number,
   to: number | null,
   nextUid: string,
+  nowMs = 0,
 ): BoardApplyResult {
   const drop = resolveDrop(board, catalog, from, to);
   if (drop.kind === 'CANCEL') {
@@ -124,7 +126,7 @@ export function applyDrop(
   if (!target) {
     return { ok: false, reason: 'INVALID' };
   }
-  const mergeEngine = new MergeEngine(catalog);
+  const mergeEngine = new MergeEngine(catalog, nowMs);
   const merged = mergeEngine.merge(source, target, nextUid);
   if (!merged.ok) {
     return { ok: false, reason: 'CANNOT_MERGE' };

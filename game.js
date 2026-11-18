@@ -30,9 +30,12 @@
       cells: board.cells.map((cell) => ({
         index: cell.index,
         locked: cell.locked,
-        item: cell.item ? { ...cell.item } : void 0
+        item: cell.item ? cloneItem(cell.item) : void 0
       }))
     };
+  }
+  function cloneItem(item) {
+    return { ...item, ...item.generatorState ? { generatorState: { ...item.generatorState } } : {} };
   }
 
   // assets/scripts/core/item/catalog.ts
@@ -47,18 +50,111 @@
     return map;
   }
 
+  // assets/scripts/core/generator/generatorItems.ts
+  function generatorItemId(id, level) {
+    return `generator_${id}_${String(level).padStart(2, "0")}`;
+  }
+  function generatorItemDefinitions(generators) {
+    return generators.flatMap((generator) => Array.from({ length: generator.upgrade?.maxLevel ?? 1 }, (_, index) => {
+      const level = index + 1, factor = Math.pow(generator.upgrade?.rechargeFactor ?? 1, index);
+      return {
+        id: generatorItemId(generator.id, level),
+        chainId: `generator_${generator.id}`,
+        level,
+        displayName: generator.displayName,
+        sellValue: 0,
+        wildcardEligible: false,
+        ...level < (generator.upgrade?.maxLevel ?? 1) ? { nextItemId: generatorItemId(generator.id, level + 1) } : { maxLevel: true },
+        generator: {
+          id: generator.id,
+          capacity: generator.recharge?.capacity ?? generator.streakCooldown?.uses ?? 0,
+          mergeRemainingRatio: generator.upgrade?.mergeRemainingRatio ?? 0.5,
+          recoveryIntervalMs: generator.recharge ? Math.max(1, Math.round(generator.recharge.intervalMs * factor)) : 0,
+          cooldownMs: generator.streakCooldown ? Math.max(1, Math.round(generator.streakCooldown.durationMs * factor)) : 0
+        }
+      };
+    }));
+  }
+  function freshGeneratorState(rules, now) {
+    return { remainingUses: rules.capacity, recoveryAt: now, cooldownUntil: null, boosted: false };
+  }
+  var finite = (value, fallback) => typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  function effectiveGeneratorState(rules, raw, now) {
+    const state = {
+      remainingUses: Math.max(0, Math.min(rules.capacity, Math.floor(finite(raw.remainingUses, 0)))),
+      recoveryAt: finite(raw.recoveryAt, now),
+      cooldownUntil: raw.cooldownUntil === null ? null : finite(raw.cooldownUntil, now + rules.cooldownMs),
+      boosted: raw.boosted === true
+    };
+    if (!rules.capacity) return { ...state, remainingUses: 0, cooldownUntil: null };
+    if (rules.recoveryIntervalMs > 0) {
+      const steps = Math.floor(Math.max(0, now - state.recoveryAt) / rules.recoveryIntervalMs);
+      state.remainingUses = Math.min(rules.capacity, state.remainingUses + steps);
+      state.recoveryAt = state.remainingUses === rules.capacity ? Math.max(now, state.recoveryAt) : state.recoveryAt + steps * rules.recoveryIntervalMs;
+      state.cooldownUntil = null;
+    } else if (rules.cooldownMs > 0) {
+      if (state.remainingUses > 0) state.cooldownUntil = null;
+      else if (state.cooldownUntil !== null && now >= state.cooldownUntil) {
+        state.remainingUses = rules.capacity;
+        state.cooldownUntil = null;
+      } else if (state.cooldownUntil === null) {
+        state.cooldownUntil = now + rules.cooldownMs;
+      }
+    }
+    return state;
+  }
+  function generatorAvailability(rules, state, now) {
+    const current = effectiveGeneratorState(rules, state, now);
+    return {
+      state: current,
+      remainingCooldownMs: current.cooldownUntil === null ? 0 : Math.max(0, current.cooldownUntil - now),
+      nextRecoveryMs: rules.recoveryIntervalMs > 0 && current.remainingUses < rules.capacity ? Math.max(0, current.recoveryAt + rules.recoveryIntervalMs - now) : null
+    };
+  }
+  function consumeGeneratorUse(rules, raw, now) {
+    const { state, remainingCooldownMs } = generatorAvailability(rules, raw, now);
+    if (remainingCooldownMs > 0 || rules.capacity > 0 && state.remainingUses === 0) return null;
+    if (!rules.capacity) return state;
+    const remainingUses = state.remainingUses - 1;
+    return {
+      ...state,
+      remainingUses,
+      recoveryAt: state.remainingUses === rules.capacity ? Math.max(now, state.recoveryAt) : state.recoveryAt,
+      cooldownUntil: remainingUses === 0 && rules.cooldownMs > 0 ? now + rules.cooldownMs : null
+    };
+  }
+  function mergeGeneratorStates(oldRules, nextRules, first, second, now) {
+    const a = effectiveGeneratorState(oldRules, first, now), b = effectiveGeneratorState(oldRules, second, now);
+    const total = a.remainingUses + b.remainingUses;
+    const ratio = Math.max(0, Math.min(0.5, finite(nextRules.mergeRemainingRatio, 0.5)));
+    const remainingUses = oldRules.capacity ? Math.min(total, Math.floor(total * nextRules.capacity * ratio / oldRules.capacity)) : 0;
+    const progress = (state) => oldRules.recoveryIntervalMs > 0 ? Math.min(1, Math.max(0, now - state.recoveryAt) / oldRules.recoveryIntervalMs) : 0;
+    const cooldownFraction = (state) => state.cooldownUntil === null || !oldRules.cooldownMs ? 0 : Math.max(0, state.cooldownUntil - now) / oldRules.cooldownMs;
+    return {
+      remainingUses,
+      boosted: false,
+      recoveryAt: now - Math.floor(Math.min(progress(a), progress(b)) * nextRules.recoveryIntervalMs),
+      cooldownUntil: remainingUses === 0 && nextRules.cooldownMs > 0 ? now + Math.ceil(Math.max(cooldownFraction(a), cooldownFraction(b), Number.EPSILON) * nextRules.cooldownMs) : null
+    };
+  }
+
   // assets/resources/config/game.json
   var game_default = {
     gameTitle: "\u6211\u4EEC\u7684\u6D6A\u6F2B\u5C0F\u5C4B",
     saveKey: "our-love-story-save",
-    saveVersion: 8,
+    saveVersion: 9,
     toolbox: {
       warehouseSlots: 6,
-      startingScissors: 2
+      startingScissors: 2,
+      backpackExpansion: {
+        maxSlots: 36,
+        baseDiamondCost: 10,
+        stepDiamondCost: 2
+      }
     },
     board: {
-      rows: 7,
-      columns: 6,
+      rows: 9,
+      columns: 7,
       unlocks: [
         {
           level: 1,
@@ -99,6 +195,21 @@
           level: 10,
           columns: 6,
           rows: 7
+        },
+        {
+          level: 12,
+          columns: 7,
+          rows: 7
+        },
+        {
+          level: 15,
+          columns: 7,
+          rows: 8
+        },
+        {
+          level: 18,
+          columns: 7,
+          rows: 9
         }
       ]
     },
@@ -132,12 +243,13 @@
     orders: {
       activeSlots: 3,
       minRequirements: 1,
-      maxRequirements: 3,
-      minItemLevel: 2,
+      maxRequirements: 2,
+      minItemLevel: 1,
       maxItemLevel: 5,
       refreshCooldownMs: 9e5,
       refreshDiamondCost: 2,
       dynamic: {
+        pacedSlots: true,
         rareChance: 0.2,
         urgentChance: 0.1,
         urgentDurationMs: 18e5,
@@ -998,6 +1110,7 @@
       chainId: "sugar",
       level: 1,
       displayName: "\u65B9\u7CD6",
+      sellValue: 1,
       wildcardEligible: true,
       nextItemId: "sugar_02"
     },
@@ -1006,6 +1119,7 @@
       chainId: "sugar",
       level: 2,
       displayName: "\u53CC\u5757\u65B9\u7CD6",
+      sellValue: 2,
       wildcardEligible: true,
       nextItemId: "sugar_03"
     },
@@ -1014,6 +1128,7 @@
       chainId: "sugar",
       level: 3,
       displayName: "\u751C\u871C\u7CD6\u7F50",
+      sellValue: 4,
       wildcardEligible: true
     },
     {
@@ -1059,6 +1174,7 @@
       chainId: "coffee",
       level: 9,
       displayName: "\u82B1\u8BED\u62FF\u94C1",
+      sellValue: 256,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "coffee_10"
@@ -1068,6 +1184,7 @@
       chainId: "coffee",
       level: 10,
       displayName: "\u53CC\u676F\u5348\u540E\u8336",
+      sellValue: 512,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "coffee_11"
@@ -1077,6 +1194,7 @@
       chainId: "coffee",
       level: 11,
       displayName: "\u73AB\u7470\u5496\u5561\u7EC4",
+      sellValue: 1024,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "coffee_12"
@@ -1086,6 +1204,7 @@
       chainId: "coffee",
       level: 12,
       displayName: "\u6D6A\u6F2B\u5496\u5561\u5BB4",
+      sellValue: 2048,
       wildcardEligible: true,
       maxLevel: true
     },
@@ -1094,6 +1213,7 @@
       chainId: "flower",
       level: 9,
       displayName: "\u73AB\u7470\u73BB\u7483\u7F69",
+      sellValue: 256,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "flower_10"
@@ -1103,6 +1223,7 @@
       chainId: "flower",
       level: 10,
       displayName: "\u5FC3\u5F62\u82B1\u73AF",
+      sellValue: 512,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "flower_11"
@@ -1112,6 +1233,7 @@
       chainId: "flower",
       level: 11,
       displayName: "\u7E41\u82B1\u793C\u7BEE",
+      sellValue: 1024,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "flower_12"
@@ -1121,6 +1243,7 @@
       chainId: "flower",
       level: 12,
       displayName: "\u5A5A\u793C\u6367\u82B1",
+      sellValue: 2048,
       wildcardEligible: true,
       maxLevel: true
     },
@@ -1129,6 +1252,7 @@
       chainId: "dessert",
       level: 9,
       displayName: "\u8393\u679C\u53CC\u5C42\u7CD5",
+      sellValue: 256,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "dessert_10"
@@ -1138,6 +1262,7 @@
       chainId: "dessert",
       level: 10,
       displayName: "\u5929\u9E45\u6CE1\u8299\u5854",
+      sellValue: 512,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "dessert_11"
@@ -1147,6 +1272,7 @@
       chainId: "dessert",
       level: 11,
       displayName: "\u73AB\u7470\u5A5A\u793C\u7CD5",
+      sellValue: 1024,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "dessert_12"
@@ -1156,6 +1282,7 @@
       chainId: "dessert",
       level: 12,
       displayName: "\u68A6\u5E7B\u751C\u54C1\u5854",
+      sellValue: 2048,
       wildcardEligible: true,
       maxLevel: true
     },
@@ -1164,6 +1291,7 @@
       chainId: "gift",
       level: 9,
       displayName: "\u73CD\u73E0\u793C\u5323",
+      sellValue: 256,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "gift_10"
@@ -1173,6 +1301,7 @@
       chainId: "gift",
       level: 10,
       displayName: "\u5FC3\u5F62\u97F3\u4E50\u76D2",
+      sellValue: 512,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "gift_11"
@@ -1182,6 +1311,7 @@
       chainId: "gift",
       level: 11,
       displayName: "\u6C42\u5A5A\u6212\u76D2",
+      sellValue: 1024,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "gift_12"
@@ -1191,6 +1321,7 @@
       chainId: "gift",
       level: 12,
       displayName: "\u5FC3\u610F\u73CD\u85CF\u7BB1",
+      sellValue: 2048,
       wildcardEligible: true,
       maxLevel: true
     },
@@ -1199,6 +1330,7 @@
       chainId: "fruit",
       level: 9,
       displayName: "\u6A59\u82B1\u679C\u51BB\u676F",
+      sellValue: 512,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "fruit_10"
@@ -1208,6 +1340,7 @@
       chainId: "fruit",
       level: 10,
       displayName: "\u6A59\u9999\u534E\u592B\u76D8",
+      sellValue: 1024,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "fruit_11"
@@ -1217,6 +1350,7 @@
       chainId: "fruit",
       level: 11,
       displayName: "\u9C9C\u6A59\u5E86\u5178\u7CD5",
+      sellValue: 2048,
       wildcardEligible: true,
       maxLevel: false,
       nextItemId: "fruit_12"
@@ -1226,6 +1360,7 @@
       chainId: "fruit",
       level: 12,
       displayName: "\u9633\u5149\u6C34\u679C\u5BB4",
+      sellValue: 4096,
       wildcardEligible: true,
       maxLevel: true
     },
@@ -1524,7 +1659,8 @@
               }
             ]
           }
-        ]
+        ],
+        mergeRemainingRatio: 0.5
       },
       streakCooldown: {
         uses: 60,
@@ -1774,7 +1910,8 @@
               }
             ]
           }
-        ]
+        ],
+        mergeRemainingRatio: 0.5
       },
       streakCooldown: {
         uses: 60,
@@ -2024,7 +2161,8 @@
               }
             ]
           }
-        ]
+        ],
+        mergeRemainingRatio: 0.5
       },
       streakCooldown: {
         uses: 60,
@@ -2274,7 +2412,8 @@
               }
             ]
           }
-        ]
+        ],
+        mergeRemainingRatio: 0.5
       },
       streakCooldown: {
         uses: 60,
@@ -2291,7 +2430,7 @@
       recharge: {
         capacity: 10,
         legacyCapacity: 3,
-        intervalMs: 6e5
+        intervalMs: 6e4
       },
       outputs: [
         {
@@ -2431,7 +2570,8 @@
               }
             ]
           }
-        ]
+        ],
+        mergeRemainingRatio: 0.5
       },
       purchaseCoins: 150
     }
@@ -3952,19 +4092,115 @@
       unlockLevel: 8,
       decorPoints: 5,
       art: "pool:3"
+    },
+    {
+      id: "wall_rose",
+      title: "\u73AB\u7470\u82B1\u8BED",
+      category: "\u58C1\u753B",
+      room: "living",
+      placement: {
+        x: -245,
+        y: 210,
+        width: 148,
+        height: 126
+      },
+      coinCost: 80,
+      unlockLevel: 1,
+      decorPoints: 1,
+      art: "wall:rose"
+    },
+    {
+      id: "wall_tulip",
+      title: "\u90C1\u91D1\u9999\u6625\u65E5",
+      category: "\u58C1\u753B",
+      room: "living",
+      placement: {
+        x: -65,
+        y: 210,
+        width: 148,
+        height: 126
+      },
+      coinCost: 80,
+      unlockLevel: 1,
+      decorPoints: 1,
+      art: "wall:tulip"
+    },
+    {
+      id: "wall_orange",
+      title: "\u6A58\u9999\u5348\u540E",
+      category: "\u58C1\u753B",
+      room: "living",
+      placement: {
+        x: 115,
+        y: 210,
+        width: 148,
+        height: 126
+      },
+      coinCost: 100,
+      unlockLevel: 2,
+      decorPoints: 1,
+      art: "wall:orange"
+    },
+    {
+      id: "wall_coffee",
+      title: "\u5496\u5561\u65F6\u5149",
+      category: "\u58C1\u753B",
+      room: "living",
+      placement: {
+        x: -245,
+        y: 65,
+        width: 148,
+        height: 126
+      },
+      coinCost: 100,
+      unlockLevel: 2,
+      decorPoints: 1,
+      art: "wall:coffee"
+    },
+    {
+      id: "wall_garden",
+      title: "\u82B1\u56ED\u6668\u5149",
+      category: "\u58C1\u753B",
+      room: "living",
+      placement: {
+        x: -65,
+        y: 65,
+        width: 148,
+        height: 126
+      },
+      coinCost: 130,
+      unlockLevel: 3,
+      decorPoints: 1,
+      art: "wall:garden"
+    },
+    {
+      id: "wall_terrace",
+      title: "\u9732\u53F0\u665A\u98CE",
+      category: "\u58C1\u753B",
+      room: "living",
+      placement: {
+        x: 115,
+        y: 65,
+        width: 148,
+        height: 126
+      },
+      coinCost: 130,
+      unlockLevel: 3,
+      decorPoints: 1,
+      art: "wall:terrace"
     }
   ];
 
   // assets/resources/config/wishes.json
   var wishes_default = [
     { id: "first_spawns", title: "\u70B9\u4EAE\u5496\u5561\u673A", metric: "spawns", target: 5, rewardCoins: 100, rewardHearts: 20 },
-    { id: "first_merges", title: "\u5C0F\u5C0F\u7684\u5408\u6210", metric: "merges", target: 3, rewardCoins: 100, rewardHearts: 20 },
+    { id: "first_merges", title: "\u5C0F\u5C0F\u7684\u5408\u6210", metric: "merges", target: 3, rewardCoins: 100, rewardHearts: 20, generatorReward: { generatorId: "coffee_machine", level: 1, count: 1 } },
     { id: "first_order", title: "\u7B2C\u4E00\u4EFD\u59D4\u6258", metric: "orders", target: 1, rewardCoins: 100, rewardHearts: 20 },
-    { id: "flower_time", title: "\u82B1\u7BEE\u5F00\u653E", metric: "level", target: 3, rewardCoins: 100, rewardHearts: 20 },
+    { id: "flower_time", title: "\u82B1\u7BEE\u5F00\u653E", metric: "level", target: 3, rewardCoins: 100, rewardHearts: 20, generatorReward: { generatorId: "flower_basket", level: 1, count: 1 } },
     { id: "first_memory", title: "\u7FFB\u5F00\u7B2C\u4E00\u9875", metric: "memories", target: 1, rewardCoins: 100, rewardHearts: 20 },
     { id: "first_furniture", title: "\u88C5\u70B9\u5C0F\u5C4B", metric: "furniture", target: 1, rewardCoins: 100, rewardHearts: 20 },
     { id: "helpful_neighbor", title: "\u70ED\u5FC3\u5C0F\u5C4B", metric: "orders", target: 5, rewardCoins: 100, rewardHearts: 20 },
-    { id: "gift_time", title: "\u793C\u7269\u65F6\u5149", metric: "level", target: 8, rewardCoins: 100, rewardHearts: 20 },
+    { id: "gift_time", title: "\u793C\u7269\u65F6\u5149", metric: "level", target: 8, rewardCoins: 100, rewardHearts: 20, generatorReward: { generatorId: "gift_box", level: 1, count: 1 } },
     { id: "more_memories", title: "\u73CD\u85CF\u7684\u6545\u4E8B", metric: "memories", target: 3, rewardCoins: 100, rewardHearts: 20 },
     { id: "cozy_home", title: "\u6E29\u6696\u7684\u5BB6", metric: "decor", target: 20, rewardCoins: 100, rewardHearts: 20 }
   ];
@@ -4000,7 +4236,7 @@
       memoryId: "letters",
       title: "\u821F\u5C71 \xB7 \u76F8\u9047\u7684\u7EBF\u7D22",
       unlockLevel: 1,
-      intro: "\u4E00\u8D77\u6574\u7406\u56DE\u5FC6\u518C\u5427\u3002\u5148\u51C6\u5907\u4E24\u4EFD\u65C5\u9014\u5FC3\u610F\uFF0C\u518D\u5728\u6D77\u8FB9\u63D2\u753B\u91CC\u5BFB\u627E\u4E09\u5F20\u7EBF\u7D22\u5361\u3002",
+      intro: "2023\u5E749\u67088\u65E5\uFF0C\u821F\u5C71\u7684\u6D77\u98CE\u3001\u6C99\u6EE9\u548C\u7BDD\u706B\uFF0C\u628A\u6211\u4EEC\u7684\u6545\u4E8B\u8FDE\u5728\u4E86\u4E00\u8D77\u3002\u70B9\u51FB\u6D77\u8FB9\u753B\u9762\uFF0C\u627E\u56DE\u76F8\u9047\u90A3\u5929\u7684\u4E09\u5F20\u7EBF\u7D22\u5361\u3002",
       steps: [
         {
           title: "\u51C6\u5907\u65C5\u9014\u5496\u5561",
@@ -4069,9 +4305,27 @@
             kind: "find",
             solution: "7314",
             hotspots: [
-              { id: "practice_card_a", label: "\u7EC3\u4E60\u5361 A", x: -190, y: 95, clue: "\u7EC3\u4E60\u5361 A\uFF1A\u524D\u4E24\u4F4D\u662F 73\u3002" },
-              { id: "practice_card_b", label: "\u7EC3\u4E60\u5361 B", x: 175, y: 5, clue: "\u7EC3\u4E60\u5361 B\uFF1A\u540E\u4E24\u4F4D\u662F 14\u3002" },
-              { id: "practice_card_note", label: "\u7EC3\u4E60\u8BF4\u660E", x: -60, y: -110, clue: "\u5361\u7247\u6570\u5B57\u4EC5\u7528\u4E8E\u672C\u6B21\u7EC3\u4E60\uFF0C\u4E0D\u4EE3\u8868\u771F\u5B9E\u65E5\u671F\u6216\u56DE\u5FC6\u4E8B\u5B9E\u3002" }
+              {
+                id: "practice_card_a",
+                label: "\u7EC3\u4E60\u5361 A",
+                x: -190,
+                y: 95,
+                clue: "\u7EC3\u4E60\u5361 A\uFF1A\u524D\u4E24\u4F4D\u662F 73\u3002"
+              },
+              {
+                id: "practice_card_b",
+                label: "\u7EC3\u4E60\u5361 B",
+                x: 175,
+                y: 5,
+                clue: "\u7EC3\u4E60\u5361 B\uFF1A\u540E\u4E24\u4F4D\u662F 14\u3002"
+              },
+              {
+                id: "practice_card_note",
+                label: "\u7EC3\u4E60\u8BF4\u660E",
+                x: -60,
+                y: -110,
+                clue: "\u5361\u7247\u6570\u5B57\u4EC5\u7528\u4E8E\u672C\u6B21\u7EC3\u4E60\uFF0C\u4E0D\u4EE3\u8868\u771F\u5B9E\u65E5\u671F\u6216\u56DE\u5FC6\u4E8B\u5B9E\u3002"
+              }
             ]
           }
         }
@@ -4080,7 +4334,12 @@
         coins: 120,
         hearts: 50,
         energy: 20,
-        scissors: 1
+        scissors: 1,
+        generator: {
+          generatorId: "coffee_machine",
+          level: 1,
+          count: 1
+        }
       },
       souvenir: {
         title: "\u521D\u8BC6\u7684\u5FC3\u610F\u793C\u76D2",
@@ -4095,7 +4354,7 @@
       memoryId: "first_trip",
       title: "\u60C5\u4E66 \xB7 \u628A\u5FC3\u610F\u6392\u6210\u4E00\u53E5\u8BDD",
       unlockLevel: 3,
-      intro: "\u628A\u82B1\u548C\u5496\u5561\u51C6\u5907\u597D\uFF0C\u518D\u4ECE\u56DB\u5C01\u4EE3\u8868\u6027\u7684\u4FE1\u91CC\uFF0C\u627E\u51FA\u8FD9\u4EFD\u5FC3\u610F\u7684\u987A\u5E8F\u3002",
+      intro: "\u76F8\u8BC6\u4E00\u767E\u5929\uFF0C\u5FC3\u610F\u5199\u6210\u4E86\u4E00\u767E\u5C01\u60C5\u4E66\u3002\u5FAA\u7740\u4FE1\u91CC\u7684\u7EBF\u7D22\uFF0C\u6574\u7406\u90A3\u53E5\u53EA\u60F3\u5BF9\u4F60\u8BF4\u7684\u8BDD\u3002",
       steps: [
         {
           title: "\u4E3A\u4FE1\u4EF6\u6311\u4E00\u6735\u82B1",
@@ -4167,12 +4426,33 @@
           puzzle: {
             kind: "sequence",
             tiles: [
-              { id: "practice_joy", label: "\u5C0F\u5C0F\u6B22\u559C", clue: "\u6211\u662F\u6574\u53E5\u8BDD\u7684\u6536\u5C3E\uFF0C\u7559\u4E0B\u8F7B\u677E\u7684\u5FC3\u60C5\u3002" },
-              { id: "practice_wish", label: "\u613F", clue: "\u6211\u662F\u8FD9\u53E5\u8BDD\u7684\u5F00\u5934\uFF0C\u5148\u8BF4\u51FA\u5FC3\u613F\u3002" },
-              { id: "practice_daily", label: "\u6BCF\u5929", clue: "\u6211\u7D27\u8DDF\u7740\u201C\u613F\u201D\uFF0C\u8BF4\u660E\u8FD9\u4EFD\u5FC3\u610F\u4F1A\u53D1\u751F\u5728\u6BCF\u5929\u3002" },
-              { id: "practice_have", label: "\u90FD\u6709", clue: "\u6211\u63A5\u5728\u201C\u6BCF\u5929\u201D\u540E\u9762\uFF0C\u8FDE\u63A5\u65F6\u95F4\u548C\u7ED3\u679C\u3002" }
+              {
+                id: "practice_joy",
+                label: "\u5C0F\u5C0F\u6B22\u559C",
+                clue: "\u6211\u662F\u6574\u53E5\u8BDD\u7684\u6536\u5C3E\uFF0C\u7559\u4E0B\u8F7B\u677E\u7684\u5FC3\u60C5\u3002"
+              },
+              {
+                id: "practice_wish",
+                label: "\u613F",
+                clue: "\u6211\u662F\u8FD9\u53E5\u8BDD\u7684\u5F00\u5934\uFF0C\u5148\u8BF4\u51FA\u5FC3\u613F\u3002"
+              },
+              {
+                id: "practice_daily",
+                label: "\u6BCF\u5929",
+                clue: "\u6211\u7D27\u8DDF\u7740\u201C\u613F\u201D\uFF0C\u8BF4\u660E\u8FD9\u4EFD\u5FC3\u610F\u4F1A\u53D1\u751F\u5728\u6BCF\u5929\u3002"
+              },
+              {
+                id: "practice_have",
+                label: "\u90FD\u6709",
+                clue: "\u6211\u63A5\u5728\u201C\u6BCF\u5929\u201D\u540E\u9762\uFF0C\u8FDE\u63A5\u65F6\u95F4\u548C\u7ED3\u679C\u3002"
+              }
             ],
-            solution: ["practice_wish", "practice_daily", "practice_have", "practice_joy"]
+            solution: [
+              "practice_wish",
+              "practice_daily",
+              "practice_have",
+              "practice_joy"
+            ]
           }
         }
       ],
@@ -4195,7 +4475,7 @@
       memoryId: "rainy_day",
       title: "\u5357\u5C71\u5854 \xB7 \u70B9\u4EAE\u5FC3\u610F",
       unlockLevel: 5,
-      intro: "\u51C6\u5907\u597D\u751C\u70B9\u548C\u82B1\u675F\uFF0C\u518D\u70B9\u4EAE\u8FD9\u5F20\u4E3A\u56DE\u5FC6\u518C\u8BBE\u8BA1\u7684\u706F\u5149\u5361\u3002",
+      intro: "2024\u5E7410\u67083\u65E5\uFF0C\u5728\u9996\u5C14\u5357\u5C71\u5854\u8BB8\u4E0B\u672A\u6765\u7684\u7EA6\u5B9A\u3002\u8F6C\u52A8\u706F\u5149\uFF0C\u8BA9\u90A3\u4E00\u665A\u7684\u5FC3\u610F\u91CD\u65B0\u4EAE\u8D77\u3002",
       steps: [
         {
           title: "\u51C6\u5907\u65C5\u884C\u751C\u70B9",
@@ -4306,9 +4586,66 @@
             rows: 3,
             start: 0,
             end: 8,
-            ports: [[1, 3], [1, 3], [2, 3], [1, 2], [1, 3], [0, 3], [0, 1], [1, 3], [1, 3]],
-            initial: [1, 0, 2, 3, 1, 2, 0, 3, 1],
-            solution: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+            ports: [
+              [
+                1,
+                3
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                0,
+                3
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                1,
+                3
+              ]
+            ],
+            initial: [
+              1,
+              0,
+              2,
+              3,
+              1,
+              2,
+              0,
+              3,
+              1
+            ],
+            solution: [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           }
         }
       ],
@@ -4331,7 +4668,7 @@
       memoryId: "night_view",
       title: "\u6A2A\u5E97 \xB7 \u4E00\u8D77\u8DE8\u5E74",
       unlockLevel: 6,
-      intro: "2023 \u5E74 12 \u6708 30 \u65E5\uFF0C\u6211\u4EEC\u53BB\u6A2A\u5E97\u8DE8\u5E74\u3002\u5148\u51C6\u5907\u4E24\u4EF6\u65C5\u9014\u5FC3\u610F\uFF0C\u518D\u628A\u56DE\u5FC6\u518C\u8FD9\u4E00\u9875\u7684\u7167\u7247\u6392\u6210\u4E00\u6BB5\u6545\u4E8B\u3002",
+      intro: "2023\u5E74\u5C81\u672B\uFF0C\u6211\u4EEC\u53BB\u4E86\u6A2A\u5E97\u3001\u79E6\u738B\u5BAB\u3001\u6E38\u4E50\u56ED\u548C\u6E29\u6CC9\u3002\u5728\u5012\u8BA1\u65F6\u91CC\uFF0C\u62FC\u56DE\u4E00\u8D77\u8DE8\u5E74\u7684\u5FEB\u4E50\u3002",
       steps: [
         {
           title: "\u51FA\u53D1\u524D\u7684\u4E00\u676F\u70ED\u5496\u5561",
@@ -4411,12 +4748,33 @@
           puzzle: {
             kind: "sequence",
             tiles: [
-              { id: "practice_joy", label: "\u5FEB\u4E50", clue: "\u6211\u5728\u53E5\u5B50\u7ED3\u5C3E\uFF0C\u8868\u793A\u4E00\u8D77\u6536\u83B7\u7684\u5FC3\u60C5\u3002" },
-              { id: "practice_together", label: "\u4E00\u8D77", clue: "\u6211\u662F\u8FD9\u53E5\u8BDD\u7684\u8D77\u70B9\uFF0C\u9080\u8BF7\u4E00\u8D77\u884C\u52A8\u3002" },
-              { id: "practice_gather", label: "\u6536\u96C6", clue: "\u6211\u63A5\u5728\u201C\u6162\u6162\u201D\u540E\u9762\uFF0C\u8868\u793A\u8981\u505A\u7684\u52A8\u4F5C\u3002" },
-              { id: "practice_slowly", label: "\u6162\u6162", clue: "\u6211\u7D27\u8DDF\u201C\u4E00\u8D77\u201D\uFF0C\u8BF4\u660E\u884C\u52A8\u7684\u8282\u594F\u3002" }
+              {
+                id: "practice_joy",
+                label: "\u5FEB\u4E50",
+                clue: "\u6211\u5728\u53E5\u5B50\u7ED3\u5C3E\uFF0C\u8868\u793A\u4E00\u8D77\u6536\u83B7\u7684\u5FC3\u60C5\u3002"
+              },
+              {
+                id: "practice_together",
+                label: "\u4E00\u8D77",
+                clue: "\u6211\u662F\u8FD9\u53E5\u8BDD\u7684\u8D77\u70B9\uFF0C\u9080\u8BF7\u4E00\u8D77\u884C\u52A8\u3002"
+              },
+              {
+                id: "practice_gather",
+                label: "\u6536\u96C6",
+                clue: "\u6211\u63A5\u5728\u201C\u6162\u6162\u201D\u540E\u9762\uFF0C\u8868\u793A\u8981\u505A\u7684\u52A8\u4F5C\u3002"
+              },
+              {
+                id: "practice_slowly",
+                label: "\u6162\u6162",
+                clue: "\u6211\u7D27\u8DDF\u201C\u4E00\u8D77\u201D\uFF0C\u8BF4\u660E\u884C\u52A8\u7684\u8282\u594F\u3002"
+              }
             ],
-            solution: ["practice_together", "practice_slowly", "practice_gather", "practice_joy"]
+            solution: [
+              "practice_together",
+              "practice_slowly",
+              "practice_gather",
+              "practice_joy"
+            ]
           }
         }
       ],
@@ -4424,7 +4782,12 @@
         coins: 300,
         hearts: 150,
         energy: 30,
-        scissors: 2
+        scissors: 2,
+        generator: {
+          generatorId: "flower_basket",
+          level: 1,
+          count: 1
+        }
       },
       souvenir: {
         title: "\u8DE8\u5E74\u884C\u7A0B\u7EAA\u5FF5\u7968",
@@ -4439,7 +4802,7 @@
       memoryId: "lijiang_wedding",
       title: "\u4E3D\u6C5F \xB7 \u7B2C\u4E00\u5957\u5A5A\u7EB1\u7167",
       unlockLevel: 8,
-      intro: "2026 \u5E74 5 \u6708 22 \u65E5\uFF0C\u6211\u4EEC\u53BB\u4E3D\u6C5F\u62CD\u5A5A\u7EB1\u7167\u3002\u51C6\u5907\u597D\u51FA\u53D1\u7684\u5FC3\u610F\uFF0C\u518D\u5728\u753B\u9762\u91CC\u627E\u56DE\u90A3\u5929\u7684\u65E5\u671F\u5BC6\u7801\u3002",
+      intro: "2026\u5E745\u670822\u65E5\uFF0C\u6211\u4EEC\u53BB\u4E3D\u6C5F\u62CD\u5A5A\u7EB1\u7167\u3002\u628A\u6E56\u6CCA\u3001\u516C\u8DEF\u3001\u655E\u7BF7\u8F66\u548C\u96EA\u5C71\u7684\u7EBF\u7D22\uFF0C\u6392\u6210\u5C5E\u4E8E\u6211\u4EEC\u7684\u65C5\u9014\u3002",
       steps: [
         {
           title: "\u6E05\u6668\u7684\u62FF\u94C1",
@@ -4516,9 +4879,27 @@
             kind: "find",
             solution: "2468",
             hotspots: [
-              { id: "practice_card_a", label: "\u7EC3\u4E60\u5361 A", x: -180, y: 80, clue: "\u7EC3\u4E60\u5361 A\uFF1A\u524D\u4E24\u4F4D\u662F 24\u3002" },
-              { id: "practice_card_b", label: "\u7EC3\u4E60\u5361 B", x: 160, y: 20, clue: "\u7EC3\u4E60\u5361 B\uFF1A\u540E\u4E24\u4F4D\u662F 68\u3002" },
-              { id: "practice_card_note", label: "\u7EC3\u4E60\u8BF4\u660E", x: -50, y: -110, clue: "\u8FD9\u7EC4\u53F7\u7801\u53EA\u5C5E\u4E8E\u7EC3\u4E60\uFF0C\u4E0D\u4EE3\u8868\u65E5\u671F\u6216\u771F\u5B9E\u56DE\u5FC6\u3002" }
+              {
+                id: "practice_card_a",
+                label: "\u7EC3\u4E60\u5361 A",
+                x: -180,
+                y: 80,
+                clue: "\u7EC3\u4E60\u5361 A\uFF1A\u524D\u4E24\u4F4D\u662F 24\u3002"
+              },
+              {
+                id: "practice_card_b",
+                label: "\u7EC3\u4E60\u5361 B",
+                x: 160,
+                y: 20,
+                clue: "\u7EC3\u4E60\u5361 B\uFF1A\u540E\u4E24\u4F4D\u662F 68\u3002"
+              },
+              {
+                id: "practice_card_note",
+                label: "\u7EC3\u4E60\u8BF4\u660E",
+                x: -50,
+                y: -110,
+                clue: "\u8FD9\u7EC4\u53F7\u7801\u53EA\u5C5E\u4E8E\u7EC3\u4E60\uFF0C\u4E0D\u4EE3\u8868\u65E5\u671F\u6216\u771F\u5B9E\u56DE\u5FC6\u3002"
+              }
             ]
           }
         }
@@ -4527,7 +4908,12 @@
         coins: 360,
         hearts: 180,
         energy: 35,
-        scissors: 2
+        scissors: 2,
+        generator: {
+          generatorId: "dessert_oven",
+          level: 1,
+          count: 1
+        }
       },
       souvenir: {
         title: "\u4E3D\u6C5F\u65C5\u62CD\u82B1\u675F",
@@ -4542,7 +4928,7 @@
       memoryId: "anniversary",
       title: "\u4E50\u6E05 \xB7 \u8349\u576A\u5A5A\u793C",
       unlockLevel: 10,
-      intro: "2026 \u5E74 10 \u6708 3 \u65E5\uFF0C\u6211\u4EEC\u5728\u4E50\u6E05\u529E\u8349\u576A\u5A5A\u793C\u3002\u51C6\u5907\u597D\u82B1\u95E8\u4E0E\u8A93\u8A00\uFF0C\u518D\u628A\u8349\u576A\u4E0A\u7684\u706F\u4E32\u70B9\u4EAE\u3002",
+      intro: "2026\u5E7410\u67083\u65E5\uFF0C\u4E50\u6E05\u7684\u8349\u576A\u4E0A\uFF0C\u6211\u4EEC\u529E\u4E86\u5A5A\u793C\u3002\u5FAA\u7740\u82B1\u4E0E\u5149\u7684\u7EBF\u7D22\uFF0C\u628A\u8FD9\u4E00\u5929\u73CD\u85CF\u8FDB\u5C0F\u5C4B\u3002",
       steps: [
         {
           title: "\u8349\u576A\u4E0A\u7684\u82B1\u95E8",
@@ -4661,9 +5047,66 @@
             rows: 3,
             start: 0,
             end: 8,
-            ports: [[3, 1], [3, 1], [3, 2], [0, 2], [1, 3], [0, 2], [0, 1], [0, 2], [0, 1]],
-            initial: [1, 2, 0, 3, 1, 2, 0, 3, 1],
-            solution: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+            ports: [
+              [
+                3,
+                1
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                3,
+                2
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            initial: [
+              1,
+              2,
+              0,
+              3,
+              1,
+              2,
+              0,
+              3,
+              1
+            ],
+            solution: [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           }
         }
       ],
@@ -4671,7 +5114,12 @@
         coins: 450,
         hearts: 220,
         energy: 40,
-        scissors: 3
+        scissors: 3,
+        generator: {
+          generatorId: "gift_box",
+          level: 1,
+          count: 1
+        }
       },
       souvenir: {
         title: "\u8349\u576A\u5A5A\u793C\u7684\u8A93\u8A00\u5361",
@@ -4950,7 +5398,7 @@
   }
   function loadConfigBundle() {
     const game = game_default;
-    const items = items_default;
+    const items = [...items_default, ...generatorItemDefinitions(generators_default)];
     const generators = generators_default;
     const orders = orders_default;
     const progression = progression_default;
@@ -5046,7 +5494,7 @@
           const item = catalog.get(output.itemId);
           return item?.chainId === gen.chainId && item.level >= minLevel && item.level <= Math.min(12, minLevel + 2) && Number.isFinite(output.weight) && output.weight > 0;
         });
-        if (!Number.isSafeInteger(upgrade.maxLevel) || upgrade.maxLevel < 2 || upgrade.maxLevel > 8 || !Number.isFinite(upgrade.rechargeFactor) || upgrade.rechargeFactor <= 0 || upgrade.rechargeFactor > 1 || !Number.isSafeInteger(upgrade.boostEnergyMultiplier) || upgrade.boostEnergyMultiplier < 2 || !Array.isArray(upgrade.levels) || upgrade.levels.length !== upgrade.maxLevel - 1 || upgrade.levels.some((entry, index) => entry.level !== index + 2 || !validOutputs(entry.outputs, entry.level) || gen.energyCost > 0 && (!entry.boostOutputs || !validOutputs(entry.boostOutputs, entry.level)) || entry.boostOutputs !== void 0 && !validOutputs(entry.boostOutputs, entry.level))) {
+        if (!Number.isSafeInteger(upgrade.maxLevel) || upgrade.maxLevel < 2 || upgrade.maxLevel > 8 || !Number.isFinite(upgrade.rechargeFactor) || upgrade.rechargeFactor <= 0 || upgrade.rechargeFactor > 1 || upgrade.mergeRemainingRatio !== void 0 && (!Number.isFinite(upgrade.mergeRemainingRatio) || upgrade.mergeRemainingRatio <= 0 || upgrade.mergeRemainingRatio > 0.5) || !Number.isSafeInteger(upgrade.boostEnergyMultiplier) || upgrade.boostEnergyMultiplier < 2 || !Array.isArray(upgrade.levels) || upgrade.levels.length !== upgrade.maxLevel - 1 || upgrade.levels.some((entry, index) => entry.level !== index + 2 || !validOutputs(entry.outputs, entry.level) || gen.energyCost > 0 && (!entry.boostOutputs || !validOutputs(entry.boostOutputs, entry.level)) || entry.boostOutputs !== void 0 && !validOutputs(entry.boostOutputs, entry.level))) {
           issues.push({ level: "error", message: `Generator ${gen.id} upgrade invalid` });
         }
       }
@@ -5145,6 +5593,7 @@
     }
     if (game.energy.maxByLevel && (game.energy.maxByLevel.length !== progression.levels.length || game.energy.maxByLevel.some((n, i, a) => !Number.isSafeInteger(n) || n < 1 || n > 1e3 || i > 0 && n < a[i - 1]))) issues.push({ level: "error", message: "Energy capacity curve invalid" });
     const dynamicOrders = game.orders.dynamic;
+    if (dynamicOrders?.pacedSlots !== void 0 && typeof dynamicOrders.pacedSlots !== "boolean") issues.push({ level: "error", message: "Order pacing flag must be boolean" });
     if (dynamicOrders && ([dynamicOrders.twoItemChance, dynamicOrders.rareChance, dynamicOrders.urgentChance].some((n) => !Number.isFinite(n) || n < 0 || n > 1) || !Number.isSafeInteger(dynamicOrders.urgentDurationMs) || dynamicOrders.urgentDurationMs <= 0 || !Number.isSafeInteger(dynamicOrders.rewardMultiplierMaxLevel) || dynamicOrders.rewardMultiplierMaxLevel < 1 || !Number.isFinite(dynamicOrders.rewardMultiplierMin) || !Number.isFinite(dynamicOrders.rewardMultiplierMax) || dynamicOrders.rewardMultiplierMin <= 0 || dynamicOrders.rewardMultiplierMax < dynamicOrders.rewardMultiplierMin)) issues.push({ level: "error", message: "Dynamic order configuration invalid" });
     for (const [name, values] of [
       ["memory", memories],
@@ -5190,8 +5639,9 @@
         issues.push({ level: "error", message: `Furniture ${item.id} placement invalid` });
       }
     }
+    const validGeneratorGift = (gift) => gift === void 0 || !!gift && generators.some((g) => g.id === gift.generatorId && Number.isSafeInteger(gift.level) && gift.level >= 1 && gift.level <= (g.upgrade?.maxLevel ?? 1)) && Number.isSafeInteger(gift.count) && gift.count >= 1 && gift.count <= 8;
     for (const wish of wishes) {
-      if (wish.target <= 0 || wish.rewardCoins < 0 || wish.rewardHearts < 0) {
+      if (wish.target <= 0 || wish.rewardCoins < 0 || wish.rewardHearts < 0 || !validGeneratorGift(wish.generatorReward)) {
         issues.push({ level: "error", message: `Wish ${wish.id} invalid` });
       }
     }
@@ -5209,6 +5659,10 @@
       specialLevels.add(reward.level);
     }
     if (!Number.isInteger(game.toolbox?.warehouseSlots) || game.toolbox.warehouseSlots < 1 || game.toolbox.warehouseSlots > 6 || !Number.isInteger(game.toolbox.startingScissors) || game.toolbox.startingScissors < 0) issues.push({ level: "error", message: "Toolbox config invalid" });
+    const backpack = game.toolbox?.backpackExpansion;
+    if (!backpack || !Number.isSafeInteger(backpack.maxSlots) || backpack.maxSlots !== 36 || backpack.maxSlots < game.toolbox.warehouseSlots || !Number.isSafeInteger(backpack.baseDiamondCost) || backpack.baseDiamondCost < 1 || !Number.isSafeInteger(backpack.stepDiamondCost) || backpack.stepDiamondCost < 1) {
+      issues.push({ level: "error", message: "Backpack expansion config invalid" });
+    }
     const chapterIds = /* @__PURE__ */ new Set();
     const chapterMemoryIds = /* @__PURE__ */ new Set();
     const souvenirKeys = /* @__PURE__ */ new Set();
@@ -5216,7 +5670,7 @@
       const p = c.puzzle;
       const unlockedAtLevel = new Set(collectUnlockChains(progression, c.unlockLevel));
       const souvenirKey = `${c.souvenir.room}:${c.souvenir.x}:${c.souvenir.y}`;
-      const baseOk = /^[a-z][a-z0-9_]*$/.test(c.id) && !chapterIds.has(c.id) && memories.some((m) => m.id === c.memoryId) && !chapterMemoryIds.has(c.memoryId) && typeof c.title === "string" && c.title.trim().length > 0 && typeof c.intro === "string" && c.intro.trim().length > 0 && typeof c.instruction === "string" && c.instruction.trim().length > 0 && c.steps.length === 2 && c.hints.length === 3 && c.hints.every((hint) => typeof hint === "string" && hint.trim().length > 0) && Number.isInteger(c.unlockLevel) && c.unlockLevel >= 1 && c.unlockLevel <= 18 && Object.values(c.reward).every((n) => Number.isInteger(n) && n >= 0) && catalog.has(c.souvenir.artItemId) && ["living", "bedroom", "garden"].includes(c.souvenir.room) && typeof c.souvenir.title === "string" && c.souvenir.title.trim().length > 0 && Number.isFinite(c.souvenir.x) && Number.isFinite(c.souvenir.y) && !souvenirKeys.has(souvenirKey) && c.steps.every((s) => typeof s.title === "string" && typeof s.note === "string" && s.requirements.length > 0 && s.requirements.every((r) => {
+      const baseOk = /^[a-z][a-z0-9_]*$/.test(c.id) && !chapterIds.has(c.id) && memories.some((m) => m.id === c.memoryId) && !chapterMemoryIds.has(c.memoryId) && typeof c.title === "string" && c.title.trim().length > 0 && typeof c.intro === "string" && c.intro.trim().length > 0 && typeof c.instruction === "string" && c.instruction.trim().length > 0 && c.steps.length === 2 && c.hints.length === 3 && c.hints.every((hint) => typeof hint === "string" && hint.trim().length > 0) && Number.isInteger(c.unlockLevel) && c.unlockLevel >= 1 && c.unlockLevel <= 18 && [c.reward.coins, c.reward.hearts, c.reward.energy, c.reward.scissors].every((n) => Number.isInteger(n) && n >= 0) && validGeneratorGift(c.reward.generator) && catalog.has(c.souvenir.artItemId) && ["living", "bedroom", "garden"].includes(c.souvenir.room) && typeof c.souvenir.title === "string" && c.souvenir.title.trim().length > 0 && Number.isFinite(c.souvenir.x) && Number.isFinite(c.souvenir.y) && !souvenirKeys.has(souvenirKey) && c.steps.every((s) => typeof s.title === "string" && typeof s.note === "string" && s.requirements.length > 0 && s.requirements.every((r) => {
         const def = catalog.get(r.itemId);
         return !!def && unlockedAtLevel.has(def.chainId) && Number.isInteger(r.count) && r.count > 0;
       }));
@@ -5623,7 +6077,7 @@
       if (!parsed || typeof parsed !== "object") return null;
       let repaired = parsed.version !== this.options.version;
       const defaults = this.options.createDefault();
-      if (Object.keys(defaults).some((key) => !(key in parsed))) repaired = true;
+      if (Object.keys(defaults).some((key) => !(key in parsed) && !["generatorInventory", "generatorCharges", "generatorCooldowns"].includes(key))) repaired = true;
       const version = typeof parsed.version === "number" ? parsed.version : 0;
       if (version < 1) {
         if (version !== 0) return null;
@@ -5637,10 +6091,17 @@
       const collectionBonus = claimedCollectionIds.length * (this.options.collection?.energyPerChain ?? 0);
       const player = this.mergePlayer(parsed.player, defaults.player, version, collectionBonus);
       const overflow = [];
-      const boardCells = this.mergeBoard(parsed.board, defaults.board, version, overflow);
+      const boardCells = this.mergeBoard(parsed.board, defaults.board, defaults.boardSize?.columns ?? 6, parsed.boardSize, overflow);
       if (!boardCells) return null;
-      const retainedOpenCellIndices = new Set(Array.isArray(parsed.retainedOpenCellIndices) ? parsed.retainedOpenCellIndices.filter((index) => Number.isInteger(index) && index >= 0 && index < defaults.board.length) : []);
-      if (version < 7) {
+      const sourceColumns = this.sourceBoardColumns(parsed.board, parsed.boardSize) || defaults.boardSize?.columns || 6;
+      const targetColumns = defaults.boardSize?.columns ?? 6;
+      const retainedOpenCellIndices = /* @__PURE__ */ new Set();
+      for (const index of Array.isArray(parsed.retainedOpenCellIndices) ? parsed.retainedOpenCellIndices : []) {
+        if (!Number.isInteger(index) || index < 0 || !Array.isArray(parsed.board) || index >= parsed.board.length) continue;
+        const row = Math.floor(index / sourceColumns), column = index % sourceColumns;
+        if (column < targetColumns && row < defaults.board.length / targetColumns) retainedOpenCellIndices.add(row * targetColumns + column);
+      }
+      if (version < 9) {
         for (const cell of boardCells) if (cell.item) retainedOpenCellIndices.add(cell.index);
       }
       const activeOrders = Array.isArray(parsed.activeOrders) ? parsed.activeOrders.filter(isActiveOrder) : defaults.activeOrders;
@@ -5686,6 +6147,7 @@
         savedAt: typeof parsed.savedAt === "number" ? parsed.savedAt : this.options.clock.now(),
         player,
         board: boardCells,
+        boardSize: defaults.boardSize ? { ...defaults.boardSize } : void 0,
         legacyBoardEntitlement: version < 6 || parsed.legacyBoardEntitlement === true,
         retainedOpenCellIndices: Array.from(retainedOpenCellIndices).sort((a, b) => a - b),
         rewardInbox: [...overflow, ...inbox],
@@ -5694,6 +6156,7 @@
         generatorCharges: this.mergeGeneratorCharges(parsed.generatorCharges),
         generatorInventory: this.mergeGeneratorInventory(parsed.generatorInventory),
         generatorCooldowns: this.mergeGeneratorCooldowns(parsed.generatorCooldowns),
+        generatorBoard: this.mergeGeneratorBoard(parsed.generatorBoard),
         claimedCollectionIds,
         orderRefreshAt: Array.isArray(parsed.orderRefreshAt) ? parsed.orderRefreshAt.map((v) => typeof v === "number" && Number.isFinite(v) ? v : null) : [],
         dailyTasks: this.mergeDailyTasks(parsed.dailyTasks),
@@ -5706,6 +6169,12 @@
         preferences: this.mergePreferences(parsed.preferences, defaults.preferences),
         play: this.mergePlay(parsed.play, defaults.play, boardCells, version)
       };
+      const maxSlots = this.options.backpack?.maxSlots ?? 36;
+      if (data.play.warehouse.length > maxSlots) {
+        data.rewardInbox.push(...data.play.warehouse.splice(maxSlots));
+        repaired = true;
+      }
+      data.play.warehouseCapacity = Math.max(data.play.warehouse.length, data.play.warehouseCapacity ?? this.options.backpack?.initialSlots ?? 6);
       return { data, repaired };
     }
     mergePlayer(raw, fallback, version, collectionBonus) {
@@ -5739,10 +6208,18 @@
         unlockedChainIds: Array.isArray(p.unlockedChainIds) ? p.unlockedChainIds.filter((x) => typeof x === "string") : [...fallback.unlockedChainIds]
       };
     }
-    mergeBoard(raw, fallback, version, overflow) {
+    sourceBoardColumns(raw, size) {
+      if (!Array.isArray(raw)) return 0;
+      if (size && typeof size === "object" && Number.isSafeInteger(size.rows) && Number.isSafeInteger(size.columns) && size.rows > 0 && size.columns > 0 && size.rows * size.columns === raw.length) return size.columns;
+      if (raw.length === 81) return 9;
+      if (raw.length === 63) return 7;
+      if (raw.length === 48 || raw.length === 42) return 6;
+      return 0;
+    }
+    mergeBoard(raw, fallback, columns, size, overflow) {
       if (!Array.isArray(raw)) return fallback.map((c) => ({ ...c, item: c.item ? { ...c.item } : void 0 }));
-      const oldWidth = version < 6 && raw.length === 81 ? 9 : version < 6 && raw.length === 63 ? 7 : version < 7 && raw.length === 48 ? 6 : 0;
-      if (raw.length !== fallback.length && !oldWidth) return null;
+      const oldWidth = this.sourceBoardColumns(raw, size) || (raw.length === fallback.length ? columns : 0);
+      if (!oldWidth) return null;
       const cells = fallback.map((c) => ({ index: c.index }));
       for (let i = 0; i < raw.length; i += 1) {
         const cell = raw[i];
@@ -5750,9 +6227,8 @@
         if (!cell.item) continue;
         if (typeof cell.item.uid !== "string" || typeof cell.item.definitionId !== "string") return null;
         const item = { ...cell.item, uid: cell.item.uid, definitionId: cell.item.definitionId };
-        const row = oldWidth ? Math.floor(i / oldWidth) : Math.floor(i / 6);
-        const column = oldWidth ? i % oldWidth : i % 6;
-        if (row < fallback.length / 6 && column < 6) cells[row * 6 + column].item = item;
+        const row = Math.floor(i / oldWidth), column = i % oldWidth;
+        if (row < fallback.length / columns && column < columns) cells[row * columns + column].item = item;
         else overflow.push(item);
       }
       return cells;
@@ -5774,6 +6250,25 @@
         if (Number.isSafeInteger(state.streak) && (state.streak ?? -1) >= 0 && (state.cooldownStartedAt === null || typeof state.cooldownStartedAt === "number" && Number.isFinite(state.cooldownStartedAt))) result[id] = { streak: state.streak, cooldownStartedAt: state.cooldownStartedAt };
       }
       return result;
+    }
+    mergeGeneratorBoard(raw) {
+      if (!raw || typeof raw !== "object" || raw.ready !== true) return void 0;
+      const validId = (value) => typeof value === "string" && /^[a-z][a-z0-9_]*$/.test(value);
+      const seen = /* @__PURE__ */ new Set();
+      const rewards = (Array.isArray(raw.rewards) ? raw.rewards : []).filter((r) => r && typeof r === "object" && validId(r.id) && validId(r.generatorId) && Number.isSafeInteger(r.level) && r.level >= 1 && r.level <= 8 && Number.isSafeInteger(r.count) && r.count > 0 && ["legacy", "unlock", "level_reward", "wish_reward", "chapter_reward"].includes(r.source) && !seen.has(r.id) && !!seen.add(r.id));
+      return {
+        ready: true,
+        entitlements: Array.isArray(raw.entitlements) ? Array.from(new Set(raw.entitlements.filter(validId))) : [],
+        grantedSourceIds: Array.isArray(raw.grantedSourceIds) ? Array.from(new Set(raw.grantedSourceIds.filter(validId))) : [],
+        rewards: rewards.map((r) => ({
+          id: r.id,
+          generatorId: r.generatorId,
+          level: r.level,
+          count: r.count,
+          source: r.source,
+          ...r.state && typeof r.state === "object" ? { state: { ...r.state } } : {}
+        }))
+      };
     }
     mergeGeneratorInventory(raw) {
       const result = /* @__PURE__ */ Object.create(null);
@@ -5884,6 +6379,10 @@
       };
       return {
         warehouse,
+        warehouseCapacity: Math.max(
+          this.options.backpack?.initialSlots ?? fallback.warehouseCapacity ?? 6,
+          Math.min(this.options.backpack?.maxSlots ?? 36, Number.isSafeInteger(p.warehouseCapacity) ? p.warehouseCapacity : 0)
+        ),
         scissors: Math.max(0, Math.floor(num(p.scissors, fallback.scissors))),
         chapters,
         replays,
@@ -5979,6 +6478,7 @@
       player,
       play: {
         warehouse: [],
+        warehouseCapacity: config.toolbox.warehouseSlots,
         scissors: config.toolbox.startingScissors,
         chapters: {},
         replays: {},
@@ -5986,6 +6486,7 @@
         smallDate: { currentId: "", rotation: 0, completed: 0 }
       },
       board,
+      boardSize: { rows, columns },
       legacyBoardEntitlement: false,
       retainedOpenCellIndices: [],
       rewardInbox: [],
@@ -6077,8 +6578,9 @@
     );
   }
   var MergeEngine = class {
-    constructor(catalog) {
+    constructor(catalog, nowMs = 0) {
       this.catalog = catalog;
+      this.nowMs = nowMs;
     }
     canMerge(source, target) {
       return this.tryMerge(source, target, `${source.uid}_merged`).ok;
@@ -6108,11 +6610,13 @@
       if (!nextDef) {
         return { ok: false, reason: "MISSING_DEFINITION" };
       }
+      if (ordinary.generator && (!source.generatorState || !target.generatorState || !nextDef.generator)) return { ok: false, reason: "MISSING_DEFINITION" };
       return {
         ok: true,
         item: {
           uid: nextUid,
           definitionId: nextDef.id,
+          ...ordinary.generator && nextDef.generator && source.generatorState && target.generatorState ? { generatorState: mergeGeneratorStates(ordinary.generator, nextDef.generator, source.generatorState, target.generatorState, this.nowMs) } : {},
           ...ordinary.maxUses && nextDef.maxUses ? { remainingUses: Math.max(1, Math.floor(
             (remainingToolUses(source, ordinary) + remainingToolUses(target, ordinary)) * nextDef.maxUses / (ordinary.maxUses * 2)
           )) } : {}
@@ -6145,6 +6649,7 @@
     }
     const tool = catalog.get(source.definitionId), targetDefinition = catalog.get(target.definitionId);
     if (tool?.maxUses && targetDefinition?.chainId !== tool.chainId) {
+      if (targetDefinition?.generator) return { kind: "CANCEL" };
       const uses = remainingToolUses(source, tool);
       const previous = Array.from(catalog.values()).find((item) => item.nextItemId === target.definitionId);
       if (uses <= 0 || !previous || targetDefinition?.maxUses || uses > 1 && !board.cells.some((cell) => !cell.locked && !cell.item)) return { kind: "CANCEL" };
@@ -6156,7 +6661,7 @@
     }
     return { kind: "SWAP", from, to };
   }
-  function applyDrop(board, catalog, from, to, nextUid) {
+  function applyDrop(board, catalog, from, to, nextUid, nowMs = 0) {
     const drop = resolveDrop(board, catalog, from, to);
     if (drop.kind === "CANCEL") {
       return { ok: false, reason: "INVALID" };
@@ -6192,7 +6697,7 @@
     if (!target) {
       return { ok: false, reason: "INVALID" };
     }
-    const mergeEngine = new MergeEngine(catalog);
+    const mergeEngine = new MergeEngine(catalog, nowMs);
     const merged = mergeEngine.merge(source, target, nextUid);
     if (!merged.ok) {
       return { ok: false, reason: "CANNOT_MERGE" };
@@ -6257,10 +6762,11 @@
 
   // assets/scripts/gameplay/BoardService.ts
   var BoardService = class {
-    constructor(catalog, ids, bus, rows, columns, initial) {
+    constructor(catalog, ids, bus, rows, columns, initial, clock) {
       this.catalog = catalog;
       this.ids = ids;
       this.bus = bus;
+      this.clock = clock;
       this.unlockLevels = [];
       if (initial && "cells" in initial && "rows" in initial) {
         this.board = initial;
@@ -6270,7 +6776,7 @@
           columns,
           cells: initial.map((c) => ({
             ...c,
-            item: c.item ? { ...c.item } : void 0
+            item: c.item ? cloneItem(c.item) : void 0
           }))
         };
       } else {
@@ -6316,7 +6822,7 @@
     }
     tryDrop(from, to) {
       const nextUid = this.ids.next();
-      const result = applyDrop(this.board, this.catalog, from, to, nextUid);
+      const result = applyDrop(this.board, this.catalog, from, to, nextUid, this.clock?.now() ?? 0);
       if (!result.ok) return result;
       this.board = result.board;
       if (result.kind === "MERGE") {
@@ -6361,11 +6867,16 @@
       if (index === null) {
         return { ok: false, reason: "BOARD_FULL" };
       }
-      const item = { uid: this.ids.next(), definitionId };
+      return this.placeInstanceAt(index, { uid: this.ids.next(), definitionId });
+    }
+    placeInstanceAt(index, item) {
+      const cell = this.board.cells[index];
+      if (!cell || cell.locked || cell.item) return null;
+      item = cloneItem(item);
       this.board.cells[index].item = item;
       this.bus.emit("ITEM_SPAWNED", {
         uid: item.uid,
-        definitionId,
+        definitionId: item.definitionId,
         cellIndex: index
       });
       this.bus.emit("BOARD_CHANGED", { reason: "spawn" });
@@ -6384,24 +6895,21 @@
     getOrderProgress(order) {
       return getOrderProgress(this.board, order);
     }
-    clearBoard() {
+    clearBoard(preserveGenerators = true) {
       for (const cell of this.board.cells) {
+        if (preserveGenerators && cell.item && this.catalog.get(cell.item.definitionId)?.generator) continue;
         cell.item = void 0;
       }
       this.bus.emit("BOARD_CHANGED", { reason: "debug" });
     }
-    placeAt(index, definitionId) {
+    placeAt(index, definitionId, generatorState) {
       if (index < 0 || index >= this.board.cells.length) return null;
       if (this.board.cells[index].item || this.board.cells[index].locked) return null;
       const item = { uid: this.ids.next(), definitionId };
-      this.board.cells[index].item = item;
-      this.bus.emit("ITEM_SPAWNED", {
-        uid: item.uid,
-        definitionId,
-        cellIndex: index
-      });
-      this.bus.emit("BOARD_CHANGED", { reason: "debug" });
-      return item;
+      const rules = this.catalog.get(definitionId)?.generator;
+      if (rules) item.generatorState = generatorState ? { ...generatorState } : { remainingUses: rules.capacity, recoveryAt: this.clock?.now() ?? 0, cooldownUntil: null, boosted: false };
+      const placed = this.placeInstanceAt(index, item);
+      return placed?.ok ? placed.item : null;
     }
   };
 
@@ -6534,7 +7042,7 @@
 
   // assets/scripts/gameplay/GeneratorService.ts
   var GeneratorService = class {
-    constructor(generators, catalog, board, energy, player, random, clock, chargeStates = {}, inventory = {}, cooldownStates = {}) {
+    constructor(generators, catalog, board, energy, player, random, clock, charges = {}, inventory = {}, cooldowns = {}, saved, hasStoredGenerator = () => false) {
       this.generators = generators;
       this.catalog = catalog;
       this.board = board;
@@ -6542,233 +7050,252 @@
       this.player = player;
       this.random = random;
       this.clock = clock;
-      this.chargeStates = chargeStates;
-      this.inventory = inventory;
-      this.cooldownStates = cooldownStates;
+      this.hasStoredGenerator = hasStoredGenerator;
       this.spawning = false;
+      this.claiming = false;
+      this.state = saved ? { ready: saved.ready, entitlements: [...saved.entitlements], rewards: saved.rewards.map((r) => ({ ...r, state: r.state ? { ...r.state } : void 0 })) } : { ready: false, entitlements: [], rewards: [] };
+      this.state.grantedSourceIds = [...saved?.grantedSourceIds ?? []];
+      const migrating = !this.state.ready;
+      if (migrating) {
+        this.importLegacy(inventory, charges, cooldowns);
+        this.state.ready = true;
+      }
       this.ensureUnlockedCharges();
-    }
-    ensureUnlockedCharges() {
-      for (const gen of this.generators) {
-        if (this.isUnlocked(gen) && !this.inventory[gen.id]) {
-          this.inventory[gen.id] = Array.from({ length: gen.upgrade?.maxLevel ?? 1 }, (_, index) => index === 0 ? 1 : 0);
-        }
-        if (this.inventory[gen.id]) while (this.inventory[gen.id].length < (gen.upgrade?.maxLevel ?? 1)) this.inventory[gen.id].push(0);
-        const savedCooldown = this.cooldownStates[gen.id];
-        if (gen.streakCooldown && savedCooldown?.cooldownStartedAt != null && savedCooldown.streak < gen.streakCooldown.uses) {
-          if (this.clock.now() >= savedCooldown.cooldownStartedAt + this.streakInterval(gen)) savedCooldown.streak = 0;
-          savedCooldown.cooldownStartedAt = null;
-        }
-        if (!gen.recharge || !this.isUnlocked(gen)) continue;
-        const rule = gen.recharge;
-        if (!this.chargeStates[gen.id]) this.chargeStates[gen.id] = { charges: rule.capacity, lastRecoveryAt: this.clock.now(), capacity: rule.capacity };
-        const saved = this.chargeStates[gen.id];
-        const previousCapacity = saved.capacity ?? rule.legacyCapacity ?? rule.capacity;
-        if (previousCapacity !== rule.capacity) {
-          saved.charges = Math.max(0, Math.min(rule.capacity, saved.charges + rule.capacity - previousCapacity));
-          if (saved.charges >= rule.capacity) saved.lastRecoveryAt = Math.max(this.clock.now(), saved.lastRecoveryAt);
-        }
-        saved.capacity = rule.capacity;
+      if (migrating) {
+        while (!this.board.isFull() && this.state.rewards.length) if (!this.claimReward(this.state.rewards[0].id).ok) break;
       }
     }
-    activeLevel(gen) {
-      const counts = this.inventory[gen.id] ?? [];
-      for (let i = counts.length - 1; i >= 0; i--) if (counts[i] > 0) return i + 1;
-      return 1;
+    importLegacy(inventory, charges, cooldowns) {
+      for (const gen of this.generators) {
+        const counts = inventory[gen.id] ?? (this.isUnlocked(gen) && (charges[gen.id] || cooldowns[gen.id]) ? [1] : []);
+        if (!counts.some((n) => n > 0)) continue;
+        this.state.entitlements.push(gen.id);
+        let assigned = false;
+        for (let level = gen.upgrade?.maxLevel ?? 1; level >= 1; level--) {
+          const count = counts[level - 1] ?? 0;
+          if (!count) continue;
+          const rules = this.catalog.get(generatorItemId(gen.id, level))?.generator;
+          if (!rules) continue;
+          const now = this.clock.now();
+          const empty = { ...freshGeneratorState(rules, now), remainingUses: 0, cooldownUntil: rules.cooldownMs ? now + rules.cooldownMs : null };
+          if (!assigned) {
+            let state = freshGeneratorState(rules, now);
+            const charge = charges[gen.id], cooldown = cooldowns[gen.id];
+            if (gen.recharge && charge) state = effectiveGeneratorState(rules, {
+              ...state,
+              remainingUses: Math.max(0, charge.charges + rules.capacity - (charge.capacity ?? gen.recharge.legacyCapacity ?? rules.capacity)),
+              recoveryAt: charge.lastRecoveryAt
+            }, now);
+            else if (cooldown) state = effectiveGeneratorState(rules, {
+              ...state,
+              remainingUses: Math.max(0, rules.capacity - cooldown.streak),
+              cooldownUntil: cooldown.cooldownStartedAt === null ? null : cooldown.cooldownStartedAt + rules.cooldownMs
+            }, now);
+            if (cooldown?.cooldownStartedAt != null && now >= cooldown.cooldownStartedAt + rules.cooldownMs) state = freshGeneratorState(rules, now);
+            this.addReward(gen.id, level, 1, "legacy", state);
+            if (count > 1) this.addReward(gen.id, level, count - 1, "legacy", empty);
+            assigned = true;
+          } else this.addReward(gen.id, level, count, "legacy", empty);
+        }
+      }
     }
-    interval(gen, level = this.activeLevel(gen)) {
-      return gen.recharge ? Math.max(1, Math.round(gen.recharge.intervalMs * Math.pow(gen.upgrade?.rechargeFactor ?? 1, level - 1))) : 0;
+    ensureUnlockedCharges() {
+      for (const gen of this.generators) if (this.isUnlocked(gen) && !this.state.entitlements.includes(gen.id)) {
+        this.state.entitlements.push(gen.id);
+        if (!this.instances(gen.id).length && !this.hasStoredGenerator(gen.id)) this.claimReward(this.addReward(gen.id, 1, 1, "unlock").id);
+      }
     }
-    streakInterval(gen, level = this.activeLevel(gen)) {
-      return gen.streakCooldown ? Math.max(1, Math.round(gen.streakCooldown.durationMs * Math.pow(gen.upgrade?.rechargeFactor ?? 1, level - 1))) : 0;
+    addReward(generatorId, level, count, source, state) {
+      const base = source + "_" + generatorId + "_" + level;
+      let id = base, suffix = 0;
+      while (this.state.rewards.some((r) => r.id === id)) id = base + "_" + ++suffix;
+      const reward = { id, generatorId, level, count, source, ...state ? { state: { ...state } } : {} };
+      this.state.rewards.push(reward);
+      return reward;
     }
-    getStatus(id) {
-      const gen = this.get(id);
+    getRewards() {
+      return this.state.rewards.map((r) => ({ ...r, state: r.state ? { ...r.state } : void 0 }));
+    }
+    getBoardState() {
+      return { ready: true, entitlements: [...this.state.entitlements], rewards: this.getRewards(), grantedSourceIds: [...this.state.grantedSourceIds ?? []] };
+    }
+    grantEarned(sourceId, gift, source) {
+      if (this.state.grantedSourceIds?.includes(sourceId)) return false;
+      const definition = this.get(gift.generatorId);
+      if (!definition || !Number.isSafeInteger(gift.count) || gift.count < 1 || gift.count > 8 || !Number.isSafeInteger(gift.level) || gift.level < 1 || gift.level > (definition.upgrade?.maxLevel ?? 1)) return false;
+      this.state.grantedSourceIds.push(sourceId);
+      const reward = this.addReward(gift.generatorId, gift.level, gift.count, source);
+      for (let i = 0; i < gift.count && !this.board.isFull(); i++) if (!this.claimReward(reward.id).ok) break;
+      return true;
+    }
+    claimReward(id) {
+      if (this.claiming) return { ok: false, reason: "IN_PROGRESS" };
+      const reward = this.state.rewards.find((r) => r.id === id);
+      if (!reward) return { ok: false, reason: "NOT_FOUND" };
+      const index = this.emptyCell(), def = this.catalog.get(generatorItemId(reward.generatorId, reward.level));
+      if (index === void 0) return { ok: false, reason: "BOARD_FULL" };
+      if (!def?.generator) return { ok: false, reason: "NOT_FOUND" };
+      this.claiming = true;
+      try {
+        reward.count--;
+        if (!reward.count) this.state.rewards.splice(this.state.rewards.indexOf(reward), 1);
+        const item = this.board.placeAt(index, def.id, reward.state ?? freshGeneratorState(def.generator, this.clock.now()));
+        return { ok: true, uid: item.uid };
+      } finally {
+        this.claiming = false;
+      }
+    }
+    emptyCell() {
+      return [...this.board.getBoard().cells].reverse().find((c) => !c.locked && !c.item)?.index;
+    }
+    instances(id) {
+      return this.board.getBoard().cells.filter((c) => c.item && this.catalog.get(c.item.definitionId)?.generator?.id === id);
+    }
+    instance(key) {
+      const exact = this.board.getBoard().cells.find((c) => !c.locked && c.item?.uid === key)?.item;
+      if (exact && this.catalog.get(exact.definitionId)?.generator) return exact;
+      return this.instances(key).filter((c) => !c.locked).map((c) => c.item).sort((a, b) => this.catalog.get(b.definitionId).level - this.catalog.get(a.definitionId).level)[0];
+    }
+    list() {
+      return this.generators;
+    }
+    get(key) {
+      const direct = this.generators.find((g) => g.id === key);
+      if (direct) return direct;
+      const item = this.instance(key), id = item && this.catalog.get(item.definitionId)?.generator?.id;
+      return this.generators.find((g) => g.id === id);
+    }
+    isUnlocked(gen) {
+      return this.player.level >= gen.unlockLevel || this.player.unlockedChainIds.includes(gen.chainId);
+    }
+    getStatus(key) {
+      const gen = this.get(key);
       if (!gen) return null;
-      const unlocked = this.isUnlocked(gen), level = unlocked ? this.activeLevel(gen) : 0, rule = gen.recharge;
-      const boostAvailable = unlocked && level > 1 && gen.energyCost > 0 && !!gen.upgrade?.levels.find((v) => v.level === level)?.boostOutputs;
-      const cooldown = gen.streakCooldown ? this.cooldownStates[id] : void 0;
-      const cooldownMs = gen.streakCooldown ? this.streakInterval(gen, level || 1) : unlocked ? this.interval(gen, level) : rule?.intervalMs ?? 0;
-      const remainingCooldownMs = cooldown?.cooldownStartedAt == null ? 0 : Math.max(0, cooldown.cooldownStartedAt + cooldownMs - this.clock.now());
-      const streak = cooldown?.cooldownStartedAt != null && remainingCooldownMs === 0 ? 0 : Math.min(gen.streakCooldown?.uses ?? 0, cooldown?.streak ?? 0);
-      const base = {
-        unlocked,
+      const item = this.instance(key), def = item && this.catalog.get(item.definitionId), rules = def?.generator;
+      const level = def?.level ?? 0;
+      const available = rules && item ? generatorAvailability(rules, item.generatorState ?? freshGeneratorState(rules, this.clock.now()), this.clock.now()) : null;
+      const boostAvailable = !!item && level > 1 && gen.energyCost > 0 && !!gen.upgrade?.levels.find((v) => v.level === level)?.boostOutputs;
+      return {
+        uid: item?.uid ?? null,
+        unlocked: !!item && this.isUnlocked(gen),
         level,
         maxLevel: gen.upgrade?.maxLevel ?? 1,
-        inventory: [...this.inventory[id] ?? Array.from({ length: gen.upgrade?.maxLevel ?? 1 }, () => 0)],
+        inventory: this.counts(gen),
         energyCost: gen.energyCost,
         boostAvailable,
+        boosted: available?.state.boosted ?? false,
         boostEnergyCost: boostAvailable ? gen.energyCost * (gen.upgrade?.boostEnergyMultiplier ?? 2) : null,
-        cooldownMs,
-        streak,
+        cooldownMs: rules?.cooldownMs || rules?.recoveryIntervalMs || 0,
+        streak: rules ? rules.capacity - (available?.state.remainingUses ?? 0) : 0,
         streakLimit: gen.streakCooldown?.uses ?? 0,
-        remainingCooldownMs
+        remainingCooldownMs: available?.remainingCooldownMs ?? 0,
+        remainingUses: available?.state.remainingUses ?? 0,
+        capacity: rules?.capacity ?? 0,
+        charges: gen.recharge && item ? available?.state.remainingUses ?? 0 : null,
+        maxCharges: gen.recharge?.capacity ?? null,
+        nextRecoveryMs: available?.nextRecoveryMs ?? null
       };
-      if (!rule) return { ...base, charges: null, maxCharges: null, nextRecoveryMs: null };
-      if (!unlocked) return { ...base, charges: null, maxCharges: rule.capacity, nextRecoveryMs: null };
-      const saved = this.chargeStates[id];
-      if (!saved) return { ...base, charges: rule.capacity, maxCharges: rule.capacity, nextRecoveryMs: null };
-      const elapsed = Math.max(0, this.clock.now() - saved.lastRecoveryAt), interval = this.interval(gen, level);
-      const restored = Math.floor(elapsed / interval);
-      const charges = Math.min(rule.capacity, saved.charges + restored);
-      const anchor = saved.lastRecoveryAt + restored * interval;
-      return { ...base, charges, maxCharges: rule.capacity, nextRecoveryMs: charges >= rule.capacity ? null : Math.max(0, anchor + interval - this.clock.now()) };
+    }
+    setBoost(uid, boosted) {
+      const item = this.instance(uid), status = this.getStatus(uid);
+      if (!item || !status?.boostAvailable) return false;
+      const rules = this.catalog.get(item.definitionId).generator;
+      item.generatorState = { ...effectiveGeneratorState(rules, item.generatorState ?? freshGeneratorState(rules, this.clock.now()), this.clock.now()), boosted };
+      return true;
+    }
+    getInventory() {
+      return Object.fromEntries(this.generators.map((g) => [g.id, this.counts(g)]));
+    }
+    counts(gen) {
+      const counts = Array.from({ length: gen.upgrade?.maxLevel ?? 1 }, () => 0);
+      for (const c of this.board.getBoard().cells) {
+        const d = c.item && this.catalog.get(c.item.definitionId);
+        if (d?.generator?.id === gen.id) counts[d.level - 1]++;
+      }
+      return counts;
+    }
+    getChargeStates() {
+      return {};
+    }
+    getCooldownStates() {
+      return {};
     }
     merge(id, level) {
       const gen = this.get(id);
       if (!gen) return { ok: false, reason: "NOT_FOUND" };
       if (!this.isUnlocked(gen)) return { ok: false, reason: "LOCKED" };
-      if (!Number.isInteger(level) || level < 1 || level >= (gen.upgrade?.maxLevel ?? 1)) return { ok: false, reason: "MAX_LEVEL" };
-      const inventory = this.inventory[id];
-      if (!inventory || (inventory[level - 1] ?? 0) < 2) return { ok: false, reason: "NOT_ENOUGH_GENERATORS" };
-      const previousLevel = this.activeLevel(gen), oldInterval = this.interval(gen, previousLevel);
-      const saved = this.chargeStates[id], status = this.getStatus(id);
-      if (saved && status && status.charges !== null && gen.recharge) {
-        const now2 = this.clock.now(), elapsed = Math.max(0, now2 - saved.lastRecoveryAt), steps = Math.floor(elapsed / oldInterval);
-        const anchor = saved.lastRecoveryAt + steps * oldInterval;
-        saved.charges = status.charges;
-        saved.lastRecoveryAt = status.charges >= gen.recharge.capacity ? Math.max(now2, saved.lastRecoveryAt) : anchor;
-      }
-      inventory[level - 1] -= 2;
-      inventory[level] = (inventory[level] ?? 0) + 1;
-      const newInterval = this.interval(gen), now = this.clock.now();
-      if (saved && gen.recharge && saved.charges < gen.recharge.capacity && newInterval !== oldInterval && now > saved.lastRecoveryAt) {
-        const progress = now - saved.lastRecoveryAt;
-        saved.lastRecoveryAt = now - Math.floor(progress * newInterval / oldInterval);
-      }
-      return { ok: true, level: level + 1 };
-    }
-    grantLevelReward(level, rotation) {
-      const eligible = rotation.map((id) => this.get(id)).filter((g) => !!g && this.isUnlocked(g));
-      if (!eligible.length) return null;
-      const gen = eligible[(level - 2) % eligible.length];
-      this.ensureUnlockedCharges();
-      this.inventory[gen.id][0] += 1;
-      return gen.id;
+      if (level < 1 || level >= (gen.upgrade?.maxLevel ?? 1)) return { ok: false, reason: "MAX_LEVEL" };
+      const pair = this.instances(gen.id).filter((c) => !c.locked && this.catalog.get(c.item.definitionId)?.level === level).slice(0, 2);
+      if (pair.length < 2) return { ok: false, reason: "NOT_ENOUGH_GENERATORS" };
+      const result = this.board.tryDrop(pair[0].index, pair[1].index);
+      return result.ok ? { ok: true, level: level + 1 } : { ok: false, reason: "NOT_ENOUGH_GENERATORS" };
     }
     grantPurchased(id) {
       const gen = this.get(id);
       if (!gen) return { ok: false, reason: "NOT_FOUND" };
       if (!this.isUnlocked(gen)) return { ok: false, reason: "LOCKED" };
-      this.ensureUnlockedCharges();
-      this.inventory[id][0] += 1;
-      return { ok: true, inventory: [...this.inventory[id]] };
+      const index = this.emptyCell();
+      if (index === void 0) return { ok: false, reason: "BOARD_FULL" };
+      this.board.placeAt(index, generatorItemId(gen.id, 1));
+      return { ok: true, inventory: this.getInventory()[gen.id] };
     }
-    getInventory() {
-      return Object.fromEntries(Object.entries(this.inventory).map(([id, counts]) => [id, [...counts]]));
+    grantLevelReward(level, rotation) {
+      const eligible = rotation.map((id) => this.get(id)).filter((g) => !!g && this.isUnlocked(g));
+      if (!eligible.length) return null;
+      const gen = eligible[Math.max(0, level - 2) % eligible.length];
+      this.claimReward(this.addReward(gen.id, 1, 1, "level_reward").id);
+      return gen.id;
     }
-    getCooldownStates() {
-      return Object.fromEntries(Object.entries(this.cooldownStates).map(([id, state]) => [id, { ...state }]));
-    }
-    restoreExhausted(id) {
+    restoreExhausted(key) {
       if (this.spawning) return { ok: false, reason: "IN_PROGRESS" };
-      const generator = this.get(id);
-      if (!generator) return { ok: false, reason: "NOT_FOUND" };
-      const status = this.getStatus(id);
+      const item = this.instance(key), gen = this.get(key), status = this.getStatus(key);
+      if (!gen || !item || !status) return { ok: false, reason: "NOT_FOUND" };
       if (!status.unlocked) return { ok: false, reason: "LOCKED" };
-      if (generator.recharge) {
-        if (status.charges !== 0) return { ok: false, reason: "NOT_NEEDED" };
-        const saved = this.chargeStates[id];
-        if (!saved) return { ok: false, reason: "NOT_NEEDED" };
-        saved.charges = generator.recharge.capacity;
-        saved.capacity = generator.recharge.capacity;
-        saved.lastRecoveryAt = Math.max(this.clock.now(), saved.lastRecoveryAt);
-        return { ok: true, kind: "charges", restoredUses: generator.recharge.capacity };
-      }
-      if (!generator.streakCooldown || status.remainingCooldownMs <= 0 || status.streak < generator.streakCooldown.uses) return { ok: false, reason: "NOT_NEEDED" };
-      this.cooldownStates[id] = { streak: 0, cooldownStartedAt: null };
-      return { ok: true, kind: "cooldown", restoredUses: generator.streakCooldown.uses };
+      if (status.remainingUses !== 0) return { ok: false, reason: "NOT_NEEDED" };
+      item.generatorState = freshGeneratorState(this.catalog.get(item.definitionId).generator, this.clock.now());
+      return { ok: true, kind: gen.recharge ? "charges" : "cooldown", restoredUses: status.capacity };
     }
-    spendCharge(gen) {
-      const rule = gen.recharge;
-      if (!rule) return null;
-      this.ensureUnlockedCharges();
-      const saved = this.chargeStates[gen.id];
-      const previous = { ...saved };
-      const now = this.clock.now();
-      const elapsed = Math.max(0, now - saved.lastRecoveryAt);
-      const interval = this.interval(gen);
-      const steps = Math.floor(elapsed / interval);
-      const charges = Math.min(rule.capacity, saved.charges + steps);
-      saved.charges = charges - 1;
-      saved.lastRecoveryAt = charges === rule.capacity ? Math.max(now, saved.lastRecoveryAt) : saved.lastRecoveryAt + steps * interval;
-      return previous;
+    rollOutput(gen, level = 1, boost = false) {
+      const upgrade = gen.upgrade?.levels.find((v) => v.level === level);
+      return pickWeighted((boost ? upgrade?.boostOutputs : upgrade?.outputs) ?? gen.outputs, this.random);
     }
-    getChargeStates() {
-      return Object.fromEntries(Object.entries(this.chargeStates).map(([id, state]) => [id, { ...state }]));
-    }
-    list() {
-      return this.generators;
-    }
-    get(id) {
-      return this.generators.find((g) => g.id === id);
-    }
-    isUnlocked(generator) {
-      return this.player.level >= generator.unlockLevel || this.player.unlockedChainIds.includes(generator.chainId);
-    }
-    rollOutput(generator, level = 1, boost = false) {
-      const upgrade = generator.upgrade?.levels.find((v) => v.level === level);
-      return pickWeighted((boost ? upgrade?.boostOutputs : upgrade?.outputs) ?? generator.outputs, this.random);
-    }
-    spawn(generatorId, boost = false) {
+    spawn(key, boost) {
       if (this.spawning) return { ok: false, reason: "IN_PROGRESS" };
       this.spawning = true;
       try {
-        return this.spawnOnce(generatorId, boost);
+        this.ensureUnlockedCharges();
+        const gen = this.get(key), item = this.instance(key), status = this.getStatus(key);
+        if (!gen) return { ok: false, reason: "UNKNOWN_GENERATOR" };
+        if (!status?.unlocked || !item) return { ok: false, reason: "LOCKED" };
+        if (status.remainingCooldownMs > 0) return { ok: false, reason: "GENERATOR_COOLDOWN" };
+        if (status.charges === 0) return { ok: false, reason: "NO_CHARGES" };
+        const boosted = boost ?? status.boosted;
+        if (boosted && !status.boostAvailable) return { ok: false, reason: "BOOST_UNAVAILABLE" };
+        const cost = gen.energyCost * (boosted ? gen.upgrade?.boostEnergyMultiplier ?? 2 : 1);
+        if (!this.energy.canSpend(cost)) return { ok: false, reason: "NOT_ENOUGH_ENERGY" };
+        if (this.board.isFull()) return { ok: false, reason: "BOARD_FULL" };
+        const output = this.rollOutput(gen, status.level, boosted);
+        if (!output || !this.catalog.has(output.itemId)) return { ok: false, reason: "UNKNOWN_GENERATOR" };
+        const rules = this.catalog.get(item.definitionId).generator;
+        const oldState = { ...item.generatorState ?? freshGeneratorState(rules, this.clock.now()) };
+        const nextState = consumeGeneratorUse(rules, oldState, this.clock.now());
+        if (!nextState) return { ok: false, reason: "GENERATOR_COOLDOWN" };
+        item.generatorState = nextState;
+        const spent = cost ? this.energy.spend(cost) : { ok: true };
+        if (!spent.ok) {
+          item.generatorState = oldState;
+          return spent;
+        }
+        const spawned = this.board.spawn(output.itemId);
+        if (!spawned.ok) {
+          item.generatorState = oldState;
+          if (cost) this.energy.add(cost);
+          return spawned;
+        }
+        return { ok: true, uid: spawned.item.uid, cellIndex: spawned.cellIndex, itemDefinitionId: output.itemId };
       } finally {
         this.spawning = false;
       }
-    }
-    spawnOnce(generatorId, boost) {
-      const generator = this.get(generatorId);
-      if (!generator) {
-        return { ok: false, reason: "UNKNOWN_GENERATOR" };
-      }
-      if (!this.isUnlocked(generator)) {
-        return { ok: false, reason: "LOCKED" };
-      }
-      const status = this.getStatus(generatorId);
-      if (status.remainingCooldownMs > 0) return { ok: false, reason: "GENERATOR_COOLDOWN" };
-      if (boost && !status.boostAvailable) return { ok: false, reason: "BOOST_UNAVAILABLE" };
-      const energyCost = generator.energyCost * (boost ? generator.upgrade?.boostEnergyMultiplier ?? 2 : 1);
-      if (generator.recharge && status.charges === 0) return { ok: false, reason: "NO_CHARGES" };
-      if (!this.energy.canSpend(energyCost)) {
-        return { ok: false, reason: "NOT_ENOUGH_ENERGY" };
-      }
-      if (this.board.isFull()) {
-        return { ok: false, reason: "BOARD_FULL" };
-      }
-      const output = this.rollOutput(generator, status.level, boost);
-      if (!output || !this.catalog.has(output.itemId)) {
-        return { ok: false, reason: "UNKNOWN_GENERATOR" };
-      }
-      const previousCharge = this.spendCharge(generator);
-      const spend = energyCost > 0 ? this.energy.spend(energyCost) : { ok: true };
-      if (!spend.ok) {
-        if (previousCharge) this.chargeStates[generator.id] = previousCharge;
-        return spend;
-      }
-      if (energyCost > 0 && this.player.energy < this.player.maxEnergy) {
-        if (!this.player.lastEnergyAt) {
-          this.player.lastEnergyAt = this.clock.now();
-        }
-      }
-      const spawned = this.board.spawn(output.itemId);
-      if (!spawned.ok) {
-        if (previousCharge) this.chargeStates[generator.id] = previousCharge;
-        if (energyCost > 0) this.energy.add(energyCost);
-        return { ok: false, reason: "BOARD_FULL" };
-      }
-      if (generator.streakCooldown) {
-        const streak = status.streak + 1;
-        this.cooldownStates[generatorId] = { streak, cooldownStartedAt: streak >= generator.streakCooldown.uses ? this.clock.now() : null };
-      }
-      return {
-        ok: true,
-        itemDefinitionId: output.itemId,
-        uid: spawned.item.uid,
-        cellIndex: spawned.cellIndex
-      };
     }
   };
 
@@ -6822,7 +7349,7 @@
     const level = input.player.level;
     const dynamic = input.dynamic ?? DEFAULT_DYNAMIC_ORDER_CONFIG;
     const count = input.random.next() < dynamic.twoItemChance ? 2 : 1;
-    const wantsRare = !occupiedLimited && rare.length > 0 && input.random.next() < dynamic.rareChance;
+    const wantsRare = input.pace !== "quick" && !occupiedLimited && rare.length > 0 && input.random.next() < dynamic.rareChance;
     const candidates = [];
     if (count === 1) {
       for (const item of wantsRare ? rare : common) candidates.push([{ itemId: item.id, count: 1 }]);
@@ -6838,13 +7365,13 @@
       }
     }
     const affordable = candidates.filter((requirements2) => {
-      const costs = /* @__PURE__ */ new Map();
+      const costs2 = /* @__PURE__ */ new Map();
       for (const req of requirements2) {
         const item = input.catalog.get(req.itemId);
-        const floor = Math.max(input.minItemLevel, input.minimumLevelForChain?.(item.chainId) ?? 1);
-        costs.set(item.chainId, (costs.get(item.chainId) ?? 0) + 2 ** Math.max(0, item.level - floor) * req.count);
+        const floor = Math.max(1, input.minimumLevelForChain?.(item.chainId) ?? 1);
+        costs2.set(item.chainId, (costs2.get(item.chainId) ?? 0) + 2 ** Math.max(0, item.level - floor) * req.count);
       }
-      return Array.from(costs.entries()).every(([chain, cost2]) => cost2 <= (input.maxMergeCostForChain?.(chain) ?? Infinity));
+      return Array.from(costs2.entries()).every(([chain, cost2]) => cost2 <= (input.maxMergeCostForChain?.(chain) ?? Infinity));
     });
     const activeSignatures = new Set(active.map((order) => requirementSignature(order.requirements)));
     const replacing = input.replacingRequirements && requirementSignature(input.replacingRequirements);
@@ -6857,7 +7384,15 @@
     const different = notOccupied.filter((rows) => requirementSignature(rows) !== replacing);
     const preferred = different.filter((rows) => !recentIds.has(`dynamic:${requirementSignature(rows)}`));
     const pool = preferred.length ? preferred : different.length ? different : notOccupied.length ? notOccupied : affordable;
-    const requirements = pool[input.random.pickIndex(pool.length)];
+    const effort = (rows) => rows.reduce((sum, req) => {
+      const item = input.catalog.get(req.itemId);
+      return sum + 2 ** Math.max(0, item.level - (input.minimumLevelForChain?.(item.chainId) ?? 1)) * req.count;
+    }, 0);
+    const costs = Array.from(new Set(affordable.map(effort))).sort((a, b) => a - b);
+    const roleIndex = input.pace === "quick" ? 0 : input.pace === "regular" ? 1 : 2;
+    const band = pool.filter((rows) => Math.min(2, Math.floor(costs.indexOf(effort(rows)) * 3 / costs.length)) === roleIndex);
+    const choices = input.pace && band.length ? band : pool;
+    const requirements = choices[input.random.pickIndex(choices.length)];
     if (!requirements) return null;
     const cost = requirements.reduce((sum, req) => sum + 2 ** ((input.catalog.get(req.itemId)?.level ?? 1) - 1) * req.count, 0);
     const multiplier = dynamic.rewardMultiplierMin + (dynamic.rewardMultiplierMax - dynamic.rewardMultiplierMin) * (Math.min(dynamic.rewardMultiplierMaxLevel, Math.max(1, level)) - 1) / Math.max(1, dynamic.rewardMultiplierMaxLevel - 1);
@@ -6865,6 +7400,7 @@
       uid: input.id,
       templateId: `dynamic:${requirementSignature(requirements)}`,
       requirements,
+      ...input.pace ? { pace: input.pace } : {},
       ...level >= 15 && hasLimited(requirements) ? { longTerm: true } : {},
       rewardCoins: Math.ceil(cost * multiplier),
       rewardXp: Math.max(6, cost * 2 + 6),
@@ -6976,6 +7512,8 @@
       }
     }
     createNextOrder(forceTutorial = false, replacingUid) {
+      const slot = replacingUid ? this.getSlot(replacingUid) : this.orders.length;
+      const pace = this.dynamic.pacedSlots ? ["quick", "regular", "goal"][Math.max(0, slot) % 3] : void 0;
       const order = forceTutorial ? generateTutorialOrder(this.templates, this.ids.next()) : generateOrder({
         player: this.player,
         templates: this.templates,
@@ -6989,6 +7527,7 @@
         minimumLevelForChain: this.minimumLevelForChain,
         canProduceItem: this.canProduceItem,
         maxMergeCostForChain: this.maxMergeCostForChain,
+        pace,
         limitedChainIds: this.limitedChainIds,
         random: this.random,
         id: this.ids.next()
@@ -7339,6 +7878,10 @@
       const loaded = JSON.parse(JSON.stringify(state));
       this.data = {
         warehouse: Array.isArray(loaded.warehouse) ? loaded.warehouse : [],
+        warehouseCapacity: Math.max(bundle.game.toolbox.warehouseSlots, Math.min(
+          bundle.game.toolbox.backpackExpansion.maxSlots,
+          Number.isSafeInteger(loaded.warehouseCapacity) ? loaded.warehouseCapacity : 0
+        )),
         scissors: typeof loaded.scissors === "number" ? loaded.scissors : bundle.game.toolbox.startingScissors,
         chapters: loaded.chapters && typeof loaded.chapters === "object" ? loaded.chapters : {},
         replays: loaded.replays && typeof loaded.replays === "object" ? loaded.replays : {},
@@ -7389,6 +7932,16 @@
     }
     get state() {
       return JSON.parse(JSON.stringify(this.data));
+    }
+    getStoredGenerator(generatorId) {
+      let best;
+      for (const item of this.data.warehouse) {
+        const definition = this.bundle.catalog.get(item.definitionId);
+        if (definition?.generator?.id === generatorId && (!best || definition.level > best.level)) {
+          best = { uid: item.uid, level: definition.level };
+        }
+      }
+      return best;
     }
     progress(id) {
       const chapter = this.bundle.adventures.find((entry) => entry.id === id);
@@ -7485,10 +8038,10 @@
     store(index) {
       const item = this.board.getBoard().cells[index]?.item;
       if (!item || this.board.getBoard().cells[index]?.locked) return { ok: false, reason: "INVALID" };
-      if (this.data.warehouse.length >= this.bundle.game.toolbox.warehouseSlots) return { ok: false, reason: "WAREHOUSE_FULL" };
+      if (this.data.warehouse.length >= this.warehouseCapacity) return { ok: false, reason: "WAREHOUSE_FULL" };
       const next = cloneBoard(this.board.getBoard());
       next.cells[index].item = void 0;
-      this.data.warehouse.push({ ...item });
+      this.data.warehouse.push(cloneItem(item));
       this.board.replaceBoard(next, "tool");
       return this.changed("warehouse");
     }
@@ -7498,9 +8051,18 @@
       const next = cloneBoard(this.board.getBoard());
       const empty = next.cells.find((cell) => !cell.locked && !cell.item);
       if (!empty) return { ok: false, reason: "BOARD_FULL" };
-      empty.item = { ...this.data.warehouse[at] };
+      empty.item = cloneItem(this.data.warehouse[at]);
       this.data.warehouse.splice(at, 1);
       this.board.replaceBoard(next, "tool");
+      return this.changed("warehouse");
+    }
+    get warehouseCapacity() {
+      return this.data.warehouseCapacity ?? this.bundle.game.toolbox.warehouseSlots;
+    }
+    /** GameContext validates and charges the diamond quote before calling this. */
+    expandWarehouse(expectedCapacity) {
+      if (expectedCapacity !== this.warehouseCapacity || this.warehouseCapacity >= this.bundle.game.toolbox.backpackExpansion.maxSlots) return { ok: false, reason: "INVALID" };
+      this.data.warehouseCapacity = this.warehouseCapacity + 1;
       return this.changed("warehouse");
     }
     takeScissors() {
@@ -7518,7 +8080,7 @@
     split(index) {
       const item = this.board.getBoard().cells[index]?.item;
       const previous = item && Array.from(this.bundle.catalog.values()).find((d) => d.nextItemId === item.definitionId);
-      if (!item || !previous || this.bundle.catalog.get(item.definitionId)?.maxUses || this.board.getBoard().cells[index]?.locked) return { ok: false, reason: "CANNOT_SPLIT" };
+      if (!item || !previous || this.bundle.catalog.get(item.definitionId)?.maxUses || this.bundle.catalog.get(item.definitionId)?.generator || this.board.getBoard().cells[index]?.locked) return { ok: false, reason: "CANNOT_SPLIT" };
       if (this.data.scissors <= 0) return { ok: false, reason: "NO_SCISSORS" };
       const next = cloneBoard(this.board.getBoard());
       const empty = next.cells.find((cell) => !cell.locked && !cell.item);
@@ -7730,6 +8292,42 @@
     }
   };
 
+  // assets/scripts/core/order/tracking.ts
+  function planOrderRequirement(catalog, cells, requirement, minimumOutputLevel) {
+    const target = catalog.get(requirement.itemId);
+    if (!target) return null;
+    const floor = Math.max(1, Math.min(target.level, minimumOutputLevel));
+    const matching = [], precursors = [];
+    const counts = /* @__PURE__ */ new Map();
+    for (const cell of cells) {
+      if (cell.locked || !cell.item) continue;
+      const item = catalog.get(cell.item.definitionId);
+      if (!item || item.chainId !== target.chainId) continue;
+      if (item.id === target.id) matching.push(cell.index);
+      if (item.level >= floor && item.level < target.level) {
+        precursors.push(cell.index);
+        counts.set(item.level, (counts.get(item.level) ?? 0) + 1);
+      }
+    }
+    const missing = Math.max(0, requirement.count - matching.length);
+    let needed = missing, merges = 0;
+    for (let level = target.level - 1; level >= floor; level--) {
+      merges += needed;
+      needed = Math.max(0, needed * 2 - (counts.get(level) ?? 0));
+    }
+    return {
+      itemId: target.id,
+      count: requirement.count,
+      have: matching.length,
+      missing,
+      matchingIndices: matching,
+      precursorIndices: precursors,
+      spawnEstimate: needed,
+      mergeEstimate: merges,
+      minimumOutputLevel: floor
+    };
+  }
+
   // assets/scripts/gameplay/GameContext.ts
   var GameContext = class {
     constructor(options = {}) {
@@ -7743,11 +8341,13 @@
       this.retainedOpenCellIndices = [];
       this.exchanging = false;
       this.purchasingGenerator = false;
+      this.expandingBackpack = false;
       this.orderRefreshAt = [];
       this.checkIn = { lastClaimDay: null, claims: 0 };
       this.bootState = "BOOT";
       this.bootError = null;
       this.saveFailed = false;
+      this.furnitureEdits = [];
       this.loadNotice = null;
       this.logger = options.logger ?? new GameLogger(true);
       this.bundle = options.config ?? loadConfigBundle();
@@ -7774,6 +8374,7 @@
         legacyStarterFurnitureId: this.bundle.furniture[0]?.id,
         energyCaps: this.config.energy.maxByLevel,
         collection: this.config.collection,
+        backpack: { initialSlots: this.config.toolbox.warehouseSlots, maxSlots: this.config.toolbox.backpackExpansion.maxSlots },
         onWrite: (result) => {
           this.saveFailed = !result.ok;
           if (result.ok) this.bus.emit("GAME_SAVED", { savedAt: result.savedAt });
@@ -7863,7 +8464,8 @@
             rows: this.config.board.rows,
             columns: this.config.board.columns,
             cells: data.board
-          })
+          }),
+          this.clock
         );
         this.board.configureUnlocks(this.playerRef.level, this.config.board.unlocks, this.retainedOpenCellIndices);
         this.bus.on("LEVEL_UP", ({ level }) => this.board.configureUnlocks(level, this.config.board.unlocks, this.retainedOpenCellIndices));
@@ -7892,6 +8494,7 @@
           this.progression,
           this.bus
         );
+        this.play = new PlayService(data.play, this.bundle, this.board, this.ids, this.bus, this.progression, this.energy, this.life, (id) => this.projectProducerItem(id));
         this.generators = new GeneratorService(
           this.bundle.generators,
           this.bundle.catalog,
@@ -7902,7 +8505,9 @@
           this.clock,
           data.generatorCharges ?? {},
           data.generatorInventory ?? {},
-          data.generatorCooldowns ?? {}
+          data.generatorCooldowns ?? {},
+          data.generatorBoard,
+          (id) => !!this.play.getStoredGenerator(id)
         );
         this.bus.on("LEVEL_UP", () => this.generators.ensureUnlockedCharges());
         this.bus.on("LEVEL_UP", () => this.energy.markRegenPoint());
@@ -7931,7 +8536,7 @@
         );
         this.orders.hydrate(data.activeOrders, data.recentOrderIds ?? []);
         this.orders.ensureFilled();
-        this.play = new PlayService(data.play, this.bundle, this.board, this.ids, this.bus, this.progression, this.energy, this.life, (id) => this.projectProducerItem(id));
+        this.grantConfiguredGeneratorRewards();
         this.journal = new JournalService(data.journal, this.clock, this.energy, () => {
           this.bus.emit("JOURNAL_CHANGED", {});
           this.save();
@@ -7963,6 +8568,7 @@
       if (this.purchasingGenerator) return { ok: false, reason: "IN_PROGRESS" };
       const quote = this.getGeneratorPurchaseQuote(id);
       if (!quote.ok) return quote;
+      if (this.board.isFull()) return { ok: false, reason: "BOARD_FULL" };
       if (this.player.coins < quote.cost) return { ok: false, reason: "NOT_ENOUGH_COINS" };
       this.purchasingGenerator = true;
       try {
@@ -8019,13 +8625,30 @@
         this.exchanging = false;
       }
     }
-    spawnFromGenerator(generatorId, boost = false) {
+    setGeneratorBoost(uid, boosted) {
+      const changed = this.generators.setBoost(uid, boosted);
+      if (changed) {
+        this.bus.emit("GENERATOR_CHANGED", { generatorId: uid });
+        this.save();
+      }
+      return changed;
+    }
+    claimGeneratorReward(id) {
+      const result = this.generators.claimReward(id);
+      if (result.ok) {
+        this.orders.reconcileRequirements();
+        this.bus.emit("GENERATOR_CHANGED", { generatorId: result.uid });
+        this.save();
+      }
+      return result;
+    }
+    spawnFromGenerator(generatorId, boost) {
       const result = this.generators.spawn(generatorId, boost);
       if (result.ok) {
         const generator = this.generators.get(generatorId);
         const level = this.generators.getStatus(generatorId)?.level ?? 0;
         for (const drop of this.config.generationBonusDrops) {
-          if (!generator || drop.generatorId !== "*" && drop.generatorId !== generatorId || level < drop.minLevel || drop.excludeRecharge && generator.recharge) continue;
+          if (!generator || drop.generatorId !== "*" && drop.generatorId !== generator.id || level < drop.minLevel || drop.excludeRecharge && generator.recharge) continue;
           if (this.random.next() < drop.chance) {
             if (!this.board.spawn(drop.itemId).ok) this.enqueue(drop.itemId);
           }
@@ -8053,17 +8676,121 @@
     }
     producerLevel(chainId) {
       const generator = this.bundle.generators.find((entry) => entry.chainId === chainId);
-      return generator ? Math.max(1, this.generators.getStatus(generator.id)?.level ?? 1) : 1;
+      return generator ? Math.max(1, this.ownedGeneratorLevel(generator.id)) : 1;
+    }
+    ownedGeneratorLevel(id) {
+      const generator = this.generators.get(id);
+      if (!generator || !this.generators.isUnlocked(generator)) return 0;
+      return Math.max(this.generators.getStatus(id)?.level ?? 0, this.play.getStoredGenerator(id)?.level ?? 0);
+    }
+    getOrderTracking(orderUid, itemId) {
+      const order = this.orders.getOrders().find((entry) => entry.uid === orderUid);
+      const requirement = order?.requirements.find((entry) => entry.itemId === itemId);
+      const target = requirement && this.bundle.catalog.get(itemId);
+      if (!requirement || !target) return { ok: false, reason: "ORDER_CHANGED" };
+      const sideDrop = this.config.generationBonusDrops.find((drop) => drop.chance > 0 && this.bundle.catalog.get(drop.itemId)?.chainId === target.chainId);
+      const generator = this.bundle.generators.find((entry) => entry.chainId === target.chainId) ?? this.bundle.generators.find((entry) => entry.id === sideDrop?.generatorId);
+      const status = generator && this.generators.getStatus(generator.id);
+      const stored = generator && this.play.getStoredGenerator(generator.id);
+      const minimumSourceLevel = generator?.chainId === target.chainId ? 1 : sideDrop?.minLevel ?? 1;
+      const live = status?.unlocked && status.level >= minimumSourceLevel ? status : null;
+      const packed = !live && stored && generator && this.generators.isUnlocked(generator) && stored.level >= minimumSourceLevel ? stored : void 0;
+      const floor = generator?.chainId === target.chainId ? live?.level ?? packed?.level ?? 1 : 1;
+      const plan = planOrderRequirement(this.bundle.catalog, this.board.getBoard().cells, requirement, floor);
+      const source = generator && (live || packed) ? {
+        id: generator.id,
+        name: generator.displayName,
+        level: live?.level ?? packed.level,
+        unlocked: !!live,
+        storedUid: packed?.uid,
+        charges: live?.charges ?? null,
+        recoveryMs: live?.remainingCooldownMs || live?.nextRecoveryMs || 0,
+        energyCost: generator.energyCost,
+        sideDrop: generator.chainId !== target.chainId
+      } : null;
+      return { ok: true, guide: {
+        orderUid,
+        ...plan,
+        name: target.displayName,
+        level: target.level,
+        chainId: target.chainId,
+        source,
+        backpackCount: this.play.state.warehouse.filter((item) => item.definitionId === itemId).length,
+        path: this.bundle.items.filter((item) => item.chainId === target.chainId && item.level >= plan.minimumOutputLevel && item.level <= target.level).sort((a, b) => a.level - b.level).map((item) => ({ id: item.id, level: item.level, name: item.displayName, discovered: this.isItemDiscovered(item.id) }))
+      } };
+    }
+    getOrderBoardHints() {
+      const hints = /* @__PURE__ */ new Map();
+      for (const order of this.orders.getOrders()) {
+        const ready = this.orders.canClaim(order.uid);
+        for (const req of order.requirements) {
+          const indices = this.board.getBoard().cells.filter((cell) => !cell.locked && cell.item?.definitionId === req.itemId).slice(0, req.count);
+          for (const cell of indices) hints.set(cell.index, ready || (hints.get(cell.index) ?? false));
+        }
+      }
+      return Array.from(hints, ([index, ready]) => ({ index, ready }));
+    }
+    getDropOrderWarning(from, to) {
+      const preview = this.board.previewDrop(from, to);
+      if (to === null || preview.kind !== "MERGE" && preview.kind !== "SPLIT") return null;
+      const removed = preview.kind === "SPLIT" ? [to] : [from, to];
+      return this.breaksReadyOrder(removed) ? "\u8BA2\u5355\u9700\u8981\uFF0C\u5EFA\u8BAE\u5148\u4EA4\u4ED8" : null;
+    }
+    breaksReadyOrder(removed) {
+      const cells = this.board.getBoard().cells;
+      return this.orders.getOrders().some((order) => this.orders.canClaim(order.uid) && order.requirements.some((req) => {
+        const available = cells.filter((cell) => !cell.locked && cell.item?.definitionId === req.itemId).length;
+        const consumed = removed.filter((index) => cells[index]?.item?.definitionId === req.itemId).length;
+        return available - consumed < req.count;
+      }));
+    }
+    quoteBoardItemSale(index, expectedUid) {
+      const cell = this.board.getBoard().cells[index];
+      if (!cell || cell.locked || cell.item?.uid !== expectedUid) return { ok: false, reason: "ITEM_CHANGED" };
+      const definition = this.bundle.catalog.get(cell.item.definitionId);
+      const coins = definition?.sellValue ?? 0;
+      if (!Number.isSafeInteger(coins) || coins <= 0) return { ok: false, reason: "NOT_FOR_SALE" };
+      return { ok: true, index, uid: expectedUid, definitionId: cell.item.definitionId, coins, breaksReadyOrder: this.breaksReadyOrder([index]) };
+    }
+    sellBoardItem(index, expectedUid) {
+      const sale = this.quoteBoardItemSale(index, expectedUid);
+      if (!sale.ok) return sale;
+      this.board.consumeItems([{ cellIndex: sale.index, uid: sale.uid, definitionId: sale.definitionId }]);
+      this.progression.addCoins(sale.coins);
+      this.orders.refreshProgressHints();
+      this.save();
+      return sale;
+    }
+    getSupplyPreview(index, expectedUid) {
+      const item = this.board.getBoard().cells[index]?.item;
+      const definition = item && this.bundle.catalog.get(item.definitionId);
+      if (!item || !definition || expectedUid && item.uid !== expectedUid) return null;
+      const chest = definition.chainId === "treasure_chest";
+      if (!chest && !["coin", "energy", "diamond"].includes(definition.chainId)) return null;
+      const tier = this.config.rewards.chestLevels.find((entry) => entry.level === definition.level);
+      const loot = chest ? tier?.loot ?? this.config.rewards.chestLoot : [];
+      return {
+        index,
+        uid: item.uid,
+        itemId: definition.id,
+        name: definition.displayName,
+        level: definition.level,
+        chainId: definition.chainId,
+        chest,
+        amount: definition.useValue ?? 0,
+        lootCount: tier?.count ?? 2,
+        loot: loot.filter((entry) => entry.weight > 0).map((entry) => {
+          const drop = this.bundle.catalog.get(entry.itemId);
+          return { id: drop.id, name: drop.displayName, chainId: drop.chainId, level: drop.level };
+        })
+      };
     }
     canProduceOrderItem(id) {
       const item = this.bundle.catalog.get(id);
       if (!item || item.wildcard || item.maxUses) return false;
       const direct = this.bundle.generators.find((generator) => generator.chainId === item.chainId);
-      if (direct) return this.generators.getStatus(direct.id)?.unlocked === true;
-      return this.config.generationBonusDrops.some((drop) => {
-        const source = this.generators.getStatus(drop.generatorId);
-        return drop.chance > 0 && source?.unlocked && source.level >= drop.minLevel && this.bundle.catalog.get(drop.itemId)?.chainId === item.chainId;
-      });
+      if (direct) return this.ownedGeneratorLevel(direct.id) > 0;
+      return this.config.generationBonusDrops.some((drop) => drop.chance > 0 && this.bundle.catalog.get(drop.itemId)?.chainId === item.chainId && this.ownedGeneratorLevel(drop.generatorId) >= drop.minLevel);
     }
     projectProducerItem(id, mergeResult = false) {
       const item = this.bundle.catalog.get(id);
@@ -8077,7 +8804,12 @@
       const result = this.board.tryDrop(from, to);
       if (result.ok && result.kind === "MERGE") {
         this.life.record("merges");
-        this.handleMerge(result.resultDefinitionId);
+        const producer = this.bundle.catalog.get(result.resultDefinitionId)?.generator;
+        if (producer) {
+          this.orders.reconcileRequirements();
+          this.ensureDailyTasks();
+          this.bus.emit("GENERATOR_CHANGED", { generatorId: producer.id });
+        } else this.handleMerge(result.resultDefinitionId);
         this.recordDaily("merges", result.resultDefinitionId);
         if (!this.tutorialRef.firstMergeCompleted) {
           this.tutorialRef.firstMergeCompleted = true;
@@ -8098,6 +8830,7 @@
     playAction(action, value) {
       const result = action === "take_scissors" ? this.play.takeScissors() : action === "store" ? this.play.store(Number(value)) : action === "withdraw" ? this.play.withdraw(value) : action === "split" ? this.play.split(Number(value)) : action === "deliver" ? this.play.deliver(value) : action === "hint" ? this.play.hint(value) : action === "claim" ? this.play.claim(value) : action === "replay" ? this.play.startReplay(value) : action === "replay_reset" ? this.play.restartReplay(value) : action === "small_date" ? this.play.deliverSmallDate(value) : this.play.solve(value, action === "skip");
       if (result.ok) {
+        if (action === "claim") this.grantConfiguredGeneratorRewards();
         if (action === "store") this.acknowledgeFirstUseHint("backpack");
         if (action === "split") this.acknowledgeFirstUseHint("scissors");
         if (action === "split") {
@@ -8111,6 +8844,38 @@
         this.save();
       }
       return result;
+    }
+    getBackpackStatus() {
+      const rules = this.config.toolbox.backpackExpansion, capacity = this.play.warehouseCapacity;
+      const nextCost = capacity >= rules.maxSlots ? null : rules.baseDiamondCost + (capacity - this.config.toolbox.warehouseSlots) * rules.stepDiamondCost;
+      return {
+        used: this.play.state.warehouse.length,
+        capacity,
+        maxCapacity: rules.maxSlots,
+        nextCost,
+        affordable: nextCost !== null && this.player.diamonds >= nextCost
+      };
+    }
+    expandBackpack(expectedCapacity, expectedCost) {
+      if (this.expandingBackpack) return { ok: false, reason: "IN_PROGRESS" };
+      const quote = this.getBackpackStatus();
+      if (quote.nextCost === null) return { ok: false, reason: "MAX_CAPACITY" };
+      if (expectedCapacity !== quote.capacity || expectedCost !== quote.nextCost) return { ok: false, reason: "STALE_QUOTE" };
+      if (!quote.affordable) return { ok: false, reason: "NOT_ENOUGH_DIAMONDS" };
+      this.expandingBackpack = true;
+      try {
+        this.player.diamonds -= quote.nextCost;
+        const expanded = this.play.expandWarehouse(expectedCapacity);
+        if (!expanded.ok) {
+          this.player.diamonds += quote.nextCost;
+          return { ok: false, reason: "STALE_QUOTE" };
+        }
+        this.bus.emit("REWARDS_CHANGED", { reason: "exchange" });
+        this.save();
+        return { ok: true, capacity: quote.capacity + 1, cost: quote.nextCost };
+      } finally {
+        this.expandingBackpack = false;
+      }
     }
     puzzleAction(id, action, value = "") {
       const result = this.play.act(id, action, value);
@@ -8141,7 +8906,7 @@
         }
       }
       const open = board.cells.filter((cell) => !cell.locked), occupied = open.filter((cell) => cell.item);
-      if (!seen.has("backpack") && occupied.length >= Math.min(6, Math.max(2, open.length - 2)) && this.play.state.warehouse.length < this.config.toolbox.warehouseSlots) {
+      if (!seen.has("backpack") && occupied.length >= Math.min(6, Math.max(2, open.length - 2)) && this.play.state.warehouse.length < this.play.warehouseCapacity) {
         const source = occupied.find((cell) => cell.item && !this.bundle.catalog.get(cell.item.definitionId)?.maxUses);
         if (source) return { hint: "backpack", sourceIndex: source.index };
       }
@@ -8166,8 +8931,20 @@
     }
     claimWish(id) {
       const result = this.life.claimWish(id);
-      if (result.ok) this.save();
+      if (result.ok) {
+        this.grantConfiguredGeneratorRewards();
+        this.save();
+      }
       return result;
+    }
+    grantConfiguredGeneratorRewards() {
+      const changed = /* @__PURE__ */ new Set();
+      for (const wish of this.bundle.wishes) if (wish.generatorReward && this.life.state.claimedWishIds.includes(wish.id) && this.generators.grantEarned("wish_" + wish.id, wish.generatorReward, "wish_reward")) changed.add(wish.generatorReward.generatorId);
+      for (const chapter of this.bundle.adventures) if (chapter.reward.generator && this.play.progress(chapter.id).claimed && this.generators.grantEarned("chapter_" + chapter.id, chapter.reward.generator, "chapter_reward")) changed.add(chapter.reward.generator.generatorId);
+      if (changed.size) {
+        this.orders.reconcileRequirements();
+        for (const generatorId of changed) this.bus.emit("GENERATOR_CHANGED", { generatorId });
+      }
     }
     claimLevelReward(level) {
       const result = this.life.claimLevelReward(level);
@@ -8233,9 +9010,7 @@
           ...this.playerRef,
           unlockedChainIds: [...this.playerRef.unlockedChainIds]
         },
-        generatorCharges: this.generators.getChargeStates(),
-        generatorInventory: this.generators.getInventory(),
-        generatorCooldowns: this.generators.getCooldownStates(),
+        generatorBoard: this.generators.getBoardState(),
         claimedCollectionIds: [...this.claimedCollections],
         orderRefreshAt: [...this.orderRefreshAt],
         dailyTasks: this.dailyTasks ? { ...this.dailyTasks, progress: { ...this.dailyTasks.progress }, claimedIds: [...this.dailyTasks.claimedIds] } : void 0,
@@ -8248,8 +9023,9 @@
         checkIn: { ...this.checkIn },
         board: this.board.getBoard().cells.map((c) => ({
           index: c.index,
-          item: c.item ? { ...c.item } : void 0
+          item: c.item ? cloneItem(c.item) : void 0
         })),
+        boardSize: { rows: this.board.getRows(), columns: this.board.getColumns() },
         activeOrders: this.orders.getOrders(),
         tutorial: { ...this.tutorialRef },
         preferences: { ...this.preferencesRef },
@@ -8389,7 +9165,7 @@
     }
     recordBaseAcquisition(id, notify = true) {
       const definition = this.bundle.catalog.get(id);
-      if (!definition || definition.level !== 1 || this.discovered.includes(id)) return;
+      if (!definition || definition.generator || definition.level !== 1 || this.discovered.includes(id)) return;
       this.discovered.push(id);
       if (notify) this.bus.emit("COLLECTION_CHANGED", { chainId: definition.chainId });
     }
@@ -8481,6 +9257,7 @@
       if (![x, y].every((v) => Number.isFinite(v) && v >= 0 && v <= 1)) return { ok: false, reason: "NOT_READY" };
       const previous = this.life.state.furniturePositions[id];
       this.life.state.furniturePositions[id] = { ...previous, x, y };
+      this.recordFurnitureEdit(id, previous);
       this.bus.emit("LIFE_CHANGED", { reason: "furniture" });
       this.save();
       return { ok: true };
@@ -8501,6 +9278,7 @@
         rotation: patch.rotation ?? previous.rotation ?? 0,
         flipped: patch.flipped ?? previous.flipped ?? false
       };
+      this.recordFurnitureEdit(id, saved);
       this.bus.emit("LIFE_CHANGED", { reason: "furniture" });
       this.save();
       return { ok: true };
@@ -8508,10 +9286,44 @@
     resetFurniturePosition(id) {
       if (!this.bundle.furniture.some((f) => f.id === id)) return { ok: false, reason: "NOT_FOUND" };
       if (!this.life.state.ownedFurnitureIds.includes(id)) return { ok: false, reason: "LOCKED" };
+      const previous = this.life.state.furniturePositions[id];
       delete this.life.state.furniturePositions[id];
+      this.recordFurnitureEdit(id, previous);
       this.bus.emit("LIFE_CHANGED", { reason: "furniture" });
       this.save();
       return { ok: true };
+    }
+    clearFurnitureEditHistory() {
+      this.furnitureEdits = [];
+    }
+    sameFurniturePosition(a, b) {
+      if (!a || !b) return a === b;
+      return a.x === b.x && a.y === b.y && (a.scale ?? 1) === (b.scale ?? 1) && (a.rotation ?? 0) === (b.rotation ?? 0) && (a.flipped ?? false) === (b.flipped ?? false);
+    }
+    recordFurnitureEdit(id, before) {
+      const after = this.life.state.furniturePositions[id];
+      if (this.sameFurniturePosition(before, after)) return;
+      this.furnitureEdits.push({ id, before: before && { ...before }, after: after && { ...after } });
+      if (this.furnitureEdits.length > 20) this.furnitureEdits.shift();
+    }
+    getFurnitureUndoState(room) {
+      for (let i = this.furnitureEdits.length - 1; i >= 0; i--) {
+        const edit = this.furnitureEdits[i], item = this.bundle.furniture.find((entry) => entry.id === edit.id);
+        if (item && (!room || item.room === room) && this.life.state.placedFurnitureIds.includes(edit.id)) return { id: edit.id, title: item.title };
+      }
+      return null;
+    }
+    undoFurnitureEdit(room) {
+      const next = this.getFurnitureUndoState(room);
+      if (!next) return { ok: false, reason: "NOT_READY" };
+      const index = this.furnitureEdits.map((edit2) => edit2.id).lastIndexOf(next.id), edit = this.furnitureEdits[index];
+      if (!this.sameFurniturePosition(this.life.state.furniturePositions[edit.id], edit.after)) return { ok: false, reason: "STATE_CHANGED" };
+      if (edit.before) this.life.state.furniturePositions[edit.id] = { ...edit.before };
+      else delete this.life.state.furniturePositions[edit.id];
+      this.furnitureEdits.splice(index, 1);
+      this.bus.emit("LIFE_CHANGED", { reason: "furniture" });
+      this.save();
+      return { ok: true, furnitureId: edit.id };
     }
     getCheckInStatus() {
       const day = businessDayUtc8(this.clock.now());
@@ -8575,7 +9387,6 @@
         heartsText: $("hearts-text"),
         orders: $("orders"),
         board: $("board"),
-        dockInner: $("dock-inner"),
         tutorial: $("tutorial"),
         toastRoot: $("toast-root"),
         levelup: $("levelup"),
@@ -8587,7 +9398,6 @@
       };
       this.bindBus();
       this.buildBoard();
-      this.buildDock();
       this.renderAll();
       this.bindDev();
       this.dom.energyPill.addEventListener("click", () => {
@@ -8646,37 +9456,8 @@
       window.addEventListener("pointerup", (e) => this.onPointerUp(e));
       window.addEventListener("pointercancel", () => this.cancelDrag());
     }
-    buildDock() {
-      this.dom.dockInner.innerHTML = "";
-      for (const gen of this.game.bundle.generators) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "gen-btn";
-        btn.dataset.gen = gen.id;
-        const map = {
-          coffee_machine: "\u5496",
-          flower_basket: "\u82B1",
-          dessert_oven: "\u751C",
-          gift_box: "\u793C"
-        };
-        btn.innerHTML = `
-        <div class="gen-icon ${chainClass(gen.chainId)}">${map[gen.id] ?? gen.displayName.slice(0, 1)}</div>
-        <div class="gen-name">${gen.displayName}</div>
-        <div class="gen-lock"></div>
-      `;
-        btn.addEventListener("click", () => this.onGeneratorClick(gen.id));
-        this.dom.dockInner.appendChild(btn);
-      }
-      this.renderDock();
-    }
-    onGeneratorClick(id) {
-      const gen = this.game.generators.get(id);
-      if (!gen) return;
-      if (!this.game.generators.isUnlocked(gen)) {
-        this.toast(`\u8FBE\u5230 Lv${gen.unlockLevel} \u540E\u89E3\u9501`, "warn");
-        return;
-      }
-      const result = this.game.spawnFromGenerator(id);
+    onGeneratorClick(uid) {
+      const result = this.game.spawnFromGenerator(uid);
       if (result.ok) {
         this.renderAll();
         return;
@@ -8685,8 +9466,8 @@
         this.toast("\u68CB\u76D8\u6EE1\u5566\uFF5E\n\u5148\u5408\u6210\u4E00\u4E9B\u7269\u54C1\u5427", "warn");
       } else if (result.reason === "NOT_ENOUGH_ENERGY") {
         this.toast("\u4F53\u529B\u4E0D\u8DB3\u5566\uFF5E\n\u4F11\u606F\u4E00\u4E0B\u518D\u56DE\u6765\u5427", "warn");
-      } else if (result.reason === "LOCKED") {
-        this.toast(`\u8FBE\u5230 Lv${gen.unlockLevel} \u540E\u89E3\u9501`, "warn");
+      } else if (result.reason === "GENERATOR_COOLDOWN" || result.reason === "NO_CHARGES") {
+        this.toast("\u751F\u6210\u5668\u6B63\u5728\u6062\u590D", "warn");
       } else {
         this.toast("\u6682\u65F6\u65E0\u6CD5\u751F\u6210", "warn");
       }
@@ -8700,6 +9481,7 @@
       return Number.isFinite(idx) ? idx : null;
     }
     onPointerDown(e) {
+      if (!e.isPrimary || e.button !== 0 || this.drag) return;
       const itemEl = e.target.closest(".item");
       if (!itemEl) return;
       const uid = itemEl.dataset.uid;
@@ -8716,7 +9498,7 @@
       };
     }
     onPointerMove(e) {
-      if (!this.drag) return;
+      if (!e.isPrimary || !this.drag) return;
       const dx = e.clientX - this.drag.startX;
       const dy = e.clientY - this.drag.startY;
       if (!this.drag.active) {
@@ -8728,16 +9510,19 @@
       this.highlightDropTarget(e);
     }
     onPointerUp(e) {
-      if (!this.drag) return;
+      if (!e.isPrimary || !this.drag) return;
       const drag = this.drag;
       this.drag = null;
       this.clearHighlights();
       this.removeGhost();
+      const to = this.cellIndexFromEvent(e);
       if (!drag.active) {
-        this.renderBoard();
+        const item = this.game.board.getBoard().cells[drag.fromIndex]?.item;
+        if (to === drag.fromIndex && item?.uid === drag.uid && this.game.bundle.catalog.get(item.definitionId)?.generator) {
+          this.onGeneratorClick(item.uid);
+        }
         return;
       }
-      const to = this.cellIndexFromEvent(e);
       const result = this.game.dropItem(drag.fromIndex, to);
       this.renderAll();
       if (result.ok && result.kind === "MERGE") {
@@ -8802,7 +9587,6 @@
       this.renderStatus();
       this.renderBoard();
       this.renderOrders();
-      this.renderDock();
       this.renderTutorial();
     }
     renderStatus() {
@@ -8839,7 +9623,8 @@
         el.className = `item ${chainClass(def.chainId)}`;
         el.dataset.uid = item.uid;
         el.dataset.index = String(cellState.index);
-        el.innerHTML = `<div class="item-code">${itemCode(def)}</div><div class="item-name">${def.displayName}</div>`;
+        const code = def.generator ? `\u26A1 Lv.${def.level}` : itemCode(def);
+        el.innerHTML = `<div class="item-code">${code}</div><div class="item-name">${def.displayName}</div>`;
         cellEl.appendChild(el);
         this.itemEls.set(item.uid, el);
       }
@@ -8885,20 +9670,6 @@
       card.appendChild(reward);
       card.appendChild(btn);
       return card;
-    }
-    renderDock() {
-      for (const gen of this.game.bundle.generators) {
-        const btn = this.dom.dockInner.querySelector(
-          `[data-gen="${gen.id}"]`
-        );
-        if (!btn) continue;
-        const isUnlocked = this.game.generators.isUnlocked(gen);
-        btn.classList.toggle("locked", !isUnlocked);
-        const lock = btn.querySelector(".gen-lock");
-        if (lock) {
-          lock.textContent = isUnlocked ? `\u26A1${gen.energyCost}` : `\u{1F512} Lv${gen.unlockLevel} \u89E3\u9501`;
-        }
-      }
     }
     renderTutorial() {
       const t = this.game.tutorial;

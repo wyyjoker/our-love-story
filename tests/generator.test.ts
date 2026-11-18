@@ -102,7 +102,7 @@ describe('GeneratorService', () => {
     const { gen, player, board } = setup();
     const b = board.getBoard();
     for (let i = 0; i < b.cells.length; i += 1) {
-      b.cells[i].item = { uid: `f${i}`, definitionId: 'coffee_01' };
+      if (!b.cells[i].item) b.cells[i].item = { uid: `f${i}`, definitionId: 'coffee_01' };
     }
     board.replaceBoard(b);
     const before = player.energy;

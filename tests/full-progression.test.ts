@@ -18,7 +18,7 @@ describe('full progression with production configuration', () => {
     const options = { storage, clock, ids, random: new FixedRandomService([0.1]), saveDebounceMs: 0 };
     let game = createGameContext(options);
     expect(game.player.level).toBe(1);
-    expect(game.board.getBoard().cells).toHaveLength(42);
+    expect(game.board.getBoard().cells).toHaveLength(63);
     expect(game.player.unlockedChainIds).toEqual(['coffee']);
     const levels: number[] = [];
     const subscribe = () => game.bus.on('LEVEL_UP', ({ level }) => levels.push(level));
@@ -92,7 +92,8 @@ describe('full progression with production configuration', () => {
       && game.life.state.ownedFurnitureIds.length === game.bundle.furniture.length
       && game.life.state.claimedWishIds.length === 10;
     for (let count = 0; count < 1500 && !complete(); count += 1) {
-      const order = game.orders.getOrders()[0];
+      // Rotate quick, regular and goal slots instead of farming only quick orders.
+      const order = game.orders.getOrders()[count % 3];
       expect(order).toBeDefined();
       const reserved = new Set<number>();
       for (const requirement of order.requirements) {

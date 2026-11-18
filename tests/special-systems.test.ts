@@ -17,11 +17,50 @@ function upgraded(g: ReturnType<ReturnType<typeof fixture>['open']>, id='coffee_
   expect(g.mergeGenerators(id,1).ok).toBe(true); g.debugClearBoard();
 }
 describe('collection, cooldown and special items', () => {
+  it('sells one exact board item for its configured price and preserves the change after restart', () => {
+    const f = fixture(), g = f.open();
+    g.debugClearBoard();
+    for (const cell of g.board.getBoard().cells) if (!cell.locked && !cell.item) g.board.placeAt(cell.index, 'coffee_12');
+    const selected = g.board.getBoard().cells[0].item!;
+    const untouched = g.board.getBoard().cells[1].item!;
+    const before = { coins: g.player.coins, xp: g.player.xp, energy: g.player.energy };
+    const price = g.bundle.catalog.get(selected.definitionId)!.sellValue!;
+    expect(g.board.isFull()).toBe(true);
+    expect(g.quoteBoardItemSale(0, selected.uid)).toMatchObject({ ok: true, index: 0, uid: selected.uid, coins: price });
+    expect(g.player).toMatchObject(before);
+    expect(g.sellBoardItem(0, untouched.uid)).toEqual({ ok: false, reason: 'ITEM_CHANGED' });
+    expect(g.sellBoardItem(0, selected.uid)).toMatchObject({ ok: true, coins: price });
+    expect(g.sellBoardItem(0, selected.uid)).toEqual({ ok: false, reason: 'ITEM_CHANGED' });
+    expect(g.board.isFull()).toBe(false);
+    const h = f.open();
+    expect(h.player).toMatchObject({ ...before, coins: before.coins + price });
+    expect(h.board.getBoard().cells[0].item).toBeUndefined();
+    expect(h.board.getBoard().cells[1].item).toEqual(untouched);
+    const machine = h.board.getBoard().cells.find(c => c.item?.generatorState)!;
+    expect(h.sellBoardItem(machine.index, machine.item!.uid)).toEqual({ ok: false, reason: 'NOT_FOR_SALE' });
+    const chest = h.board.placeAt(0, 'treasure_chest')!;
+    expect(h.sellBoardItem(0, chest.uid)).toEqual({ ok: false, reason: 'NOT_FOR_SALE' });
+  });
+  it('warns before selling a ready requirement and only then updates the order', () => {
+    const g = fixture().open();
+    g.debugClearBoard();
+    const item = g.board.placeAt(0, 'coffee_01')!;
+    const spare = g.board.placeAt(1, 'coffee_01')!;
+    const order = { ...g.orders.getOrders()[0], requirements: [{ itemId: 'coffee_01', count: 2 }] };
+    g.orders.hydrate([order], []);
+    expect(g.orders.canClaim(order.uid)).toBe(true);
+    expect(g.quoteBoardItemSale(0, item.uid)).toMatchObject({ ok: true, breaksReadyOrder: true });
+    expect(g.orders.canClaim(order.uid)).toBe(true);
+    expect(g.sellBoardItem(0, item.uid).ok).toBe(true);
+    expect(g.orders.canClaim(order.uid)).toBe(false);
+    expect(g.board.getBoard().cells[1].item).toEqual(spare);
+    expect(g.orders.getOrders()[0]).toEqual(order);
+  });
   it('unlocks permanent collection bonus only once, preserving saved energy and cap through levels', () => {
     const f=fixture(), g=f.open(); g.debugClearBoard();
     expect(g.claimCollectionBonus('sugar')).toEqual({ok:false,reason:'NOT_READY'});
-    for(let pair=0;pair<2;pair++){g.board.placeAt(0,'sugar_01');g.board.placeAt(1,'sugar_01');expect(g.dropItem(0,1).ok).toBe(true);g.dropItem(1,pair===0?6:7);}
-    expect(g.dropItem(6,7)).toMatchObject({ok:true,kind:'MERGE',resultDefinitionId:'sugar_03'});
+    for(let pair=0;pair<2;pair++){g.board.placeAt(0,'sugar_01');g.board.placeAt(1,'sugar_01');expect(g.dropItem(0,1).ok).toBe(true);g.dropItem(1,pair===0?7:8);}
+    expect(g.dropItem(7,8)).toMatchObject({ok:true,kind:'MERGE',resultDefinitionId:'sugar_03'});
     expect(g.getCollectionProgress().find((c)=>c.chainId==='sugar')).toMatchObject({discovered:3,total:3,ready:true,claimed:false});
     const energy=g.player.energy; expect(g.player.maxEnergy).toBe(100);
     expect(g.claimCollectionBonus('sugar')).toEqual({ok:true,energyBonus:3});
@@ -55,9 +94,9 @@ describe('collection, cooldown and special items', () => {
     f.clock.advance(5000); let h=f.open(); expect(h.getGeneratorStatus('coffee_machine')?.remainingCooldownMs).toBe(config.streakCooldown!.durationMs-5000);
     h.debugAddXp(50); h.claimLevelReward(2); h.mergeGenerators('coffee_machine',1);
     const upgradedInterval=Math.round(config.streakCooldown!.durationMs*config.upgrade!.rechargeFactor);
-    expect(h.getGeneratorStatus('coffee_machine')).toMatchObject({cooldownMs:upgradedInterval,remainingCooldownMs:upgradedInterval-5000});
+    expect(h.getGeneratorStatus('coffee_machine')).toMatchObject({cooldownMs:upgradedInterval,remainingCooldownMs:0,remainingUses:30});
     f.clock.advance(11000); expect(h.spawnFromGenerator('coffee_machine').ok).toBe(true);
-    h=f.open(); expect(h.getGeneratorStatus('coffee_machine')).toMatchObject({streak:1,remainingCooldownMs:0});
+    h=f.open(); expect(h.getGeneratorStatus('coffee_machine')).toMatchObject({streak:31,remainingCooldownMs:0});
     expect(h.getGeneratorStatus('orange_tree')).toMatchObject({streak:0,remainingCooldownMs:0});
   });
   it('drops sugar and wildcard into inbox when the primary output fills the last cell', () => {

@@ -1,5 +1,6 @@
 import type { ItemInstance, ItemDefinition } from '../types';
 import type { ItemCatalog } from '../item/catalog';
+import { mergeGeneratorStates } from '../generator/generatorItems';
 
 
 export function remainingToolUses(item: ItemInstance, definition: ItemDefinition): number {
@@ -19,7 +20,7 @@ export type MergeResult =
  * No Cocos / UI / storage dependencies.
  */
 export class MergeEngine {
-  constructor(private readonly catalog: ItemCatalog) {}
+  constructor(private readonly catalog: ItemCatalog, private readonly nowMs = 0) {}
 
   canMerge(source: ItemInstance, target: ItemInstance): boolean {
     return this.tryMerge(source, target, `${source.uid}_merged`).ok;
@@ -55,9 +56,12 @@ export class MergeEngine {
     if (!nextDef) {
       return { ok: false, reason: 'MISSING_DEFINITION' };
     }
+    if (ordinary.generator && (!source.generatorState || !target.generatorState || !nextDef.generator)) return { ok: false, reason: 'MISSING_DEFINITION' };
     return {
       ok: true,
       item: { uid: nextUid, definitionId: nextDef.id,
+        ...(ordinary.generator && nextDef.generator && source.generatorState && target.generatorState
+          ? { generatorState: mergeGeneratorStates(ordinary.generator, nextDef.generator, source.generatorState, target.generatorState, this.nowMs) } : {}),
         ...(ordinary.maxUses && nextDef.maxUses ? { remainingUses: Math.max(1, Math.floor(
           (remainingToolUses(source, ordinary) + remainingToolUses(target, ordinary)) * nextDef.maxUses / (ordinary.maxUses * 2))) } : {}),
       },

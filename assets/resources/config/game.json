@@ -1,14 +1,19 @@
 {
   "gameTitle": "我们的浪漫小屋",
   "saveKey": "our-love-story-save",
-  "saveVersion": 8,
+  "saveVersion": 9,
   "toolbox": {
     "warehouseSlots": 6,
-    "startingScissors": 2
+    "startingScissors": 2,
+    "backpackExpansion": {
+      "maxSlots": 36,
+      "baseDiamondCost": 10,
+      "stepDiamondCost": 2
+    }
   },
   "board": {
-    "rows": 7,
-    "columns": 6,
+    "rows": 9,
+    "columns": 7,
     "unlocks": [
       {
         "level": 1,
@@ -49,6 +54,21 @@
         "level": 10,
         "columns": 6,
         "rows": 7
+      },
+      {
+        "level": 12,
+        "columns": 7,
+        "rows": 7
+      },
+      {
+        "level": 15,
+        "columns": 7,
+        "rows": 8
+      },
+      {
+        "level": 18,
+        "columns": 7,
+        "rows": 9
       }
     ]
   },
@@ -82,12 +102,13 @@
   "orders": {
     "activeSlots": 3,
     "minRequirements": 1,
-    "maxRequirements": 3,
-    "minItemLevel": 2,
+    "maxRequirements": 2,
+    "minItemLevel": 1,
     "maxItemLevel": 5,
     "refreshCooldownMs": 900000,
     "refreshDiamondCost": 2,
     "dynamic": {
+      "pacedSlots": true,
       "rareChance": 0.2,
       "urgentChance": 0.1,
       "urgentDurationMs": 1800000,

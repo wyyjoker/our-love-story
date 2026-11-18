@@ -25,6 +25,7 @@ export type OrderGenerateInput = {
   minimumLevelForChain?: (chainId: string) => number;
   canProduceItem?: (itemId: string) => boolean;
   maxMergeCostForChain?: (chainId: string) => number;
+  pace?: ActiveOrder['pace'];
 };
 
 /** Stable signature so equal needs with different template ids or split rows count as duplicates. */
@@ -142,7 +143,7 @@ export function generateOrder(input: OrderGenerateInput): ActiveOrder | null {
   const level = input.player.level;
   const dynamic = input.dynamic ?? DEFAULT_DYNAMIC_ORDER_CONFIG;
   const count = input.random.next() < dynamic.twoItemChance ? 2 : 1;
-  const wantsRare = !occupiedLimited && rare.length > 0 && input.random.next() < dynamic.rareChance;
+  const wantsRare = input.pace !== 'quick' && !occupiedLimited && rare.length > 0 && input.random.next() < dynamic.rareChance;
   const candidates: OrderRequirement[][] = [];
   if (count === 1) {
     for (const item of wantsRare ? rare : common) candidates.push([{ itemId: item.id, count: 1 }]);
@@ -161,7 +162,7 @@ export function generateOrder(input: OrderGenerateInput): ActiveOrder | null {
     const costs = new Map<string, number>();
     for (const req of requirements) {
       const item = input.catalog.get(req.itemId)!;
-      const floor = Math.max(input.minItemLevel, input.minimumLevelForChain?.(item.chainId) ?? 1);
+      const floor = Math.max(1, input.minimumLevelForChain?.(item.chainId) ?? 1);
       costs.set(item.chainId, (costs.get(item.chainId) ?? 0) + 2 ** Math.max(0, item.level - floor) * req.count);
     }
     return Array.from(costs.entries()).every(([chain, cost]) => cost <= (input.maxMergeCostForChain?.(chain) ?? Infinity));
@@ -178,12 +179,23 @@ export function generateOrder(input: OrderGenerateInput): ActiveOrder | null {
   // With only three early coffee choices, reuse the just-delivered kind before
   // duplicating another occupied slot. A narrow pool must still fill all slots.
   const pool = preferred.length ? preferred : different.length ? different : notOccupied.length ? notOccupied : affordable;
-  const requirements = pool[input.random.pickIndex(pool.length)];
+  const effort = (rows: readonly OrderRequirement[]): number => rows.reduce((sum, req) => {
+    const item = input.catalog.get(req.itemId)!;
+    return sum + 2 ** Math.max(0, item.level - (input.minimumLevelForChain?.(item.chainId) ?? 1)) * req.count;
+  }, 0);
+  // Split the reachable costs into three bands. If a band is occupied, prefer
+  // another distinct need over duplicating a neighbouring customer.
+  const costs = Array.from(new Set(affordable.map(effort))).sort((a, b) => a - b);
+  const roleIndex = input.pace === 'quick' ? 0 : input.pace === 'regular' ? 1 : 2;
+  const band = pool.filter(rows => Math.min(2, Math.floor(costs.indexOf(effort(rows)) * 3 / costs.length)) === roleIndex);
+  const choices = input.pace && band.length ? band : pool;
+  const requirements = choices[input.random.pickIndex(choices.length)];
   if (!requirements) return null;
   const cost = requirements.reduce((sum, req) => sum + 2 ** ((input.catalog.get(req.itemId)?.level ?? 1) - 1) * req.count, 0);
   const multiplier = dynamic.rewardMultiplierMin + (dynamic.rewardMultiplierMax - dynamic.rewardMultiplierMin)
     * (Math.min(dynamic.rewardMultiplierMaxLevel, Math.max(1, level)) - 1) / Math.max(1, dynamic.rewardMultiplierMaxLevel - 1);
   return { uid: input.id, templateId: `dynamic:${requirementSignature(requirements)}`, requirements,
+    ...(input.pace ? { pace: input.pace } : {}),
     ...(level >= 15 && hasLimited(requirements) ? { longTerm: true } : {}),
     rewardCoins: Math.ceil(cost * multiplier), rewardXp: Math.max(6, cost * 2 + 6), rewardHearts: Math.max(1, Math.ceil(cost / 2)) };
 }

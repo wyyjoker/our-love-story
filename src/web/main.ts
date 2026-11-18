@@ -17,7 +17,6 @@ type Dom = {
   heartsText: HTMLElement;
   orders: HTMLElement;
   board: HTMLElement;
-  dockInner: HTMLElement;
   tutorial: HTMLElement;
   toastRoot: HTMLElement;
   levelup: HTMLElement;
@@ -69,7 +68,6 @@ class WebGameUI {
       heartsText: $('hearts-text'),
       orders: $('orders'),
       board: $('board'),
-      dockInner: $('dock-inner'),
       tutorial: $('tutorial'),
       toastRoot: $('toast-root'),
       levelup: $('levelup'),
@@ -81,7 +79,6 @@ class WebGameUI {
     };
     this.bindBus();
     this.buildBoard();
-    this.buildDock();
     this.renderAll();
     this.bindDev();
     this.dom.energyPill.addEventListener('click', () => {
@@ -144,38 +141,8 @@ class WebGameUI {
     window.addEventListener('pointercancel', () => this.cancelDrag());
   }
 
-  private buildDock(): void {
-    this.dom.dockInner.innerHTML = '';
-    for (const gen of this.game.bundle.generators) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'gen-btn';
-      btn.dataset.gen = gen.id;
-      const map: Record<string, string> = {
-        coffee_machine: '咖',
-        flower_basket: '花',
-        dessert_oven: '甜',
-        gift_box: '礼',
-      };
-      btn.innerHTML = `
-        <div class="gen-icon ${chainClass(gen.chainId)}">${map[gen.id] ?? gen.displayName.slice(0, 1)}</div>
-        <div class="gen-name">${gen.displayName}</div>
-        <div class="gen-lock"></div>
-      `;
-      btn.addEventListener('click', () => this.onGeneratorClick(gen.id));
-      this.dom.dockInner.appendChild(btn);
-    }
-    this.renderDock();
-  }
-
-  private onGeneratorClick(id: string): void {
-    const gen = this.game.generators.get(id);
-    if (!gen) return;
-    if (!this.game.generators.isUnlocked(gen)) {
-      this.toast(`达到 Lv${gen.unlockLevel} 后解锁`, 'warn');
-      return;
-    }
-    const result = this.game.spawnFromGenerator(id);
+  private onGeneratorClick(uid: string): void {
+    const result = this.game.spawnFromGenerator(uid);
     if (result.ok) {
       this.renderAll();
       return;
@@ -184,8 +151,8 @@ class WebGameUI {
       this.toast('棋盘满啦～\n先合成一些物品吧', 'warn');
     } else if (result.reason === 'NOT_ENOUGH_ENERGY') {
       this.toast('体力不足啦～\n休息一下再回来吧', 'warn');
-    } else if (result.reason === 'LOCKED') {
-      this.toast(`达到 Lv${gen.unlockLevel} 后解锁`, 'warn');
+    } else if (result.reason === 'GENERATOR_COOLDOWN' || result.reason === 'NO_CHARGES') {
+      this.toast('生成器正在恢复', 'warn');
     } else {
       this.toast('暂时无法生成', 'warn');
     }
@@ -201,6 +168,7 @@ class WebGameUI {
   }
 
   private onPointerDown(e: PointerEvent): void {
+    if (!e.isPrimary || e.button !== 0 || this.drag) return;
     const itemEl = (e.target as HTMLElement).closest('.item') as HTMLElement | null;
     if (!itemEl) return;
     const uid = itemEl.dataset.uid;
@@ -219,7 +187,7 @@ class WebGameUI {
   }
 
   private onPointerMove(e: PointerEvent): void {
-    if (!this.drag) return;
+    if (!e.isPrimary || !this.drag) return;
     const dx = e.clientX - this.drag.startX;
     const dy = e.clientY - this.drag.startY;
     if (!this.drag.active) {
@@ -232,18 +200,21 @@ class WebGameUI {
   }
 
   private onPointerUp(e: PointerEvent): void {
-    if (!this.drag) return;
+    if (!e.isPrimary || !this.drag) return;
     const drag = this.drag;
     this.drag = null;
     this.clearHighlights();
     this.removeGhost();
 
+    const to = this.cellIndexFromEvent(e);
     if (!drag.active) {
-      this.renderBoard();
+      const item = this.game.board.getBoard().cells[drag.fromIndex]?.item;
+      if (to === drag.fromIndex && item?.uid === drag.uid && this.game.bundle.catalog.get(item.definitionId)?.generator) {
+        this.onGeneratorClick(item.uid);
+      }
       return;
     }
 
-    const to = this.cellIndexFromEvent(e);
     const result = this.game.dropItem(drag.fromIndex, to);
     this.renderAll();
     if (result.ok && result.kind === 'MERGE') {
@@ -316,7 +287,6 @@ class WebGameUI {
     this.renderStatus();
     this.renderBoard();
     this.renderOrders();
-    this.renderDock();
     this.renderTutorial();
   }
 
@@ -366,7 +336,8 @@ class WebGameUI {
       el.className = `item ${chainClass(def.chainId)}`;
       el.dataset.uid = item.uid;
       el.dataset.index = String(cellState.index);
-      el.innerHTML = `<div class="item-code">${itemCode(def)}</div><div class="item-name">${def.displayName}</div>`;
+      const code = def.generator ? `⚡ Lv.${def.level}` : itemCode(def);
+      el.innerHTML = `<div class="item-code">${code}</div><div class="item-name">${def.displayName}</div>`;
       cellEl.appendChild(el);
       this.itemEls.set(item.uid, el);
     }
@@ -416,23 +387,6 @@ class WebGameUI {
     card.appendChild(reward);
     card.appendChild(btn);
     return card;
-  }
-
-  private renderDock(): void {
-    for (const gen of this.game.bundle.generators) {
-      const btn = this.dom.dockInner.querySelector(
-        `[data-gen="${gen.id}"]`,
-      ) as HTMLElement | null;
-      if (!btn) continue;
-      const isUnlocked = this.game.generators.isUnlocked(gen);
-      btn.classList.toggle('locked', !isUnlocked);
-      const lock = btn.querySelector('.gen-lock');
-      if (lock) {
-        lock.textContent = isUnlocked
-          ? `⚡${gen.energyCost}`
-          : `🔒 Lv${gen.unlockLevel} 解锁`;
-      }
-    }
   }
 
   private renderTutorial(): void {

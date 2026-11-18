@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "scope": "ordertracking",
+  "checks": [
+    "requirement inspection, board tracking, ready shortcut and delivery at 320",
+    "requirement inspection, board tracking, ready shortcut and delivery at 375",
+    "requirement inspection, board tracking, ready shortcut and delivery at 430",
+    "coin Lv1 inspection and guide preserve UID and balance until confirmation",
+    "coin Lv5 inspection and guide preserve UID and balance until confirmation",
+    "diamond Lv1 inspection and guide preserve UID and balance until confirmation",
+    "diamond Lv5 inspection and guide preserve UID and balance until confirmation",
+    "energy Lv1 inspection and guide preserve UID and balance until confirmation",
+    "energy Lv5 inspection and guide preserve UID and balance until confirmation",
+    "treasure_chest Lv1 inspection and guide preserve UID and balance until confirmation",
+    "treasure_chest Lv5 inspection and guide preserve UID and balance until confirmation",
+    "orange tree restores one pick per minute and keeps partial time across restart",
+    "higher room tabs, expanded placement and six framed paintings with editable saved transforms at 320",
+    "higher room tabs, expanded placement and six framed paintings with editable saved transforms at 375",
+    "higher room tabs, expanded placement and six framed paintings with editable saved transforms at 430"
+  ],
+  "exceptions": [],
+  "testedBuildDigest": "1959924dc3ae374a73a8e16616cd1aa2a8a0bcdb239b44622a64bbb7320241fc",
+  "version": "1.3.0",
+  "output": "E:\\A-game\\temp\\cocos-ui-qa-2026-11-18T01-17-28-625Z-YzphG4"
+}

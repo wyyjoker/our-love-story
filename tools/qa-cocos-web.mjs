@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto';
 import { build } from 'esbuild';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const buildDir = path.join(root, 'build/web-mobile');
+const buildDir = path.resolve(root, process.env.COCOS_QA_BUILD_DIR ?? 'build/web-mobile');
 const chromePath = process.env.COCOS_QA_CHROME ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 assert.ok(fs.existsSync(path.join(buildDir, 'index.html')), 'Build Web Mobile with Creator first');
 assert.ok(fs.existsSync(chromePath), 'Set COCOS_QA_CHROME to a Chrome/Chromium executable');
@@ -22,7 +22,8 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const checks = [];
 const exceptions = [];
 const scope = process.env.COCOS_QA_FOCUS ?? 'full';
-assert.ok(['full', 'timeline', 'postfresh', 'late', 'tail', 'level2', 'artfailure', 'polish', 'boardfill', 'chestflow', 'delivery', 'customer_tools', 'tools_only', 'systems', 'firstuse'].includes(scope), 'Unknown COCOS_QA_FOCUS');
+const visualScope = scope === 'watercolor';
+assert.ok(visualScope || ['full', 'timeline', 'postfresh', 'late', 'tail', 'level2', 'artfailure', 'polish', 'boardfill', 'chestflow', 'delivery', 'customer_tools', 'tools_only', 'systems', 'firstuse', 'ordertracking', 'homewalls', 'furnitureedit', 'backpack36', 'physical', 'earned', 'surfaces', 'paced'].includes(scope), 'Unknown COCOS_QA_FOCUS');
 function digestBuild(directory) {
   const hash = createHash('sha256');
   const walk = (folder) => {
@@ -130,11 +131,20 @@ try {
   const labels = () => ev("(()=>{const s=[];const walk=n=>{const l=n.getComponent(cc.Label);if(l&&n.activeInHierarchy)s.push(l.string);n.children.forEach(walk)};walk(cc.director.getScene());return s})()");
   const coords = (name, index = 0) => ev(`(()=>{const found=[];const walk=n=>{if(n.name===${JSON.stringify(name)}&&n.activeInHierarchy)found.push(n);n.children.forEach(walk)};walk(cc.director.getScene());const n=found[${index}];if(!n)throw Error('Missing '+${JSON.stringify(name)});const p=n.worldPosition,v=cc.view.getVisibleSize();return{x:(p.x+v.width/2)*innerWidth/v.width,y:(v.height/2-p.y)*innerHeight/v.height}})()`);
   const tap = async (name, index = 0) => {
+    if(name === 'Button_家园' && !await active(name) && await active('MergeHomeButton')) name='MergeHomeButton';
+    if ((name === 'Button_回忆' || name === 'Button_任务') && !await active(name) && await active('MergeHomeButton')) {
+      await tap('MergeHomeButton');
+    }
+    if (name === 'OpenAdventure' && !await active(name) && await active('MergeItemInfo')) name = 'MergeItemInfo';
+    if(name === 'OpenTools' && !await active(name)) name='energyPlus';
+    // Dismiss the delivery shortcut explicitly before unrelated touch actions.
+    if (!name.startsWith('ReadyOrder') && await active('ReadyOrderNotice')) await tap('ReadyOrderDismiss');
     if (name === 'ClaimLevelReward') for (let retry=0; retry<25 && !await active(name);retry++) await wait(80);
     const p = await coords(name, index);
     await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...p, id: 1 }] });
     await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await wait(400);
     if (['OrderCard','ClaimButton','ClaimLevelReward'].includes(name)) for(let retry=0;retry<25 && await ev(`${app}.view.deliveries.size > 0 || ${app}.view.levelRewardInFlight`);retry++) await wait(70);
+    if (scope === 'paced') await wait(1400);
   };
   const dragItemToBackpack = async (index) => {
     const start = await coords('Cell_'+index), end = await coords('BackpackDropIcon');
@@ -183,14 +193,14 @@ try {
   };
   const useReward = async (id) => {
     const item = bundle.items.find((entry) => entry.id === id); assert.ok(item);
-    await rewardRowAction(item.displayName); if(item.chainId==='treasure_chest'){assert.ok(!(await active('ConfirmConsume')));await wait(1700);await tap('OpenTools');}else await tap('ConfirmUse');
+    await rewardRowAction(item.displayName); await tap('SupplyInspectConfirm'); await wait(item.chainId === 'treasure_chest' ? 1700 : 150); await tap('OpenTools');
   };
   const clearFreshSupplies = async () => {
     const board = await cells();
     if (board.some((cell) => !cell.locked && !cell.item)) return;
     const usable = board.find((cell) => cell.item && ['treasure_chest', 'coin_01', 'coin_02', 'coin_03', 'diamond_01', 'diamond_02', 'diamond_03', 'energy_01', 'energy_02', 'energy_03'].includes(cell.item.definitionId));
     if (!usable) return;
-    await tap('Cell_'+usable.index); await wait(1700);
+    await tap('Cell_'+usable.index); await tap('SupplyInspectConfirm'); await wait(1700);
     freshPathActions.push(`use supply ${usable.item.definitionId}`);
   };
   const openAdventure = async (chapter, replay = false) => {
@@ -242,15 +252,47 @@ try {
       await send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: a.x + (b.x - a.x) * i / 6, y: a.y + (b.y - a.y) * i / 6, id: 1 }] }); await wait(35);
     }
     await send('Input.dispatchTouchEvent', { type: cancel ? 'touchCancel' : 'touchEnd', touchPoints: [] }); await wait(450);
+    if (scope === 'paced') await wait(1800);
   };
   const seed = async (mutate) => {
     const data = structuredClone(initial); data.savedAt = Date.now(); data.player.lastEnergyAt = Date.now(); mutate(data);
+    if (data.generatorInventory || data.generatorCooldowns || data.generatorCharges) delete data.generatorBoard;
     await ev(`localStorage.setItem(${JSON.stringify(key)},${JSON.stringify(JSON.stringify(data))});true`);
     await send('Page.reload'); await wait(400); await ready(); await wait(600);
   };
   const cells = () => ev(`${app}.game.board.getBoard().cells`);
+  const producerCell = async (key) => {
+    const status = await ev(`${app}.game.getGeneratorStatus(${JSON.stringify(key)})`);
+    const producer = (await cells()).find(cell => cell.item && cell.item.uid === status?.uid);
+    assert.ok(producer, `Missing physical generator ${key}`);
+    return producer.index;
+  };
+  const produce = async (key = 'coffee_machine') => tap('Cell_' + await producerCell(key));
+  const holdProducer = async (key) => {
+    if (await active('ReadyOrderNotice')) await tap('ReadyOrderDismiss');
+    const point = await coords('Cell_' + await producerCell(key));
+    await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...point, id: 31 }] });
+    await wait(650);
+    await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await wait(350);
+  };
+  const coffeePair = async () => {
+    const pair = (await cells()).filter(c => c.item?.definitionId === 'generator_coffee_machine_01');
+    assert.equal(pair.length, 2);
+    return pair.map(c => c.index);
+  };
+  const generatorLabels = async (key) => {
+    const name = 'Cell_' + await producerCell(key);
+    return ev(`(()=>{let cell;const walk=n=>{if(n.name===${JSON.stringify(name)}&&n.activeInHierarchy)cell=n;n.children.forEach(walk)};walk(cc.director.getScene());return cell?.getComponentsInChildren(cc.Label).filter(l=>l.node.activeInHierarchy).map(l=>l.string)??[]})()`);
+  };
+  const deliver = async (slot) => {
+    const readySlots = await ev(`(()=>{const g=${app}.game;return g.orders.getOrders().flatMap((order,index)=>g.board.getOrderProgress(order).ready?[index]:[])})()`);
+    const buttonIndex = readySlots.indexOf(slot);
+    assert.ok(buttonIndex >= 0, `Order slot ${slot} is not ready for delivery`);
+    await tap('ClaimButton', buttonIndex);
+  };
   const freshPathActions = [];
-  const ensureItem = async (itemId, count = 1) => {
+  const ensureItem = async (itemId, count = 1, keep = new Map()) => {
     const target = bundle.items.find((item) => item.id === itemId);
     assert.ok(target, `Unknown fresh-play target ${itemId}`);
     const generatorIndex = bundle.generators.findIndex((generator) => generator.chainId === target.chainId);
@@ -260,10 +302,16 @@ try {
       const board = await cells();
       if (board.filter((cell) => cell.item?.definitionId === itemId).length >= count) return;
       const groups = new Map();
+      const reserved = new Map(keep);
       for (const cell of board) {
         if (!cell.item) continue;
         const definition = bundle.items.find((item) => item.id === cell.item.definitionId);
         if (!definition || definition.chainId !== target.chainId || definition.level >= target.level) continue;
+        const copiesToKeep = reserved.get(definition.id) ?? 0;
+        if (copiesToKeep > 0) {
+          reserved.set(definition.id, copiesToKeep - 1);
+          continue;
+        }
         const group = groups.get(definition.id) ?? [];
         group.push({ index: cell.index, level: definition.level }); groups.set(definition.id, group);
       }
@@ -292,18 +340,27 @@ try {
       if (generator.id === 'orange_tree') {
         const status = await ev(`${app}.game.getGeneratorStatus('orange_tree')`);
         assert.ok(status?.charges > 0, `Orange tree is recovering while preparing ${itemId}`);
-        await tap('GeneratorOrangeTree');
-      } else await tap('GenBtn', generatorIndex);
+      }
+      await produce(generator.id);
       freshPathActions.push(`spawn ${generator.id}`);
     }
     throw Error(`Unable to prepare ${count} × ${itemId} through normal UI actions`);
+  };
+  const prepareOrder = async (requirements) => {
+    const keep = new Map();
+    const highestFirst = [...requirements].sort((a, b) =>
+      bundle.catalog.get(b.itemId).level - bundle.catalog.get(a.itemId).level);
+    for (const requirement of highestFirst) {
+      await ensureItem(requirement.itemId, requirement.count, keep);
+      keep.set(requirement.itemId, requirement.count);
+    }
   };
   await send('Runtime.enable'); await send('Page.enable'); await send('Network.enable');
   await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   const checkBoardFill = async () => {
     const g = await ev(`(()=>{let paper;const cells=[];const walk=n=>{if(n.activeInHierarchy){if(n.name==='BoardPaper')paper=n;const m=/^Cell_([0-9]+)$/.exec(n.name);if(m)cells[+m[1]]=n;}n.children.forEach(walk)};walk(cc.director.getScene());const box=n=>{const t=n?.getComponent('cc.UITransform')??n?._uiProps.uiTransformComp;if(!t)return null;const ps=[[-t.anchorX*t.width,-t.anchorY*t.height],[(1-t.anchorX)*t.width,(1-t.anchorY)*t.height]].map(([x,y])=>t.convertToWorldSpaceAR(new cc.Vec3(x,y,0)));return{xMin:Math.min(...ps.map(p=>p.x)),xMax:Math.max(...ps.map(p=>p.x)),yMin:Math.min(...ps.map(p=>p.y)),yMax:Math.max(...ps.map(p=>p.y))}};return{paper:box(paper),cells:cells.map(box)}})()`);
-    assert.ok(g.paper && g.cells.length===boardSize && g.cells.every(Boolean), 'All 42 board cells and paper must be visible');
+    assert.ok(g.paper && g.cells.length===boardSize && g.cells.every(Boolean), `All ${boardSize} board cells and paper must be visible`);
     const cols=bundle.game.board.columns, rows=bundle.game.board.rows;
     for(let row=0;row<rows;row++) {
       const first=g.cells[row*cols], last=g.cells[row*cols+cols-1];
@@ -316,7 +373,472 @@ try {
       assert.ok(gap>=-0.5 && gap<=12.5, `Vertical cell gap ${row},${col}: ${gap}`); }
     return g;
   };
-  if (scope === 'firstuse') {
+  if (scope === 'paced') {
+    const durationMs = 20 * 60 * 1000;
+    const started = Date.now();
+    const snapshots = [];
+    const snapshot = async (reason) => {
+      const state = await ev(`(()=>{const g=${app}.game,b=g.board.getBoard().cells;return {
+        level:g.player.level, xp:g.player.xp, energy:g.player.energy, coins:g.player.coins,
+        empty:b.filter(c=>!c.locked&&!c.item).length, backpack:g.play.state.warehouse.length,
+        stats:g.life.state.stats, orange:g.getGeneratorStatus('orange_tree'),
+        orders:g.orders.getOrders().map(o=>({id:o.id,needs:o.requirements,ready:g.board.getOrderProgress(o).ready}))
+      }})()`);
+      snapshots.push({ elapsedMs: Date.now() - started, reason, ...state });
+      fs.writeFileSync(path.join(output, 'paced-play.json'), JSON.stringify({
+        durationMs, realClock: true, simulatedHumanPacing: true, actions: freshPathActions, snapshots
+      }, null, 2));
+      console.log(`[paced] ${Math.round((Date.now()-started)/1000)}s ${reason}: Lv${state.level}, ${state.stats.orders} orders, ${state.energy} energy, ${state.empty} open spaces`);
+      return state;
+    };
+    const claimLevels = async () => {
+      for (let n=0; n<10 && await active('ClaimLevelReward'); n++) await tap('ClaimLevelReward');
+    };
+    const recoverEnergy = async () => {
+      const readyTasks = await ev(`${app}.game.getDailyTasks().tasks.filter(t=>t.ready&&!t.claimed&&t.reward.energy>0)`);
+      if (readyTasks.length) {
+        await tap('DailyCheckInButton');
+        await tap('RewardsTab_daily');
+        for (const task of readyTasks) {
+          await tap('DailyTaskClaim_' + task.id);
+          freshPathActions.push('claim daily task ' + task.id);
+        }
+        await tap('CloseRewards');
+        await claimLevels();
+        return true;
+      }
+      const board = await cells();
+      const supplies = board.filter(c => !c.locked && c.item);
+      const energy = supplies.find(c => bundle.catalog.get(c.item.definitionId)?.chainId === 'energy');
+      const chest = supplies.find(c => bundle.catalog.get(c.item.definitionId)?.chainId === 'treasure_chest');
+      const supply = energy ?? chest;
+      if (supply) {
+        await tap('Cell_' + supply.index);
+        await tap('SupplyInspectConfirm');
+        if (!energy) await wait(1750);
+        freshPathActions.push('use ' + supply.item.definitionId);
+        return true;
+      }
+      const chapterId = await ev(`(()=>{const p=${app}.game.play.journeyProgress();return p.availability?.available?p.nextChapter?.id:null})()`);
+      const chapter = bundle.adventures.find(entry => entry.id === chapterId);
+      if (!chapter) return false;
+      await tap('OpenAdventure');
+      await openAdventure(chapter);
+      await solvePuzzle(chapter);
+      await tap('AdventureClaim');
+      assert.equal(await ev(`${app}.game.play.progress(${JSON.stringify(chapter.id)}).claimed`), true);
+      await tap('PlayClose');
+      await claimLevels();
+      freshPathActions.push('claim story chapter ' + chapter.id);
+      return true;
+    };
+    await load();
+    await tap('EnterGame');
+    await produce();
+    await gesture(0,1);
+    await deliver(0);
+    await claimLevels();
+    await tap('DailyCheckInButton');
+    await tap('CheckInClaim');
+    await tap('CloseRewards');
+    await tap('OpenAdventure');
+    await openAdventure(bundle.adventures[0]);
+    await solvePuzzle(bundle.adventures[0]);
+    await tap('AdventureClaim');
+    await tap('JourneyContinue');
+    await claimLevels();
+    await snapshot('fresh start, first delivery, check-in and opening chapter');
+    let lastMilestone = 0;
+    let usedBackpack = false;
+    let deliveredOrangeOrder = false;
+    try {
+      while (Date.now() - started < durationMs) {
+        const stats = await ev(`(()=>{const g=${app}.game;return{orders:g.orders.getOrders().map((o,slot)=>({slot,requirements:o.requirements,ready:g.board.getOrderProgress(o).ready})),energy:g.player.energy}})()`);
+        if (stats.energy < 18 && await recoverEnergy()) {
+          await snapshot('used a task reward or board supply to replenish energy');
+          continue;
+        }
+        const board = await cells();
+        const freeSpaces = board.filter(c => !c.locked && !c.item).length;
+        if (!usedBackpack && freeSpaces >= 2 && freeSpaces <= 5) {
+          const spare = board.find(c => !c.locked && c.item &&
+            !bundle.catalog.get(c.item.definitionId)?.generator &&
+            !stats.orders.some(order => order.requirements.some(req => req.itemId === c.item.definitionId)));
+          if (spare) {
+            if (await active('ReadyOrderNotice')) await tap('ReadyOrderDismiss');
+            await dragItemToBackpack(spare.index);
+            await tap('BoardBackpackButton');
+            await tap('Warehouse_0');
+            await tap('BackpackWithdraw');
+            await tap('PlayClose');
+            assert.ok((await cells()).some(c => c.item?.uid === spare.item.uid), 'Stored spare returned to the board');
+            usedBackpack = true;
+            freshPathActions.push('store and retrieve one spare item');
+          }
+        }
+        const score = (order) => order.requirements.reduce((sum, req) => {
+          const def = bundle.catalog.get(req.itemId);
+          const have = board.filter(c => !c.locked && c.item?.definitionId === req.itemId).length;
+          const weight = def.chainId === 'fruit' && (!deliveredOrangeOrder || stats.energy < 18) ? .5 : 1;
+          return sum + Math.max(0, req.count - have) * 2 ** (def.level - 1) * weight;
+        }, 0);
+        const order = stats.orders.find(o=>o.ready) ?? [...stats.orders].sort((a,b)=>score(a)-score(b))[0];
+        assert.ok(order, 'Three customer slots must remain available');
+        if (!order.ready) await prepareOrder(order.requirements);
+        await deliver(order.slot);
+        if (order.requirements.some(req => bundle.catalog.get(req.itemId).chainId === 'fruit')) deliveredOrangeOrder = true;
+        await claimLevels();
+        const elapsed = Date.now() - started;
+        if (elapsed - lastMilestone >= 30_000) {
+          lastMilestone = elapsed;
+          await snapshot('orders in progress');
+        }
+      }
+    } catch (error) {
+      await snapshot('stopped during an interaction');
+      throw error;
+    }
+    await shot('paced-end');
+    const final = await snapshot('completed');
+    assert.ok(final.stats.orders > 4, 'Paced play must exercise several orders');
+    assert.deepEqual(exceptions, []);
+    passed('20 minutes of live-clock paced touch play with a fresh save');
+  } else if (scope === 'earned') {
+    await load();
+    for(const [width,height]of [[320,568],[375,812]]){
+      await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
+      await seed(d=>{d.life.stats.merges=3;d.tutorial={generatorClicked:true,firstMergeCompleted:true,firstOrderCompleted:true,firstUseHints:['backpack','scissors','chest']};
+        for(const cell of d.board)if(Math.floor(cell.index/7)<3&&cell.index%7<3&&!cell.item?.definitionId.startsWith('generator_'))cell.item={uid:'earned_'+cell.index,definitionId:'coffee_01'};
+        d.activeOrders.forEach(order=>{order.requirements=[{itemId:'coffee_04',count:1}];});
+      });await tap('EnterGame');assert.equal(await ev(`${app}.game.board.isFull()`),true);
+      const before=await ev(`${app}.game.player.coins`);await tap('MergeHomeButton');await tap('Button_任务');
+      const point=await ev(`(()=>{let wish;const w=n=>{if(n.name==='Wish_first_merges'&&n.activeInHierarchy)wish=n;n.children.forEach(w)};w(cc.director.getScene());const n=wish.getChildByName('Button_领取奖励'),p=n.worldPosition,v=cc.view.getVisibleSize();return{x:(p.x+v.width/2)*innerWidth/v.width,y:(v.height/2-p.y)*innerHeight/v.height}})()`);
+      await send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...point,id:27}]});await send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await wait(400);
+      assert.equal(await ev(`${app}.game.player.coins`),before+100);assert.equal((await ev(`${app}.game.generators.getRewards()`))[0].source,'wish_reward');await shot('earned-task-'+width);
+      await tap('Button_关闭');await tap('Button_合成');assert.ok(await active('ShopRewardsBadge'));await tap('ShopButton');await shot('earned-pending-'+width);
+      await tap('ClaimGeneratorReward');assert.equal((await ev(`${app}.game.generators.getRewards()`))[0].count,1);await tap('GeneratorWorkshopCloseButton');
+      await dragItemToBackpack(0);assert.equal(await ev(`${app}.game.play.state.warehouse.length`),1);await tap('ShopButton');await tap('ClaimGeneratorReward');
+      assert.equal((await ev(`${app}.game.generators.getRewards()`)).length,0);await tap('GeneratorWorkshopCloseButton');assert.equal(await active('ShopRewardsBadge'),false);
+      assert.equal(await ev(`${app}.game.getGeneratorStatus('coffee_machine').inventory[0]`),2);await shot('earned-board-'+width);
+      await send('Page.reload');await wait(400);await ready();await tap('EnterGame');assert.equal(await ev(`${app}.game.getGeneratorStatus('coffee_machine').inventory[0]`),2);assert.equal(await ev(`${app}.game.player.coins`),before+100);
+      passed('wish gift, full-board pending badge, direct board claim and no duplicate after restart at '+width);
+    }
+    assert.deepEqual(exceptions,[]);
+  } else if (scope === 'surfaces') {
+    await load();await seed(d=>{d.player.level=18;d.player.xp=7650;d.player.coins=10000;d.player.diamonds=100;d.player.hearts=500;d.life.claimedLevelRewards=Array.from({length:17},(_,i)=>i+2);
+      d.life.unlockedMemoryIds=bundle.memories.slice(0,6).map(m=>m.id);d.life.ownedFurnitureIds=['sofa','tea_table','wall_rose'];d.life.placedFurnitureIds=[...d.life.ownedFurnitureIds];
+      d.discoveredItemIds=bundle.items.filter(item=>!item.generator && (item.chainId!=='coffee' || item.level<=4)).map(item=>item.id);d.tutorial={generatorClicked:true,firstMergeCompleted:true,firstOrderCompleted:true,firstUseHints:['backpack','scissors','chest']};
+    });await waitForArt('CoverIllustration');await shot('surface-cover');await tap('EnterGame');
+    await tap('SettingsButton');assert.ok(await active('SettingsPanel'));await shot('surface-settings');const sound=await ev(`${app}.game.preferences.soundEnabled`);await tap('SoundToggle');assert.equal(await ev(`${app}.game.preferences.soundEnabled`),!sound);await tap('SettingsClose');
+    await tap('DailyCheckInButton');await shot('surface-checkin');
+    for(const tab of ['daily','supplies']){await tap('RewardsTab_'+tab);await shot('surface-'+tab);}
+    await tap('RewardsTab_collection'); await waitForArt('CollectionItemArt');
+    const coffeeCollection = await ev(`(() => {
+      let leaf;
+      const find = node => {
+        if (node.name === 'Collection_coffee' && node.activeInHierarchy) leaf = node;
+        node.children.forEach(find);
+      };
+      find(cc.director.getScene());
+      return leaf.children.filter(node => node.name.startsWith('CollectionSlot_')).map(node => ({
+        label: node.getChildByName('CollectionItemName')?.getComponentInChildren(cc.Label)?.string,
+        art: !!node.getChildByName('CollectionItemArt'),
+        interactive: !!node.getComponent(cc.Button),
+      }));
+    })()`);
+    assert.equal(coffeeCollection.length,12);
+    assert.ok(coffeeCollection.slice(0,4).every(entry=>entry.art && entry.interactive && entry.label!=='未发现'));
+    assert.ok(coffeeCollection.slice(4).every(entry=>!entry.art && !entry.interactive && entry.label==='未发现'));
+    await shot('surface-collection');
+    await tap('CollectionSlot_5'); assert.equal(await active('ItemGuideOverlay'),false);
+    await tap('CollectionSlot_2'); assert.ok(await active('ItemGuideOverlay'));
+    assert.equal(await active('ItemGuideSell'),false,'A collection entry must never expose a sale action');
+    await tap('ItemGuideClose');
+    await tap('CollectionTab_flower'); assert.ok(await active('Collection_flower'));
+    await tap('CollectionNext'); assert.ok(await active('Collection_fruit'));
+    await tap('CollectionTab_sugar'); assert.ok(await active('Collection_sugar'));
+    await tap('CollectionPrevious'); assert.ok(await active('Collection_coffee')); await tap('CollectionBack');
+    assert.ok(await active('RewardsTab_supplies'));
+    await tap('RewardsTab_collection'); await tap('diamondsPlus');
+    assert.ok(await active('RewardsTab_supplies'), 'The visible currency controls still open supplies from the book');
+    await tap('OpenTodayJournal');assert.ok(await active('JournalPanel'));await shot('surface-journal');await tap('JournalClose');
+    await tap('BoardBackpackButton');await shot('surface-backpack');await tap('PlayClose');await tap('Cell_0');assert.ok(await active('ItemGuidePanel'));await shot('surface-item-guide');await tap('ItemGuideClose');
+    await tap('MergeHomeButton');await shot('surface-home');await tap('Button_布置家具');await shot('surface-furniture');await tap('Button_关闭');
+    await tap('Button_调整位置');await tap('Placed_sofa');await shot('surface-home-editor');await tap('Button_完成布置');
+    await tap('Button_回忆');for(const tab of ['album','diary','timeline','photos']){await tap('MemoryTab_'+tab);await shot('surface-memory-'+tab);}
+    await tap('Button_任务');await shot('surface-wishes');await tap('Button_今日约会 · 剧情与解谜 ›');await shot('surface-journey');
+    for (const chapter of bundle.adventures) {
+      if (!await active('Adventure_' + chapter.id)) {
+        // The directory opens on the next chapter. Return there after other puzzle panels.
+        if (await active('PuzzleCheck') || await active('AdventureClaim')) {
+          await tap('PlayClose');
+          await tap('Button_今日约会 · 剧情与解谜 ›');
+        }
+      }
+      await openAdventure(chapter);
+      const kind = await ev(`${app}.game.play.puzzleDefinition(${JSON.stringify(chapter.id)}).puzzle.kind`);
+      assert.ok(await active('PuzzleCheck'), `Missing puzzle for ${chapter.id}`);
+      await shot('surface-puzzle-' + chapter.id);
+      await solvePuzzle(chapter);
+      assert.equal(await ev(`${app}.game.play.progress(${JSON.stringify(chapter.id)}).outcome`), 'solved', kind);
+      await shot('surface-chapter-reward-' + chapter.id);
+    }
+    assert.deepEqual(exceptions,[]);passed('paper materials and tactile controls across cover, settings, four supply tabs, journal, bag, guide, home/editor, memories, wishes and journey');
+  } else if (visualScope) {
+    await load();
+    const fixture=d=>{
+      d.player.level=18;d.player.xp=7650;d.player.maxEnergy=1000;d.player.energy=250;d.player.coins=1216;d.player.hearts=263;d.player.diamonds=30;
+      d.life.claimedLevelRewards=Array.from({length:17},(_,i)=>i+2);d.rewardInbox=[];d.play.warehouse=[];
+      d.tutorial={generatorClicked:true,firstMergeCompleted:true,firstOrderCompleted:true,firstOrderHintShown:true,firstUseHints:['backpack','scissors','chest']};
+      d.generatorBoard={ready:true,entitlements:bundle.generators.map(g=>g.id),rewards:[]};
+      const items=['generator_coffee_machine_02','generator_coffee_machine_01','generator_flower_basket_01','generator_dessert_oven_01','generator_gift_box_01','generator_orange_tree_01','generator_coffee_machine_01'];
+      d.board=Array.from({length:63},(_,index)=>({index,...(items[index]?{item:{uid:'visual_'+index,definitionId:items[index],generatorState:{remainingUses:items[index].includes('orange_tree')?10:60,recoveryAt:Date.now(),cooldownUntil:null,boosted:false}}}:{})}));
+      for(const [index,id]of [[9,'coffee_03'],[16,'flower_02'],[24,'fruit_04'],[30,'treasure_chest'],[38,'coin_02'],[39,'diamond_02'],[45,'energy_02'],[51,'scissors_01']])d.board[index].item={uid:'visual_'+index,definitionId:id};
+      d.activeOrders=d.activeOrders.map((order,index)=>({...order,uid:'visual_order_'+index,requirements:[{itemId:['coffee_03','flower_02','fruit_04'][index],count:index===1?2:1}],rewardCoins:[50,32,38][index],rewardXp:[12,8,9][index],urgentUntil:undefined}));
+      d.discoveredItemIds=['coffee_01','coffee_02','coffee_03','flower_01','flower_02','fruit_01','fruit_02','fruit_03','fruit_04'];
+    };
+    const rectangles=()=>ev(`(()=>{const out={};const names=['energyPill','coinsPill','diamondsPill','ShopButton','LevelCard','OrderPanel','StatusBar','BoardPaper','Cell_0','Cell_62','BoardBackpackButton','MergeHomeButton'];const walk=n=>{if(n.activeInHierarchy&&names.includes(n.name)){const t=n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp,points=[[-t.width/2,-t.height/2],[t.width/2,t.height/2]].map(([x,y])=>t.convertToWorldSpaceAR(new cc.Vec3(x,y,0))),xMin=Math.min(...points.map(p=>p.x)),xMax=Math.max(...points.map(p=>p.x)),yMin=Math.min(...points.map(p=>p.y)),yMax=Math.max(...points.map(p=>p.y));out[n.name]={xMin,xMax,yMin,yMax,width:xMax-xMin,height:yMax-yMin};}n.children.forEach(walk)};walk(cc.director.getScene());return out})()`);
+    for(const [width,height]of [[320,568],[375,812],[430,932]]){
+      await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});await seed(fixture);await tap('EnterGame');
+      const bust=await waitForArt('CustomerAvatar');assert.equal(bust.width,1152);assert.equal(bust.height,384);await waitForArt('Art');await wait(600);
+      if(await active('ReadyOrderNotice'))await tap('ReadyOrderDismiss');
+      await checkBoardFill();const geometry=await rectangles();
+      assert.ok(Math.abs(geometry.Cell_0.width-geometry.Cell_0.height)<.01,'Board cells must be square');
+      assert.ok(geometry.energyPill.xMax<geometry.coinsPill.xMin&&geometry.coinsPill.xMax<geometry.diamondsPill.xMin,'Resource pills must be horizontal and separated');
+      assert.ok(Math.abs(geometry.energyPill.yMin-geometry.diamondsPill.yMin)<.01);
+      assert.ok(geometry.ShopButton.yMax<=geometry.diamondsPill.yMin+1,'Shop stays below resources');
+      assert.ok(geometry.ShopButton.yMin>=geometry.OrderPanel.yMax,'Shop stays outside customer hit targets');
+      assert.ok(geometry.Cell_62.yMin>geometry.MergeHomeButton.yMax-2,'Footer cannot obscure bottom cells');
+      assert.equal(await ev(`(()=>{let count=0;const w=n=>{if(n.name==='ClaimButton'&&n.activeInHierarchy)count++;n.children.forEach(w)};w(cc.director.getScene());return count})()`),2);
+      const before=await ev(`${app}.game.buildSaveData()`);const head=await ev(`(()=>{let n;const w=v=>{if(!n&&v.name==='CustomerAvatar'&&v.activeInHierarchy)n=v;v.children.forEach(w)};w(cc.director.getScene());const t=n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp,p=t.convertToWorldSpaceAR(new cc.Vec3(0,t.height*.32,0)),v=cc.view.getVisibleSize();return{x:(p.x+v.width/2)*innerWidth/v.width,y:(v.height/2-p.y)*innerHeight/v.height}})()`);await send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...head,id:26}]});await send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await wait(250);assert.equal(await active('OrderGuideOverlay'),false);assert.deepEqual(await ev(`${app}.game.orders.getOrders().map(o=>o.uid)`),before.activeOrders.map(o=>o.uid),'Touching a customer cannot deliver');
+      await shot('watercolor-merge-'+width);
+      await tap('ShopButton');assert.ok(await active('PurchaseGenerator_coffee_machine'));await shot('watercolor-shop-'+width);await tap('GeneratorWorkshopCloseButton');
+      await tap('ShopButton');await tap('ShopSupplies');assert.ok(await active('RewardsOverlay'));await tap('CloseRewards');
+      await tap('ShopButton');await tap('ShopBackpack');assert.ok(await active('BackpackTitle'));await tap('PlayClose');
+      assert.equal(await ev(`${app}.game.player.diamonds`), before.player.diamonds, 'Opening the shop shortcuts does not purchase anything');
+      await tap('diamondsPlus');assert.ok(await active('RewardsOverlay'));await tap('CloseRewards');
+      await tap('ClaimButton',0);assert.equal(await ev(`${app}.game.life.state.stats.orders`),before.life.stats.orders+1);assert.equal(await ev(`${app}.game.player.coins`),before.player.coins+50);
+      assert.equal(await ev(`${app}.view.deliveries.size`),0);assert.ok(!(await cells()).some(c=>c.item?.uid==='visual_9'));
+      await shot('watercolor-delivered-'+width);passed('horizontal chrome, original busts, service trays, square 7x9 board and explicit delivery at '+width);
+    }
+    assert.deepEqual(exceptions,[]);passed('no uncaught Cocos exceptions in watercolor layout');
+  } else if (scope === 'physical') {
+    await load();
+    const machines=async()=> (await cells()).filter(c=>c.item&&bundle.catalog.get(c.item.definitionId)?.generator);
+    const hold=async(index)=>{if(await active('ReadyOrderNotice'))await tap('ReadyOrderDismiss');const point=await coords('Cell_'+index);await send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...point,id:31}]});await wait(650);await send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await wait(350);};
+    const move=async(from,to)=>{if(await active('ReadyOrderNotice'))await tap('ReadyOrderDismiss');await gesture(from,to);};
+    for(const [width,height] of [[320,568],[375,812],[430,932]]){
+      await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
+      await seed(d=>{d.player.coins=500;d.player.diamonds=20;d.tutorial={generatorClicked:true,firstMergeCompleted:true,firstOrderCompleted:true,firstUseHints:['backpack','scissors','chest']};});await tap('EnterGame');
+      assert.equal(await ev(`${app}.game.board.getBoard().cells.length`),63);assert.equal((await machines()).length,1);
+      assert.equal(await active('GenBtn'),false);assert.equal(await active('Button_合成'),false);
+      for(const name of ['Cell_0','Cell_62','BoardBackpackButton','MergeHomeButton']){const p=await coords(name);assert.ok(p.x>0&&p.x<width&&p.y>0&&p.y<height,name+' must fit '+width);}
+      const first=(await machines())[0],uid=first.item.uid,before=await ev(`${app}.game.player.energy`);
+      await tap('Cell_'+first.index);assert.equal(await ev(`${app}.game.player.energy`),before-1);assert.equal((await ev(`${app}.game.getGeneratorStatus(${JSON.stringify(uid)})`)).remainingUses,59);
+      if(await active('ReadyOrderNotice'))await tap('ReadyOrderDismiss');
+      await dragItemToBackpack(first.index);
+      assert.equal((await machines()).length,0);
+      assert.equal((await ev(`${app}.game.play.state.warehouse[0]`)).uid,uid);
+      assert.equal(await ev(`${app}.game.player.energy`),before-1,'Packing must not produce or spend energy');
+      await tap('Required_0'); assert.ok((await labels()).some(label=>label.includes('在背包中')));
+      await tap('OrderGuideLocate'); assert.ok(await active('BackpackTitle'));
+      await tap('BackpackWithdraw'); await tap('PlayClose');
+      const returned=(await machines())[0]; assert.equal(returned.item.uid,uid);
+      assert.equal(returned.item.generatorState.remainingUses,59);
+      await hold(returned.index);assert.ok(await active('GeneratorDetailName'));assert.equal(await active('GeneratorLevel_1'),false);await shot('producer-details-'+width);await tap('GeneratorWorkshopCloseButton');
+      await tap('OpenTools');await tap('GeneratorWorkshopButton');assert.ok(await active('PurchaseGenerator_coffee_machine'));await tap('PurchaseGenerator_coffee_machine');assert.equal(await ev(`${app}.game.player.coins`),400);await tap('GeneratorWorkshopCloseButton');
+      const pair=await machines();assert.equal(pair.length,2);const a=pair.find(c=>c.item.uid===uid),b=pair.find(c=>c.item.uid!==uid);
+      await move(a.index,b.index);let merged=(await machines())[0];assert.equal((await machines()).length,1);assert.equal(merged.item.definitionId,'generator_coffee_machine_02');assert.equal(merged.item.generatorState.remainingUses,59);
+      await hold(merged.index);assert.ok(await active('GeneratorBoostToggle'));await tap('GeneratorBoostToggle');await tap('GeneratorWorkshopCloseButton');
+      const energy=await ev(`${app}.game.player.energy`);await tap('Cell_'+merged.index);assert.equal(await ev(`${app}.game.player.energy`),energy-2);
+      const empty=(await cells()).find(c=>!c.locked&&!c.item);assert.ok(empty);await move(merged.index,empty.index);merged=(await machines())[0];assert.equal(merged.index,empty.index);
+      await shot('physical-board-'+width);
+      if(await active('ReadyOrderNotice'))await tap('ReadyOrderDismiss');
+      await dragItemToBackpack(merged.index);
+      await send('Page.reload');await wait(400);await ready();await tap('EnterGame');
+      assert.equal((await machines()).length,0);
+      await tap('BoardBackpackButton'); await tap('Warehouse_0'); await shot('packed-generator-'+width);
+      await tap('BackpackWithdraw'); await tap('PlayClose');
+      const restored=(await machines())[0];assert.equal(restored.item.uid,merged.item.uid);
+      assert.equal(restored.item.generatorState.remainingUses,58);assert.equal(restored.item.generatorState.boosted,true);
+      await tap('BoardBackpackButton');assert.ok(await active('BackpackTitle'));await tap('PlayClose');await tap('MergeHomeButton');assert.ok(await active('HomeRoomTabs'));
+      await tap('Button_合成');assert.ok(await active('MergeHomeButton'));assert.equal(await active('GenBtn'),false);
+      passed('physical producer tap, hold, board merge, boosted backpack round-trip and restart at '+width);
+    }
+    await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+    await seed(d=>{
+      d.player.coins=100; d.discoveredItemIds=['coffee_01','coffee_02'];
+      d.tutorial={generatorClicked:true,firstMergeCompleted:true,firstOrderCompleted:true,firstUseHints:['backpack','scissors','chest']};
+      d.board=Array.from({length:boardSize},(_,index)=>({index,...(index%7<3 && index<17
+        ? {item:{uid:`sale_fixture_${index}`,definitionId:index<=1?'coffee_02':index===16?'generator_coffee_machine_01':'coffee_01'}} : {})}));
+      d.generatorBoard={ready:true,entitlements:['coffee_machine'],rewards:[]};
+      d.activeOrders[0].requirements=[{itemId:'coffee_02',count:2}];
+    });
+    await tap('EnterGame');
+    const saleBefore=await ev(`({coins:${app}.game.player.coins, energy:${app}.game.player.energy, full:${app}.game.board.isFull(), orders:${app}.game.orders.getOrders()})`);
+    assert.equal(saleBefore.full,true);
+    await tap('Cell_0'); await tap('ItemGuideSell'); assert.ok(await active('SellItemConfirmOverlay'));
+    assert.ok((await labels()).some(label=>label.includes('订单会重新缺货')));
+    await shot('sell-ready-item-390');
+    await tap('SellItemCancel'); assert.ok(await active('ItemGuideOverlay'));
+    assert.equal((await cells())[0].item.uid,'sale_fixture_0');
+    assert.equal(await ev(`${app}.game.player.coins`),saleBefore.coins);
+    await tap('ItemGuideSell'); await tap('SellItemConfirm');
+    assert.equal(await active('ItemGuideOverlay'),false);
+    assert.equal((await cells())[0].item,undefined);
+    assert.equal((await cells())[1].item.uid,'sale_fixture_1');
+    assert.equal(await ev(`${app}.game.player.coins`),saleBefore.coins+bundle.catalog.get('coffee_02').sellValue);
+    assert.equal(await ev(`${app}.game.player.energy`),saleBefore.energy);
+    assert.deepEqual(await ev(`${app}.game.orders.getOrders()`),saleBefore.orders);
+    await send('Page.reload'); await wait(400); await ready(); await tap('EnterGame');
+    assert.equal((await cells())[0].item,undefined);
+    assert.equal(await ev(`${app}.game.player.coins`),saleBefore.coins+bundle.catalog.get('coffee_02').sellValue);
+    passed('full board touch sale confirms the order warning, frees one slot, and persists exactly one payout');
+    assert.deepEqual(exceptions,[]);passed('no uncaught runtime exceptions in physical producer flow');
+  } else if (scope === 'backpack36') {
+    await load();
+    const packFixture=(d,capacity=6,diamonds=100)=>{
+      d.player.level=18;d.player.xp=7650;d.player.diamonds=diamonds;d.life.claimedLevelRewards=Array.from({length:17},(_,i)=>i+2);
+      d.board=Array.from({length:boardSize},(_,index)=>({index}));d.rewardInbox=[];
+      d.play.warehouseCapacity=capacity;d.play.scissors=2;
+      d.play.warehouse=[{uid:'pack_coffee',definitionId:'coffee_04'},{uid:'pack_chest',definitionId:'treasure_chest'},
+        {uid:'pack_shears',definitionId:'scissors_03',remainingUses:3},{uid:'pack_diamond',definitionId:'diamond_03'}];
+      d.tutorial={generatorClicked:true,firstMergeCompleted:true,firstOrderCompleted:true,firstUseHints:['backpack','scissors','chest']};
+    };
+    const enabled=name=>ev(`(()=>{let n;const walk=v=>{if(v.name===${JSON.stringify(name)}&&v.activeInHierarchy)n=v;v.children.forEach(walk)};walk(cc.director.getScene());return n?.getComponent(cc.Button).interactable})()`);
+    for(const [width,height] of [[320,568],[375,812],[430,932]]) {
+      await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});await seed(d=>packFixture(d));await tap('EnterGame');
+      await tap('BoardBackpackButton');
+      let bagMaterial;
+      for(let attempt=0;attempt<40;attempt++) {
+        bagMaterial=await ev(`(()=>{let n;const walk=v=>{if(v.name==='PlayPanel'&&v.activeInHierarchy)n=v;v.children.forEach(walk)};walk(cc.director.getScene());const sprite=n?.getChildByName('MaterialFrame')?.getComponent(cc.Sprite),f=sprite?.spriteFrame;return f&&{sliced:sprite.type===cc.Sprite.Type.SLICED,width:f.texture.width,height:f.texture.height,inset:f.insetTop}})()`);
+        if(bagMaterial)break;await wait(100);
+      }
+      assert.ok(bagMaterial?.sliced&&bagMaterial.width===512&&bagMaterial.height===683&&bagMaterial.inset>0,'Backpack must use the imported scalable leather/linen sprite');
+      assert.equal(await ev(`(()=>{let count=0;const walk=n=>{if(/^Warehouse_\\d+$/.test(n.name)&&n.activeInHierarchy)count++;n.children.forEach(walk)};walk(cc.director.getScene());return count})()`),36);
+      const corners=await Promise.all(['Warehouse_0','Warehouse_35','BackpackExpand','PlayClose'].map(name=>coords(name)));
+      for(const p of corners)assert.ok(p.x>0&&p.x<width&&p.y>0&&p.y<height,'Backpack controls must fit the viewport');
+      const gridGap=await ev(`(()=>{let cell,selection;const walk=n=>{if(n.activeInHierarchy){if(n.name==='Warehouse_35')cell=n;if(n.name==='BackpackSelectedItem')selection=n}n.children.forEach(walk)};walk(cc.director.getScene());const bounds=n=>(n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp).getBoundingBoxToWorld();return bounds(cell).yMin-bounds(selection).yMax})()`);
+      assert.ok(gridGap>1,'Selection bar must not overlap the last storage row');
+      assert.equal((await ev(`${app}.game.getBackpackStatus()`)).capacity,6);await shot('backpack36-initial-'+width);
+      await tap('Warehouse_0');assert.equal(await enabled('BackpackWithdraw'),true);await tap('BackpackWithdraw');
+      assert.equal(await ev(`${app}.game.play.state.warehouse.length`),3);
+      assert.ok((await cells()).some(c=>c.item?.uid==='pack_coffee'));
+      await tap('BackpackExpand');assert.ok(await active('BackpackExpandConfirm'));assert.equal(await ev(`${app}.game.player.diamonds`),100);
+      await tap('BackpackExpandCancel');assert.equal(await ev(`${app}.game.play.warehouseCapacity`),6);assert.equal(await ev(`${app}.game.player.diamonds`),100);
+      await tap('BackpackExpand');await shot('backpack36-confirm-'+width);
+      const confirmPoint=await coords('BackpackExpandConfirmButton');await tap('BackpackExpandConfirmButton');
+      await send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...confirmPoint,id:41}]});await send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await wait(250);
+      assert.equal(await ev(`${app}.game.play.warehouseCapacity`),7);assert.equal(await ev(`${app}.game.player.diamonds`),90);
+      await shot('backpack36-expanded-'+width);await tap('PlayClose');await send('Page.reload');await wait(400);await ready();await tap('EnterGame');await tap('BoardBackpackButton');
+      assert.equal(await ev(`${app}.game.play.warehouseCapacity`),7);assert.equal(await ev(`${app}.game.player.diamonds`),90);
+      assert.deepEqual(await ev(`${app}.game.play.state.warehouse.map(i=>i.uid)`),['pack_chest','pack_shears','pack_diamond']);
+      await tap('TakeScissors');assert.equal(await ev(`${app}.game.play.state.scissors`),1);
+      passed(`36-slot backpack, selection, withdraw, reviewed expansion, no double spend and restart at ${width}`);
+    }
+    await seed(d=>packFixture(d,36,100));await tap('EnterGame');await tap('BoardBackpackButton');assert.equal(await enabled('BackpackExpand'),false);await shot('backpack36-max');
+    await seed(d=>packFixture(d,6,9));await tap('EnterGame');await tap('BoardBackpackButton');assert.equal(await enabled('BackpackExpand'),false);
+    await tap('Warehouse_6');assert.equal(await active('BackpackExpandConfirm'),false);assert.equal(await ev(`${app}.game.player.diamonds`),9);await shot('backpack36-insufficient');
+    assert.deepEqual(exceptions,[]);passed('maximum capacity and insufficient diamonds stay read-only with no runtime exceptions');
+  } else if (scope === 'furnitureedit') {
+    await load();
+    const pose=()=>ev(`${app}.game.life.state.furniturePositions.sofa`);
+    const point=async(name,x,y)=>ev(`(()=>{let n;const walk=v=>{if(v.name===${JSON.stringify(name)}&&v.activeInHierarchy)n=v;v.children.forEach(walk)};walk(cc.director.getScene());const t=n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp,p=t.convertToWorldSpaceAR(new cc.Vec3(${x},${y},0)),v=cc.view.getVisibleSize();return{x:(p.x+v.width/2)*innerWidth/v.width,y:(v.height/2-p.y)*innerHeight/v.height}})()`);
+    const begin=async(from,to)=>{await send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...from,id:44}]});for(let i=1;i<=10;i++){await send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:from.x+(to.x-from.x)*i/10,y:from.y+(to.y-from.y)*i/10,id:44}]});await wait(24)}};
+    const release=async(cancel=false)=>{await send('Input.dispatchTouchEvent',{type:cancel?'touchCancel':'touchEnd',touchPoints:[]});await wait(500)};
+    const sliderPoint=async(p)=>point('FurnitureScaleSlider',-235+p*470,0);
+    const upEnabled=()=>ev(`(()=>{let n;const w=v=>{if(v.name==='FurnitureScaleUp'&&v.activeInHierarchy)n=v;v.children.forEach(w)};w(cc.director.getScene());return n.getComponent(cc.Button).interactable})()`);
+    for(const [width,height] of [[320,568],[375,812],[430,932]]){
+      await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
+      await seed(d=>{d.player.level=18;d.player.xp=7650;d.life.claimedLevelRewards=Array.from({length:17},(_,i)=>i+2);d.life.ownedFurnitureIds=['sofa','tea_table','wall_rose'];d.life.placedFurnitureIds=[...d.life.ownedFurnitureIds];d.life.furniturePositions={};for(const id of d.life.ownedFurnitureIds)d.life.furniturePositions[id]={x:.5,y:.62,scale:.8,rotation:0,flipped:false};d.tutorial={generatorClicked:true,firstMergeCompleted:true,firstOrderCompleted:true,firstUseHints:['backpack','scissors','chest']};});
+      await tap('EnterGame');await tap('Button_家园');await tap('Button_调整位置');await tap('Placed_tea_table');assert.ok(await active('FurniturePickList'));await shot('editor-pick-'+width);await tap('FurniturePick_sofa');
+      assert.ok(await active('FurnitureSelection_sofa'));assert.ok((await labels()).includes('甜蜜沙发'));
+      const original=await pose();await ev(`${app}.game.bus.on('LIFE_CHANGED',()=>{window.__editWrites=(window.__editWrites??0)+1});window.__editWrites=0;true`);
+      const currentY=await ev(`(()=>{let n;const w=v=>{if(v.name==='Placed_sofa'&&v.activeInHierarchy)n=v;v.children.forEach(w)};w(cc.director.getScene());return n.position.y})()`);
+      await begin(await coords('Placed_sofa'),await point('HomeFurnitureScene',4,currentY+100));
+      assert.deepEqual(await pose(),original,'Preview drag cannot save');assert.equal(await ev('window.__editWrites'),0);assert.ok(await active('FurnitureSnapGuides'));await shot('editor-guides-'+width);
+      await release();let saved=await pose();assert.ok(saved.y>original.y);assert.equal(saved.x,.5);assert.equal(await ev('window.__editWrites'),1);await tap('FurnitureUndo');assert.deepEqual(await pose(),original);
+      await begin(await coords('FurnitureScaleHandle'),await sliderPoint(1));assert.deepEqual(await pose(),original,'Scale preview cannot save');assert.equal(await upEnabled(),false);assert.ok((await labels()).includes('180%'));await shot('editor-scale-preview-'+width);await release();
+      assert.equal((await pose()).scale,1.8);const atMax=await pose();await tap('FurnitureScaleUp');assert.deepEqual(await pose(),atMax);await tap('FurnitureUndo');assert.deepEqual(await pose(),original);assert.equal(await ev(`${app}.game.getFurnitureUndoState()===null`),true,'Slider must record one undo, not one per frame');
+      await begin(await coords('FurnitureScaleHandle'),await sliderPoint(0));await release();assert.equal((await pose()).scale,.5);
+      assert.equal(await ev(`(()=>{let n;const w=v=>{if(v.name==='FurnitureScaleDown'&&v.activeInHierarchy)n=v;v.children.forEach(w)};w(cc.director.getScene());return n.getComponent(cc.Button).interactable})()`),false);await tap('FurnitureUndo');
+      await begin(await coords('FurnitureScaleHandle'),await sliderPoint(.7));await release(true);assert.deepEqual(await pose(),original,'OS cancel must roll back the preview');
+      await tap('FurnitureRotateLeft');assert.equal((await pose()).rotation,15);await tap('FurnitureFlipHorizontal');assert.equal((await pose()).flipped,true);await tap('FurnitureUndo');await tap('FurnitureUndo');assert.deepEqual(await pose(),original);
+      await tap('FurnitureScaleUp');saved=await pose();await tap('FurnitureResetAll');assert.equal(await pose(),undefined);await tap('FurnitureUndo');assert.deepEqual(await pose(),saved);await shot('editor-final-'+width);
+      await send('Page.reload');await wait(400);await ready();await tap('EnterGame');assert.deepEqual(await pose(),saved);assert.equal(await ev(`${app}.game.getFurnitureUndoState()===null`),true);
+      passed(`overlap selection, dragging underneath, visible snap guides, undo and preview-only bounded slider at ${width}`);
+    }
+    assert.deepEqual(exceptions,[]);
+  } else if (scope === 'ordertracking' || scope === 'homewalls') {
+    await load();
+    const mature = (d, ids, count = 1) => {
+      d.player.level=18;d.player.xp=7650;d.player.energy=500;d.life.claimedLevelRewards=Array.from({length:17},(_,i)=>i+2);d.rewardInbox=[];d.play.warehouse=[];
+      d.tutorial={generatorClicked:true,firstMergeCompleted:true,firstOrderCompleted:true,firstOrderHintShown:true,firstUseHints:['backpack','scissors','chest']};
+      d.board=Array.from({length:boardSize},(_,index)=>({index,...(ids[index]?{item:{uid:'track_'+index,definitionId:ids[index]}}:{})}));
+      delete d.generatorBoard;
+      d.activeOrders=d.activeOrders.map((o,i)=>({...o,uid:'trace_order_'+i,requirements:[{itemId:i===0?'coffee_03':i===1?'gift_03':'flower_03',count:i===0?count:1}]}));
+    };
+    const inventory=()=>ev(`JSON.stringify({board:${app}.game.board.getBoard(),coins:${app}.game.player.coins,energy:${app}.game.player.energy,diamonds:${app}.game.player.diamonds,inbox:${app}.game.rewardInbox,discovered:${app}.game.buildSaveData().discoveredItemIds})`);
+    if(scope !== 'homewalls') {
+    for(const [width,height] of [[320,568],[375,812],[430,932]]) {
+      await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
+      await seed(d=>mature(d,['coffee_02','coffee_01','coffee_01',...(width===430?['coffee_03']:[])],width===430?2:1));await tap('EnterGame');
+      await waitForArt('CustomerAvatar');
+      const before=await inventory();await tap('Required_0',0);assert.ok(await active('OrderGuideOverlay'));assert.equal(await inventory(),before);
+      assert.ok((await labels()).some(s=>s.includes('补生成 0 件')&&s.includes('合成 2 次')));await shot('order-guide-'+width);await tap('OrderGuideLocate');
+      assert.ok(await active('OrderTraceOutline'));assert.equal(await inventory(),before,'Locating must not generate');
+      await gesture(1,2);await gesture(0,2);assert.ok(await active('ReadyOrderNotice'));assert.ok(await active('OrderNeedBadge'));await shot('ready-order-'+width);
+      if(width===320){await wait(1700);await ev(`${app}.view.renderAll();true`);await wait(3100);assert.equal(await active('ReadyOrderNotice'),false);assert.equal((await ev(`${app}.game.orders.getOrders()`))[0].uid,'trace_order_0');await tap('ClaimButton',0);}
+      else if(width===375){await tap('ReadyOrderDeliver');await wait(1400);}
+      else {
+        await tap('ReadyOrderDismiss');const from=await coords('Cell_2'),to=await coords('Cell_3');
+        await send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...from,id:55}]});
+        for(let i=1;i<=6;i++){await send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:from.x+(to.x-from.x)*i/6,y:from.y+(to.y-from.y)*i/6,id:55}]});await wait(25)}
+        assert.ok(await active('OrderDragWarning'));assert.ok((await labels()).includes('订单需要，建议先交付'));await shot('order-drag-warning');
+        await send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});await wait(300);assert.ok(await ev(`${app}.game.orders.canClaim('trace_order_0')`));await tap('ClaimButton',0);
+      }
+      assert.ok(!(await ev(`${app}.game.orders.getOrders().map(o=>o.uid)`)).includes('trace_order_0'));
+      passed(`requirement inspection, board tracking, ready shortcut and delivery at ${width}`);
+    }
+    for(const chain of ['coin','diamond','energy','treasure_chest'])for(const level of [1,5]){
+      const definition=bundle.items.find(item=>item.chainId===chain&&item.level===level);assert.ok(definition);
+      await seed(d=>mature(d,[definition.id]));await tap('EnterGame');const before=await inventory();
+      await tap('Cell_0');assert.ok(await active('SupplyInspectOverlay'));assert.equal(await inventory(),before);assert.ok((await labels()).some(s=>s.includes('Lv'+level)));if(level===5)await shot('inspect-'+chain);
+      await tap('SupplyInspectClose');assert.equal(await inventory(),before);
+      await tap('Cell_0');await tap('SupplyInspectGuide');assert.ok(await active('ItemGuideOverlay'));assert.equal(await inventory(),before);await tap('ItemGuideClose');
+      await tap('Cell_0');await tap('SupplyInspectConfirm');assert.ok(!(await cells()).some(c=>c.item?.uid==='track_0'));
+      passed(`${chain} Lv${level} inspection and guide preserve UID and balance until confirmation`);
+    }
+    const interval=bundle.generators.find(g=>g.id==='orange_tree').recharge.intervalMs;assert.equal(interval,60000);
+    await seed(d=>{mature(d,[]);d.generatorCharges={...d.generatorCharges,orange_tree:{charges:0,capacity:10,lastRecoveryAt:Date.now()-interval*2-1000}}});
+    await tap('EnterGame');assert.equal((await ev(`${app}.game.getGeneratorStatus('orange_tree')`)).charges,2);
+    await send('Page.reload');await wait(400);await ready();await tap('EnterGame');assert.equal((await ev(`${app}.game.getGeneratorStatus('orange_tree')`)).charges,2);
+    passed('orange tree restores one pick per minute and keeps partial time across restart');
+    }
+    for(const [width,height] of [[320,568],[375,812],[430,932]]) {
+      await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
+      const wallIds=bundle.furniture.filter(item=>item.art.startsWith('wall:')).map(item=>item.id);assert.equal(wallIds.length,6);
+      await seed(d=>{mature(d,[]);d.life.ownedFurnitureIds=['sofa','tea_table',...wallIds];d.life.placedFurnitureIds=['sofa','tea_table','wall_rose','wall_tulip','wall_garden']});
+      await tap('EnterGame');await tap('Button_家园');await waitForArt('WallPaintingImage_wall_rose');
+      const geometry=await ev(`(()=>{let tabs,scene,status;const walk=n=>{if(n.activeInHierarchy){if(n.name==='HomeRoomTabs')tabs=n;if(n.name==='HomeFurnitureScene')scene=n;if(n.name==='StatusBar')status=n}n.children.forEach(walk)};walk(cc.director.getScene());const t=n=>n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp,b=n=>{const r=t(n).getBoundingBoxToWorld();return{yMin:r.yMin,yMax:r.yMax}};return{tabs:b(tabs),status:b(status),height:t(scene).height,width:t(scene).width}})()`);
+      assert.ok(geometry.tabs.yMax<=geometry.status.yMin+1,'Room tabs cannot overlap status');assert.ok(geometry.status.yMin-geometry.tabs.yMax<55,'Room tabs should sit directly below status');assert.ok(geometry.height>580&&geometry.width>670);
+      await shot('home-wall-art-'+width);await tap('Button_调整位置');await tap('Placed_wall_rose');await tap('FurnitureScaleUp');await tap('FurnitureRotateRight');await tap('FurnitureFlipHorizontal');
+      let saved=await ev(`${app}.game.life.state.furniturePositions.wall_rose`);assert.equal(saved.scale,1.1);assert.equal(saved.rotation,-15);assert.equal(saved.flipped,true);
+      const from=await coords('Placed_wall_rose');const to=await ev(`(()=>{let scene;const walk=n=>{if(n.name==='HomeFurnitureScene'&&n.activeInHierarchy)scene=n;n.children.forEach(walk)};walk(cc.director.getScene());const t=scene.getComponent('cc.UITransform')??scene._uiProps.uiTransformComp,p=t.convertToWorldSpaceAR(new cc.Vec3(150,t.height/2-130,0)),v=cc.view.getVisibleSize();return{x:(p.x+v.width/2)*innerWidth/v.width,y:(v.height/2-p.y)*innerHeight/v.height}})()`);
+      await send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...from,id:22}]});
+      for(let i=1;i<=8;i++){await send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:from.x+(to.x-from.x)*i/8,y:from.y+(to.y-from.y)*i/8,id:22}]});await wait(20)}
+      await send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await wait(450);
+      saved=await ev(`${app}.game.life.state.furniturePositions.wall_rose`);assert.ok(saved.y>.65&&saved.y<1,'Wall art must reach expanded upper placement area');
+      const depths=await ev(`(()=>{let layer;const walk=n=>{if(n.name==='FurnitureLayer'&&n.activeInHierarchy)layer=n;n.children.forEach(walk)};walk(cc.director.getScene());return layer.children.map(n=>n.name)})()`);
+      assert.ok(depths.indexOf('Placed_wall_rose')<depths.indexOf('Placed_sofa'),'Paintings must stay behind floor furniture');
+      await send('Page.reload');await wait(400);await ready();await tap('EnterGame');assert.deepEqual(await ev(`${app}.game.life.state.furniturePositions.wall_rose`),saved);
+      await tap('Button_家园');await tap('Button_布置家具');await tap('Button_壁画');assert.ok((await labels()).includes('玫瑰花语'));assert.ok((await labels()).includes('咖啡时光'));await shot('wall-art-catalog-'+width);
+      const next=await ev(`(()=>{let panel;const walk=n=>{if(n.name==='FurniturePanel'&&n.activeInHierarchy)panel=n;n.children.forEach(walk)};walk(cc.director.getScene());const n=panel.children.find(n=>n.name==='Button_›'),p=n.worldPosition,v=cc.view.getVisibleSize();return{x:(p.x+v.width/2)*innerWidth/v.width,y:(v.height/2-p.y)*innerHeight/v.height}})()`);
+      await send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...next,id:77}]});await send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await wait(450);assert.ok((await labels()).includes('露台晚风'));
+      passed(`higher room tabs, expanded placement and six framed paintings with editable saved transforms at ${width}`);
+    }
+    assert.deepEqual(exceptions,[]);
+  } else if (scope === 'firstuse') {
     await load();
     const fixture = (d,items,hints=[]) => {
       d.player.level=2;d.player.xp=50;d.player.energy=150;d.player.maxEnergy=150;d.life.claimedLevelRewards=[2];d.rewardInbox=[];d.play.warehouse=[];
@@ -332,7 +854,7 @@ try {
     await tap('EnterGame');assert.ok(await bubble());assert.ok((await hintText()).includes('背包'));await shot('firstuse-backpack');
     const source=(await ev(`${app}.game.getFirstUseGuide()`)).sourceIndex;const uid=(await cells())[source].item.uid;
     await dragItemToBackpack(source);assert.ok((await ev(`${app}.game.tutorial.firstUseHints`)).includes('backpack'));
-    assert.ok(!(await bubble()));await tap('BoardBackpackButton');await tap('Warehouse_0');assert.ok((await cells()).some(c=>c.item?.uid===uid));await tap('PlayClose');
+    assert.ok(!(await bubble()));await tap('BoardBackpackButton');await tap('Warehouse_0');await tap('BackpackWithdraw');assert.ok((await cells()).some(c=>c.item?.uid===uid));await tap('PlayClose');
     await send('Page.reload');await wait(400);await ready();await tap('EnterGame');assert.ok(!(await bubble()));
     passed('backpack guide waits for entry, accepts real drag, clears on completion and never returns after restart');
 
@@ -343,7 +865,7 @@ try {
     await seed(d=>fixture(d,['treasure_chest']));await tap('EnterGame');assert.ok((await hintText()).includes('宝箱'));await shot('firstuse-chest');await tap('DismissHint');
     assert.ok(!(await bubble()));assert.equal((await cells())[0].item.definitionId,'treasure_chest');
     await send('Page.reload');await wait(400);await ready();await tap('EnterGame');assert.ok(!(await bubble()));
-    await tap('Cell_0');assert.ok((await ev(`${app}.game.tutorial.firstUseHints`)).includes('chest'));assert.ok((await cells()).some(c=>c.item&&c.item.definitionId!=='treasure_chest'));
+    await tap('Cell_0');await tap('SupplyInspectConfirm');assert.ok((await ev(`${app}.game.tutorial.firstUseHints`)).includes('chest'));assert.ok((await cells()).some(c=>c.item&&c.item.definitionId!=='treasure_chest'));
     passed('chest guide dismisses across restart without opening the chest; real tap still opens random supplies');
 
     await seed(d=>fixture(d,['coffee_02','scissors_02']));await tap('EnterGame');await wait(3400);await ev(`${app}.view.renderAll();true`);await wait(3000);
@@ -379,11 +901,11 @@ try {
     assert.equal(await ev(`${app}.view.playPages.screen`),'tools');
     assert.ok(!(await active('Split_0')));await tap('TakeScissors');await tap('TakeScissors');assert.equal(await ev(`${app}.game.play.state.scissors`),0);await shot('physical-scissors-backpack');await tap('PlayClose');
     const tools=(await cells()).flatMap(c=>c.item?.definitionId==='scissors_01'?[c.index]:[]);assert.equal(tools.length,2);await gesture(tools[0],tools[1]);const merged=(await cells())[tools[1]].item;assert.equal(merged.definitionId,'scissors_02');assert.equal(merged.remainingUses,3);
-    await tap('BoardBackpackButton');await tap('Warehouse_0');await tap('PlayClose');await gesture(tools[1],0);assert.equal((await cells())[tools[1]].item.remainingUses,2);assert.equal((await cells()).filter(c=>c.item?.definitionId==='coffee_02').length,2);await shot('scissors-drag-split');
+    await tap('BoardBackpackButton');await tap('Warehouse_0');await tap('BackpackWithdraw');await tap('PlayClose');await gesture(tools[1],0);assert.equal((await cells())[tools[1]].item.remainingUses,2);assert.equal((await cells()).filter(c=>c.item?.definitionId==='coffee_02').length,2);await shot('scissors-drag-split');
     await dragToBackpack(tools[1]);assert.equal(await ev(`${app}.game.play.state.warehouse[0].remainingUses`),2);await send('Page.reload');await wait(400);await ready();await tap('EnterGame');assert.equal(await ev(`${app}.game.play.state.warehouse[0].remainingUses`),2);assert.equal(await ev(`${app}.game.play.state.scissors`),0);
     passed('drag into backpack, take finite scissors, merge, drag to split and store worn tools across restart');
     await seed(d=>{mature(d);d.board=fill(['coffee_01']);d.play.warehouse=Array.from({length:bundle.game.toolbox.warehouseSlots},(_,i)=>({uid:'full_pack_'+i,definitionId:'coffee_01'}));});await tap('EnterGame');const fullBefore=await cells();await dragToBackpack(0);assert.deepEqual(await cells(),fullBefore);assert.equal(await ev(`${app}.game.play.state.warehouse.length`),bundle.game.toolbox.warehouseSlots);
-    await seed(d=>{mature(d);d.board=fill(Array.from({length:42},(_,i)=>i===0?'scissors_02':i===1?'coffee_02':'coffee_01'));d.board[0].item.remainingUses=1;});await tap('EnterGame');const spent=(await cells())[0].item.uid;await gesture(0,1);assert.ok(!(await cells()).some(c=>c.item?.uid===spent));assert.equal((await cells()).filter(c=>c.item).length,42);
+    await seed(d=>{mature(d);d.board=fill(Array.from({length:boardSize},(_,i)=>i===0?'scissors_02':i===1?'coffee_02':'coffee_01'));d.board[0].item.remainingUses=1;});await tap('EnterGame');const spent=(await cells())[0].item.uid;await gesture(0,1);assert.ok(!(await cells()).some(c=>c.item?.uid===spent));assert.equal((await cells()).filter(c=>c.item).length,boardSize);
     passed('full backpack rejects without loss and final scissors charge works on a full board');
     assert.deepEqual(exceptions,[]);
   } else if (scope === 'delivery') {
@@ -421,8 +943,8 @@ try {
     passed('restart during delivery preserves rewards without replaying an unfinished effect');
     await seed(d=>{fixture(d);d.discoveredItemIds=['coffee_01'];d.claimedDiscoveryIds=[];});await tap('EnterGame');await gesture(0,1);
     assert.ok(await active('DiscoveryReward'));assert.equal(await ev(`${app}.game.player.coins`),100+bundle.game.rewards.discoveryCoins);
-    const noticeBounds=await ev(`(()=>{let card,dock;const w=n=>{if(n.name==='DiscoveryCard'&&n.activeInHierarchy)card=n;if(n.name==='GeneratorDock'&&n.activeInHierarchy)dock=n;n.children.forEach(w)};w(cc.director.getScene());const rect=n=>{const t=n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp,p=n.worldPosition;return{bottom:p.y-t.height/2,top:p.y+t.height/2}};return{card:rect(card),dock:rect(dock)}})()`);
-    assert.ok(noticeBounds.card.bottom>noticeBounds.dock.top,'Discovery must not cover generator controls');
+    const noticeBounds=await ev(`(()=>{let card,dock;const w=n=>{if(n.name==='DiscoveryCard'&&n.activeInHierarchy)card=n;if(n.name==='MergeFooter'&&n.activeInHierarchy)dock=n;n.children.forEach(w)};w(cc.director.getScene());const rect=n=>{const t=n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp,p=n.worldPosition;return{bottom:p.y-t.height/2,top:p.y+t.height/2}};return{card:rect(card),dock:rect(dock)}})()`);
+    assert.ok(noticeBounds.card.bottom>noticeBounds.dock.top,'Discovery must not cover backpack or home controls');
     assert.ok(!(await labels()).some(t=>t.includes('准备好啦！')),'Date readiness stays in its objective bar');
     await shot('delivery-discovery');await wait(1700);assert.equal(await active('DiscoveryReward'),false);
     passed('first discovery uses an illustrated non-blocking card and still pays exactly once');
@@ -439,10 +961,10 @@ try {
         if(variant==='urgent')d.activeOrders[0].urgentUntil=Date.now()+1_200_000;});
       await ev(`cc.sys.getSafeAreaRect=()=>{const v=cc.view.getVisibleSize(),bottom=Math.min(50,v.height*.05),top=Math.min(80,v.height*.08);return new cc.Rect(0,bottom,v.width,v.height-bottom-top)};true`);
       await ev('new Promise(resolve=>cc.director.loadScene("Game",()=>setTimeout(()=>resolve(true),700)))'); await tap('EnterGame');
-      const layout=await ev(`(()=>{let n;const w=v=>{if(!n&&v.name==='OrderCard'&&v.activeInHierarchy)n=v;v.children.forEach(w)};w(cc.director.getScene());const rect=v=>{if(!v||!v.activeInHierarchy)return null;const t=v.getComponent('cc.UITransform')??v._uiProps.uiTransformComp,p=v.worldPosition,z=v.worldScale;return{xMin:p.x-t.width*Math.abs(z.x)*t.anchorX,xMax:p.x+t.width*Math.abs(z.x)*(1-t.anchorX),yMin:p.y-t.height*Math.abs(z.y)*t.anchorY,yMax:p.y+t.height*Math.abs(z.y)*(1-t.anchorY)}};const c=n.getChildByName('ClaimButton');return {card:rect(n),claim:rect(c),text:c?.getComponentsInChildren(cc.Label).map(l=>l.string),menu:rect(n.getChildByName('OrderRefreshMenuButton')),items:[0,1,2].map(i=>rect(n.getChildByName('Required_'+i)))}})()`);
+      const layout=await ev(`(()=>{let n;const w=v=>{if(!n&&v.name==='OrderCard'&&v.activeInHierarchy)n=v;v.children.forEach(w)};w(cc.director.getScene());const rect=v=>{if(!v||!v.activeInHierarchy)return null;const t=v.getComponent('cc.UITransform')??v._uiProps.uiTransformComp,p=v.worldPosition,z=v.worldScale;return{xMin:p.x-t.width*Math.abs(z.x)*t.anchorX,xMax:p.x+t.width*Math.abs(z.x)*(1-t.anchorX),yMin:p.y-t.height*Math.abs(z.y)*t.anchorY,yMax:p.y+t.height*Math.abs(z.y)*(1-t.anchorY)}};const c=n.getChildByName('ClaimButton'),tray=n.getChildByName('OrderServiceTray');return {card:rect(n),claim:rect(c),text:c?.getComponentsInChildren(cc.Label).map(l=>l.string),items:[0,1,2].map(i=>rect(tray.getChildByName('Required_'+i)))}})()`);
+      assert.equal(layout.items.filter(Boolean).length, await ev(`${app}.game.orders.getOrders()[0].requirements.length`), 'All required items must appear in the order tray');
       if(variant==='unready')assert.equal(layout.claim,null,'Unready order must hide its delivery button');else {assert.ok(layout.claim&&Math.abs((layout.claim.xMin+layout.claim.xMax-layout.card.xMin-layout.card.xMax)/2)<2,'Delivery button should be centered');
       assert.ok(layout.text.some(t=>t.includes('交付订单')), 'Delivery button needs a clear label');
-      assert.ok(!intersects(layout.claim,layout.menu)&&!intersects(layout.claim,layout.menu),'Delivery and the customer header must remain separate');
       for(const item of layout.items.filter(Boolean))assert.ok(!intersects(layout.claim,item),'Delivery must not cover item requirements');}
       await shot(`order-${variant}-${width}`); const before=await ev(`${app}.game.orders.getOrders()[0].uid`);
       if(variant==='ready'){for(let i=0;i<30 && !await ev(`${app}.view.feedback.clips.has('sfx_order')`);i++)await wait(100);
@@ -455,11 +977,13 @@ try {
     const limit=bundle.generators.find(g=>g.id==='coffee_machine').streakCooldown.uses;assert.equal(limit,60,'Configured consecutive-use limit must be 60');
     await seed(d=>{mature(d);d.board=boardWith([]);d.generatorCooldowns={coffee_machine:{streak:limit-2,cooldownStartedAt:null}};});await tap('EnterGame');
     let status=await ev(`${app}.game.getGeneratorStatus('coffee_machine')`);assert.equal(status.streak,limit-2);assert.equal(status.streakLimit,limit);
-    await tap('GenBtn',0);status=await ev(`${app}.game.getGeneratorStatus('coffee_machine')`);assert.equal(status.streak,limit-1);assert.equal(status.remainingCooldownMs,0,'Cooldown must not start early');
-    await tap('GenBtn',0);status=await ev(`${app}.game.getGeneratorStatus('coffee_machine')`);assert.ok(status.remainingCooldownMs>0,'Configured final use starts cooldown'); assert.ok((await labels()).some(v=>v.includes('/'+limit)), 'Generator cooldown counter must show configured streak limit');
-    const blocked=await cells();const diamondsBeforeRestore=await ev(`${app}.game.player.diamonds`);await tap('GenBtn',0);assert.deepEqual(await cells(),blocked,'Cooldown blocks extra production');
+    await produce();status=await ev(`${app}.game.getGeneratorStatus('coffee_machine')`);assert.equal(status.streak,limit-1);assert.equal(status.remainingCooldownMs,0,'Cooldown must not start early');
+    await produce();status=await ev(`${app}.game.getGeneratorStatus('coffee_machine')`);assert.ok(status.remainingCooldownMs>0,'Configured final use starts cooldown');
+    const cooldownLabels=await generatorLabels('coffee_machine');
+    assert.equal(status.streak,limit);assert.ok(cooldownLabels.some(s=>/^\d+:\d{2}$/.test(s)),'Generator tile must show its live cooldown');
+    const blocked=await cells();const diamondsBeforeRestore=await ev(`${app}.game.player.diamonds`);await produce();assert.deepEqual(await cells(),blocked,'Cooldown blocks extra production');
     assert.ok(await active('GeneratorRestoreOverlay'),'Cooldown must offer explicit restore');await tap('GeneratorRestoreCancel');assert.equal(await ev(`${app}.game.player.diamonds`),diamondsBeforeRestore);
-    await tap('GenBtn',0);await tap('GeneratorRestoreConfirm');assert.equal(await ev(`${app}.game.player.diamonds`),diamondsBeforeRestore-2);assert.equal((await ev(`${app}.game.getGeneratorStatus('coffee_machine')`)).remainingCooldownMs,0);
+    await produce();await tap('GeneratorRestoreConfirm');assert.equal(await ev(`${app}.game.player.diamonds`),diamondsBeforeRestore-2);assert.equal((await ev(`${app}.game.getGeneratorStatus('coffee_machine')`)).remainingCooldownMs,0);
     const currentOrders=await ev(`${app}.game.orders.getOrders()`);for(const order of currentOrders)assert.ok(order.requirements.reduce((sum,r)=>sum+r.count,0)<=2,'Orders may need at most two items in total');
     passed('order delivery controls across three sizes and configured generator streak limit');
     for(let index=0;index<bundle.adventures.length;index++){
@@ -470,32 +994,27 @@ try {
     }
     passed('all six level-eligible adventures open directly without consuming items or claiming earlier chapters');
     await seed(d=>{mature(d);d.board=boardWith([]);d.generatorCharges={...d.generatorCharges,orange_tree:{charges:10,lastRecoveryAt:Date.now(),capacity:10}};});await tap('EnterGame');
-    const dock=await coords('GeneratorDockViewport');await send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:dock.x+95,y:dock.y,id:7}]});
-    for(let i=1;i<=10;i++){await send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:dock.x+95-i*18,y:dock.y,id:7}]});await wait(25)}await send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await wait(450);
     const energy=await ev(`${app}.game.player.energy`);status=await ev(`${app}.game.getGeneratorStatus('orange_tree')`);assert.ok(status.maxCharges>=10);assert.equal(status.charges,10);
-    for(let i=0;i<10;i++){await tap('GeneratorOrangeTree');assert.equal((await ev(`${app}.game.getGeneratorStatus('orange_tree')`)).charges,9-i);assert.equal(await ev(`${app}.game.player.energy`),energy)}
-    const fruitBoard=await cells();assert.equal(fruitBoard.filter(c=>c.item?.definitionId.startsWith('fruit_')).length,10);await tap('GeneratorOrangeTree');assert.deepEqual(await cells(),fruitBoard);assert.equal((await ev(`${app}.game.getGeneratorStatus('orange_tree')`)).charges,0);
+    for(let i=0;i<10;i++){await produce('orange_tree');assert.equal((await ev(`${app}.game.getGeneratorStatus('orange_tree')`)).charges,9-i);assert.equal(await ev(`${app}.game.player.energy`),energy)}
+    const fruitBoard=await cells();assert.equal(fruitBoard.filter(c=>c.item?.definitionId.startsWith('fruit_')).length,10);await produce('orange_tree');assert.deepEqual(await cells(),fruitBoard);assert.equal((await ev(`${app}.game.getGeneratorStatus('orange_tree')`)).charges,0);
     assert.ok(await active('GeneratorRestoreOverlay'));const orangeDiamonds=await ev(`${app}.game.player.diamonds`);await tap('GeneratorRestoreCancel');assert.equal(await ev(`${app}.game.player.diamonds`),orangeDiamonds);
-    await tap('GeneratorOrangeTree');await tap('GeneratorRestoreConfirm');assert.equal(await ev(`${app}.game.player.diamonds`),orangeDiamonds-5);assert.equal((await ev(`${app}.game.getGeneratorStatus('orange_tree')`)).charges,10);
+    await produce('orange_tree');await tap('GeneratorRestoreConfirm');assert.equal(await ev(`${app}.game.player.diamonds`),orangeDiamonds-5);assert.equal((await ev(`${app}.game.getGeneratorStatus('orange_tree')`)).charges,10);
     await seed(d=>{mature(d);d.player.diamonds=0;d.board=boardWith([]);d.generatorCharges={...d.generatorCharges,orange_tree:{charges:0,lastRecoveryAt:Date.now(),capacity:10}};});await tap('EnterGame');
-    const noMoneyDock=await coords('GeneratorDockViewport');await send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:noMoneyDock.x+95,y:noMoneyDock.y,id:7}]});
-    for(let i=1;i<=10;i++){await send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:noMoneyDock.x+95-i*18,y:noMoneyDock.y,id:7}]});await wait(25)}await send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await wait(450);
-    await tap('GeneratorOrangeTree');await tap('GeneratorRestoreConfirm');assert.equal(await ev(`${app}.game.player.diamonds`),0);assert.equal((await ev(`${app}.game.getGeneratorStatus('orange_tree')`)).charges,0,'Insufficient diamonds must not restore charges');
+    await produce('orange_tree');await tap('GeneratorRestoreConfirm');assert.equal(await ev(`${app}.game.player.diamonds`),0);assert.equal((await ev(`${app}.game.getGeneratorStatus('orange_tree')`)).charges,0,'Insufficient diamonds must not restore charges');
     passed('orange tree ten free touch picks, exhausted rejection and explicit paid restore');
-    await seed(d=>{mature(d);d.board=boardWith([]);});await tap('EnterGame');await tap('OpenTools');await tap('GeneratorWorkshopButton');
+    await seed(d=>{mature(d);d.board=boardWith([]);d.generatorInventory={coffee_machine:[1]};});await tap('EnterGame');await tap('ShopButton');
     const purchaseQuote=await ev(`${app}.game.getGeneratorPurchaseQuote('coffee_machine')`),beforePurchase=await ev(`${app}.game.player.coins`);
-    await tap('GeneratorPurchaseButton');assert.equal(await ev(`${app}.game.player.coins`),beforePurchase-purchaseQuote.cost);assert.equal((await ev(`${app}.game.getGeneratorStatus('coffee_machine')`)).inventory[0],2);
-    await tap('GeneratorTab_upgrade');let mergeCoords=await coords('GeneratorMergeButton_1'),viewportCoords=await coords('GeneratorWorkshopViewport');
-    if(mergeCoords.y>viewportCoords.y+30){await scrollDown('GeneratorWorkshopViewport');}await tap('GeneratorMergeButton_1');
-    assert.equal((await ev(`${app}.game.getGeneratorStatus('coffee_machine')`)).level,2);await tap('GeneratorWorkshopCloseButton');
-    for(let i=0;i<8;i++)await tap('GenBtn',0);const levelTwoItems=(await cells()).filter(c=>c.item).map(c=>c.item.definitionId);
+    await tap('PurchaseGenerator_coffee_machine');assert.equal(await ev(`${app}.game.player.coins`),beforePurchase-purchaseQuote.cost);assert.equal((await ev(`${app}.game.getGeneratorStatus('coffee_machine')`)).inventory[0],2);
+    await tap('GeneratorWorkshopCloseButton');await gesture(...await coffeePair());
+    assert.equal((await ev(`${app}.game.getGeneratorStatus('coffee_machine')`)).level,2);
+    for(let i=0;i<8;i++)await produce();const levelTwoItems=(await cells()).filter(c=>c.item).map(c=>c.item.definitionId);
     assert.ok(levelTwoItems.some(id=>id.startsWith('coffee_')));assert.ok(levelTwoItems.filter(id=>id.startsWith('coffee_')).every(id=>bundle.items.find(item=>item.id===id).level>=2),'Level 2 generator must not produce level 1 main-chain items');
-    passed('purchase and merge generators through the workshop with level-appropriate main output');
+    passed('purchase directly onto the board and drag-merge generators with level-appropriate main output');
     const machine=bundle.generators.find(g=>g.id==='coffee_machine'); const levels=machine.upgrade?.maxLevel ?? 8;
     assert.ok(levels>=8,'Generator must support eight levels');
     await seed(d=>{mature(d);d.board=boardWith([]);d.generatorInventory={...d.generatorInventory,coffee_machine:Array.from({length:levels},(_,i)=>i===levels-1?1:0)};});await tap('EnterGame');
     const maxMachine=await ev(`${app}.game.getGeneratorStatus('coffee_machine')`);assert.equal(maxMachine.level,levels);
-    for(let i=0;i<10;i++)await tap('GenBtn',0);const generated=(await cells()).filter(c=>c.item).map(c=>c.item.definitionId);
+    for(let i=0;i<10;i++)await produce();const generated=(await cells()).filter(c=>c.item).map(c=>c.item.definitionId);
     assert.ok(generated.some(id=>id.startsWith('coffee_')),'Highest machine must produce its main chain');
     for(const id of generated.filter(id=>id.startsWith('coffee_'))){const item=bundle.items.find(v=>v.id===id);assert.ok(item.level>=levels && item.level<=levels+2,`Highest machine generated out-of-range ${id}`)}
     await seed(d=>{mature(d);d.board=boardWith(['coffee_12','coffee_12']);});await tap('EnterGame');await gesture(0,1);const maxAfter=await cells();assert.deepEqual(new Set(maxAfter.slice(0,2).map(c=>c.item?.uid)),new Set(['chest_fixture_0','chest_fixture_1']),'Level 12 must keep both original UIDs');assert.ok(maxAfter.slice(0,2).every(c=>c.item?.definitionId==='coffee_12'),'Level 12 items must not merge');
@@ -509,15 +1028,43 @@ try {
     }
     for(let level=0;level<5;level++){
       await seed(d=>{mature(d);d.board=boardWith([ids[level]]);});await tap('EnterGame');const before=await ev(`({coins:${app}.game.player.coins,diamonds:${app}.game.player.diamonds})`);
-      await tap('Cell_0');assert.ok(await active('ChestOpenBurst') && await active('OpenedChest') && await active('ChestLootSummary'),'Opening must animate and summarize loot');await wait(1800);assert.equal(await active('ChestOpenBurst'),false,'Chest opening animation must be removed');let state=await cells();const loot=state.filter(c=>c.item&&c.item.uid!=='chest_fixture_0');
+      const existingItems = new Set((await cells()).flatMap(c => c.item ? [c.item.uid] : []));
+      await tap('Cell_0');assert.ok(await active('SupplyInspectOverlay'));await tap('SupplyInspectConfirm');assert.ok(await active('ChestOpenBurst') && await active('OpenedChest') && await active('ChestLootSummary'),'Opening must animate and summarize loot');
+      if (level === 3) {
+        assert.equal(await ev(`${app}.game.getFirstUseGuide()?.hint`), 'backpack', 'Fixture must have a waiting backpack hint');
+        assert.equal(await active('DismissHint'), false, 'First-use hints should wait until the chest celebration ends');
+        assert.equal(await active('ReadyOrderNotice'), false, 'Delivery shortcut should not overlay the chest celebration');
+        const geometry = await ev(`(() => {
+          let burst;
+          const walk = node => {
+            if (node.name === 'ChestOpenBurst' && node.activeInHierarchy) burst = node;
+            node.children.forEach(walk);
+          };
+          walk(cc.director.getScene());
+          const bounds = node => {
+            const transform = node.getComponent('cc.UITransform') ?? node._uiProps.uiTransformComp;
+            const rect = transform.getBoundingBoxToWorld();
+            return { xMin: rect.xMin, xMax: rect.xMax, yMin: rect.yMin, yMax: rect.yMax };
+          };
+          return {
+            board: bounds(burst.parent.getChildByName('BoardPaper')),
+            art: burst.children.filter(node => ['OpenedChest', 'ChestLootParticle'].includes(node.name)).map(bounds),
+          };
+        })()`);
+        const { board, art } = geometry;
+        assert.ok(art.length > 1 && art.every(box => box.xMin >= board.xMin && box.xMax <= board.xMax && box.yMin >= board.yMin && box.yMax <= board.yMax), 'Corner chest and loot must fit inside the board');
+        await shot('chest-4-opening-effect');
+      }
+      await wait(1800);assert.equal(await active('ChestOpenBurst'),false,'Chest opening animation must be removed');const state=await cells();const loot=state.filter(c=>c.item&&!existingItems.has(c.item.uid));
+      if (level === 3) assert.ok(await active('DismissHint'), 'The waiting backpack hint should return after the celebration');
       assert.equal(loot.length,bundle.game.rewards.chestLevels[level].count,`Level ${level+1} must place configured loot`);
       assert.ok(loot.every(c=>/^(coin|energy|diamond)_/.test(c.item.definitionId)),'Chest produces coin/energy/diamond bottles');
-      assert.equal(state.some(c=>c.item?.uid==='chest_fixture_0'),false,'Chest consumed on direct tap');
+      assert.equal(state.some(c=>c.item?.uid==='chest_fixture_0'),false,'Chest consumed only after confirmation');
       assert.deepEqual(await ev(`({coins:${app}.game.player.coins,diamonds:${app}.game.player.diamonds})`),before,'Opening costs no coins or diamonds');
       assert.equal((await ev(`${app}.game.useBoardItem(0,'chest_fixture_0')`)).ok,false,'Consumed UID cannot open twice');
       assert.deepEqual(await cells(),state);await shot(`chest-open-${level+1}`);
     }
-    await seed(d=>{mature(d);d.board=boardWith(Array.from({length:boardSize},(_,i)=>i===0?ids[4]:'coffee_01'));});await tap('EnterGame');await tap('Cell_0');await wait(1100);
+    await seed(d=>{mature(d);d.board=boardWith(Array.from({length:boardSize},(_,i)=>i===0?ids[4]:'coffee_01'));});await tap('EnterGame');await tap('Cell_0');await tap('SupplyInspectConfirm');await wait(1100);
     const overflow=await ev(`${app}.game.rewardInbox`);assert.equal(overflow.length,bundle.game.rewards.chestLevels[4].count-1,'Full board puts excess loot in recovery inbox');
     const idsBefore=overflow.map(i=>i.uid);await send('Page.reload');await wait(400);await ready();await wait(800);await tap('EnterGame');assert.deepEqual((await ev(`${app}.game.rewardInbox`)).map(i=>i.uid),idsBefore,'Recovery inbox preserves reward UIDs across restart');
     passed('five chest levels merge, open by touch, reject reused UID and preserve overflow');
@@ -525,7 +1072,7 @@ try {
       const id=`${chain}_0${level}`,definition=bundle.items.find(item=>item.id===id);assert.ok(definition,`Missing ${id}`);
       await seed(d=>{mature(d);d.player.energy=d.player.maxEnergy;d.board=boardWith([id]);});await tap('EnterGame');
       const before=await ev(`({coins:${app}.game.player.coins,energy:${app}.game.player.energy,diamonds:${app}.game.player.diamonds})`);
-      await tap('Cell_0');assert.equal(await active('ConfirmConsume'),false,`${id} should be used directly`);assert.equal(await active('RewardsOverlay'),false,`${id} must not require exchange panel`);
+      await tap('Cell_0');assert.ok(await active('SupplyInspectOverlay'));assert.equal(await active('RewardsOverlay'),false,`${id} must not require exchange panel`);await tap('SupplyInspectConfirm');
       const after=await ev(`({coins:${app}.game.player.coins,energy:${app}.game.player.energy,diamonds:${app}.game.player.diamonds})`),field=chain==='coin'?'coins':chain==='diamond'?'diamonds':'energy';
       assert.equal(after[field],before[field]+definition.useValue,`${id} must grant its configured value`);
       if(chain==='energy')assert.ok(after.energy>await ev(`${app}.game.player.maxEnergy`),'Energy rewards may overflow cap');
@@ -538,7 +1085,7 @@ try {
       if(level<5)assert.equal(result[1].item?.definitionId,`${chain}_0${level+1}`,`${id} must merge to next level`);
       else {assert.deepEqual(new Set(result.slice(0,2).map(c=>c.item?.uid)),new Set(['chest_fixture_0','chest_fixture_1']));assert.ok(result.slice(0,2).every(c=>c.item?.definitionId===id),'Level 5 supplies cannot merge');}
     }
-    assert.deepEqual(exceptions,[]);passed('all 15 supply levels use directly once with configured rewards and level 5 merge ceiling');
+    assert.deepEqual(exceptions,[]);passed('all 15 supply levels require explicit use and grant configured rewards once with level 5 merge ceiling');
   } else if (scope === 'boardfill') {
     const mouseDrag = async (from,to) => { const a=await coords('Cell_'+from),b=typeof to==='number'?await coords('Cell_'+to):to;
       await send('Input.dispatchMouseEvent',{type:'mouseMoved',...a}); await send('Input.dispatchMouseEvent',{type:'mousePressed',...a,button:'left',buttons:1,clickCount:1});
@@ -566,10 +1113,10 @@ try {
     assert.deepEqual(exceptions,[]);passed('board fill, adjacent cells, touch/mouse merge, swap, edge and last-cell moves, outside release and locked drop at 320/375/430');
   } else if (scope === 'polish') {
     const assertSelected = async (title) => {
-      const selected = await ev(`(()=>{let nav;const w=n=>{if(n.name==='Navigation'&&n.activeInHierarchy)nav=n;n.children.forEach(w)};w(cc.director.getScene());return nav.children.filter(n=>n.name.startsWith('Button_')&&n.getChildByName('NavigationSelection')?.activeInHierarchy).map(n=>n.name)})()`);
-      assert.deepEqual(selected, ['Button_' + title], `Navigation selection must follow ${title}`);
+      const selected = await ev(`(()=>{let nav;const w=n=>{if(n.name==='Navigation'&&n.activeInHierarchy)nav=n;n.children.forEach(w)};w(cc.director.getScene());return nav?.children.filter(n=>n.name.startsWith('Button_')&&n.getChildByName('NavigationSelection')?.activeInHierarchy).map(n=>n.name)??[]})()`);
+      assert.deepEqual(selected, title === '合成' ? [] : ['Button_' + title], `Navigation selection must follow ${title}`);
     };
-    const navGeometry = () => ev(`(()=>{let nav,safe,dock,summary,cell;const w=n=>{if(n.activeInHierarchy){if(n.name==='Navigation')nav=n;if(n.name==='SafeArea')safe=n;if(n.name==='GeneratorDock')dock=n;if(n.name==='BoardSummary')summary=n;if(n.name==='Cell_0')cell=n}n.children.forEach(w)};w(cc.director.getScene());const rect=n=>{if(!n)return null;const t=n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp;if(!t)return null;const x0=-t.anchorX*t.width,x1=(1-t.anchorX)*t.width,y0=-t.anchorY*t.height,y1=(1-t.anchorY)*t.height;const p=[[x0,y0],[x0,y1],[x1,y0],[x1,y1]].map(([x,y])=>t.convertToWorldSpaceAR(new cc.Vec3(x,y,0)));return {xMin:Math.min(...p.map(v=>v.x)),xMax:Math.max(...p.map(v=>v.x)),yMin:Math.min(...p.map(v=>v.y)),yMax:Math.max(...p.map(v=>v.y))}};const buttons=nav.children.filter(n=>n.name.startsWith('Button_')).map(n=>({name:n.name,box:rect(n),label:rect(n.getChildByName('NavigationCaption')),icon:rect(n.getChildByName('NavigationIcon')?.getChildByName('NavSymbol'))}));const v=cc.view.getVisibleSize();return{safe:rect(safe),nav:rect(nav),dock:rect(dock),summary:rect(summary),cell:rect(cell),buttons,scaleX:innerWidth/v.width,scaleY:innerHeight/v.height}})()`);
+    const navGeometry = () => ev(`(()=>{let nav,safe,dock,summary,cell;const w=n=>{if(n.activeInHierarchy){if(['Navigation','MergeFooter'].includes(n.name))nav=n;if(n.name==='SafeArea')safe=n;if(n.name==='GeneratorDock')dock=n;if(n.name==='BoardSummary')summary=n;if(n.name==='Cell_0')cell=n}n.children.forEach(w)};w(cc.director.getScene());const rect=n=>{if(!n)return null;const t=n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp;if(!t)return null;const p=[[-t.anchorX*t.width,-t.anchorY*t.height],[(1-t.anchorX)*t.width,(1-t.anchorY)*t.height]].map(([x,y])=>t.convertToWorldSpaceAR(new cc.Vec3(x,y,0)));return{xMin:Math.min(...p.map(v=>v.x)),xMax:Math.max(...p.map(v=>v.x)),yMin:Math.min(...p.map(v=>v.y)),yMax:Math.max(...p.map(v=>v.y))}};const buttons=(nav?.children??[]).filter(n=>['BoardBackpackButton','MergeHomeButton'].includes(n.name)||n.name.startsWith('Button_')).map(n=>({name:n.name,box:rect(n)}));const v=cc.view.getVisibleSize();return{safe:rect(safe),nav:rect(nav),dock:rect(dock),summary:rect(summary),cell:rect(cell),buttons,scaleX:innerWidth/v.width,scaleY:innerHeight/v.height}})()`);
     const within = (a,b) => !!a && !!b && a.xMin>=b.xMin-1 && a.xMax<=b.xMax+1 && a.yMin>=b.yMin-1 && a.yMax<=b.yMax+1;
     const intersects = (a,b) => !!a && !!b && Math.min(a.xMax,b.xMax)-Math.max(a.xMin,b.xMin)>0.5 && Math.min(a.yMax,b.yMax)-Math.max(a.yMin,b.yMin)>0.5;
     for (const [width, height] of [[320,568],[375,812],[430,932]]) {
@@ -584,30 +1131,29 @@ try {
       // Simulate asymmetric notch and home-indicator insets while preserving UI state.
       await ev(`cc.sys.getSafeAreaRect=()=>{const v=cc.view.getVisibleSize(),bottom=Math.min(50,v.height*.05),top=Math.min(80,v.height*.08);return new cc.Rect(0,bottom,v.width,v.height-bottom-top)};true`);
       await ev('new Promise(resolve=>cc.director.loadScene("Game",()=>setTimeout(()=>resolve(true),700)))'); await tap('EnterGame');
-      assert.equal(await ev(`${app}.game.config.board.rows`), 7); assert.equal(await ev(`${app}.game.config.board.columns`), 6);
+      assert.equal(await ev(`${app}.game.config.board.rows`), 9); assert.equal(await ev(`${app}.game.config.board.columns`), 7);
       await assertSelected('合成'); await checkBoardFill(); const geo = await navGeometry();
-      assert.equal(geo.buttons.length,4); assert.ok(within(geo.nav,geo.safe),'Navigation must stay inside safe area');
-      assert.ok(geo.dock && !intersects(geo.nav,geo.dock),'Navigation must not overlap generator dock');
+      assert.equal(geo.buttons.length,2); assert.ok(within(geo.nav,geo.safe),'Merge footer must stay inside safe area');
+      assert.equal(geo.dock,null,'No separate producer dock or storage may be mounted');
       for (const button of geo.buttons) {
-        assert.ok(within(button.box,geo.safe) && within(button.label,geo.safe) && within(button.icon,geo.safe), `${button.name} content must fit safe area`);
+        assert.ok(within(button.box,geo.safe), `${button.name} content must fit safe area`);
         assert.ok((button.box.yMax-button.box.yMin)*geo.scaleY >= 43, `${button.name} touch target too small`);
       }
       assert.ok(geo.cell && (geo.cell.xMax-geo.cell.xMin)*geo.scaleX >= 26, 'Board cell visually too small');
-      assert.ok(geo.summary, 'Board goal row must be visible');
-      const goalText = await ev(`(()=>{let n;const w=v=>{if(v.name==='BoardGoalText'&&v.activeInHierarchy)n=v;v.children.forEach(w)};w(cc.director.getScene());const l=n?.getComponent(cc.Label);l?.updateRenderData(true);return l&&{text:l.string,size:l.actualFontSize??l.fontSize,scale:Math.abs(n.worldScale.y)}})()`);
+      const goalText = await ev(`(()=>{let n;const w=v=>{if(['BoardGoalText','MergeItemInfo'].includes(v.name)&&v.activeInHierarchy)n=v;v.children.forEach(w)};w(cc.director.getScene());const l=n?.getComponent(cc.Label);l?.updateRenderData(true);return l&&{text:l.string,size:l.actualFontSize??l.fontSize,scale:Math.abs(n.worldScale.y)}})()`);
       assert.ok(goalText?.text && goalText.size*goalText.scale*geo.scaleY>=7.5, 'Board objective text must remain readable');
       const resources = await ev(`(()=>{const out={};const w=n=>{if(n.activeInHierarchy&&['HeartsValue','DiamondsValue','LevelCard','Resources','Title'].includes(n.name)){const t=n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp,p=n.worldPosition,z=n.worldScale;out[n.name]={parent:n.parent?.name,text:n.getComponent(cc.Label)?.string??null,xMin:p.x-t.width*Math.abs(z.x)*t.anchorX,xMax:p.x+t.width*Math.abs(z.x)*(1-t.anchorX),yMin:p.y-t.height*Math.abs(z.y)*t.anchorY,yMax:p.y+t.height*Math.abs(z.y)*(1-t.anchorY)}}n.children.forEach(w)};w(cc.director.getScene());return out})()`);
       assert.equal(resources.HeartsValue.parent,'LevelHearts'); assert.equal(resources.HeartsValue.text,'37');
-      assert.equal(resources.DiamondsValue.parent,'Resources'); assert.equal(resources.DiamondsValue.text,'30');
-      assert.ok(resources.LevelCard.xMax < resources.Resources.xMin, 'Hearts and diamonds must occupy separate status regions');
+      assert.equal(resources.DiamondsValue.parent,'diamondsPill'); assert.equal(resources.DiamondsValue.text,'30');
+      assert.ok(resources.LevelCard.xMax < resources.DiamondsValue.xMin, 'Hearts and diamonds must occupy separate status regions');
       await tap('diamondsPlus'); assert.ok(await active('RewardsOverlay'),'Diamond control must open the supply panel'); await tap('CloseRewards');
       assert.ok((await labels()).some((value)=>value === '0/6'),'Backpack count must be visible');
       await tap('BoardBackpackButton'); assert.ok(await active('PlayOverlay'),'Backpack shortcut must open the backpack');
-      assert.ok((await labels()).some(v=>v.includes('收纳 0/6')), 'Backpack panel must show empty capacity'); await shot(`polish-backpack-empty-${width}`);
+      assert.ok((await labels()).some(v=>v.includes('0/6 格')), 'Backpack panel must show empty capacity'); await shot(`polish-backpack-empty-${width}`);
       const bagLayout=await ev(`(()=>{let panel;const w=n=>{if(n.name==='PlayPanel'&&n.activeInHierarchy)panel=n;n.children.forEach(w)};w(cc.director.getScene());const t=panel.getComponent('cc.UITransform')??panel._uiProps.uiTransformComp,v=cc.view.getVisibleSize();return{height:t.height*Math.abs(panel.worldScale.y)/v.height*innerHeight,y:panel.worldPosition.y,slots:panel.children.filter(n=>n.name.startsWith('Warehouse_')).length}})()`);
-      assert.ok(bagLayout.height<=height*.7 && bagLayout.y<0 && bagLayout.slots===6,'Backpack must be a compact bottom drawer with six slots');
-      assert.equal(await active('Store_0'),false); await tap('PlayClose'); await dragItemToBackpack(0); await tap('BoardBackpackButton'); assert.ok((await labels()).some(v=>v.includes('收纳 1/6')), 'Backpack panel must update capacity after storing'); await shot(`polish-backpack-stored-${width}`); await tap('PlayClose'); assert.ok((await labels()).some((value)=>value === '1/6'));
-      await tap('BoardBackpackButton'); await tap('Warehouse_0'); assert.ok((await labels()).some(v=>v.includes('收纳 0/6')), 'Backpack panel must update capacity after withdrawal'); await tap('PlayClose'); assert.ok((await labels()).some((value)=>value === '0/6'));
+      assert.ok(bagLayout.height<=height*.95 && bagLayout.slots===36,'Backpack must show its 6x6 capacity inside the safe area');
+      assert.equal(await active('Store_0'),false); await tap('PlayClose'); await dragItemToBackpack(0); await tap('BoardBackpackButton'); assert.ok((await labels()).some(v=>v.includes('1/6 格')), 'Backpack panel must update capacity after storing'); await shot(`polish-backpack-stored-${width}`); await tap('PlayClose'); assert.ok((await labels()).some((value)=>value === '1/6'));
+      await tap('BoardBackpackButton'); await tap('Warehouse_0'); await tap('BackpackWithdraw'); assert.ok((await labels()).some(v=>v.includes('0/6 格')), 'Backpack panel must update capacity after withdrawal'); await tap('PlayClose'); assert.ok((await labels()).some((value)=>value === '0/6'));
       await tap('DailyCheckInButton'); assert.ok(await active('RewardsOverlay') && await active('CheckInClaim'),'Top sign-in shortcut must open the check-in tab');
       const rewardGeometry = () => ev(`(()=>{const names=['RewardsViewport','RewardsTab_checkin','RewardsTab_daily','RewardsTab_supplies','RewardsTab_collection','CheckInClaim','CheckInDay_7'],out={};const w=n=>{if(n.activeInHierarchy&&names.includes(n.name)){const t=n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp,p=n.worldPosition,z=n.worldScale;out[n.name]={xMin:p.x-t.width*Math.abs(z.x)*t.anchorX,xMax:p.x+t.width*Math.abs(z.x)*(1-t.anchorX),yMin:p.y-t.height*Math.abs(z.y)*t.anchorY,yMax:p.y+t.height*Math.abs(z.y)*(1-t.anchorY)}}n.children.forEach(w)};w(cc.director.getScene());return out})()`);
       let rewardsGeo = await rewardGeometry();
@@ -616,18 +1162,18 @@ try {
       for (let i=0; i<8 && !within(rewardsGeo.CheckInDay_7,rewardsGeo.RewardsViewport); i++) { await swipeRewardViewport(-1, 31+i, height); rewardsGeo = await rewardGeometry(); }
       assert.ok(within(rewardsGeo.CheckInDay_7,rewardsGeo.RewardsViewport), 'Seventh sign-in day must be fully visible after touch scrolling');
       await tap('CloseRewards');
-      const card = await ev(`(()=>{let n;const w=v=>{if(!n&&v.name==='OrderCard'&&v.activeInHierarchy)n=v;v.children.forEach(w)};w(cc.director.getScene());const box=v=>{if(!v)return null;const t=v.getComponent('cc.UITransform')??v._uiProps.uiTransformComp,p=v.worldPosition,z=v.worldScale;return{xMin:p.x-t.width*Math.abs(z.x)*t.anchorX,xMax:p.x+t.width*Math.abs(z.x)*(1-t.anchorX),yMin:p.y-t.height*Math.abs(z.y)*t.anchorY,yMax:p.y+t.height*Math.abs(z.y)*(1-t.anchorY)}};return{claim:box(n.getChildByName('ClaimButton')),menu:box(n.getChildByName('OrderRefreshMenuButton')),avatar:box(n.getChildByName('CustomerAvatar')),urgent:box(n.getChildByName('OrderUrgentBadge')),countdown:box(n.getChildByName('OrderUrgentCountdown')),items:[0,1].map(i=>{const r=n.getChildByName('Required_'+i),a=r.getChildByName('Art');return{box:box(r),sprite:!!a.getComponent(cc.Sprite)?.spriteFrame,labels:r.getComponentsInChildren(cc.Label).filter(l=>l.node.activeInHierarchy).map(l=>({text:l.string,size:l.fontSize,scale:Math.abs(l.node.worldScale.y)}))}})}})()`);
+      const card = await ev(`(()=>{let n;const w=v=>{if(!n&&v.name==='OrderCard'&&v.activeInHierarchy)n=v;v.children.forEach(w)};w(cc.director.getScene());const box=v=>{if(!v)return null;const t=v.getComponent('cc.UITransform')??v._uiProps.uiTransformComp,p=v.worldPosition,z=v.worldScale;return{xMin:p.x-t.width*Math.abs(z.x)*t.anchorX,xMax:p.x+t.width*Math.abs(z.x)*(1-t.anchorX),yMin:p.y-t.height*Math.abs(z.y)*t.anchorY,yMax:p.y+t.height*Math.abs(z.y)*(1-t.anchorY)}};return{claim:box(n.getChildByName('ClaimButton')),menu:box(n.getChildByName('OrderRefreshMenuButton')),avatar:box(n.getChildByName('CustomerAvatar')),urgent:box(n.getChildByName('OrderUrgentBadge')),countdown:box(n.getChildByName('OrderUrgentCountdown')),items:[0,1].map(i=>{const r=n.getChildByName('OrderServiceTray').getChildByName('Required_'+i),a=r.getChildByName('Art');return{box:box(r),sprite:!!a.getComponent(cc.Sprite)?.spriteFrame,labels:r.getComponentsInChildren(cc.Label).filter(l=>l.node.activeInHierarchy).map(l=>({text:l.string,size:l.fontSize,scale:Math.abs(l.node.worldScale.y)}))}})}})()`);
       assert.ok(await active('OrderUrgentBadge') && await active('OrderUrgentCountdown'), 'Urgent order must show its badge and countdown');
       assert.ok(!intersects(card.urgent,card.countdown), 'Urgent badge and countdown overlap');
       assert.ok(!intersects(card.claim,card.menu)&&!intersects(card.claim,card.menu),'Order delivery and refresh controls overlap');
       for (const item of card.items) {
-        assert.ok(!intersects(item.box,card.claim) && !intersects(item.box,card.avatar) && !intersects(item.box,card.urgent) && !intersects(item.box,card.countdown), `Order requirements overlap header or delivery control: ${JSON.stringify({item:item.box,claim:card.claim,avatar:card.avatar,urgent:card.urgent,countdown:card.countdown})}`);
+        assert.ok(!intersects(item.box,card.claim) && !intersects(item.box,card.urgent) && !intersects(item.box,card.countdown), `Order requirements overlap header or delivery control: ${JSON.stringify({item:item.box,claim:card.claim,avatar:card.avatar,urgent:card.urgent,countdown:card.countdown})}`);
         assert.ok(item.sprite && item.labels.some((l)=>/1\s*\/\s*1/.test(l.text)), 'Both order requirements must show icon and quantity');
         const count = item.labels.find((l)=>/1\s*\/\s*1/.test(l.text));
         assert.ok(count.size*count.scale*geo.scaleY>=8, 'Order quantity font is too small');
       }
       await shot(`polish-merge-${width}`);
-      await tap('Button_回忆'); await assertSelected('回忆'); await waitForArt('Illustration'); await shot(`polish-memories-${width}`);
+      await tap('MergeHomeButton'); await tap('Button_回忆'); await assertSelected('回忆'); await waitForArt('Illustration'); await shot(`polish-memories-${width}`);
       const memoryTargets=await ev(`(()=>{const sizes=[];const w=n=>{if(n.name.startsWith('MemoryTab_')&&n.activeInHierarchy)sizes.push((n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp).height);n.children.forEach(w)};w(cc.director.getScene());return sizes})()`);assert.ok(memoryTargets.length===4 && memoryTargets.every(h=>h>=104),'Compact memory tabs must retain their original touch area');
       await tap('Button_任务'); await assertSelected('任务'); assert.ok(await active('Wishes')); await tap('Button_关闭');
       assert.equal(await ev(`${app}.view.lifePages.currentPage`),'memories'); await assertSelected('回忆');
@@ -644,14 +1190,14 @@ try {
       await tap('DailyCheckInButton'); assert.ok(await active('RewardsOverlay')); await shot(`polish-rewards-checkin-${width}`);
       assert.ok(await active('CheckInClaim')); await tap('RewardsTab_daily'); assert.ok(await active('DailyTask_orders_3')); await shot(`polish-rewards-daily-${width}`);
       await tap('RewardsTab_supplies'); assert.ok(await active('RewardRow')); await shot(`polish-rewards-supplies-${width}`);
-      await tap('RewardsTab_collection'); assert.ok(await active('Collection_coffee')); await shot(`polish-rewards-collection-${width}`);
+      await tap('RewardsTab_collection'); assert.ok(await active('Collection_coffee')); await shot(`polish-rewards-collection-${width}`); await tap('CollectionBack');
       await tap('GeneratorWorkshopButton'); assert.ok(await active('GeneratorWorkshopPanel')); await shot(`polish-generator-${width}`); await tap('GeneratorWorkshopCloseButton');
       await tap('OpenTools'); await tap('OpenTodayJournal'); assert.ok(await active('JournalOverlay')); await shot(`polish-journal-${width}`); await tap('JournalClose');
       await tap('Cell_0'); assert.ok(await active('ItemGuideOverlay')); await shot(`polish-guide-${width}`); await tap('ItemGuideClose');
       await tap('OpenTools'); await tap('BackpackButton'); assert.ok(await active('PlayOverlay')); await tap('PlayClose');
       await tap('SettingsButton'); assert.ok(await active('SettingsOverlay')); await shot(`polish-settings-${width}`); await tap('SettingsClose');
     }
-    assert.deepEqual(exceptions, []); passed('polish: four navigation states, safe areas, tabbed menus and furniture controls at 320/375/430');
+    assert.deepEqual(exceptions, []); passed('polish: merge footer, home navigation states, asymmetric safe areas, current backpack, sign-in and furniture controls at 320/375/430');
   } else if (scope === 'artfailure') {
     await send('Network.setCacheDisabled', { cacheDisabled: true }); await send('Network.setBlockedURLs', { urls: ['*/assets/game_art/*'] });
     await load('?preview=lv12'); await tap('EnterGame');
@@ -730,7 +1276,7 @@ try {
   await tap('SettingsClose');
   await ev(`${app}.view.feedback.source.playOneShot=window.__qaAudioOriginal;true`);
   assert.ok((await labels()).some((text) => text.includes('晨间咖啡')));
-  assert.ok(await active('TutorialGesture')); await tap('GenBtn', 0); freshPathActions.push('spawn opening coffee item'); assert.ok(await active('TutorialGesture')); await shot('drag-guide');
+  assert.ok(await active('TutorialGesture')); await produce(); freshPathActions.push('spawn opening coffee item'); assert.ok(await active('TutorialGesture')); await shot('drag-guide');
   await tap('Cell_0'); assert.ok(await active('ItemGuideOverlay'));
   assert.ok((await labels()).some((text) => text.includes('咖啡机')));
   assert.ok((await labels()).some((text) => text.includes('合成链')));
@@ -745,18 +1291,17 @@ try {
   assert.ok(await ev('window.__hapticCalls>0'));
   assert.ok((await labels()).some((text) => text.includes('交付订单')));
   assert.ok(!(await labels()).some((t) => t.includes('还差一点') || t.includes('下午茶')));
-  const orderIcon = await ev(`(()=>{let n;const w=v=>{if(!n&&v.name==='OrderCard'&&v.activeInHierarchy)n=v;v.children.forEach(w)};w(cc.director.getScene());const a=n?.getChildByName('Required_0')?.getChildByName('Art');const t=a&&(a.getComponent('cc.UITransform')??a._uiProps.uiTransformComp);return t&&{width:t.width,height:t.height,hasSprite:!!a.getComponent(cc.Sprite)?.spriteFrame}})()`);
+  const orderIcon = await ev(`(()=>{let n;const w=v=>{if(!n&&v.name==='OrderCard'&&v.activeInHierarchy)n=v;v.children.forEach(w)};w(cc.director.getScene());const a=n?.getChildByName('OrderServiceTray')?.getChildByName('Required_0')?.getChildByName('Art');const t=a&&(a.getComponent('cc.UITransform')??a._uiProps.uiTransformComp);return t&&{width:t.width,height:t.height,hasSprite:!!a.getComponent(cc.Sprite)?.spriteFrame}})()`);
   assert.ok(orderIcon?.hasSprite && orderIcon.width >= 40 && orderIcon.height >= 40, `Order required item icon must be visible and enlarged: ${JSON.stringify(orderIcon)}`);
-  const orderBounds = await ev(`(()=>{let card;const w=n=>{if(!card&&n.name==='OrderCard'&&n.activeInHierarchy)card=n;n.children.forEach(w)};w(cc.director.getScene());const box=name=>{const n=card?.getChildByName(name);const t=n&&(n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp);if(!t)return null;const b=t.getBoundingBoxToWorld();return{xMin:b.xMin,xMax:b.xMax,yMin:b.yMin,yMax:b.yMax}};return {claim:box('ClaimButton'),menu:box('OrderRefreshMenuButton'),required:box('Required_0'),avatar:box('CustomerAvatar')}})()`);
+  const orderBounds = await ev(`(()=>{let card;const w=n=>{if(!card&&n.name==='OrderCard'&&n.activeInHierarchy)card=n;n.children.forEach(w)};w(cc.director.getScene());const box=n=>{const t=n&&(n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp);if(!t)return null;const b=t.getBoundingBoxToWorld();return{xMin:b.xMin,xMax:b.xMax,yMin:b.yMin,yMax:b.yMax}};return {claim:box(card.getChildByName('ClaimButton')),menu:box(card.getChildByName('OrderRefreshMenuButton')),required:box(card.getChildByName('OrderServiceTray').getChildByName('Required_0')),avatar:box(card.getChildByName('CustomerAvatar'))}})()`);
   const overlaps = (a, b) => a && b && Math.min(a.xMax, b.xMax) - Math.max(a.xMin, b.xMin) > 0.5 && Math.min(a.yMax, b.yMax) - Math.max(a.yMin, b.yMin) > 0.5;
   assert.ok(orderBounds.claim && orderBounds.required && orderBounds.avatar && !await active('OrderRefreshMenuButton'), 'Order layout shows the customer without replacement controls');
   orderLayoutIssues = [];
-  if (overlaps(orderBounds.claim, orderBounds.menu) || overlaps(orderBounds.claim, orderBounds.menu)) orderLayoutIssues.push('Claim button overlaps refresh controls');
-  if (overlaps(orderBounds.required, orderBounds.avatar)) orderLayoutIssues.push('Requirement area overlaps customer portrait');
+  if (overlaps(orderBounds.claim, orderBounds.menu)) orderLayoutIssues.push('Claim button overlaps refresh controls');
   if (orderLayoutIssues.length) { fs.writeFileSync(path.join(output, 'order-layout-failure.json'), JSON.stringify({ orderBounds, orderLayoutIssues }, null, 2)); await shot('order-layout-failure'); }
   assert.deepEqual(orderLayoutIssues, [], 'Order layout overlaps detected');
 
-  await tap('OrderCard', 0); freshPathActions.push('deliver first coffee order');
+  await deliver(0); freshPathActions.push('deliver first coffee order');
   assert.equal(await ev(`${app}.game.life.state.stats.orders`), 1);
   assert.equal(await ev(`${app}.game.player.coins`), initial.activeOrders[0].rewardCoins + bundle.game.rewards.discoveryCoins);
   assert.ok(await active('OrderDeliveryEffects') || !(await ev(`${app}.view.deliveries.size`)), 'Delivery has a visual sequence and finishes cleanly');
@@ -774,7 +1319,7 @@ try {
 
   // First-15-minute fresh-save route: all changes below use visible touch/drag UI; ev() only observes state.
   const dateRequirements = await ev(`(()=>{const o=${app}.game.play.smallDateOrder();return o.template.requirements})()`);
-  for (const requirement of dateRequirements) await ensureItem(requirement.itemId, requirement.count);
+  await prepareOrder(dateRequirements);
   await tap('OpenAdventure'); await tap('SmallDateOpen');
   assert.equal(await ev(`${app}.game.play.smallDateOrder().ready`), true);
   const firstDateId = await ev(`${app}.game.play.smallDateOrder().template.id`);
@@ -816,8 +1361,8 @@ try {
     const readyOrder = activeOrders.find((order) => order.ready);
     const chosen = readyOrder ?? [...activeOrders].sort((a, b) =>
       b.rewardXp / estimateCost(b) - a.rewardXp / estimateCost(a))[0];
-    for (const requirement of chosen.requirements) await ensureItem(requirement.itemId, requirement.count);
-    await tap('OrderCard', chosen.index); naturalOrders += 1;
+    await prepareOrder(chosen.requirements);
+    await deliver(chosen.index); naturalOrders += 1;
     freshPathActions.push(`deliver order ${chosen.uid}`);
     if (await ev(`${app}.game.player.level`) >= 3) { lv3OrderIndex = naturalOrders; break; }
     for (let reward = 0; reward < 8 && await active('LevelUpView'); reward += 1) {
@@ -842,8 +1387,7 @@ try {
   passed(`fresh save reached first date, chapter puzzle and Lv3 in ${(first15Evidence.elapsedMs / 1000).toFixed(1)}s (${freshPathActions.length} documented actions)`);
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 700, deviceScaleFactor: 1, mobile: true });
   await send('Page.reload'); await wait(400); await ready(); await wait(700); await tap('EnterGame');
-  assert.ok(await active('BoardSummary'));
-  const compactObjective = await ev(`(()=>{let label;const w=n=>{if(n.name==='BoardGoalText'&&n.activeInHierarchy)label=n.getComponent(cc.Label)?.string;n.children.forEach(w)};w(cc.director.getScene());return{label,title:${app}.game.play.smallDateOrder()?.template.title}})()`);
+  const compactObjective = await ev(`(()=>{let label;const w=n=>{if(['BoardGoalText','MergeItemInfo'].includes(n.name)&&n.activeInHierarchy){const text=n.getComponent(cc.Label)?.string;if(text?.includes('已备齐'))label=text;}n.children.forEach(w)};w(cc.director.getScene());return{label,title:${app}.game.play.smallDateOrder()?.template.title}})()`);
   assert.ok(compactObjective.label && (!compactObjective.title || compactObjective.label.includes(compactObjective.title)), 'Compact objective must show the current date title');
   await shot('compact-objective');
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }); await wait(500);
@@ -870,10 +1414,13 @@ try {
   passed('Lv2-3-4 reward queue, exact rewards and no pending repeat');
   await seed((d) => { d.life.photoPaths = Array.from({ length: 6 }, (_, i) => origin + (i === 5 ? '/missing-photo.png' : '/qa-photo.png?' + i)); });
   await tap('EnterGame'); await tap('Button_回忆'); await tap('MemoryTab_photos'); await tap('Button_下一页');
-  assert.ok((await labels()).includes('留念 5')); assert.ok((await labels()).some((s) => s.includes('照片暂时无法读取')));
+  assert.ok((await labels()).includes('留念 5'));
+  const missingPhotoVisible = async () => (await labels()).some(s => s.includes('照片暂时无法读取'));
+  for (let attempt = 0; attempt < 28 && !await missingPhotoVisible(); attempt++) await wait(125);
+  assert.ok(await missingPhotoVisible(), 'A failed asynchronous image load must show its photo fallback');
   await tap('Button_', 0); assert.ok((await labels()).includes('留念 5 / 6')); await shot('photo-detail'); await tap('Button_关闭');
   await tap('Button_合成'); await ev("window.qaSet=Storage.prototype.setItem;Storage.prototype.setItem=function(){throw Error('qa quota')};true");
-  await tap('GenBtn', 0); assert.ok(await active('StorageNotice')); await shot('save-failed');
+  await produce(); assert.ok(await active('StorageNotice')); await shot('save-failed');
   await ev('Storage.prototype.setItem=window.qaSet;true'); await tap('ConfirmStorageNotice'); assert.equal(await active('StorageNotice'), false);
   assert.equal(await ev(`JSON.parse(localStorage.getItem(${JSON.stringify(key)})).life.stats.spawns`), 1);
   passed('six photos, failed-photo explanation, large preview and failed-save retry');
@@ -888,8 +1435,8 @@ try {
   await ev(`localStorage.setItem(${JSON.stringify(key)},${JSON.stringify(goodSave)});true`);
   passed('read failure blocks overwrites, retry re-enters and corrupt-save recovery is visible');
   const normalBefore = await ev(`localStorage.getItem(${JSON.stringify(key)})`);
-  await load('?preview=lv12'); await tap('EnterGame'); assert.ok((await labels()).includes('320 / 600')); await shot('demo-merge');
-  await tap('GenBtn', 0); assert.equal(await ev(`localStorage.getItem(${JSON.stringify(key)})`), normalBefore);
+  await load('?preview=lv12'); await tap('EnterGame'); assert.ok((await labels()).includes('320 / 600')); await waitForArt('CustomerAvatar'); await shot('demo-merge');
+  await produce(); assert.equal(await ev(`localStorage.getItem(${JSON.stringify(key)})`), normalBefore);
   await load('?preview=lv12'); await tap('EnterGame'); assert.equal(await ev(`${app}.game.player.energy`), 86);
   await tap('Button_家园'); await shot('demo-home'); await tap('Button_任务'); await tap('Button_合成');
   assert.equal(await ev(`${app}.view.lifePages.currentPage`), 'home'); assert.ok(await active('Wishes')); await tap('Button_关闭');
@@ -911,12 +1458,13 @@ try {
       const actual = await ev("(()=>{const a=[];const walk=n=>{if(n.name.startsWith('Placed_')&&n.activeInHierarchy)a.push(n.name.slice(7));n.children.forEach(walk)};walk(cc.director.getScene());return a.sort()})()");
       assert.deepEqual(actual, bundle.furniture.filter((f) => f.room === room && ids.includes(f.id)).map((f) => f.id).sort());
       if (mode === 'full') for (const id of actual) {
-        const frame = await waitForArt('Placed_' + id);
+        const item = bundle.furniture.find(item => item.id === id);
+        const frame = await waitForArt(item.art.startsWith('wall:') ? 'WallPaintingImage_' + id : 'Placed_' + id);
         furnitureFrames.add([frame.textureId, frame.rectX, frame.rectY, frame.rectWidth, frame.rectHeight].join(':'));
       }
     }
     assert.equal(roomTextures.size, 6, 'Rooms must use six distinct backgrounds');
-    if (mode === 'full') assert.equal(furnitureFrames.size, 30, 'Every furniture item needs its own artwork cell');
+    if (mode === 'full') assert.equal(furnitureFrames.size, bundle.furniture.length, 'Every furniture item needs its own artwork cell');
   }
   passed('six rooms empty, partly furnished and fully furnished with distinct backgrounds');
   await tap('Button_回忆'); await shot('album'); await tap('Button_翻开日记 ›');
@@ -985,7 +1533,7 @@ try {
   const toolEnergy = await ev(`${app}.game.player.energy`);
   assert.equal(await active('Store_0'),false); await tap('PlayClose'); await dragItemToBackpack(0); await tap('BoardBackpackButton'); assert.equal((await cells())[0].item, undefined);
   assert.equal(await ev(`${app}.game.play.state.warehouse.length`), 1);
-  await tap('Warehouse_0'); assert.equal((await cells())[0].item.uid, 'tool_0');
+  await tap('Warehouse_0'); await tap('BackpackWithdraw'); assert.equal((await cells())[0].item.uid, 'tool_0');
   await tap('TakeScissors');
   const scissorCell=(await cells()).findIndex(c=>c.item?.definitionId==='scissors_01');assert.ok(scissorCell>=0);
   const blockedBoard = await cells(); await gesture(0, 2); assert.deepEqual(await cells(), blockedBoard);
@@ -998,7 +1546,7 @@ try {
   await tap('ItemGuideTools'); assert.ok(await active('PlayOverlay')); await tap('PlayClose');
   await tap('Button_任务'); await tap('Button_今日约会 · 剧情与解谜 ›'); await tap('AdventureOpen_zhoushan'); assert.ok(await active('PuzzleCheck')); await tap('PlayClose');
   assert.ok(await active('Wishes'), 'Closing adventure returns to the task page'); await tap('Button_关闭');
-  assert.equal(await ev(`${app}.view.lifePages.currentPage`), 'merge'); assert.ok(!(await active('Wishes')));
+  assert.equal(await ev(`${app}.view.lifePages.currentPage`), 'home'); assert.ok(!(await active('Wishes')));
   passed('touch inventory transfer, item-guide tool shortcut, scissors value conservation and modal input blocking');
 
   await seed((d) => { grownUp(d); const needs = bundle.adventures.flatMap((c) => c.steps.flatMap((s) => s.requirements.flatMap((r) => Array(r.count).fill(r.itemId))));
@@ -1249,30 +1797,19 @@ try {
   passed('v4 migration preserves current replay, claimed rewards and muted settings without recounting practice results');
 
   }
-  const revealOrangeTree = async () => {
-    const p = await coords('GeneratorDockViewport');
-    await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: p.x + 95, y: p.y, id: 7 }] });
-    for (let i = 1; i <= 10; i++) {
-      await send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: p.x + 95 - i * 18, y: p.y, id: 7 }] });
-      await wait(25);
-    }
-    await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await wait(450);
-    const location = await coords('GeneratorOrangeTree');
-    assert.ok(location.x > 0 && location.x < 390, 'Orange tree must be in the touch viewport after horizontal swipe');
-  };
   if (scope !== 'late' && scope !== 'tail') {
-  // Starting at eleven prior picks is an isolated fixture; the twelfth and rejected pick use real touches.
+  // Start one use from exhaustion. The final and rejected picks use real touches.
   await seed((d) => { d.generatorCooldowns = { coffee_machine: { streak: bundle.generators.find((g) => g.id === 'coffee_machine').streakCooldown.uses - 1, cooldownStartedAt: null } };
     d.board = Array.from({ length: boardSize }, (_, index) => ({ index }));
     d.tutorial = { generatorClicked: true, firstMergeCompleted: true, firstOrderCompleted: true, firstOrderHintShown: true }; });
   await tap('EnterGame'); const cooldownEnergy = await ev(`${app}.game.player.energy`);
-  await tap('GenBtn', 0);
+  await produce();
   const runningCooldown = await ev(`${app}.game.getGeneratorStatus('coffee_machine')`);
   assert.ok(runningCooldown.remainingCooldownMs > 0 && runningCooldown.remainingCooldownMs <= runningCooldown.cooldownMs);
-  await tap('OpenTools'); await tap('GeneratorWorkshopButton');
+  await holdProducer('coffee_machine');
   assert.ok(await active('GeneratorCooldownLabel')); assert.ok(await active('GeneratorCooldownProgress'));
   await tap('GeneratorWorkshopCloseButton');
-  const boardBeforeBlockedPick = await cells(); await tap('GenBtn', 0);
+  const boardBeforeBlockedPick = await cells(); await produce();
   assert.deepEqual(await cells(), boardBeforeBlockedPick); if(await active('GeneratorRestoreCancel')) await tap('GeneratorRestoreCancel');
   assert.equal(await ev(`${app}.game.player.energy`), cooldownEnergy - bundle.generators.find((g) => g.id === 'coffee_machine').energyCost);
   await send('Page.reload'); await wait(400); await ready(); await wait(800); await tap('EnterGame');
@@ -1280,23 +1817,23 @@ try {
   assert.ok(resumedCooldown.remainingCooldownMs > 0 && resumedCooldown.remainingCooldownMs < runningCooldown.remainingCooldownMs);
   passed('configured generator use limit starts visible cooldown, rejects extra pick and persists across restart');
 
-  // Upgrade two identical generators and use the enhanced action through the workshop.
+  // Drag-merge two identical generators and enable the enhanced output in the new machine's details.
   await seed((d) => { d.generatorInventory = { ...d.generatorInventory, coffee_machine: [2, 0, 0] };
     d.board = Array.from({ length: boardSize }, (_, index) => ({ index }));
     d.tutorial = { generatorClicked: true, firstMergeCompleted: true, firstOrderCompleted: true, firstOrderHintShown: true }; });
-  await tap('EnterGame'); await tap('OpenTools'); await tap('GeneratorWorkshopButton'); assert.ok(await active('GeneratorWorkshopPanel'));
-  await tap('GeneratorTab_upgrade'); if ((await coords('GeneratorMergeButton_1')).y > (await coords('GeneratorWorkshopViewport')).y+30) await scrollDown('GeneratorWorkshopViewport'); await tap('GeneratorMergeButton_1');
+  await tap('EnterGame'); await gesture(...await coffeePair());
   let coffeeMachine = await ev(`${app}.game.getGeneratorStatus('coffee_machine')`);
   assert.equal(coffeeMachine.level, 2); assert.deepEqual(coffeeMachine.inventory, [0, 1, ...Array(coffeeMachine.maxLevel - 2).fill(0)]);
-  await tap('GeneratorWorkshopCloseButton'); await send('Page.reload'); await wait(400); await ready(); await wait(800); await tap('EnterGame');
+  await send('Page.reload'); await wait(400); await ready(); await wait(800); await tap('EnterGame');
   coffeeMachine = await ev(`${app}.game.getGeneratorStatus('coffee_machine')`); assert.equal(coffeeMachine.level, 2);
-  await tap('OpenTools'); await tap('GeneratorWorkshopButton'); await tap('GeneratorTab_output'); assert.ok(await active('GeneratorBoostButton'));
+  await holdProducer('coffee_machine'); assert.ok(await active('GeneratorBoostToggle'));
+  await tap('GeneratorBoostToggle'); await tap('GeneratorWorkshopCloseButton');
   const machineEnergy = await ev(`${app}.game.player.energy`); const machineItems = (await cells()).filter((c) => c.item).length;
-  await tap('GeneratorBoostButton');
+  await produce();
   assert.equal(await ev(`${app}.game.player.energy`), machineEnergy - coffeeMachine.boostEnergyCost);
   assert.equal((await cells()).filter((c) => c.item).length, machineItems + 1);
   if (await active('GeneratorWorkshopCloseButton')) await tap('GeneratorWorkshopCloseButton');
-  passed('generator workshop merges two machines, persists level and spends boosted energy on an actual spawn');
+  passed('drag-merge persists the new generator and spends boosted energy on a board tap');
 
   // Exercise a full tree at Lv18, then a separate Lv2 offline-recovery fixture.
   const orangeIndex = bundle.generators.findIndex((generator) => generator.id === 'orange_tree');
@@ -1309,26 +1846,24 @@ try {
     d.generatorCharges = { ...d.generatorCharges, orange_tree: { charges: 10, capacity: 10, lastRecoveryAt: Date.now() } };
   });
   await tap('EnterGame');
-  assert.ok(await active('GeneratorOrangeTree'));
-  await revealOrangeTree();
-  assert.ok(await active('GeneratorCharges'));
+  assert.ok(await active('Cell_' + await producerCell('orange_tree')));
   const orangeEnergy = await ev(`${app}.game.player.energy`);
   const initialOrange = await orangeStatus();
   assert.deepEqual([initialOrange.unlocked, initialOrange.charges, initialOrange.maxCharges], [true, 10, 10]);
   for (let expected = 9; expected >= 0; expected--) {
-    await tap('GeneratorOrangeTree');
+    await produce('orange_tree');
     assert.equal((await orangeStatus()).charges, expected);
     assert.equal(await ev(`${app}.game.player.energy`), orangeEnergy, 'Picking oranges must not consume energy');
   }
   const fruitItems = (await cells()).filter((cell) => cell.item?.definitionId.startsWith('fruit_'));
   assert.equal(fruitItems.length, 10, 'Each available pick produces one fruit');
   assert.ok((await orangeStatus()).nextRecoveryMs > 0);
-  await tap('GeneratorOrangeTree');
+  await produce('orange_tree');
   assert.equal((await orangeStatus()).charges, 0);
   assert.equal(await ev(`${app}.game.player.energy`), orangeEnergy);
   assert.ok(await active('GeneratorRestoreOverlay'), 'Exhausted tree should offer recovery'); await tap('GeneratorRestoreCancel');
-  const visibleRecovery = await ev(`(()=>{let tree;const w=n=>{if(n.name==='GeneratorOrangeTree'&&n.activeInHierarchy)tree=n;n.children.forEach(w)};w(cc.director.getScene());return tree?.getComponentsInChildren(cc.Label).filter(l=>l.node.activeInHierarchy).map(l=>l.string)??[]})()`);
-  assert.ok(visibleRecovery.some(text=>/\d{2}:\d{2}/.test(text)), 'Orange-tree card must visibly show its live recovery countdown');
+  const visibleRecovery = await generatorLabels('orange_tree');
+  assert.ok(visibleRecovery.some(text=>/^\d+:\d{2}$/.test(text)), 'Orange-tree tile must visibly show its live recovery countdown');
   const firstFruit = fruitItems[0];
   for (let i = 0; i < 40; i++) {
     if (await ev(`(()=>{let n;const w=v=>{if(v.name==='Cell_${firstFruit.index}'&&v.activeInHierarchy)n=v;v.children.forEach(w)};w(cc.director.getScene());return !!n?.getChildByName('ItemView')?.getChildByName('ItemArt')?.getComponent(cc.Sprite)?.spriteFrame})()`)) break;
@@ -1339,15 +1874,15 @@ try {
   assert.equal((await orangeStatus()).charges, 0, 'Spent orange-tree charges must persist after restart');
   await seed((d) => {
     d.player.level = 2; d.player.xp = 50; d.life.claimedLevelRewards = [2];
-    d.generatorCharges = { ...d.generatorCharges, orange_tree: { charges: 0, capacity: 10, lastRecoveryAt: Date.now() - 1_210_000 } };
+    d.generatorCharges = { ...d.generatorCharges, orange_tree: { charges: 0, capacity: 10, lastRecoveryAt: Date.now() - bundle.generators.find(g=>g.id==='orange_tree').recharge.intervalMs*2 - 1000 } };
     d.tutorial = { generatorClicked: true, firstMergeCompleted: true, firstOrderCompleted: true, firstOrderHintShown: true };
   });
-  await tap('EnterGame'); assert.equal((await orangeStatus()).charges, 2, 'Twenty minutes offline should recover two picks');
-  assert.ok((await orangeStatus()).nextRecoveryMs > 0 && (await orangeStatus()).nextRecoveryMs <= 600_000);
+  await tap('EnterGame'); assert.equal((await orangeStatus()).charges, 2, 'Two minutes offline should recover two picks');
+  assert.ok((await orangeStatus()).nextRecoveryMs > 0 && (await orangeStatus()).nextRecoveryMs <= 60_000);
   await send('Page.reload'); await wait(400); await ready(); await wait(800); await tap('EnterGame');
   assert.equal((await orangeStatus()).charges, 2, 'Offline recharge must survive a second restart');
   const beforeOrangeEnergy = await ev(`${app}.game.player.energy`);
-  await revealOrangeTree(); await tap('GeneratorOrangeTree'); assert.equal((await orangeStatus()).charges, 1);
+  await produce('orange_tree'); assert.equal((await orangeStatus()).charges, 1);
   assert.equal(await ev(`${app}.game.player.energy`), beforeOrangeEnergy);
   passed('orange tree touch picks use charges rather than energy, explain exhaustion and recover offline across restart');
 
@@ -1461,14 +1996,15 @@ try {
     d.activeOrders[0].requirements = needed.map((itemId) => ({ itemId, count: 1 }));
   });
   await tap('EnterGame');
+  await waitForArt('Art');
   const tripleUid = await ev(`${app}.game.orders.getOrders()[0].uid`);
   assert.ok(await active('Required_0') && await active('Required_1'));
-  const tripleVisual = await ev(`(()=>{let card;const w=n=>{if(!card&&n.name==='OrderCard'&&n.activeInHierarchy)card=n;n.children.forEach(w)};w(cc.director.getScene());const b=n=>{const t=n&&(n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp);if(!t)return null;const r=t.getBoundingBoxToWorld();return{xMin:r.xMin,xMax:r.xMax,yMin:r.yMin,yMax:r.yMax}};return{claim:b(card.getChildByName('ClaimButton')),menu:b(card.getChildByName('OrderRefreshMenuButton')),requirements:[0,1].map(i=>{const n=card.getChildByName('Required_'+i),a=n?.getChildByName('Art');return{box:b(n),sprite:!!a?.getComponent(cc.Sprite)?.spriteFrame,labels:n?.getComponentsInChildren(cc.Label).map(l=>l.string)}})}})()`);
+  const tripleVisual = await ev(`(()=>{let card;const w=n=>{if(!card&&n.name==='OrderCard'&&n.activeInHierarchy)card=n;n.children.forEach(w)};w(cc.director.getScene());const b=n=>{const t=n&&(n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp);if(!t)return null;const r=t.getBoundingBoxToWorld();return{xMin:r.xMin,xMax:r.xMax,yMin:r.yMin,yMax:r.yMax}};const tray=card.getChildByName('OrderServiceTray');return{claim:b(card.getChildByName('ClaimButton')),menu:b(card.getChildByName('OrderRefreshMenuButton')),requirements:[0,1].map(i=>{const n=tray?.getChildByName('Required_'+i),a=n?.getChildByName('Art');return{box:b(n),sprite:!!a?.getComponent(cc.Sprite)?.spriteFrame,labels:n?.getComponentsInChildren(cc.Label).map(l=>l.string)}})}})()`);
   const tripleOverlap = (a,b) => a&&b&&Math.min(a.xMax,b.xMax)-Math.max(a.xMin,b.xMin)>0.5&&Math.min(a.yMax,b.yMax)-Math.max(a.yMin,b.yMin)>0.5;
   assert.ok(tripleVisual.requirements.every((item) => item.sprite && item.labels.some((text) => /1\s*\/\s*1/.test(text))), 'Two requirements must each show their item and quantity');
-  assert.ok(!tripleOverlap(tripleVisual.claim,tripleVisual.menu) && !tripleOverlap(tripleVisual.claim,tripleVisual.menu), 'Two-item order claim must not cover refresh controls');
+  assert.ok(tripleVisual.claim && !tripleOverlap(tripleVisual.claim, tripleVisual.menu), 'Ready order has its own delivery button');
   assert.ok((await labels()).some((text) => text.includes('交付订单')));
-  await tap('OrderCard', 0);
+  await deliver(0);
   assert.ok(!(await ev(`${app}.game.orders.getOrders().map((order) => order.uid)`)).includes(tripleUid));
   assert.ok(!(await cells()).some((cell) => cell.item?.uid?.startsWith('triple_')));
   passed('two-item order shows both requirements and delivers both by touch');
@@ -1481,7 +2017,6 @@ try {
 
   const tapRewardContent = async (name) => {
     if (name.startsWith('DailyTask_') || name.startsWith('DailyTaskClaim_')) { if (!await active(name)) await tap('RewardsTab_daily'); }
-    if (name.startsWith('Collection_') || name.startsWith('CollectionClaim_')) { if (!await active(name)) await tap('RewardsTab_collection'); }
     for (let attempt = 0; attempt < 20; attempt++) {
       const state = await ev(`(()=>{let viewport,target;const w=n=>{if(n.name==='RewardsViewport'&&n.activeInHierarchy)viewport=n;if(n.name===${JSON.stringify(name)}&&n.activeInHierarchy)target=n;n.children.forEach(w)};w(cc.director.getScene());if(!viewport||!target)return null;const p=target.worldPosition,t=viewport.getComponent('cc.UITransform')??viewport._uiProps.uiTransformComp,vp=viewport.worldPosition,v=cc.view.getVisibleSize(),hh=t.height*Math.abs(viewport.worldScale.y)/2;return{x:(p.x+v.width/2)*innerWidth/v.width,y:(v.height/2-p.y)*innerHeight/v.height,top:(v.height/2-vp.y-hh)*innerHeight/v.height,bottom:(v.height/2-vp.y+hh)*innerHeight/v.height}})()`);
       assert.ok(state, `Missing reward content ${name}`);
@@ -1501,11 +2036,11 @@ try {
   await tap('EnterGame'); const capBeforeCollection = await ev(`${app}.game.player.maxEnergy`);
   const collection = (await ev(`${app}.game.getCollectionProgress()`)).find((item) => item.chainId === 'coffee');
   assert.equal(collection.ready, true); assert.equal(collection.energyBonus, bundle.game.collection.energyPerChain);
-  await tap('OpenTools'); await tapRewardContent('CollectionClaim_coffee');
+  await tap('OpenTools'); await tap('RewardsTab_collection'); await tap('CollectionClaim_coffee');
   assert.equal(await ev(`${app}.game.player.maxEnergy`), capBeforeCollection + collection.energyBonus);
-  await tapRewardContent('CollectionClaim_coffee');
+  await tap('CollectionClaim_coffee');
   assert.equal(await ev(`${app}.game.player.maxEnergy`), capBeforeCollection + collection.energyBonus);
-  await tap('CloseRewards'); await send('Page.reload'); await wait(400); await ready(); await wait(800); await tap('EnterGame');
+  await tap('CollectionClose'); await send('Page.reload'); await wait(400); await ready(); await wait(800); await tap('EnterGame');
   assert.equal(await ev(`${app}.game.player.maxEnergy`), capBeforeCollection + collection.energyBonus);
   assert.equal((await ev(`${app}.game.getCollectionProgress()`)).find((item) => item.chainId === 'coffee').claimed, true);
   passed('completed collection grants permanent energy cap once and persists across restart');
@@ -1514,6 +2049,7 @@ try {
   const qaBusinessDay = Math.floor((Date.now() + 28_800_000) / 86_400_000);
   await seed((d) => {
     grownUp(d); d.player.energy = 60;
+    delete d.generatorBoard;
     d.board = Array.from({ length: boardSize }, (_, index) => ({ index,
       ...(index < 2 ? { item: { uid: `daily_merge_${index}`, definitionId: 'coffee_01' } } : {}) }));
     d.activeOrders[0].requirements = [{ itemId: 'coffee_02', count: 1 }];
@@ -1523,7 +2059,7 @@ try {
   let daily = await ev(`${app}.game.getDailyTasks()`);
   assert.equal(daily.tasks.find((task) => task.id === 'merges_10').progress, 10);
   assert.equal(daily.tasks.find((task) => task.id === 'specific_2').progress, 2);
-  await tap('OrderCard', 0); daily = await ev(`${app}.game.getDailyTasks()`);
+  await deliver(0); daily = await ev(`${app}.game.getDailyTasks()`);
   assert.ok(daily.tasks.every((task) => task.ready), 'Real merge and delivery should complete all daily goals');
   await tap('OpenTools'); await tap('RewardsTab_daily');
   for (const task of daily.tasks) {
@@ -1546,23 +2082,26 @@ try {
   passed('daily task progress from real actions, one-time claims, restart persistence and UTC+8 next-day reset');
 
 
-  // Version 6 had 48 cells: retain occupied old cells, lock unrelated empty cells,
-  // and put items from the six removed cells into the persistent inbox.
+  // The old six-column layout fits on today's seven-column board by row and column.
   await seed((d) => { d.version = 6; d.player.level = 1; d.player.xp = 0; d.legacyBoardEntitlement = true;
-    d.retainedOpenCellIndices = [];
+    d.retainedOpenCellIndices = []; delete d.boardSize; delete d.generatorBoard;
     d.board = Array.from({ length: 48 }, (_, index) => ({ index,
       ...([0, 4, 41, 46].includes(index) ? { item: { uid: `v6_sparse_${index}`, definitionId: 'coffee_01' } } : {}) })); });
   await tap('EnterGame'); if (await active('ConfirmStorageNotice')) await tap('ConfirmStorageNotice');
   const sparse = await cells(); assert.equal(sparse.length, boardSize);
-  assert.ok(!sparse[4].locked && !sparse[41].locked && sparse[5].locked);
-  assert.equal(sparse[4].item.uid, 'v6_sparse_4'); assert.equal(sparse[41].item.uid, 'v6_sparse_41');
-  assert.ok((await ev(`${app}.game.rewardInbox`)).some((item) => item.uid === 'v6_sparse_46'));
-  assert.equal(sparse.filter((cell) => !cell.locked).length, 11);
-  passed('v6 sparse migration preserves occupied rights and overflow while unrelated empty cells stay locked');
+  for (const index of [0, 4, 41, 46]) {
+    const mapped = sparse[Math.floor(index / 6) * boardColumns + index % 6];
+    assert.equal(mapped.item.uid, `v6_sparse_${index}`);
+    assert.equal(mapped.locked, false);
+  }
+  assert.equal(sparse[5].locked, true);
+  assert.deepEqual(await ev(`${app}.game.rewardInbox`), []);
+  assert.equal(sparse.filter(cell => !cell.locked).length, 12);
+  passed('v6 sparse migration remaps occupied coordinates while unrelated empty cells stay locked');
 
   // Isolated v5 migration: all legacy UIDs and preferences must survive the smaller board.
   await seed((d) => {
-    d.version = 5; d.player.level = 1; d.preferences = { soundEnabled: false, vibrationEnabled: false };
+    d.version = 5; delete d.boardSize; delete d.generatorBoard; d.player.level = 1; d.preferences = { soundEnabled: false, vibrationEnabled: false };
     d.board = Array.from({ length: 81 }, (_, index) => ({ index, item: { uid: `legacy_${index}`, definitionId: 'coffee_01' } }));
     d.life.unlockedMemoryIds = ['letters', 'anniversary'];
   });

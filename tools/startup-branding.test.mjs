@@ -13,7 +13,7 @@ async function fixture(t, platform) {
   const build = join(root, 'out'); mkdirSync(join(build, 'src'), { recursive: true });
   mkdirSync(join(root, 'assets/game_art'), { recursive: true });
   cpSync(resolve('build-templates/startup'), join(root, 'build-templates/startup'), { recursive: true });
-  await sharp({ create: { width: 420, height: 700, channels: 3, background: '#e7d8c5' } }).jpeg().toFile(join(root, 'assets/game_art/cover_background.jpg'));
+  await sharp({ create: { width: 420, height: 700, channels: 3, background: '#e7d8c5' } }).jpeg().toFile(join(root, 'assets/game_art/cover_garden.jpg'));
   writeFileSync(join(build, 'src/settings.json'), JSON.stringify({ splashScreen: { totalTime: 2000, logo: { type: 'default' }, background: { type: 'default' } }, untouched: 17 }));
   if (platform === 'wechatgame') {
     writeFileSync(join(build, 'first-screen.js'), 'default Cocos');
