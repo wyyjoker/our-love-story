@@ -43,7 +43,7 @@ export class CocosPlayPages {
   private hubPage = 0;
   readonly hubPageSize = 2;
   private skipping = false;
-  private selectedWarehouseUid: string | null = null;
+  private highlightedWarehouseUid: string | null = null;
   private backpackExpansionQuote: { capacity: number; cost: number } | null = null;
   constructor(private readonly game: GameContext, private readonly roots: UiRoots,
     private readonly toast: (message: string) => void, private readonly changed: () => void,
@@ -64,7 +64,7 @@ export class CocosPlayPages {
   }
   openTools(focusUid?: string): void {
     this.clearToast();
-    this.selectedWarehouseUid = focusUid ?? null; this.backpackExpansionQuote = null;
+    this.highlightedWarehouseUid = focusUid ?? null; this.backpackExpansionQuote = null;
     this.screen = 'tools'; this.root.active = true;
     this.render(); this.changed();
   }
@@ -274,14 +274,15 @@ export class CocosPlayPages {
     for (let i = 0; i < status.maxCapacity; i++) {
       const item = state.warehouse[i];
       const locked = i >= status.capacity, next = i === status.capacity;
+      const highlighted = !!item && item.uid === this.highlightedWarehouseUid;
       const slot = button(panel, 'Warehouse_' + i, locked && next ? '◆\n扩容' : '', -250 + i % 6 * 100, 318 - Math.floor(i / 6) * 100, 94, 94,
         () => {
           if (locked) { if (next) this.requestBackpackExpansion(); else this.toast('逐格扩容，下一格可用钻石解锁'); return; }
-          if (item) { this.selectedWarehouseUid = item.uid; this.render(); }
+          if (item) this.action('withdraw', item.uid, '已取回棋盘');
           else this.toast('把棋盘上的物品或生成器拖到背包图标即可收纳');
-        }, !!item && item.uid === this.selectedWarehouseUid);
+        }, highlighted);
       paintRoundRect(slot.getComponent(Graphics)!, 94, 94, 12,
-        hexColor(item?.uid === this.selectedWarehouseUid ? '#F7DDD6' : locked ? '#F1E7D8' : '#FFF7E8'), hexColor(next ? '#D9978C' : '#DECAB2'), next ? 2 : 1);
+        hexColor(highlighted ? '#F7DDD6' : locked ? '#F1E7D8' : '#FFF7E8'), hexColor(next || highlighted ? '#D9978C' : '#DECAB2'), next || highlighted ? 2 : 1);
       if (locked && !next) {
         const lock = createUiNode('BackpackSlotLock'); slot.addChild(lock); const glyph = lock.addComponent(Graphics);
         glyph.strokeColor = hexColor('#B89973'); glyph.lineWidth = 2.5; glyph.roundRect(-7, 0, 14, 19, 7); glyph.stroke();
@@ -295,12 +296,8 @@ export class CocosPlayPages {
       const art = itemArt(item.definitionId); if (art) applyArt(icon, { ...art, preserveAspect:true }, 70, 62);
       text(slot, definition?.maxUses ? `余${item.remainingUses ?? definition.maxUses}次` : `Lv.${definition?.level ?? '—'}`, 0, -31, 88, 26, 18, '#A8786D');
     }
-    const selected = state.warehouse.find(item => item.uid === this.selectedWarehouseUid);
-    const definition = selected && this.game.bundle.catalog.get(selected.definitionId);
-    const selection = box(panel, 'BackpackSelectedItem', 0, -262, 612, 54, '#F9EDDD');
-    text(selection, definition?.generator ? `${definition.displayName} · Lv.${definition.level}` : definition?.displayName ?? '选择物品后取回棋盘', -84, 0, 400, 44, 24);
-    button(selection, 'BackpackWithdraw', '取回', 222, 0, 130, 52, () => { if (selected) this.action('withdraw', selected.uid); }, !!selected)
-      .getComponent(Button)!.interactable = !!selected;
+    const tapHint = box(panel, 'BackpackTapHint', 0, -262, 612, 54, '#F9EDDD');
+    text(tapHint, '点击物品取回棋盘', 0, 0, 580, 44, 24);
     const expand = button(panel, 'BackpackExpand', status.nextCost === null ? '已达到36格上限' : `扩容1格   ◆ ${status.nextCost}`, 0, -332, 612, 68,
       () => this.requestBackpackExpansion(), status.affordable);
     expand.getComponent(Button)!.interactable = status.nextCost !== null && status.affordable;

@@ -493,7 +493,6 @@ try {
             await dragItemToBackpack(spare.index);
             await tap('BoardBackpackButton');
             await tap('Warehouse_0');
-            await tap('BackpackWithdraw');
             await tap('PlayClose');
             assert.ok((await cells()).some(c => c.item?.uid === spare.item.uid), 'Stored spare returned to the board');
             usedBackpack = true;
@@ -1021,7 +1020,8 @@ try {
       assert.equal(await ev(`${app}.game.player.energy`),before-1,'Packing must not produce or spend energy');
       await tap('Required_0'); assert.ok((await labels()).some(label=>label.includes('在背包中')));
       await tap('OrderGuideLocate'); assert.ok(await active('BackpackTitle'));
-      await tap('BackpackWithdraw'); await tap('PlayClose');
+      assert.equal((await ev(`${app}.game.play.state.warehouse[0]`)).uid,uid,'Opening the backpack from the order guide keeps the generator stored');
+      await tap('Warehouse_0'); await tap('PlayClose');
       const returned=(await machines())[0]; assert.equal(returned.item.uid,uid);
       assert.equal(returned.item.generatorState.remainingUses,59);
       await hold(returned.index);assert.ok(await active('GeneratorDetailName'));assert.equal(await active('GeneratorLevel_1'),false);await shot('producer-details-'+width);await tap('GeneratorWorkshopCloseButton');
@@ -1036,8 +1036,8 @@ try {
       await dragItemToBackpack(merged.index);
       await send('Page.reload');await wait(400);await ready();await tap('EnterGame');
       assert.equal((await machines()).length,0);
-      await tap('BoardBackpackButton'); await tap('Warehouse_0'); await shot('packed-generator-'+width);
-      await tap('BackpackWithdraw'); await tap('PlayClose');
+      await tap('BoardBackpackButton'); await shot('packed-generator-'+width);
+      await tap('Warehouse_0'); await tap('PlayClose');
       const restored=(await machines())[0];assert.equal(restored.item.uid,merged.item.uid);
       assert.equal(restored.item.generatorState.remainingUses,58);assert.equal(restored.item.generatorState.boosted,true);
       await tap('BoardBackpackButton');assert.ok(await active('BackpackTitle'));await tap('PlayClose');await tap('MergeHomeButton');assert.ok(await active('HomeRoomTabs'));
@@ -1097,12 +1097,15 @@ try {
       assert.equal(await ev(`(()=>{let count=0;const walk=n=>{if(/^Warehouse_\\d+$/.test(n.name)&&n.activeInHierarchy)count++;n.children.forEach(walk)};walk(cc.director.getScene());return count})()`),36);
       const corners=await Promise.all(['Warehouse_0','Warehouse_35','BackpackExpand','PlayClose'].map(name=>coords(name)));
       for(const p of corners)assert.ok(p.x>0&&p.x<width&&p.y>0&&p.y<height,'Backpack controls must fit the viewport');
-      const gridGap=await ev(`(()=>{let cell,selection;const walk=n=>{if(n.activeInHierarchy){if(n.name==='Warehouse_35')cell=n;if(n.name==='BackpackSelectedItem')selection=n}n.children.forEach(walk)};walk(cc.director.getScene());const bounds=n=>(n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp).getBoundingBoxToWorld();return bounds(cell).yMin-bounds(selection).yMax})()`);
-      assert.ok(gridGap>1,'Selection bar must not overlap the last storage row');
+      const gridGap=await ev(`(()=>{let cell,hint;const walk=n=>{if(n.activeInHierarchy){if(n.name==='Warehouse_35')cell=n;if(n.name==='BackpackTapHint')hint=n}n.children.forEach(walk)};walk(cc.director.getScene());const bounds=n=>(n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp).getBoundingBoxToWorld();return bounds(cell).yMin-bounds(hint).yMax})()`);
+      assert.ok(gridGap>1,'The tap instruction must not overlap the last storage row');
       assert.equal((await ev(`${app}.game.getBackpackStatus()`)).capacity,6);await shot('backpack36-initial-'+width);
-      await tap('Warehouse_0');assert.equal(await enabled('BackpackWithdraw'),true);await tap('BackpackWithdraw');
+      assert.equal(await active('BackpackWithdraw'),false);
+      await tap('Warehouse_0');
       assert.equal(await ev(`${app}.game.play.state.warehouse.length`),3);
       assert.ok((await cells()).some(c=>c.item?.uid==='pack_coffee'));
+      assert.ok(await active('BackpackTitle'),'The backpack remains open after a successful withdrawal');
+      assert.ok((await labels()).includes('已取回棋盘'));
       await tap('BackpackExpand');assert.ok(await active('BackpackExpandConfirm'));assert.equal(await ev(`${app}.game.player.diamonds`),100);
       await tap('BackpackExpandCancel');assert.equal(await ev(`${app}.game.play.warehouseCapacity`),6);assert.equal(await ev(`${app}.game.player.diamonds`),100);
       await tap('BackpackExpand');await shot('backpack36-confirm-'+width);
@@ -1113,12 +1116,24 @@ try {
       assert.equal(await ev(`${app}.game.play.warehouseCapacity`),7);assert.equal(await ev(`${app}.game.player.diamonds`),90);
       assert.deepEqual(await ev(`${app}.game.play.state.warehouse.map(i=>i.uid)`),['pack_chest','pack_shears','pack_diamond']);
       await tap('TakeScissors');assert.equal(await ev(`${app}.game.play.state.scissors`),1);
-      passed(`36-slot backpack, selection, withdraw, reviewed expansion, no double spend and restart at ${width}`);
+      passed(`36-slot backpack, one-tap withdrawal, reviewed expansion, no double spend and restart at ${width}`);
     }
     await seed(d=>packFixture(d,36,100));await tap('EnterGame');await tap('BoardBackpackButton');assert.equal(await enabled('BackpackExpand'),false);await shot('backpack36-max');
     await seed(d=>packFixture(d,6,9));await tap('EnterGame');await tap('BoardBackpackButton');assert.equal(await enabled('BackpackExpand'),false);
     await tap('Warehouse_6');assert.equal(await active('BackpackExpandConfirm'),false);assert.equal(await ev(`${app}.game.player.diamonds`),9);await shot('backpack36-insufficient');
-    assert.deepEqual(exceptions,[]);passed('maximum capacity and insufficient diamonds stay read-only with no runtime exceptions');
+    passed('maximum capacity and insufficient diamonds stay read-only');
+    await seed(d=>{
+      packFixture(d);
+      d.board=d.board.map(cell=>({...cell,item:{uid:'occupied_'+cell.index,definitionId:'coffee_01'}}));
+    });await tap('EnterGame');await tap('BoardBackpackButton');
+    const fullBoard=await cells(),packedItems=await ev(`${app}.game.play.state.warehouse`);
+    assert.ok(fullBoard.every(cell=>cell.locked||cell.item));
+    await tap('Warehouse_0');
+    assert.deepEqual(await cells(),fullBoard);
+    assert.deepEqual(await ev(`${app}.game.play.state.warehouse`),packedItems);
+    assert.ok(await active('BackpackTitle'));
+    assert.ok((await labels()).includes('棋盘已满，先留出一个空格再试'));
+    assert.deepEqual(exceptions,[]);passed('a full board keeps the item in the backpack and displays feedback');
   } else if (scope === 'furnitureedit') {
     await load();
     const pose=()=>ev(`${app}.game.life.state.furniturePositions.sofa`);
@@ -1233,7 +1248,7 @@ try {
     await tap('EnterGame');assert.ok(await bubble());assert.ok((await hintText()).includes('背包'));await shot('firstuse-backpack');
     const source=(await ev(`${app}.game.getFirstUseGuide()`)).sourceIndex;const uid=(await cells())[source].item.uid;
     await dragItemToBackpack(source);assert.ok((await ev(`${app}.game.tutorial.firstUseHints`)).includes('backpack'));
-    assert.ok(!(await bubble()));await tap('BoardBackpackButton');await tap('Warehouse_0');await tap('BackpackWithdraw');assert.ok((await cells()).some(c=>c.item?.uid===uid));await tap('PlayClose');
+    assert.ok(!(await bubble()));await tap('BoardBackpackButton');await tap('Warehouse_0');assert.ok((await cells()).some(c=>c.item?.uid===uid));await tap('PlayClose');
     await send('Page.reload');await wait(400);await ready();await tap('EnterGame');assert.ok(!(await bubble()));
     passed('backpack guide waits for entry, accepts real drag, clears on completion and never returns after restart');
 
@@ -1280,7 +1295,7 @@ try {
     assert.equal(await ev(`${app}.view.playPages.screen`),'tools');
     assert.ok(!(await active('Split_0')));await tap('TakeScissors');await tap('TakeScissors');assert.equal(await ev(`${app}.game.play.state.scissors`),0);await shot('physical-scissors-backpack');await tap('PlayClose');
     const tools=(await cells()).flatMap(c=>c.item?.definitionId==='scissors_01'?[c.index]:[]);assert.equal(tools.length,2);await gesture(tools[0],tools[1]);const merged=(await cells())[tools[1]].item;assert.equal(merged.definitionId,'scissors_02');assert.equal(merged.remainingUses,3);
-    await tap('BoardBackpackButton');await tap('Warehouse_0');await tap('BackpackWithdraw');await tap('PlayClose');await gesture(tools[1],0);assert.equal((await cells())[tools[1]].item.remainingUses,2);assert.equal((await cells()).filter(c=>c.item?.definitionId==='coffee_02').length,2);await shot('scissors-drag-split');
+    await tap('BoardBackpackButton');await tap('Warehouse_0');await tap('PlayClose');await gesture(tools[1],0);assert.equal((await cells())[tools[1]].item.remainingUses,2);assert.equal((await cells()).filter(c=>c.item?.definitionId==='coffee_02').length,2);await shot('scissors-drag-split');
     await dragToBackpack(tools[1]);assert.equal(await ev(`${app}.game.play.state.warehouse[0].remainingUses`),2);await send('Page.reload');await wait(400);await ready();await tap('EnterGame');assert.equal(await ev(`${app}.game.play.state.warehouse[0].remainingUses`),2);assert.equal(await ev(`${app}.game.play.state.scissors`),0);
     passed('drag into backpack, take finite scissors, merge, drag to split and store worn tools across restart');
     await seed(d=>{mature(d);d.board=fill(['coffee_01']);d.play.warehouse=Array.from({length:bundle.game.toolbox.warehouseSlots},(_,i)=>({uid:'full_pack_'+i,definitionId:'coffee_01'}));});await tap('EnterGame');const fullBefore=await cells();await dragToBackpack(0);assert.deepEqual(await cells(),fullBefore);assert.equal(await ev(`${app}.game.play.state.warehouse.length`),bundle.game.toolbox.warehouseSlots);
@@ -1532,7 +1547,7 @@ try {
       const bagLayout=await ev(`(()=>{let panel;const w=n=>{if(n.name==='PlayPanel'&&n.activeInHierarchy)panel=n;n.children.forEach(w)};w(cc.director.getScene());const t=panel.getComponent('cc.UITransform')??panel._uiProps.uiTransformComp,v=cc.view.getVisibleSize();return{height:t.height*Math.abs(panel.worldScale.y)/v.height*innerHeight,y:panel.worldPosition.y,slots:panel.children.filter(n=>n.name.startsWith('Warehouse_')).length}})()`);
       assert.ok(bagLayout.height<=height*.95 && bagLayout.slots===36,'Backpack must show its 6x6 capacity inside the safe area');
       assert.equal(await active('Store_0'),false); await tap('PlayClose'); await dragItemToBackpack(0); await tap('BoardBackpackButton'); assert.ok((await labels()).some(v=>v.includes('1/6 格')), 'Backpack panel must update capacity after storing'); await shot(`polish-backpack-stored-${width}`); await tap('PlayClose'); assert.ok((await labels()).some((value)=>value === '1/6'));
-      await tap('BoardBackpackButton'); await tap('Warehouse_0'); await tap('BackpackWithdraw'); assert.ok((await labels()).some(v=>v.includes('0/6 格')), 'Backpack panel must update capacity after withdrawal'); await tap('PlayClose'); assert.ok((await labels()).some((value)=>value === '0/6'));
+      await tap('BoardBackpackButton'); await tap('Warehouse_0'); assert.ok((await labels()).some(v=>v.includes('0/6 格')), 'Backpack panel must update capacity after withdrawal'); await tap('PlayClose'); assert.ok((await labels()).some((value)=>value === '0/6'));
       await tap('DailyCheckInButton'); assert.ok(await active('RewardsOverlay') && await active('CheckInClaim'),'Top sign-in shortcut must open the check-in tab');
       const rewardGeometry = () => ev(`(()=>{const names=['RewardsViewport','RewardsTab_checkin','RewardsTab_daily','RewardsTab_supplies','RewardsTab_collection','CheckInClaim','CheckInDay_7'],out={};const w=n=>{if(n.activeInHierarchy&&names.includes(n.name)){const t=n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp,p=n.worldPosition,z=n.worldScale;out[n.name]={xMin:p.x-t.width*Math.abs(z.x)*t.anchorX,xMax:p.x+t.width*Math.abs(z.x)*(1-t.anchorX),yMin:p.y-t.height*Math.abs(z.y)*t.anchorY,yMax:p.y+t.height*Math.abs(z.y)*(1-t.anchorY)}}n.children.forEach(w)};w(cc.director.getScene());return out})()`);
       let rewardsGeo = await rewardGeometry();
@@ -1919,7 +1934,7 @@ try {
   const toolEnergy = await ev(`${app}.game.player.energy`);
   assert.equal(await active('Store_0'),false); await tap('PlayClose'); await dragItemToBackpack(0); await tap('BoardBackpackButton'); assert.equal((await cells())[0].item, undefined);
   assert.equal(await ev(`${app}.game.play.state.warehouse.length`), 1);
-  await tap('Warehouse_0'); await tap('BackpackWithdraw'); assert.equal((await cells())[0].item.uid, 'tool_0');
+  await tap('Warehouse_0'); assert.equal((await cells())[0].item.uid, 'tool_0');
   await tap('TakeScissors');
   const scissorCell=(await cells()).findIndex(c=>c.item?.definitionId==='scissors_01');assert.ok(scissorCell>=0);
   const blockedBoard = await cells(); await gesture(0, 2); assert.deepEqual(await cells(), blockedBoard);
