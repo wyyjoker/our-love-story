@@ -82,18 +82,18 @@ export type PuzzleDefinitionView = {
   variantId: string;
 };
 export type AdventureChapter = {
-  id: string; memoryId: string; title: string; intro: string; unlockLevel: number;
+  id: string; memoryId: string; title: string; intro: string;
+  /** Legacy preparation milestones, retained to validate old delivery data. */
+  unlockLevel?: number;
   steps: Array<{ title: string; requirements: OrderRequirement[]; note: string }>;
   instruction: string; hints: string[]; puzzle: PuzzleDefinition;
   replayVariants?: ReplayPuzzleVariant[];
   reward: { coins: number; hearts: number; energy: number; scissors: number; generator?: import('../types').GeneratorGift };
-  souvenir: { title: string; artItemId: string; room: 'living' | 'bedroom' | 'garden'; x: number; y: number };
+  souvenir?: { title: string; artItemId: string; room: 'living' | 'bedroom' | 'garden'; x: number; y: number };
 };
+export const WEDDING_CHAPTER_ID = 'leqing_wedding';
 export type ChapterAvailability = {
   available: boolean;
-  requiredLevel: number;
-  currentLevel: number;
-  previousChapter?: { id: string; title: string; claimed: boolean };
 };
 export type JourneyProgress = {
   completed: number;

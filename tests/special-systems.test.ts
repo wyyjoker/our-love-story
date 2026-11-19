@@ -61,12 +61,42 @@ describe('collection, cooldown and special items', () => {
     expect(g.claimCollectionBonus('sugar')).toEqual({ok:false,reason:'NOT_READY'});
     for(let pair=0;pair<2;pair++){g.board.placeAt(0,'sugar_01');g.board.placeAt(1,'sugar_01');expect(g.dropItem(0,1).ok).toBe(true);g.dropItem(1,pair===0?7:8);}
     expect(g.dropItem(7,8)).toMatchObject({ok:true,kind:'MERGE',resultDefinitionId:'sugar_03'});
-    expect(g.getCollectionProgress().find((c)=>c.chainId==='sugar')).toMatchObject({discovered:3,total:3,ready:true,claimed:false});
+    expect(g.getCollectionProgress().find((c)=>c.chainId==='sugar')).toMatchObject({discovered:3,total:5,ready:false,claimed:false});
+    expect(g.claimCollectionBonus('sugar')).toEqual({ok:false,reason:'NOT_READY'});
+    g.board.placeAt(0,'sugar_03');
+    expect(g.dropItem(8,0)).toMatchObject({ok:true,kind:'MERGE',resultDefinitionId:'sugar_04'});
+    g.board.placeAt(1,'sugar_04');
+    expect(g.dropItem(0,1)).toMatchObject({ok:true,kind:'MERGE',resultDefinitionId:'sugar_05'});
+    expect(g.getCollectionProgress().find((c)=>c.chainId==='sugar')).toMatchObject({discovered:5,total:5,ready:true,claimed:false});
     const energy=g.player.energy; expect(g.player.maxEnergy).toBe(100);
     expect(g.claimCollectionBonus('sugar')).toEqual({ok:true,energyBonus:3});
     expect(g.player).toMatchObject({maxEnergy:103,energy}); expect(g.claimCollectionBonus('sugar')).toEqual({ok:false,reason:'ALREADY_CLAIMED'});
     let h=f.open(); expect(h.player).toMatchObject({maxEnergy:103,energy}); expect(h.getCollectionProgress().find((c)=>c.chainId==='sugar')?.claimed).toBe(true);
     h.debugAddXp(50); expect(h.player.maxEnergy).toBe(153); h=f.open(); expect(h.player.maxEnergy).toBe(153); expect(h.player.energy).toBe(energy);
+  });
+  it('merges two previously saved level-three sugar jars and keeps their new result after reload', () => {
+    const f=fixture(), g=f.open();
+    g.debugClearBoard();
+    g.board.placeAt(0,'sugar_03'); g.board.placeAt(1,'sugar_03'); g.save();
+    const restored=f.open();
+    expect(restored.dropItem(0,1)).toMatchObject({ok:true,kind:'MERGE',resultDefinitionId:'sugar_04'});
+    expect(f.open().board.getBoard().cells[1].item?.definitionId).toBe('sugar_04');
+  });
+  it('replaces a regular order with a single already-held sugar item and never duplicates its request', () => {
+    const g=fixture().open(); g.debugClearBoard();
+    const before=g.orders.getOrders().map(order=>({...order,requirements:[{itemId:'coffee_01',count:1}]}));
+    g.orders.hydrate(before,[]);
+    g.board.placeAt(0,'coffee_01');g.board.placeAt(1,'sugar_03');g.board.placeAt(2,'sugar_05');
+    expect(g.claimOrder(before[1].uid).ok).toBe(true);
+    const stocked=g.orders.getOrders()[1];
+    expect(stocked.requirements).toEqual([{itemId:'sugar_05',count:1}]);
+    expect(g.orders.canClaim(stocked.uid)).toBe(true);
+    g.board.placeAt(0,'coffee_01');
+    expect(g.claimOrder(before[2].uid).ok).toBe(true);
+    expect(g.orders.getOrders().filter(order=>order.requirements.some(req=>req.itemId.startsWith('sugar_')))).toHaveLength(1);
+    expect(g.claimOrder(stocked.uid).ok).toBe(true);
+    expect(g.board.getBoard().cells[2].item).toBeUndefined();
+    expect(g.board.getBoard().cells[1].item?.definitionId).toBe('sugar_03');
   });
   it('caps cumulative bonuses at 1000 without losing overflowing saved energy', () => {
     const f=fixture(), b=loadConfigBundle(), d=createDefaultSaveData(b.game,f.clock.now());
@@ -120,12 +150,13 @@ describe('collection, cooldown and special items', () => {
   it('merges wildcard in both directions only with eligible non-max chains', () => {
     const bundle=loadConfigBundle(), engine=new MergeEngine(bundle.catalog);
     const item=(id:string)=>({uid:id,definitionId:id});
-    for(const id of ['coffee_01','flower_03','dessert_04','gift_02','fruit_01','sugar_02']) {
+    for(const id of ['coffee_01','coffee_12','flower_03','dessert_04','gift_02','fruit_01','painting_03','photo_03','sugar_02']) {
       const expected=bundle.catalog.get(id)?.nextItemId;
       expect(engine.merge(item('wildcard'),item(id),'a')).toMatchObject({ok:true,item:{definitionId:expected}});
       expect(engine.merge(item(id),item('wildcard'),'b')).toMatchObject({ok:true,item:{definitionId:expected}});
     }
-    for(const id of ['coffee_12','sugar_03','coin_01','energy_01','diamond_01','treasure_chest','wildcard']) expect(engine.canMerge(item('wildcard'),item(id))).toBe(false);
+    for(const id of ['coffee_18','sugar_05','coin_01','energy_01','diamond_01','treasure_chest','wildcard']) expect(engine.canMerge(item('wildcard'),item(id))).toBe(false);
+    expect(engine.merge(item('sugar_05'),item('sugar_05'),'max')).toEqual({ok:false,reason:'MAX_LEVEL'});
     const g=fixture(0.5).open(); g.board.clearBoard(); g.board.placeAt(0,'wildcard'); g.board.placeAt(1,'sugar_02');
     const coins=g.player.coins; expect(g.dropItem(0,1)).toMatchObject({ok:true,kind:'MERGE',resultDefinitionId:'sugar_03'});
     expect(g.player.coins).toBe(coins+g.config.rewards.discoveryCoins); expect(g.isItemDiscovered('sugar_03')).toBe(true);

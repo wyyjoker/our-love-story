@@ -95,16 +95,20 @@
       800,
       850,
       900,
-      1000
+      1000,
+      1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
+      1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
+      1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
+      1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000
     ]
   },
   "dragThresholdPx": 12,
   "orders": {
-    "activeSlots": 3,
+    "activeSlots": 6,
     "minRequirements": 1,
     "maxRequirements": 2,
     "minItemLevel": 1,
-    "maxItemLevel": 5,
+    "maxItemLevel": 12,
     "refreshCooldownMs": 900000,
     "refreshDiamondCost": 2,
     "dynamic": {
@@ -115,6 +119,17 @@
       "rewardMultiplierMin": 1.2,
       "rewardMultiplierMax": 1.8,
       "rewardMultiplierMaxLevel": 18,
+      "difficulty": [
+        {"minPlayerLevel": 11, "regularMin": 3, "goalMin": 4, "maxItemLevel": 5},
+        {"minPlayerLevel": 15, "regularMin": 4, "goalMin": 5, "maxItemLevel": 6},
+        {"minPlayerLevel": 18, "regularMin": 4, "goalMin": 5, "maxItemLevel": 7},
+        {"minPlayerLevel": 25, "regularMin": 5, "goalMin": 6, "maxItemLevel": 8},
+        {"minPlayerLevel": 35, "regularMin": 6, "goalMin": 7, "maxItemLevel": 9},
+        {"minPlayerLevel": 45, "regularMin": 7, "goalMin": 8, "maxItemLevel": 10},
+        {"minPlayerLevel": 50, "regularMin": 8, "goalMin": 9, "maxItemLevel": 11}
+      ],
+      "quickMaxItemLevel": 3,
+      "regularTwoItemChance": 0.7,
       "twoItemChance": 0.3
     }
   },
@@ -202,6 +217,21 @@
         "itemId": "scissors_02"
       }
     ],
+    "weeklyChallenge": {
+      "minLevel": 8,
+      "advancedItemLevel": 4,
+      "themes": [
+        {"title": "晨间咖啡周", "days": 3, "orders": 18, "challengeOrders": 5, "advancedMerges": 8, "chains": ["coffee"]},
+        {"title": "花艺小铺周", "days": 3, "orders": 16, "challengeOrders": 5, "advancedMerges": 12, "chains": ["flower"]},
+        {"title": "甜点试吃周", "days": 3, "orders": 20, "challengeOrders": 6, "advancedMerges": 8, "chains": ["dessert"]},
+        {"title": "暖心礼物周", "days": 3, "orders": 16, "challengeOrders": 8, "advancedMerges": 10, "chains": ["gift"]},
+        {"title": "阳光市集周", "days": 3, "orders": 22, "challengeOrders": 7, "advancedMerges": 10, "chains": ["fruit","flower"]},
+        {"title": "周末约会周", "days": 3, "orders": 20, "challengeOrders": 6, "advancedMerges": 14, "chains": ["coffee","dessert"]},
+        {"title": "旅程纪念周", "days": 3, "orders": 18, "challengeOrders": 8, "advancedMerges": 14, "chains": ["gift","fruit"]},
+        {"title": "小屋庆典周", "days": 3, "orders": 24, "challengeOrders": 9, "advancedMerges": 16, "chains": ["coffee","flower","dessert","gift","fruit"]}
+      ],
+      "reward": {"coins": 260, "xp": 180, "energy": 50, "diamonds": 5}
+    },
     "dailyTasks": [
       {
         "id": "orders_3",
@@ -402,6 +432,8 @@
       "dessert",
       "gift",
       "fruit",
+      "painting",
+      "photo",
       "sugar"
     ],
     "energyPerChain": 3,

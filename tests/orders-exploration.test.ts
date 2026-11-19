@@ -10,7 +10,7 @@ function fixture() {
  const storage={getItem:(k:string)=>values.get(k)??null,setItem:(k:string,v:string)=>{values.set(k,v);},removeItem:(k:string)=>{values.delete(k);}};
  const open=()=>createGameContext({storage,clock,deterministic:true,saveDebounceMs:0}); return {values,clock,open};
 }
-describe('short orders and level-only exploration',()=>{
+describe('short orders and direct exploration',()=>{
  it('offers one or two items from early levels, with exactly 30% two-item orders',()=>{
   const b=loadConfigBundle();
   for(const level of [1,5,6,10,11,18]) {
@@ -34,7 +34,7 @@ describe('short orders and level-only exploration',()=>{
   data.activeOrders[0]=old;data.board[0].item={uid:'keep_item',definitionId:'coffee_01'};data.player.coins=123;
   f.values.set(b.game.saveKey,JSON.stringify(data));const g=f.open(),current=g.orders.getOrders()[0];
   expect(current).toMatchObject({uid:'legacy_order',rewardCoins:70,rewardXp:20,rewardHearts:3,requirements:[{itemId:'coffee_02',count:2}]});
-  expect(g.board.getBoard().cells[0].item?.uid).toBe('keep_item');expect(g.player.coins).toBe(123);expect(g.orders.getOrders()).toHaveLength(3);
+  expect(g.board.getBoard().cells[0].item?.uid).toBe('keep_item');expect(g.player.coins).toBe(123);expect(g.orders.getOrders()).toHaveLength(6);
   expect(f.open().orders.getOrders()[0]).toEqual(current);
  });
  it('preserves reachable low-level two-item orders and promised rewards across restart',()=>{
@@ -42,8 +42,8 @@ describe('short orders and level-only exploration',()=>{
   data.activeOrders[0]={uid:'old',templateId:'old',requirements:[{itemId:'coffee_02',count:2}],rewardCoins:32,rewardXp:14,rewardHearts:5};
   f.values.set(b.game.saveKey,JSON.stringify(data));const g=f.open();expect(g.orders.getOrders()[0]).toMatchObject({uid:'old',requirements:[{itemId:'coffee_02',count:2}],rewardCoins:32});
  });
- it('opens a later chapter solely by level and requires actual puzzle completion before claiming',()=>{
-  const f=fixture(),g=f.open();g.debugAddXp(150);g.debugClearBoard();
+ it('opens a later chapter at Lv1 and requires actual puzzle completion before claiming',()=>{
+  const f=fixture(),g=f.open();g.debugClearBoard();
   const chapter=g.bundle.adventures.find((c)=>c.id==='love_letters')!;
   expect(g.play.progress('zhoushan').claimed).toBe(false);expect(g.play.isAvailable(chapter.id)).toBe(true);
   expect(g.play.progress(chapter.id).step).toBe(chapter.steps.length);expect(g.playAction('claim',chapter.id)).toEqual({ok:false,reason:'NOT_READY'});

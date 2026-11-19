@@ -108,7 +108,7 @@ describe('playful story and inventory loop', () => {
     game.playAction('withdraw', game.play.state.warehouse[0].uid);
     expect(game.playAction('deliver', 'zhoushan')).toEqual({ ok: false, reason: 'NOT_READY' });
     expect(game.board.getBoard().cells.some((c) => c.item?.definitionId === 'coffee_02')).toBe(true);
-    expect(game.orders.getOrders()).toHaveLength(3);
+    expect(game.orders.getOrders()).toHaveLength(6);
   });
   it('keeps clues, code, free hint count and step progress after restart; wrong answers never charge energy', () => {
     const f = fixture(); prepare(f.game, 'zhoushan');

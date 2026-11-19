@@ -5,6 +5,7 @@ import type {
   GamePreferences,
   LifeState,
   PlayerState,
+  ProgressionConfig,
   SaveData,
   TutorialState,
 } from '../core/types';
@@ -12,6 +13,8 @@ import type { StorageAdapter } from './PlatformService';
 import { normalizeJournal } from '../gameplay/JournalService';
 import type { ClockService } from './ClockService';
 import type { ChapterProgress, PlayState, PuzzleProgress, ReplayProgress, ReplayStats, SmallDateProgress } from '../core/play/types';
+import { getLevelForXp } from '../core/progression/progression';
+import { MAX_GENERATOR_TIER } from '../core/generator/generatorItems';
 
 export type SaveLoadResult =
   | { ok: true; data: SaveData; repaired: boolean; notice?: 'MIGRATED' | 'REPAIRED' | 'BACKUP_RESTORED' }
@@ -32,6 +35,7 @@ export type SaveServiceOptions = {
   /** First starter furniture, used only to repair the former Creator Set-serialization bug. */
   legacyStarterFurnitureId?: string;
   energyCaps?: readonly number[];
+  progression?: ProgressionConfig;
   collection?: GameConfig['collection'];
   backpack?: { initialSlots: number; maxSlots: number };
 };
@@ -40,9 +44,11 @@ export class SaveService {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private pending: SaveData | null = null;
   private readonly debounceMs: number;
+  private readonly levelCap: number;
 
   constructor(private readonly options: SaveServiceOptions) {
     this.debounceMs = options.debounceMs ?? 200;
+    this.levelCap = options.progression?.levels.length ?? 18;
   }
 
   load(): SaveLoadResult {
@@ -253,6 +259,7 @@ export class SaveService {
       claimedCollectionIds,
       orderRefreshAt: Array.isArray(parsed.orderRefreshAt) ? parsed.orderRefreshAt.map((v) => typeof v === 'number' && Number.isFinite(v) ? v : null) : [],
       dailyTasks: this.mergeDailyTasks(parsed.dailyTasks),
+      weeklyChallenge: this.mergeWeeklyChallenge(parsed.weeklyChallenge),
       journal: normalizeJournal(parsed.journal),
       checkIn: { lastClaimDay: typeof parsed.checkIn?.lastClaimDay === 'number' && Number.isFinite(parsed.checkIn.lastClaimDay) ? parsed.checkIn.lastClaimDay : null, claims: Math.max(0, Math.floor(num(parsed.checkIn?.claims, 0))) },
       activeOrders: activeOrders.length > 0 ? activeOrders : defaults.activeOrders,
@@ -283,7 +290,9 @@ export class SaveService {
   ): PlayerState {
     if (!raw || typeof raw !== 'object') return { ...fallback };
     const p = raw as Partial<PlayerState>;
-    const level = Math.max(1, Math.min(18, Math.floor(num(p.level, fallback.level))));
+    const progression = this.options.progression;
+    const formerCap = 18;
+    let level = Math.max(1, Math.min(this.levelCap, Math.floor(num(p.level, fallback.level))));
     const oldXp = Math.max(0, Math.floor(num(p.xp, fallback.xp)));
     let xp = oldXp;
     if (version === 1) {
@@ -296,6 +305,7 @@ export class SaveService {
         : 0;
       xp = newFloor + Math.round(progress * 50 * level) + (level >= 5 ? Math.max(0, oldXp - oldFloor) : 0);
     }
+    if (progression && level >= formerCap) level = Math.max(level, getLevelForXp(progression, xp));
     const oldMax = Math.max(1, num(p.maxEnergy, fallback.maxEnergy));
     const oldEnergy = Math.max(0, num(p.energy, fallback.energy));
     const baseCap = this.options.energyCaps?.[Math.min(this.options.energyCaps.length - 1, level - 1)] ?? fallback.maxEnergy;
@@ -344,6 +354,21 @@ export class SaveService {
     return cells;
   }
 
+  private mergeWeeklyChallenge(raw: unknown): SaveData['weeklyChallenge'] {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+    const data = raw as NonNullable<SaveData['weeklyChallenge']>;
+    if (!Number.isSafeInteger(data.week) || data.week < 0) return undefined;
+    const count = (value: number): number => Number.isSafeInteger(value) && value >= 0 ? value : 0;
+    return {
+      week: data.week, orders: count(data.orders), challengeOrders: count(data.challengeOrders),
+      advancedMerges: count(data.advancedMerges), completedWeeks: count(data.completedWeeks), claimed: data.claimed === true,
+      orderDays: Array.isArray(data.orderDays)
+        ? Array.from(new Set(data.orderDays.filter(day => Number.isInteger(day) && day >= 0 && day < 7))) : [],
+      pendingRewardWeeks: Array.isArray(data.pendingRewardWeeks)
+        ? Array.from(new Set(data.pendingRewardWeeks.filter(week => Number.isSafeInteger(week) && week >= 0 && week < data.week))) : [],
+    };
+  }
+
   private mergeDailyTasks(raw: unknown): SaveData['dailyTasks'] {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
     const d = raw as NonNullable<SaveData['dailyTasks']>;
@@ -369,7 +394,7 @@ export class SaveService {
     const validId = (value: unknown): value is string => typeof value === 'string' && /^[a-z][a-z0-9_]*$/.test(value);
     const seen = new Set<string>();
     const rewards = (Array.isArray(raw.rewards) ? raw.rewards : []).filter(r => r && typeof r === 'object' && validId(r.id) && validId(r.generatorId)
-      && Number.isSafeInteger(r.level) && r.level >= 1 && r.level <= 8 && Number.isSafeInteger(r.count) && r.count > 0
+      && Number.isSafeInteger(r.level) && r.level >= 1 && r.level <= MAX_GENERATOR_TIER && Number.isSafeInteger(r.count) && r.count > 0
       && ['legacy', 'unlock', 'level_reward', 'wish_reward', 'chapter_reward'].includes(r.source) && !seen.has(r.id) && !!seen.add(r.id));
     return { ready: true, entitlements: Array.isArray(raw.entitlements) ? Array.from(new Set(raw.entitlements.filter(validId))) : [],
       grantedSourceIds:Array.isArray(raw.grantedSourceIds)?Array.from(new Set(raw.grantedSourceIds.filter(validId))):[],
@@ -382,7 +407,7 @@ export class SaveService {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return result;
     for (const [id, value] of Object.entries(raw)) {
       if (!/^[a-z][a-z0-9_]*$/.test(id) || !Array.isArray(value)) continue;
-      const counts = Array.from({ length: 8 }, (_, index) => Number.isSafeInteger(value[index]) && value[index] >= 0 ? value[index] as number : 0);
+      const counts = Array.from({ length: MAX_GENERATOR_TIER }, (_, index) => Number.isSafeInteger(value[index]) && value[index] >= 0 ? value[index] as number : 0);
       if (counts.some((count) => count > 0)) result[id] = counts;
     }
     return result;
@@ -518,7 +543,8 @@ export class SaveService {
       ? Array.from(new Set(value.filter((x): x is string => typeof x === 'string')))
       : [];
     const claimedLevels = Array.isArray(state.claimedLevelRewards)
-      ? Array.from(new Set(state.claimedLevelRewards.filter((x): x is number => typeof x === 'number' && Number.isInteger(x) && x >= 2 && x <= 18)))
+      ? Array.from(new Set(state.claimedLevelRewards.filter((x): x is number => typeof x === 'number' && Number.isInteger(x) && x >= 2
+        && x <= this.levelCap)))
       : [];
     return {
       furniturePositions: state.furniturePositions && typeof state.furniturePositions === 'object' && !Array.isArray(state.furniturePositions)

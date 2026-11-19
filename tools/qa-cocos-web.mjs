@@ -23,7 +23,7 @@ const checks = [];
 const exceptions = [];
 const scope = process.env.COCOS_QA_FOCUS ?? 'full';
 const visualScope = scope === 'watercolor';
-assert.ok(visualScope || ['full', 'timeline', 'postfresh', 'late', 'tail', 'level2', 'artfailure', 'polish', 'boardfill', 'chestflow', 'delivery', 'customer_tools', 'tools_only', 'systems', 'firstuse', 'ordertracking', 'homewalls', 'furnitureedit', 'backpack36', 'physical', 'earned', 'surfaces', 'paced'].includes(scope), 'Unknown COCOS_QA_FOCUS');
+assert.ok(visualScope || ['full', 'timeline', 'postfresh', 'late', 'tail', 'level2', 'artfailure', 'polish', 'boardfill', 'chestflow', 'delivery', 'customer_tools', 'tools_only', 'systems', 'firstuse', 'ordertracking', 'homewalls', 'furnitureedit', 'backpack36', 'physical', 'earned', 'surfaces', 'journey-layout', 'customer-queue', 'sugar-chain', 'memory-42', 'long-play', 'generator-expansion', 'paced'].includes(scope), 'Unknown COCOS_QA_FOCUS');
 function digestBuild(directory) {
   const hash = createHash('sha256');
   const walk = (folder) => {
@@ -45,6 +45,8 @@ const compiled = await build({ stdin: { contents: `
 `, resolveDir: root }, bundle: true, platform: 'node', format: 'esm', write: false });
 const domain = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].text).toString('base64')}`);
 const bundle = domain.loadConfigBundle();
+const originalAdventures = bundle.adventures.filter(chapter => chapter.steps.length > 0);
+const weddingAdventure = bundle.adventures.find(chapter => chapter.id === 'leqing_wedding');
 const initial = domain.createGameContext({ deterministic: true }).buildSaveData();
 const key = bundle.game.saveKey;
 const boardSize = bundle.game.board.rows * bundle.game.board.columns;
@@ -125,7 +127,7 @@ try {
   const active = (name) => ev(`(()=>{let yes=false;const walk=n=>{if(n.name===${JSON.stringify(name)}&&n.activeInHierarchy)yes=true;n.children.forEach(walk)};walk(cc.director.getScene());return yes})()`);
   const artState = (name) => ev(`(()=>{let n;const walk=v=>{if(v.name===${JSON.stringify(name)}&&v.activeInHierarchy)n=v;v.children.forEach(walk)};walk(cc.director.getScene());const f=n?.getComponent(cc.Sprite)?.spriteFrame;return f&&{textureId:f.texture._uuid,width:f.texture.width,height:f.texture.height,rectWidth:f.rect.width,rectHeight:f.rect.height,rectX:f.rect.x,rectY:f.rect.y}})()`);
   const waitForArt = async (name) => {
-    for (let i = 0; i < 40; i++) { const frame = await artState(name); if (frame) return frame; await wait(100); }
+    for (let i = 0; i < 80; i++) { const frame = await artState(name); if (frame) return frame; await wait(100); }
     throw Error(`Missing story artwork: ${name}`);
   };
   const labels = () => ev("(()=>{const s=[];const walk=n=>{const l=n.getComponent(cc.Label);if(l&&n.activeInHierarchy)s.push(l.string);n.children.forEach(walk)};walk(cc.director.getScene());return s})()");
@@ -142,7 +144,8 @@ try {
     if (name === 'ClaimLevelReward') for (let retry=0; retry<25 && !await active(name);retry++) await wait(80);
     const p = await coords(name, index);
     await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...p, id: 1 }] });
-    await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await wait(400);
+    await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await wait(scope === 'memory-42' && /^(Clue_|Letter_|Circuit_|PuzzleDigit_)/.test(name) ? 90 : 400);
     if (['OrderCard','ClaimButton','ClaimLevelReward'].includes(name)) for(let retry=0;retry<25 && await ev(`${app}.view.deliveries.size > 0 || ${app}.view.levelRewardInFlight`);retry++) await wait(70);
     if (scope === 'paced') await wait(1400);
   };
@@ -286,10 +289,31 @@ try {
     return ev(`(()=>{let cell;const walk=n=>{if(n.name===${JSON.stringify(name)}&&n.activeInHierarchy)cell=n;n.children.forEach(walk)};walk(cc.director.getScene());return cell?.getComponentsInChildren(cc.Label).filter(l=>l.node.activeInHierarchy).map(l=>l.string)??[]})()`);
   };
   const deliver = async (slot) => {
-    const readySlots = await ev(`(()=>{const g=${app}.game;return g.orders.getOrders().flatMap((order,index)=>g.board.getOrderProgress(order).ready?[index]:[])})()`);
-    const buttonIndex = readySlots.indexOf(slot);
+    const orders = await ev(`(()=>{const g=${app}.game;return g.orders.getOrders().map(order=>({uid:order.uid,ready:g.board.getOrderProgress(order).ready}))})()`);
+    const buttonIndex = orders.flatMap((order, index) => order.ready ? [index] : []).indexOf(slot);
     assert.ok(buttonIndex >= 0, `Order slot ${slot} is not ready for delivery`);
-    await tap('ClaimButton', buttonIndex);
+    const viewport = await coords('CustomerQueueViewport');
+    const width = await ev('innerWidth');
+    const swipeInset = width * 0.34;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const button = await coords('ClaimButton', buttonIndex);
+      if (button.x > width * 0.05 && button.x < width * 0.95) {
+        await tap('ClaimButton', buttonIndex);
+        assert.notEqual(await ev(`${app}.game.orders.getOrders()[${slot}].uid`), orders[slot].uid,
+          `Order slot ${slot} was not delivered`);
+        return;
+      }
+      const direction = button.x > viewport.x ? 1 : -1;
+      const start = viewport.x + direction * swipeInset;
+      await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: start, y: viewport.y, id: 57 }] });
+      for (let step = 1; step <= 7; step++) {
+        await send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: start - direction * swipeInset * 2 * step / 7, y: viewport.y, id: 57 }] });
+        await wait(25);
+      }
+      await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      await wait(450);
+    }
+    throw Error(`Order slot ${slot} could not be reached by horizontal touch scrolling`);
   };
   const freshPathActions = [];
   const ensureItem = async (itemId, count = 1, keep = new Map()) => {
@@ -522,6 +546,361 @@ try {
       assert.equal(await ev(`${app}.game.getGeneratorStatus('coffee_machine').inventory[0]`),2);await shot('earned-board-'+width);
       await send('Page.reload');await wait(400);await ready();await tap('EnterGame');assert.equal(await ev(`${app}.game.getGeneratorStatus('coffee_machine').inventory[0]`),2);assert.equal(await ev(`${app}.game.player.coins`),before+100);
       passed('wish gift, full-board pending badge, direct board claim and no duplicate after restart at '+width);
+    }
+    assert.deepEqual(exceptions,[]);
+  } else if (scope === 'sugar-chain') {
+    await load();
+    await seed(d=>{
+      d.tutorial={generatorClicked:true,firstMergeCompleted:true,firstOrderCompleted:true,firstUseHints:['backpack','scissors','chest']};
+      d.board=d.board.map(cell=>({index:cell.index,...(cell.item?.definitionId.startsWith('generator_')?{item:cell.item}:{})}));
+      for(const index of [0,1,7,8])d.board[index].item={uid:`sugar-jar-${index}`,definitionId:'sugar_03'};
+      d.board[2].item={uid:'sugar-order-coffee',definitionId:'coffee_01'};
+      d.discoveredItemIds=['sugar_01','sugar_02','sugar_03','coffee_01'];
+      d.activeOrders=Array.from({length:6},(_,index)=>({...d.activeOrders[0],uid:`sugar-slot-${index}`,requirements:[{itemId:'coffee_01',count:1}]}));
+    });
+    await tap('EnterGame');
+    const cellArt = async index => {
+      for(let i=0;i<35;i++){
+        const frame=await ev(`(() => {
+          let cell;
+          const walk=n=>{if(n.name==='Cell_${index}'&&n.activeInHierarchy)cell=n;n.children.forEach(walk)};
+          walk(cc.director.getScene());
+          const f=cell?.getChildByName('ItemView')?.getChildByName('ItemArt')?.getComponent(cc.Sprite)?.spriteFrame;
+          return f && {width:f.originalSize.width, height:f.originalSize.height};
+        })()`);
+        if(frame)return frame;
+        await wait(100);
+      }
+      throw Error('Missing sugar artwork for cell '+index);
+    };
+    const original=await cellArt(0);
+    await gesture(0,1);assert.equal((await cells())[1].item.definitionId,'sugar_04');
+    assert.deepEqual(await cellArt(1),{width:256,height:256}); assert.notDeepEqual(await cellArt(1),original); await shot('sugar-level-4');
+    await gesture(7,8);await gesture(1,8);assert.equal((await cells())[8].item.definitionId,'sugar_05');
+    assert.deepEqual(await cellArt(8),{width:256,height:256}); await shot('sugar-level-5');
+    await send('Page.reload');await wait(400);await ready();await tap('EnterGame');
+    assert.equal((await cells())[8].item.definitionId,'sugar_05');
+    await tap('ClaimButton',1);
+    const sugarOrder=(await ev(`${app}.game.orders.getOrders()`))[1];
+    assert.deepEqual(sugarOrder.requirements,[{itemId:'sugar_05',count:1}]);
+    assert.equal((await ev(`${app}.game.orders.getOrders()`)).length,6);
+    assert.ok(await ev(`${app}.game.orders.canClaim(${JSON.stringify(sugarOrder.uid)})`));
+    await tap('ClaimButton');
+    assert.equal((await cells())[8].item,undefined,'Stocked sugar order consumes its specific item');
+    assert.deepEqual(exceptions,[]);
+    passed('old sugar jars merge into levels 4 and 5 with their imported sprites, persist and supply one six-slot customer order');
+  } else if (scope === 'memory-42') {
+    await load();
+    await seed(d => {
+      d.tutorial={generatorClicked:true,firstMergeCompleted:true,firstOrderCompleted:true,firstUseHints:['backpack','scissors','chest']};
+    });
+    await tap('EnterGame'); await tap('OpenAdventure'); await tap('JourneyNextStep');
+    for (const [index, chapter] of bundle.adventures.entries()) {
+      assert.ok((await labels()).includes(chapter.title), 'Unexpected chapter at ' + index);
+      if (chapter.id === 'memory_wedding_thanksgiving') {
+        assert.equal(chapter.puzzle.tiles.length, 6);
+        const positions = await Promise.all(chapter.puzzle.tiles.map(tile => coords('Letter_' + tile.id)));
+        assert.equal(new Set(positions.map(position => `${position.x},${position.y}`)).size, 6);
+        await shot('memory-42-six-card-puzzle');
+      }
+      if (chapter.id === 'memory_xian_terracotta') await shot('memory-xian-nine-tile-puzzle');
+      await solvePuzzle(chapter);
+      assert.equal(await ev(`${app}.game.play.progress(${JSON.stringify(chapter.id)}).outcome`), 'solved', chapter.id);
+      await tap('AdventureClaim');
+      assert.equal(await ev(`${app}.game.play.progress(${JSON.stringify(chapter.id)}).claimed`), true, chapter.id);
+      if (chapter.id === weddingAdventure.id) {
+        assert.ok(await active('WeddingEndingOverlay'));
+        await shot('memory-06-wedding-letter');
+        await tap('WeddingEndingContinueHome'); await tap('Button_合成');
+        await send('Page.reload'); await wait(400); await ready(); await tap('EnterGame');
+        await tap('OpenAdventure'); await tap('JourneyNextStep');
+      } else if (index + 1 < bundle.adventures.length) {
+        if ([6, 20, 40].includes(index)) await shot('memory-' + (index + 1) + '-earned');
+        await tap('JourneyContinue');
+      }
+    }
+    assert.ok((await labels()).some(label=>label.includes('42 段回忆已全部珍藏')));
+    assert.equal(await ev(`${app}.game.play.journeyProgress().completed`),42);
+    assert.equal(await ev(`${app}.game.player.level`),1);
+    await shot('memory-42-complete'); await tap('JourneyContinue');
+    assert.equal(await ev(`${app}.view.lifePages.currentPage`),'home');
+    const finalChapter = bundle.adventures.at(-1);
+    await tap('Button_回忆'); await tap('MemoryTab_timeline'); await scrollDown('MemoryTimelineViewport');
+    await tap('TimelineEntry_' + finalChapter.memoryId);
+    await tap('MemoryAdventure_' + finalChapter.id);
+    assert.ok(await active('PuzzleCheck'), 'The diary should start the free replay directly');
+    assert.equal(await ev(`${app}.game.play.replayProgress(${JSON.stringify(finalChapter.id)}).outcome`), 'playing');
+    assert.deepEqual(exceptions,[]);
+    passed('all 42 puzzles played by touch at Lv1, including wedding letter, reload after original chapters, final home link and direct diary replay');
+  } else if (scope === 'generator-expansion') {
+    await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+    await load();
+    const unlocked = ['painting_easel', 'photo_station'].map(id => bundle.generators.find(generator => generator.id === id));
+    assert.ok(unlocked.every(Boolean));
+    const xpAt = level => bundle.progression.levels.find(entry => entry.level === level).xpRequired;
+    const setup = (d, level) => {
+      Object.assign(d.player, { level, xp: xpAt(level), coins: 30000 });
+      d.life.claimedLevelRewards = Array.from({ length: level - 1 }, (_, index) => index + 2);
+      d.tutorial = { generatorClicked: true, firstMergeCompleted: true, firstOrderCompleted: true, firstUseHints: ['backpack', 'scissors', 'chest'] };
+    };
+    const put = (d, definitionId, index) => { d.board[index].item = { uid: 'expansion-' + index, definitionId }; };
+    const childArt = async (name, childName) => {
+      for (let attempt = 0; attempt < 45; attempt++) {
+        const ready = await ev(`(() => {
+          let node;
+          const walk = candidate => {
+            if (candidate.name === ${JSON.stringify(name)} && candidate.activeInHierarchy) node = candidate;
+            candidate.children.forEach(walk);
+          };
+          walk(cc.director.getScene());
+          const view = ${childName === 'ItemArt' ? "node?.getChildByName('ItemView')" : 'node'};
+          const frame = view?.getChildByName(${JSON.stringify(childName)})?.getComponent(cc.Sprite)?.spriteFrame;
+          return frame?.texture && { x: frame.rect.x, y: frame.rect.y, texture: frame.texture._uuid };
+        })()`);
+        if (ready) return ready;
+        await wait(100);
+      }
+      throw Error(`Missing sprite ${childName} on ${name}`);
+    };
+    for (const [index, generator] of unlocked.entries()) {
+      const level = generator.unlockLevel;
+      await seed(d => {
+        setup(d, level - 1); d.player.xp = xpAt(level) - 1;
+        put(d, 'coffee_01', 0);
+        d.activeOrders = [{ ...d.activeOrders[0], uid: 'expansion-advance', pace: 'quick',
+          requirements: [{ itemId: 'coffee_01', count: 1 }], rewardXp: 1 }];
+      });
+      await tap('EnterGame'); await tap('ShopButton'); await tap('GeneratorShopNext');
+      assert.ok(await active('PurchaseGenerator_' + generator.id));
+      assert.ok((await labels()).includes('Lv' + level + ' 开放'));
+      const frames = [];
+      for (const late of unlocked) frames.push(await childArt('GeneratorShop_' + late.id, 'GeneratorShopArt'));
+      assert.notEqual(frames[0].x, frames[1].x, 'Both new machines must have their own atlas cell');
+      if (index === 0) await shot('generator-shop-second-page');
+      await tap('GeneratorWorkshopCloseButton'); await deliver(0); await waitForArt('UnlockedGenerator');
+      assert.ok((await labels()).includes(generator.displayName + ' 已解锁'));
+      await shot('generator-unlock-lv' + level);
+      await tap('ClaimLevelReward');
+      const machine = await producerCell(generator.id);
+      await childArt('Cell_' + machine, 'ItemArt');
+      assert.equal((await cells())[machine].item.definitionId, 'generator_' + generator.id + '_01');
+      await produce(generator.id);
+      assert.ok((await cells()).some(cell => cell.item?.definitionId.startsWith(generator.chainId + '_')));
+    }
+
+    await send('Emulation.setDeviceMetricsOverride', { width: 320, height: 568, deviceScaleFactor: 1, mobile: true });
+    await seed(d => {
+      setup(d, bundle.progression.levels.at(-1).level);
+      bundle.generators.forEach((generator, i) => {
+        put(d, generator.chainId + '_17', i * 2);
+        put(d, generator.chainId + '_17', i * 2 + 1);
+      });
+      put(d, 'generator_painting_easel_08', 14); put(d, 'generator_painting_easel_08', 15);
+    });
+    await tap('EnterGame');
+    for (const [i, generator] of bundle.generators.entries()) {
+      await gesture(i * 2, i * 2 + 1);
+      assert.equal((await cells())[i * 2 + 1].item.definitionId, generator.chainId + '_18');
+      await childArt('Cell_' + (i * 2 + 1), 'ItemArt');
+    }
+    await gesture(14, 15);
+    assert.equal((await cells())[15].item.definitionId, 'generator_painting_easel_09');
+    await childArt('Cell_15', 'ItemArt');
+    await shot('seven-chains-top-tier');
+    await holdProducer('painting_easel');
+    assert.ok((await labels()).some(label => label.includes('最高 Lv9')));
+    await waitForArt('GeneratorDetailArt');
+    const outputTiles = [];
+    for (let level = 9; level <= 12; level++) outputTiles.push(await coords('GeneratorOutput_painting_' + String(level).padStart(2, '0')));
+    assert.ok(outputTiles.every(point => point.x >= 20 && point.x <= 300), 'All four Lv9 production probabilities must fit the 320px panel');
+    await shot('generator-lv9-probabilities');
+    await tap('GeneratorWorkshopCloseButton');
+    const before = new Set((await cells()).map(cell => cell.item?.uid));
+    await produce('painting_easel');
+    const output = (await cells()).find(cell => cell.item?.definitionId.startsWith('painting_') && !before.has(cell.item.uid));
+    assert.ok(output && Number(output.item.definitionId.slice(-2)) >= 9, 'Lv9 machine should spawn at or above Lv9');
+
+    await tap('OpenTools'); await tap('RewardsTab_collection');
+    await tap('CollectionNext');
+    for (const generator of unlocked) {
+      await tap('CollectionTab_' + generator.chainId); await tap('CollectionItemsNext');
+      assert.ok((await labels()).some(label => label.includes('Lv.13–18')));
+      await childArt('CollectionSlot_17', 'CollectionItemArt');
+      await tap('CollectionSlot_17');
+      assert.ok((await labels()).some(label => label.includes('最高等级 Lv18')));
+      await tap('ItemGuideClose');
+    }
+    await shot('new-chain-album-final-tiers');
+    assert.deepEqual(exceptions, []);
+    passed('seven generator arts, Lv22 and Lv32 delivery unlocks, seven Lv18 physical merges, Lv9 producer merge and production, and high-tier album pages');
+  } else if (scope === 'long-play') {
+    await load();
+    const week = Math.floor((Math.floor((Date.now()+8*3600000)/86400000)+3)/7);
+    const config=bundle.game.rewards.weeklyChallenge, theme=config.themes[week%config.themes.length];
+    await seed(d=>{
+      d.player.level=18; d.player.xp=bundle.progression.levels[17].xpRequired; d.player.maxEnergy=1000; d.player.energy=890;
+      d.life.claimedLevelRewards=Array.from({length:17},(_,index)=>index+2);
+      d.activeOrders=[{...d.activeOrders[0],pace:'quick'}];
+      d.weeklyChallenge={week,orders:theme.orders,challengeOrders:theme.challengeOrders,advancedMerges:theme.advancedMerges,orderDays:[0,1,2],claimed:false,completedWeeks:1,pendingRewardWeeks:[week-1]};
+      d.tutorial={generatorClicked:true,firstMergeCompleted:true,firstOrderCompleted:true,firstUseHints:['backpack','scissors','chest']};
+    });
+    await tap('EnterGame');
+    const orders=await ev(`${app}.game.orders.getOrders()`);
+    assert.equal(orders.length,6);
+    for(const pace of ['quick','regular','goal']) assert.equal(orders.filter(order=>order.pace===pace).length,2);
+    for(const order of orders.filter(order=>order.pace==='goal')){
+      assert.equal(order.requirements.reduce((count,req)=>count+req.count,0),2);
+      assert.ok(order.requirements.some(req=>bundle.catalog.get(req.itemId).level>=5));
+    }
+    await waitForArt('CustomerAvatar'); await shot('lv18-order-difficulty');
+    assert.ok(await active('WeeklyRewardBadge')); await tap('OpenTools');
+    assert.ok((await labels()).includes(theme.title)); await shot('weekly-challenge-ready');
+    const prior=await ev(`${app}.game.player.diamonds`); await tap('WeeklyClaim');
+    assert.equal(await ev(`${app}.game.player.diamonds`),prior+config.reward.diamonds);
+    assert.equal(await ev(`${app}.game.getWeeklyChallenge().claimed`),true);
+    await scrollDown('RewardsViewport'); await tap('WeeklyPastClaim');
+    assert.equal(await ev(`${app}.game.player.diamonds`),prior+config.reward.diamonds*2);
+    assert.equal(await active('WeeklyRewardBadge'),false);
+    await shot('weekly-challenge-claimed');
+    await send('Page.reload'); await wait(400); await ready(); await tap('EnterGame');
+    assert.equal(await ev(`${app}.game.getWeeklyChallenge().completedWeeks`),3);
+    assert.equal(await ev(`${app}.game.player.diamonds`),prior+config.reward.diamonds*2);
+    await seed(d=>{
+      d.player.level=50; d.player.xp=bundle.progression.levels[49].xpRequired;
+      d.life.claimedLevelRewards=Array.from({length:48},(_,index)=>index+2);
+      d.tutorial={generatorClicked:true,firstMergeCompleted:true,firstOrderCompleted:true,firstUseHints:['backpack','scissors','chest']};
+    });
+    await tap('EnterGame'); assert.ok((await labels()).some(label=>label.includes('Lv.8 咖啡机')));
+    await waitForArt('UnlockedGenerator'); await shot('level-50-milestone'); await tap('ClaimLevelReward');
+    assert.equal(await ev(`${app}.game.getGeneratorStatus('coffee_machine').level`),8);
+    assert.equal(await ev(`${app}.game.progression.getXpToNext().nextThreshold`),null);
+    assert.deepEqual(exceptions,[]);
+    passed('Lv18 has six differentiated orders, weekly theme reward survives reload and Lv50 grants the Lv8 coffee machine');
+  } else if (scope === 'customer-queue') {
+    await load();
+    const cardGeometry = () => ev(`(() => {
+      let viewport;
+      const walk=n=>{if(n.name==='CustomerQueueViewport'&&n.activeInHierarchy)viewport=n;n.children.forEach(walk)};
+      walk(cc.director.getScene());
+      const rect=n=>{
+        const t=n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp,p=n.worldPosition,s=n.worldScale;
+        return {l:p.x-t.width*s.x/2,r:p.x+t.width*s.x/2,b:p.y-t.height*s.y/2,t:p.y+t.height*s.y/2};
+      };
+      const content=viewport.getChildByName('CustomerQueueContent');
+      return {viewport:rect(viewport), cards:content.children.filter(n=>n.activeInHierarchy).map(n=>{
+        const avatar=n.getChildByName('CustomerAvatar'), frame=avatar.getComponent(cc.Sprite)?.spriteFrame;
+        return {bounds:rect(n),portrait:rect(avatar),tray:rect(n.getChildByName('OrderServiceTray')),
+          image:frame&&[frame.texture._uuid,frame.rect.x].join(':')};
+      })};
+    })()`);
+    const visible = (geometry) => geometry.cards.filter(c=>c.bounds.l>=geometry.viewport.l-1&&c.bounds.r<=geometry.viewport.r+1);
+    for (const [width,height] of [[320,568],[440,956]]) {
+      await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
+      await seed(d=>{
+        d.tutorial={generatorClicked:true,firstMergeCompleted:true,firstOrderCompleted:true,firstUseHints:['backpack','scissors','chest']};
+        d.board=d.board.map(cell=>({index:cell.index,...(cell.item?.definitionId.startsWith('generator_')?{item:cell.item}:{})}));
+        d.board[0].item={uid:'queue-coffee',definitionId:'coffee_02'};
+        d.activeOrders=Array.from({length:6},(_,i)=>({...d.activeOrders[0],uid:`queue-order-${i}`,
+          requirements:[{itemId:i===5?'coffee_02':'coffee_01',count:1}]}));
+      });
+      await tap('EnterGame');
+      for(let attempt=0;attempt<35 && !(await cardGeometry()).cards.every(c=>c.image);attempt++) await wait(100);
+      const first=await cardGeometry();
+      assert.equal(first.cards.length,6);
+      assert.equal(visible(first).length,3,'Exactly three customers fit before sliding');
+      assert.ok(first.cards.every(c=>c.image));
+      assert.equal(new Set(first.cards.map(c=>c.image)).size,6,'All six customers use distinct portraits');
+      for(const card of first.cards) {
+        const portraitHeight=card.portrait.t-card.portrait.b;
+        assert.ok(portraitHeight>=70,'Portrait must stay large enough on the short layout');
+        assert.ok(card.portrait.t<=card.bounds.t+1);
+        assert.ok(card.tray.t-card.portrait.b<=portraitHeight*.08,'The tray must not cover the customer’s body');
+      }
+      assert.ok(first.cards[5].bounds.l>=first.viewport.r);
+      await shot('customer-queue-first-'+width);
+      if(await active('ReadyOrderNotice'))await tap('ReadyOrderDismiss');
+      for(let i=0;i<3;i++){
+        const start=i===0 ? await coords('Required_0',2) : await coords('CustomerQueueViewport');
+        const y=i===0 ? start.y : start.y+25;
+        const x=i===0 ? start.x : width*.87, end=width*.10;
+        await send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:57}]});
+        for(let j=1;j<=7;j++){await send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+(end-x)*j/7,y,id:57}]});await wait(25);}
+        await send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await wait(350);
+        assert.equal(await active('OrderGuideOverlay'),false,'Dragging across a card must not open a requirement');
+        if((await cardGeometry()).cards[5].bounds.r<=first.viewport.r+1)break;
+      }
+      const last=await cardGeometry();
+      assert.ok(last.cards[5].bounds.r<=last.viewport.r+1&&last.cards[5].bounds.l>=last.viewport.l-1,'Last customer reachable by touch');
+      assert.equal((await ev(`${app}.game.orders.getOrders()`))[5].uid,'queue-order-5','Swiping must never deliver an order');
+      await shot('customer-queue-last-'+width);
+      await tap('Required_0',5); assert.ok(await active('OrderGuideOverlay')); await tap('OrderGuideClose');
+      await tap('ClaimButton');
+      const orders=await ev(`${app}.game.orders.getOrders()`);
+      assert.equal(orders.length,6); assert.notEqual(orders[5].uid,'queue-order-5');
+      assert.deepEqual(orders.slice(0,5).map(order=>order.uid),Array.from({length:5},(_,i)=>`queue-order-${i}`));
+      const after=await cardGeometry();
+      assert.ok(after.cards[5].bounds.r<=after.viewport.r+1,'Delivering must retain the queue scroll position');
+      passed('six distinct full busts, touch scrolling, inspection and last-slot delivery at '+width);
+    }
+    await seed(d=>{
+      d.tutorial={generatorClicked:true,firstMergeCompleted:true,firstOrderCompleted:true,firstUseHints:['backpack','scissors','chest']};
+      d.board=d.board.map(cell=>({index:cell.index,...(cell.item?.definitionId.startsWith('generator_')?{item:cell.item}:{})}));
+      for(const index of [0,1])d.board[index].item={uid:`queue-bean-${index}`,definitionId:'coffee_01'};
+      d.activeOrders=Array.from({length:6},(_,i)=>({...d.activeOrders[0],uid:`offscreen-order-${i}`,
+        requirements:[{itemId:i===5?'coffee_02':'coffee_03',count:1}]}));
+    });
+    await tap('EnterGame'); await gesture(0,1);
+    assert.ok(await active('ReadyOrderNotice'));
+    await tap('ReadyOrderDeliver'); await wait(1400);
+    const delivered=await cardGeometry();
+    assert.ok(delivered.cards[5].bounds.r<=delivered.viewport.r+1&&delivered.cards[5].bounds.l>=delivered.viewport.l-1,
+      'Delivery from a board notice must reveal the offscreen customer before playing the animation');
+    assert.notEqual((await ev(`${app}.game.orders.getOrders()`))[5].uid,'offscreen-order-5');
+    passed('a ready notice reveals the offscreen customer before delivery');
+    assert.deepEqual(exceptions,[]);
+  } else if (scope === 'journey-layout') {
+    await load();
+    for (const [width,height] of [[320,568],[390,844],[430,932]]) {
+      await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
+      await seed(d => {
+        d.player.level=4; d.player.xp=bundle.progression.levels[3].xpRequired;
+        d.life.claimedLevelRewards=[2,3,4];
+        d.play.chapters.zhoushan={step:2,found:[],selected:[],rotations:[],code:'',hints:0,outcome:'solved',claimed:true};
+      });
+      await tap('EnterGame'); await tap('OpenAdventure');
+      await waitForArt('AdventureIllustration');
+      const layout = await ev(`(() => {
+        let panel;
+        const walk=n=>{if(n.name==='PlayPanel'&&n.activeInHierarchy)panel=n;n.children.forEach(walk)};
+        walk(cc.director.getScene());
+        const bounds=n=>{
+          const t=n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp,p=n.worldPosition,s=n.worldScale;
+          return {l:p.x-t.width*s.x/2,r:p.x+t.width*s.x/2,b:p.y-t.height*s.y/2,t:p.y+t.height*s.y/2};
+        };
+        const cards=panel.children.filter(n=>n.name.startsWith('Adventure_'));
+        return {panel:bounds(panel), cards:cards.map(n=>({
+          bounds:bounds(n), innerFrame:!!n.getChildByName('MaterialFrame'),
+          children:n.children.filter(c=>c.name.startsWith('Adventure')).map(bounds),
+        })), rows:[...cards,...['AdventureHubTitle','PlayClose','JourneySummary','SmallDateEntry','HubNext','AdventureHubFooter']
+          .map(name=>panel.getChildByName(name))].map(bounds)};
+      })()`);
+      assert.equal(layout.cards.length,2);
+      const overlaps=(a,b)=>a.l<b.r&&a.r>b.l&&a.b<b.t&&a.t>b.b;
+      for (const {bounds:card,children,innerFrame} of layout.cards) {
+        assert.equal(innerFrame,false,'Chapter copy must not cross a decorative inner frame');
+        for (const [i,part] of children.entries()) {
+          assert.ok(part.l-card.l>=12&&card.r-part.r>=12&&part.b-card.b>=8&&card.t-part.t>=12,'Chapter content needs visible edge padding');
+          assert.ok(children.slice(i+1).every(other=>!overlaps(part,other)));
+        }
+      }
+      for (const [i,row] of layout.rows.entries()) {
+        assert.ok(row.b-layout.panel.b>=18&&layout.panel.t-row.t>=18,'Hub rows must leave visible top and bottom margins');
+        assert.ok(layout.rows.slice(i+1).every(other=>!overlaps(row,other)));
+      }
+      await shot('journey-layout-'+width);
+      await tap('HubNext'); assert.equal(await active('AdventureIllustration'),false,'Locked chapters must not expose their illustrations'); await tap('HubPrev');
+      await tap('AdventureReplay_zhoushan'); assert.ok(await active('PuzzleCheck'));
+      passed('completed and available chapter layout, pagination and replay at '+width);
     }
     assert.deepEqual(exceptions,[]);
   } else if (scope === 'surfaces') {
@@ -876,7 +1255,7 @@ try {
     await tap('EnterGame');await waitForArt('CustomerAvatar');await wait(400);
     const early=(await ev(`${app}.game.orders.getOrders()`))[0];assert.equal(early.requirements.length,2);await shot('firstuse-early-orange-order');
     await tap('ClaimButton');assert.notEqual((await ev(`${app}.game.orders.getOrders()`))[0].uid,early.uid);
-    await send('Page.reload');await wait(400);await ready();await tap('EnterGame');assert.equal((await ev(`${app}.game.orders.getOrders()`)).length,3);
+    await send('Page.reload');await wait(400);await ready();await tap('EnterGame');assert.equal((await ev(`${app}.game.orders.getOrders()`)).length,6);
     passed('Lv2 mixed coffee and orange order keeps both requirements, delivers and persists without replacement UI');
     assert.deepEqual(exceptions,[]);
   } else   if (scope === 'customer_tools' || scope === 'tools_only') {
@@ -986,13 +1365,13 @@ try {
     await produce();await tap('GeneratorRestoreConfirm');assert.equal(await ev(`${app}.game.player.diamonds`),diamondsBeforeRestore-2);assert.equal((await ev(`${app}.game.getGeneratorStatus('coffee_machine')`)).remainingCooldownMs,0);
     const currentOrders=await ev(`${app}.game.orders.getOrders()`);for(const order of currentOrders)assert.ok(order.requirements.reduce((sum,r)=>sum+r.count,0)<=2,'Orders may need at most two items in total');
     passed('order delivery controls across three sizes and configured generator streak limit');
-    for(let index=0;index<bundle.adventures.length;index++){
-      const chapter=bundle.adventures[index];await seed(d=>{mature(d);d.board=boardWith(['coffee_01','flower_01']);});await tap('EnterGame');const beforeAdventure=await cells();await tap('OpenAdventure');
+    for(let index=0;index<originalAdventures.length;index++){
+      const chapter=originalAdventures[index];await seed(d=>{mature(d);d.board=boardWith(['coffee_01','flower_01']);});await tap('EnterGame');const beforeAdventure=await cells();await tap('OpenAdventure');
       for(let page=0;page<Math.floor(index/2);page++)await tap('HubNext');await tap('AdventureOpen_'+chapter.id);
-      assert.ok(await active('PuzzleCheck'),`Level-eligible chapter ${chapter.id} must open its puzzle directly without prior claims or delivery`);
+      assert.ok(await active('PuzzleCheck'),`Chapter ${chapter.id} must open its puzzle directly without prior claims or delivery`);
       assert.deepEqual(await cells(),beforeAdventure,`Opening ${chapter.id} must not consume board items`);
     }
-    passed('all six level-eligible adventures open directly without consuming items or claiming earlier chapters');
+    passed('all six original adventures open directly without consuming items or claiming earlier chapters');
     await seed(d=>{mature(d);d.board=boardWith([]);d.generatorCharges={...d.generatorCharges,orange_tree:{charges:10,lastRecoveryAt:Date.now(),capacity:10}};});await tap('EnterGame');
     const energy=await ev(`${app}.game.player.energy`);status=await ev(`${app}.game.getGeneratorStatus('orange_tree')`);assert.ok(status.maxCharges>=10);assert.equal(status.charges,10);
     for(let i=0;i<10;i++){await produce('orange_tree');assert.equal((await ev(`${app}.game.getGeneratorStatus('orange_tree')`)).charges,9-i);assert.equal(await ev(`${app}.game.player.energy`),energy)}
@@ -1225,7 +1604,7 @@ try {
     });
     await tap('EnterGame'); await tap('Button_回忆'); await tap('MemoryTab_timeline'); await shot('timeline-top');
     await scrollDown('MemoryTimelineViewport'); await shot('timeline-bottom');
-    await tap('TimelineEntry_' + bundle.adventures[bundle.adventures.length - 1].memoryId);
+    await tap('TimelineEntry_' + weddingAdventure.memoryId);
     await tap('WeddingLetterReplay'); assert.ok(await active('WeddingEndingOverlay'));
     await tap('WeddingEndingContinueHome'); assert.equal(await ev(`${app}.view.lifePages.currentPage`), 'home');
     passed('focused seeded timeline touch-scroll, final memory, wedding reread and home exit');
@@ -1309,13 +1688,16 @@ try {
   await shot('merge'); passed('fresh-save target, item guide, persistent toggles and touch order delivery');
 
   await tap('OpenAdventure');
-  assert.ok((await labels()).some((value) => value.includes('旅程 0/6') && value.includes('推荐')));
+  assert.ok((await labels()).includes(`旅程 0 / ${bundle.adventures.length}`));
+  assert.ok((await labels()).some((value) => value.includes('下一章')));
+  const beforeEarlyPuzzle = await cells();
   await tap('AdventureOpen_love_letters');
-  const lockedJourneyToast = await ev(`${app}.view.toast.current.getComponentInChildren(cc.Label).string`);
-  assert.ok(lockedJourneyToast.startsWith('开启条件：') && lockedJourneyToast.includes('达到 Lv.3（当前 Lv.1）')
-    && !lockedJourneyToast.includes('先完成并珍藏上一章'));
+  assert.ok(await active('PuzzleCheck'), 'A chapter can open directly at Lv1');
+  assert.equal(await ev(`${app}.game.player.level`), 1);
+  assert.equal(await ev(`${app}.game.play.progress('zhoushan').claimed`), false);
+  assert.deepEqual(await cells(), beforeEarlyPuzzle, 'Opening a chapter must not consume board items');
   await tap('PlayClose');
-  passed('six-chapter journey shows its recommendation and level locks without a previous-chapter prerequisite');
+  passed('42-chapter journey recommends the next memory and lets a fresh Lv1 save start later puzzles immediately');
 
   // First-15-minute fresh-save route: all changes below use visible touch/drag UI; ev() only observes state.
   const dateRequirements = await ev(`(()=>{const o=${app}.game.play.smallDateOrder();return o.template.requirements})()`);
@@ -1339,8 +1721,12 @@ try {
   assert.ok(await active('PuzzleSuccessBurst'));
   await shot('first15-puzzle-success'); await wait(800); await tap('AdventureClaim');
   assert.equal(await ev(`${app}.game.play.progress('zhoushan').claimed`), true);
-  assert.ok((await labels()).some((value) => value.includes('下一章尚未解锁') && value.includes('达到 Lv.3')));
+  const nextChapter = bundle.adventures.find(({ id }) => id === 'love_letters');
+  assert.ok((await labels()).some((value) => value.includes('下一章') && value.includes(nextChapter.title)));
   freshPathActions.push('solve and claim opening chapter'); await tap('JourneyContinue');
+  assert.ok(await active('PuzzleCheck'), 'Continue should open the recommended puzzle immediately');
+  assert.ok((await labels()).includes(nextChapter.title));
+  await tap('PlayClose');
   assert.equal(await ev(`${app}.view.lifePages.currentPage`), 'merge');
   assert.ok(!(await active('PlayOverlay')));
 
@@ -1586,7 +1972,7 @@ try {
   await tap('OpenAdventure'); await tap('AdventureOpen_namsan'); assert.equal((await playProgress('namsan')).rotations[0], 2);
   await tap('PuzzleReset'); for (let i = 0; i < 9; i++) for (let k = 0; k < 3; k++) await tap('Circuit_' + i);
   await shot('puzzle-namsan'); await tap('PuzzleCheck'); await tap('AdventureClaim');
-  for (const chapter of bundle.adventures.slice(3)) {
+  for (const chapter of originalAdventures.slice(3)) {
     await tap('AdventureBack'); await openAdventure(chapter);
     await shot('adventure-order-' + chapter.id);
     assert.ok(await active('PuzzleCheck'));
@@ -1596,8 +1982,8 @@ try {
     assert.equal((await playProgress(chapter.id)).claimed, true);
   }
   assert.ok(bundle.adventures.every((c) => c.reward.coins > 0));
-  assert.equal(await ev(`${app}.game.player.coins`), bundle.adventures.reduce((n, c) => n + c.reward.coins, 0));
-  assert.equal(await ev(`${app}.game.play.state.scissors`), bundle.game.toolbox.startingScissors + bundle.adventures.reduce((n, c) => n + c.reward.scissors, 0));
+  assert.equal(await ev(`${app}.game.player.coins`), originalAdventures.reduce((n, c) => n + c.reward.coins, 0));
+  assert.equal(await ev(`${app}.game.play.state.scissors`), bundle.game.toolbox.startingScissors + originalAdventures.reduce((n, c) => n + c.reward.scissors, 0));
   assert.ok(await active('WeddingEndingOverlay'));
   assert.ok((await labels()).includes('专属信待填写'));
   assert.ok(!(await active('PlayOverlay')));
@@ -1614,7 +2000,7 @@ try {
   await tap('TimelineEntry_' + bundle.memories[0].id);
   assert.equal(await ev(`${app}.view.lifePages.memoryTab`), 'diary');
   await tap('MemoryTab_timeline'); await scrollDown('MemoryTimelineViewport'); await shot('memory-timeline-bottom');
-  await tap('TimelineEntry_' + bundle.adventures[bundle.adventures.length - 1].memoryId);
+  await tap('TimelineEntry_' + weddingAdventure.memoryId);
   await tap('WeddingLetterReplay'); assert.ok(await active('WeddingEndingOverlay'));
   await tap('WeddingEndingClose');
   // Explicit synthetic copy fixture after the UI-only fresh route; never personal content or a save migration.
@@ -1646,7 +2032,7 @@ try {
   await shot('replay-completed'); await tap('ReplayAgain'); assert.ok(await active('PuzzleCheck')); await tap('PlayClose');
   passed('free replay persists independently and cannot reissue story rewards');
 
-  for (const chapter of bundle.adventures) {
+  for (const chapter of originalAdventures) {
     await tap('OpenAdventure'); await openAdventure(chapter, true);
     if (chapter.id !== replayChapter.id) {
       assert.equal(await ev(`${app}.game.play.puzzleDefinition(${JSON.stringify(chapter.id)}).variantId`), 'classic');
@@ -1740,7 +2126,7 @@ try {
     const touchSize = async (name) => ev(`(()=>{let n;const w=v=>{if(v.name===${JSON.stringify(name)}&&v.activeInHierarchy)n=v;v.children.forEach(w)};w(cc.director.getScene());const t=n.getComponent('cc.UITransform')??n._uiProps.uiTransformComp;const b=t.getBoundingBoxToWorld(),v=cc.view.getVisibleSize();return{width:b.width*innerWidth/v.width,height:b.height*innerHeight/v.height}})()`);
     assert.ok((await touchSize('JourneyNextStep')).height >= 43, 'Journey CTA too small for compact touch');
     await tap('JourneyNextStep'); assert.ok(await active('PuzzleCheck')); await tap('PlayClose');
-    for (let i = 0; i < bundle.adventures.length; i++) {
+    for (let i = 0; i < originalAdventures.length; i++) {
       await seed((d) => { grownUp(d); bundle.adventures.forEach((c, j) => { d.play.chapters[c.id] = { step: j <= i ? c.steps.length : 0, found: [], selected: [], rotations: [], code: '', hints: 0,
         outcome: j < i ? 'solved' : 'playing', claimed: j < i }; }); });
       await tap('EnterGame'); await tap('OpenAdventure'); await openAdventure(bundle.adventures[i]);
@@ -1748,7 +2134,7 @@ try {
       assert.ok(bounds.top >= -1 && bounds.bottom <= height + 1, 'Play panel outside portrait viewport');
       await shot(`puzzle-${bundle.adventures[i].id}-${width}`);
       await tap('PuzzleSkip'); await tap('PuzzleSkipConfirm'); await tap('AdventureClaim');
-      if (i + 1 < bundle.adventures.length) {
+      if (bundle.adventures[i].id !== weddingAdventure.id) {
         for (const name of ['JourneyContinue', 'AdventureReplay', 'AdventureMemory', 'JourneyHome']) {
           assert.ok((await touchSize(name)).height >= 43, `${name} too small for compact touch`);
         }

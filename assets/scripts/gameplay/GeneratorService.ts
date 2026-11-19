@@ -154,7 +154,12 @@ export class GeneratorService {
     const index = this.emptyCell(); if (index === undefined) return { ok: false, reason: 'BOARD_FULL' };
     this.board.placeAt(index, generatorItemId(gen.id, 1)); return { ok: true, inventory: this.getInventory()[gen.id] };
   }
-  grantLevelReward(level: number, rotation: readonly string[]): string | null {
+  grantLevelReward(level: number, rotation: readonly string[], gift?: GeneratorGift): string | null {
+    if (gift) {
+      const reward = this.addReward(gift.generatorId, gift.level, gift.count, 'level_reward');
+      for (let i = 0; i < gift.count && !this.board.isFull(); i++) if (!this.claimReward(reward.id).ok) break;
+      return gift.generatorId;
+    }
     const eligible = rotation.map(id => this.get(id)).filter((g): g is GeneratorDefinition => !!g && this.isUnlocked(g)); if (!eligible.length) return null;
     const gen = eligible[Math.max(0, level-2) % eligible.length];
     this.claimReward(this.addReward(gen.id, 1, 1, 'level_reward').id); return gen.id;

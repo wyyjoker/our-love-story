@@ -1,6 +1,7 @@
 import type {
   FurnitureDefinition,
   LifeState,
+  LevelReward,
   LevelRewardConfig,
   MemoryDefinition,
   PlayerState,
@@ -124,10 +125,10 @@ export class LifeService {
     return levels;
   }
 
-  rewardForLevel(level: number): { coins: number; hearts: number; xp: number } {
+  rewardForLevel(level: number): LevelReward {
     const special = this.levelRewards.special.find((reward) => reward.level === level);
     return special
-      ? { coins: special.coins, hearts: special.hearts, xp: special.xp }
+      ? { coins: special.coins, hearts: special.hearts, xp: special.xp, ...(special.generator ? { generator: special.generator } : {}) }
       : {
           coins: this.levelRewards.default.coinsPerLevel * level,
           hearts: this.levelRewards.default.heartsPerLevel * level,

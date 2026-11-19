@@ -47,6 +47,14 @@ describe('order tracking without spending or discovering items', () => {
     const g = fixture(['coffee_01']); expect(g.getOrderBoardHints()).toEqual([{ index: 0, ready: false }]);
     expect(g.getDropOrderWarning(0, 1)).toBeNull();
   });
+  it('combines duplicate rows from a legacy order before counting the same board item', () => {
+    const g = fixture(['coffee_01']);
+    g.orders.hydrate([{ ...order(), requirements: [{ itemId: 'coffee_01', count: 1 }, { itemId: 'coffee_01', count: 1 }] }], []);
+    expect(g.orders.getOrders()[0].requirements).toEqual([{ itemId: 'coffee_01', count: 2 }]);
+    expect(g.orders.canClaim('target')).toBe(false);
+    g.debugSpawn('coffee_01');
+    expect(g.orders.canClaim('target')).toBe(true);
+  });
   it.each(['coin_01', 'diamond_03', 'energy_05', 'treasure_chest'])('previews %s without consuming it or drawing loot', id => {
     let draws = 0;
     const g = createGameContext({ deterministic: true, random: { next: () => { draws++; return .5; }, pickIndex: () => { draws++; return 0; } } });
@@ -68,8 +76,8 @@ describe('paced customer slots', () => {
   it('keeps quick orders free of time-gated fruit, while other slots can request it at Lv2', () => {
     const g = createGameContext({ deterministic: true, random: { next: () => 0, pickIndex: () => 0 } }); g.debugAddXp(50);
     g.orders.hydrate([], []); g.orders.ensureFilled(); const orders = g.orders.getOrders();
-    expect(orders.map(o => o.pace)).toEqual(['quick', 'regular', 'goal']);
-    expect(orders[0].requirements.every(r => !r.itemId.startsWith('fruit'))).toBe(true);
+    expect(orders.map(o => o.pace)).toEqual(['quick', 'regular', 'goal', 'quick', 'regular', 'goal']);
+    expect(orders.filter(o => o.pace === 'quick').every(o => o.requirements.every(r => !r.itemId.startsWith('fruit')))).toBe(true);
     expect(orders.filter(o => o.requirements.some(r => r.itemId.startsWith('fruit')))).toHaveLength(1);
   });
   it('budgets actual minimum output rather than the order eligibility floor', () => {

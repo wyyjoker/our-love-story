@@ -20,7 +20,7 @@
       }
     ],
     "upgrade": {
-      "maxLevel": 8,
+      "maxLevel": 9,
       "rechargeFactor": 0.8,
       "boostEnergyMultiplier": 2,
       "levels": [
@@ -238,6 +238,45 @@
             {
               "itemId": "coffee_10",
               "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "outputs": [
+            {
+              "itemId": "coffee_09",
+              "weight": 60
+            },
+            {
+              "itemId": "coffee_10",
+              "weight": 26
+            },
+            {
+              "itemId": "coffee_11",
+              "weight": 12
+            },
+            {
+              "itemId": "coffee_12",
+              "weight": 2
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "coffee_09",
+              "weight": 20
+            },
+            {
+              "itemId": "coffee_10",
+              "weight": 42
+            },
+            {
+              "itemId": "coffee_11",
+              "weight": 32
+            },
+            {
+              "itemId": "coffee_12",
+              "weight": 6
             }
           ]
         }
@@ -271,7 +310,7 @@
       }
     ],
     "upgrade": {
-      "maxLevel": 8,
+      "maxLevel": 9,
       "rechargeFactor": 0.8,
       "boostEnergyMultiplier": 2,
       "levels": [
@@ -489,6 +528,45 @@
             {
               "itemId": "flower_10",
               "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "outputs": [
+            {
+              "itemId": "flower_09",
+              "weight": 60
+            },
+            {
+              "itemId": "flower_10",
+              "weight": 26
+            },
+            {
+              "itemId": "flower_11",
+              "weight": 12
+            },
+            {
+              "itemId": "flower_12",
+              "weight": 2
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "flower_09",
+              "weight": 20
+            },
+            {
+              "itemId": "flower_10",
+              "weight": 42
+            },
+            {
+              "itemId": "flower_11",
+              "weight": 32
+            },
+            {
+              "itemId": "flower_12",
+              "weight": 6
             }
           ]
         }
@@ -522,7 +600,7 @@
       }
     ],
     "upgrade": {
-      "maxLevel": 8,
+      "maxLevel": 9,
       "rechargeFactor": 0.8,
       "boostEnergyMultiplier": 2,
       "levels": [
@@ -740,6 +818,45 @@
             {
               "itemId": "dessert_10",
               "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "outputs": [
+            {
+              "itemId": "dessert_09",
+              "weight": 60
+            },
+            {
+              "itemId": "dessert_10",
+              "weight": 26
+            },
+            {
+              "itemId": "dessert_11",
+              "weight": 12
+            },
+            {
+              "itemId": "dessert_12",
+              "weight": 2
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "dessert_09",
+              "weight": 20
+            },
+            {
+              "itemId": "dessert_10",
+              "weight": 42
+            },
+            {
+              "itemId": "dessert_11",
+              "weight": 32
+            },
+            {
+              "itemId": "dessert_12",
+              "weight": 6
             }
           ]
         }
@@ -773,7 +890,7 @@
       }
     ],
     "upgrade": {
-      "maxLevel": 8,
+      "maxLevel": 9,
       "rechargeFactor": 0.8,
       "boostEnergyMultiplier": 2,
       "levels": [
@@ -991,6 +1108,45 @@
             {
               "itemId": "gift_10",
               "weight": 25
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "outputs": [
+            {
+              "itemId": "gift_09",
+              "weight": 60
+            },
+            {
+              "itemId": "gift_10",
+              "weight": 26
+            },
+            {
+              "itemId": "gift_11",
+              "weight": 12
+            },
+            {
+              "itemId": "gift_12",
+              "weight": 2
+            }
+          ],
+          "boostOutputs": [
+            {
+              "itemId": "gift_09",
+              "weight": 20
+            },
+            {
+              "itemId": "gift_10",
+              "weight": 42
+            },
+            {
+              "itemId": "gift_11",
+              "weight": 32
+            },
+            {
+              "itemId": "gift_12",
+              "weight": 6
             }
           ]
         }
@@ -1029,7 +1185,7 @@
       }
     ],
     "upgrade": {
-      "maxLevel": 8,
+      "maxLevel": 9,
       "rechargeFactor": 0.8,
       "boostEnergyMultiplier": 2,
       "levels": [
@@ -1151,10 +1307,83 @@
               "weight": 5
             }
           ]
+        },
+        {
+          "level": 9,
+          "outputs": [
+            {
+              "itemId": "fruit_09",
+              "weight": 60
+            },
+            {
+              "itemId": "fruit_10",
+              "weight": 26
+            },
+            {
+              "itemId": "fruit_11",
+              "weight": 12
+            },
+            {
+              "itemId": "fruit_12",
+              "weight": 2
+            }
+          ]
         }
       ],
       "mergeRemainingRatio": 0.5
     },
     "purchaseCoins": 150
+  },
+  {
+    "id": "painting_easel",
+    "chainId": "painting",
+    "displayName": "调色画架",
+    "unlockLevel": 22,
+    "energyCost": 1,
+    "outputs": [{"itemId":"painting_01","weight":70},{"itemId":"painting_02","weight":25},{"itemId":"painting_03","weight":5}],
+    "streakCooldown": {"uses":60,"durationMs":20000},
+    "upgrade": {
+      "maxLevel": 9,
+      "rechargeFactor": 0.8,
+      "boostEnergyMultiplier": 2,
+      "mergeRemainingRatio": 0.5,
+      "levels": [
+        {"level":2,"outputs":[{"itemId":"painting_02","weight":70},{"itemId":"painting_03","weight":25},{"itemId":"painting_04","weight":5}],"boostOutputs":[{"itemId":"painting_02","weight":25},{"itemId":"painting_03","weight":50},{"itemId":"painting_04","weight":25}]},
+        {"level":3,"outputs":[{"itemId":"painting_03","weight":70},{"itemId":"painting_04","weight":25},{"itemId":"painting_05","weight":5}],"boostOutputs":[{"itemId":"painting_03","weight":25},{"itemId":"painting_04","weight":50},{"itemId":"painting_05","weight":25}]},
+        {"level":4,"outputs":[{"itemId":"painting_04","weight":70},{"itemId":"painting_05","weight":25},{"itemId":"painting_06","weight":5}],"boostOutputs":[{"itemId":"painting_04","weight":25},{"itemId":"painting_05","weight":50},{"itemId":"painting_06","weight":25}]},
+        {"level":5,"outputs":[{"itemId":"painting_05","weight":70},{"itemId":"painting_06","weight":25},{"itemId":"painting_07","weight":5}],"boostOutputs":[{"itemId":"painting_05","weight":25},{"itemId":"painting_06","weight":50},{"itemId":"painting_07","weight":25}]},
+        {"level":6,"outputs":[{"itemId":"painting_06","weight":70},{"itemId":"painting_07","weight":25},{"itemId":"painting_08","weight":5}],"boostOutputs":[{"itemId":"painting_06","weight":25},{"itemId":"painting_07","weight":50},{"itemId":"painting_08","weight":25}]},
+        {"level":7,"outputs":[{"itemId":"painting_07","weight":70},{"itemId":"painting_08","weight":25},{"itemId":"painting_09","weight":5}],"boostOutputs":[{"itemId":"painting_07","weight":25},{"itemId":"painting_08","weight":50},{"itemId":"painting_09","weight":25}]},
+        {"level":8,"outputs":[{"itemId":"painting_08","weight":70},{"itemId":"painting_09","weight":25},{"itemId":"painting_10","weight":5}],"boostOutputs":[{"itemId":"painting_08","weight":25},{"itemId":"painting_09","weight":50},{"itemId":"painting_10","weight":25}]},
+        {"level":9,"outputs":[{"itemId":"painting_09","weight":60},{"itemId":"painting_10","weight":26},{"itemId":"painting_11","weight":12},{"itemId":"painting_12","weight":2}],"boostOutputs":[{"itemId":"painting_09","weight":20},{"itemId":"painting_10","weight":42},{"itemId":"painting_11","weight":32},{"itemId":"painting_12","weight":6}]}
+      ]
+    },
+    "purchaseCoins": 210
+  },
+  {
+    "id": "photo_station",
+    "chainId": "photo",
+    "displayName": "留影工作台",
+    "unlockLevel": 32,
+    "energyCost": 1,
+    "outputs": [{"itemId":"photo_01","weight":70},{"itemId":"photo_02","weight":25},{"itemId":"photo_03","weight":5}],
+    "streakCooldown": {"uses":60,"durationMs":20000},
+    "upgrade": {
+      "maxLevel": 9,
+      "rechargeFactor": 0.8,
+      "boostEnergyMultiplier": 2,
+      "mergeRemainingRatio": 0.5,
+      "levels": [
+        {"level":2,"outputs":[{"itemId":"photo_02","weight":70},{"itemId":"photo_03","weight":25},{"itemId":"photo_04","weight":5}],"boostOutputs":[{"itemId":"photo_02","weight":25},{"itemId":"photo_03","weight":50},{"itemId":"photo_04","weight":25}]},
+        {"level":3,"outputs":[{"itemId":"photo_03","weight":70},{"itemId":"photo_04","weight":25},{"itemId":"photo_05","weight":5}],"boostOutputs":[{"itemId":"photo_03","weight":25},{"itemId":"photo_04","weight":50},{"itemId":"photo_05","weight":25}]},
+        {"level":4,"outputs":[{"itemId":"photo_04","weight":70},{"itemId":"photo_05","weight":25},{"itemId":"photo_06","weight":5}],"boostOutputs":[{"itemId":"photo_04","weight":25},{"itemId":"photo_05","weight":50},{"itemId":"photo_06","weight":25}]},
+        {"level":5,"outputs":[{"itemId":"photo_05","weight":70},{"itemId":"photo_06","weight":25},{"itemId":"photo_07","weight":5}],"boostOutputs":[{"itemId":"photo_05","weight":25},{"itemId":"photo_06","weight":50},{"itemId":"photo_07","weight":25}]},
+        {"level":6,"outputs":[{"itemId":"photo_06","weight":70},{"itemId":"photo_07","weight":25},{"itemId":"photo_08","weight":5}],"boostOutputs":[{"itemId":"photo_06","weight":25},{"itemId":"photo_07","weight":50},{"itemId":"photo_08","weight":25}]},
+        {"level":7,"outputs":[{"itemId":"photo_07","weight":70},{"itemId":"photo_08","weight":25},{"itemId":"photo_09","weight":5}],"boostOutputs":[{"itemId":"photo_07","weight":25},{"itemId":"photo_08","weight":50},{"itemId":"photo_09","weight":25}]},
+        {"level":8,"outputs":[{"itemId":"photo_08","weight":70},{"itemId":"photo_09","weight":25},{"itemId":"photo_10","weight":5}],"boostOutputs":[{"itemId":"photo_08","weight":25},{"itemId":"photo_09","weight":50},{"itemId":"photo_10","weight":25}]},
+        {"level":9,"outputs":[{"itemId":"photo_09","weight":60},{"itemId":"photo_10","weight":26},{"itemId":"photo_11","weight":12},{"itemId":"photo_12","weight":2}],"boostOutputs":[{"itemId":"photo_09","weight":20},{"itemId":"photo_10","weight":42},{"itemId":"photo_11","weight":32},{"itemId":"photo_12","weight":6}]}
+      ]
+    },
+    "purchaseCoins": 260
   }
 ]

@@ -1,5 +1,6 @@
-import type { ItemInstance, GameConfig, GamePreferences, LifeState, PlayerState, SaveData, TutorialState, FirstUseHint } from '../core/types';
+import type { ItemInstance, GameConfig, GamePreferences, LifeState, PlayerState, SaveData, TutorialState, FirstUseHint, WeeklyChallengeConfig, WeeklyChallengeState } from '../core/types';
 import { cloneBoard, cloneItem } from '../core/board/board';
+import { freshGeneratorState } from '../core/generator/generatorItems';
 import type { ConfigBundle } from '../config/ConfigRepository';
 import { loadConfigBundle, assertConfigValid } from '../config/ConfigRepository';
 import { GameEventBus } from '../events/GameEventBus';
@@ -93,6 +94,7 @@ export class GameContext {
   private expandingBackpack = false;
   private orderRefreshAt: Array<number | null> = [];
   private dailyTasks?: NonNullable<SaveData['dailyTasks']>;
+  private weeklyChallenge?: NonNullable<SaveData['weeklyChallenge']>;
   private checkIn = { lastClaimDay: null as number | null, claims: 0 };
 
   board!: BoardService;
@@ -143,6 +145,7 @@ export class GameContext {
       logger: (m) => this.logger.debug('SAVE', m),
       legacyStarterFurnitureId: this.bundle.furniture[0]?.id,
       energyCaps: this.config.energy.maxByLevel,
+      progression: this.bundle.progression,
       collection: this.config.collection,
       backpack: { initialSlots: this.config.toolbox.warehouseSlots, maxSlots: this.config.toolbox.backpackExpansion.maxSlots },
       onWrite: (result) => {
@@ -207,10 +210,17 @@ export class GameContext {
         this.logger.debug('SAVE', `using default (${loaded.reason})`);
       }
 
-      for (const id of [...data.board.flatMap((c) => c.item ? [c.item.uid] : []), ...data.rewardInbox.map((i) => i.uid), ...data.play.warehouse.map((i) => i.uid), ...data.activeOrders.map((o) => o.uid)]) this.reservedIds.add(id);
-      this.inboxRef = data.rewardInbox.map((i) => ({ ...i }));
       this.discovered = [...data.discoveredItemIds];
-      for (const item of [...data.board.flatMap((cell) => cell.item ? [cell.item] : []), ...data.play.warehouse, ...data.rewardInbox]) this.recordBaseAcquisition(item.definitionId, false);
+      const savedItems = [...data.board.flatMap((cell) => cell.item ? [cell.item] : []), ...data.play.warehouse, ...data.rewardInbox];
+      const loadTime = this.clock.now();
+      for (const item of savedItems) {
+        this.reservedIds.add(item.uid);
+        const generator = this.bundle.catalog.get(item.definitionId)?.generator;
+        if (generator && !item.generatorState) item.generatorState = freshGeneratorState(generator, loadTime);
+        this.recordBaseAcquisition(item.definitionId, false);
+      }
+      for (const order of data.activeOrders) this.reservedIds.add(order.uid);
+      this.inboxRef = data.rewardInbox.map(cloneItem);
       this.claimedDiscoveries = [...data.claimedDiscoveryIds];
       this.claimedCollections = [...(data.claimedCollectionIds ?? [])];
       this.legacyBoardEntitlement = data.legacyBoardEntitlement;
@@ -218,6 +228,7 @@ export class GameContext {
       this.checkIn = { ...data.checkIn };
       this.orderRefreshAt = [...(data.orderRefreshAt ?? [])];
       this.dailyTasks = data.dailyTasks ? { ...data.dailyTasks, progress: { ...data.dailyTasks.progress }, claimedIds: [...data.dailyTasks.claimedIds] } : undefined;
+      this.weeklyChallenge = data.weeklyChallenge;
       this.playerRef = {
         ...data.player,
         unlockedChainIds: [...data.player.unlockedChainIds],
@@ -551,6 +562,8 @@ export class GameContext {
       if (producer) { this.orders.reconcileRequirements(); this.ensureDailyTasks(); this.bus.emit('GENERATOR_CHANGED', { generatorId: producer.id }); }
       else this.handleMerge(result.resultDefinitionId);
       this.recordDaily('merges', result.resultDefinitionId);
+      const definition = this.bundle.catalog.get(result.resultDefinitionId);
+      if (definition && !definition.generator) this.recordWeekly('merges', definition.level, definition.chainId);
       if (!this.tutorialRef.firstMergeCompleted) {
         this.tutorialRef.firstMergeCompleted = true;
         this.bus.emit('TUTORIAL_UPDATED', { ...this.tutorialRef });
@@ -690,8 +703,12 @@ export class GameContext {
     const result = this.life.claimLevelReward(level);
     if (result.ok) {
       this.enqueue('treasure_chest');
-      const generatorId = this.generators.grantLevelReward(level, this.bundle.levelRewards.generatorRotation ?? []);
-      if (generatorId) this.bus.emit('GENERATOR_CHANGED', { generatorId });
+      const gift = this.life.rewardForLevel(level).generator;
+      const generatorId = this.generators.grantLevelReward(level, this.bundle.levelRewards.generatorRotation ?? [], gift);
+      if (generatorId) {
+        if (gift) this.orders.reconcileRequirements();
+        this.bus.emit('GENERATOR_CHANGED', { generatorId });
+      }
       this.save();
     }
     return result;
@@ -708,10 +725,12 @@ export class GameContext {
   }
 
   claimOrder(orderUid: string): ReturnType<OrderService['claim']> {
+    const order = this.orders.getOrders().find(entry => entry.uid === orderUid);
     const result = this.orders.claim(orderUid);
     if (result.ok) {
       this.life.record('orders');
       this.recordDaily('orders');
+      if (order) this.recordWeekly('orders', Math.max(...order.requirements.map(req => this.bundle.catalog.get(req.itemId)?.level ?? 0)));
       if (!this.tutorialRef.firstOrderCompleted) {
         this.tutorialRef.firstOrderCompleted = true;
         this.bus.emit('TUTORIAL_UPDATED', { ...this.tutorialRef });
@@ -764,6 +783,8 @@ export class GameContext {
       claimedCollectionIds: [...this.claimedCollections],
       orderRefreshAt: [...this.orderRefreshAt],
       dailyTasks: this.dailyTasks ? { ...this.dailyTasks, progress: { ...this.dailyTasks.progress }, claimedIds: [...this.dailyTasks.claimedIds] } : undefined,
+      weeklyChallenge: this.weeklyChallenge ? { ...this.weeklyChallenge,
+        orderDays: [...this.weeklyChallenge.orderDays], pendingRewardWeeks: [...this.weeklyChallenge.pendingRewardWeeks] } : undefined,
       journal: this.journal.state,
       legacyBoardEntitlement: this.legacyBoardEntitlement,
       retainedOpenCellIndices: [...this.retainedOpenCellIndices],
@@ -857,6 +878,95 @@ export class GameContext {
     const energy = task.reward.energy;
     this.progression.addCoins(coins); this.progression.addXp(xp); this.player.diamonds += diamonds; this.energy.add(energy);
     this.bus.emit('DAILY_TASKS_CHANGED', { day: state.day }); this.save(); return { ok: true, coins, xp, energy, diamonds };
+  }
+
+  private weeklyState() {
+    const config = this.config.rewards.weeklyChallenge;
+    if (!config || this.player.level < config.minLevel) return null;
+    const day = businessDayUtc8(this.clock.now()) + 3;
+    const week = Math.floor(day / 7);
+    const previous = this.weeklyChallenge;
+    if (!previous || week > previous.week) {
+      const pendingRewardWeeks = [...(previous?.pendingRewardWeeks ?? [])];
+      if (previous && !previous.claimed && this.completedWeeklyGoals(previous, this.weeklyTheme(config, previous.week))) {
+        pendingRewardWeeks.push(previous.week);
+      }
+      this.weeklyChallenge = { week, orders: 0, challengeOrders: 0, advancedMerges: 0,
+        orderDays: [], claimed: false, completedWeeks: previous?.completedWeeks ?? 0, pendingRewardWeeks };
+    }
+    const state = this.weeklyChallenge!;
+    const theme = this.weeklyTheme(config, state.week);
+    return { config, state, theme, dayOffset: day - state.week * 7 };
+  }
+
+  private weeklyTheme(config: WeeklyChallengeConfig, week: number): WeeklyChallengeConfig['themes'][number] {
+    return config.themes[(week % config.themes.length + config.themes.length) % config.themes.length];
+  }
+
+  private completedWeeklyGoals(state: WeeklyChallengeState, theme: WeeklyChallengeConfig['themes'][number]): boolean {
+    return state.orderDays.length >= theme.days && state.orders >= theme.orders
+      && state.challengeOrders >= theme.challengeOrders && state.advancedMerges >= theme.advancedMerges;
+  }
+
+  hasWeeklyReward(): boolean {
+    const weekly = this.weeklyState();
+    return !!weekly && (weekly.state.pendingRewardWeeks.length > 0 ||
+      (!weekly.state.claimed && this.completedWeeklyGoals(weekly.state, weekly.theme)));
+  }
+
+  private recordWeekly(kind: 'orders' | 'merges', itemLevel: number, chainId = ''): void {
+    const weekly = this.weeklyState();
+    if (!weekly || weekly.state.claimed || weekly.dayOffset < 0) return;
+    const { config, state, theme, dayOffset } = weekly;
+    if (kind === 'merges') {
+      if (itemLevel < config.advancedItemLevel || !theme.chains.includes(chainId) || state.advancedMerges >= theme.advancedMerges) return;
+      state.advancedMerges++;
+    } else {
+      state.orders = Math.min(theme.orders, state.orders + 1);
+      if (itemLevel >= config.advancedItemLevel) state.challengeOrders = Math.min(theme.challengeOrders, state.challengeOrders + 1);
+      if (!state.orderDays.includes(dayOffset)) state.orderDays.push(dayOffset);
+    }
+    this.bus.emit('WEEKLY_CHALLENGE_CHANGED', { week: state.week });
+  }
+
+  getWeeklyChallenge() {
+    const weekly = this.weeklyState();
+    if (!weekly) return null;
+    const { config, state, theme, dayOffset } = weekly;
+    const chainNames = theme.chains.length === this.bundle.generators.length ? '任意主链' : theme.chains.map(chain => {
+      const name = this.bundle.items.find(item => item.chainId === chain && item.level === config.advancedItemLevel)?.displayName;
+      return name ?? chain;
+    }).join('、');
+    const goals = [
+      { title: '完成订单的不同天数', current: state.orderDays.length, target: theme.days },
+      { title: '交付顾客订单', current: state.orders, target: theme.orders },
+      { title: `交付含 Lv${config.advancedItemLevel}+ 物品的订单`, current: state.challengeOrders, target: theme.challengeOrders },
+      { title: `合成 Lv${config.advancedItemLevel}+ 主题物品`, note: chainNames, current: state.advancedMerges, target: theme.advancedMerges },
+    ];
+    return { week: state.week, title: theme.title, goals, reward: { ...config.reward }, pendingRewardWeeks: [...state.pendingRewardWeeks],
+      daysLeft: 7 - Math.max(0, dayOffset), completedWeeks: state.completedWeeks,
+      claimed: state.claimed, ready: !state.claimed && this.completedWeeklyGoals(state, theme) };
+  }
+
+  claimWeeklyChallenge(week: number) {
+    const weekly = this.weeklyState();
+    if (!weekly) return { ok: false, reason: 'STALE_WEEK' } as const;
+    const { config, state, theme } = weekly;
+    if (week === state.week) {
+      if (state.claimed) return { ok: false, reason: 'ALREADY_CLAIMED' } as const;
+      if (!this.completedWeeklyGoals(state, theme)) return { ok: false, reason: 'NOT_READY' } as const;
+      state.claimed = true;
+    } else {
+      const pending = state.pendingRewardWeeks.indexOf(week);
+      if (pending < 0) return { ok: false, reason: 'STALE_WEEK' } as const;
+      state.pendingRewardWeeks.splice(pending, 1);
+    }
+    state.completedWeeks++;
+    const { coins, xp, energy, diamonds } = config.reward;
+    this.player.diamonds += diamonds;
+    this.progression.addCoins(coins); this.progression.addXp(xp); this.energy.add(energy);
+    this.bus.emit('WEEKLY_CHALLENGE_CHANGED', { week: state.week }); this.save();
+    return { ok: true, reward: { ...config.reward } } as const;
   }
 
   get rewardInbox(): readonly ItemInstance[] { return this.inboxRef.map((i) => ({ ...i })); }

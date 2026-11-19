@@ -65,6 +65,9 @@ export type OrderRequirement = {
 
 export type OrderDynamicConfig = {
   pacedSlots?: boolean;
+  difficulty?: Array<{ minPlayerLevel: number; regularMin: number; goalMin: number; maxItemLevel: number }>;
+  quickMaxItemLevel?: number;
+  regularTwoItemChance?: number;
   twoItemChance: number;
   rareChance: number;
   urgentChance: number;
@@ -144,10 +147,12 @@ export type WishDefinition = {
   rewardHearts: number;
 };
 
+export type LevelReward = { coins: number; hearts: number; xp: number; generator?: GeneratorGift };
+
 export type LevelRewardConfig = {
   generatorRotation?: string[];
   default: { coinsPerLevel: number; heartsPerLevel: number; xp: number };
-  special: Array<{ level: number; coins: number; hearts: number; xp: number }>;
+  special: Array<LevelReward & { level: number }>;
 };
 
 export type LifeState = {
@@ -192,12 +197,24 @@ export type SaveData = {
   claimedCollectionIds?: string[];
   orderRefreshAt?: Array<number | null>;
   dailyTasks?: { day: number; targetItemId: string; progress: Record<string, number>; claimedIds: string[] };
+  weeklyChallenge?: WeeklyChallengeState;
   journal?: import('../../gameplay/JournalService').JournalState;
   activeOrders: ActiveOrder[];
   tutorial: TutorialState;
   recentOrderIds?: string[];
   life: LifeState;
   play: import('../play/types').PlayState;
+};
+export type WeeklyChallengeState = {
+  week: number; orders: number; challengeOrders: number; advancedMerges: number;
+  orderDays: number[]; claimed: boolean; completedWeeks: number;
+  pendingRewardWeeks: number[];
+};
+export type WeeklyChallengeConfig = {
+  minLevel: number;
+  advancedItemLevel: number;
+  themes: Array<{ title: string; days: number; orders: number; challengeOrders: number; advancedMerges: number; chains: string[] }>;
+  reward: { coins: number; xp: number; energy: number; diamonds: number };
 };
 
 export type GameConfig = {
@@ -209,7 +226,7 @@ export type GameConfig = {
   saveVersion: number;
   toolbox: { warehouseSlots: number; startingScissors: number; backpackExpansion: { maxSlots: number; baseDiamondCost: number; stepDiamondCost: number } };
   board: { rows: number; columns: number; unlocks: Array<{ level: number; rows: number; columns: number }> };
-  rewards: { discoveryCoins: number; chestDropChance: number; chestLoot: Array<{ itemId: string; weight: number }>; chestLevels: Array<{ level: number; count: number; loot?: Array<{ itemId: string; weight: number }> }>; exchangeOffers: Array<{ id: string; diamonds: number; energy: number }>; checkIn: Array<{ coins: number; energy: number; diamonds: number; itemId?: string }>; dailyTasks: Array<{ id: string; kind: 'orders' | 'merges' | 'specific'; title: string; target: number; reward: { coins: number; xp: number; energy: number; diamonds: number } }> };
+  rewards: { discoveryCoins: number; chestDropChance: number; chestLoot: Array<{ itemId: string; weight: number }>; chestLevels: Array<{ level: number; count: number; loot?: Array<{ itemId: string; weight: number }> }>; exchangeOffers: Array<{ id: string; diamonds: number; energy: number }>; checkIn: Array<{ coins: number; energy: number; diamonds: number; itemId?: string }>; dailyTasks: Array<{ id: string; kind: 'orders' | 'merges' | 'specific'; title: string; target: number; reward: { coins: number; xp: number; energy: number; diamonds: number } }>; weeklyChallenge?: WeeklyChallengeConfig };
   energy: {
     maxEnergy: number;
     maxByLevel?: number[];

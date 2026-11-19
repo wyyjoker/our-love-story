@@ -3,6 +3,7 @@ export type GameEventMap = {
   JOURNAL_CHANGED: Record<string, never>;
   GENERATOR_CHANGED: { generatorId: string };
   DAILY_TASKS_CHANGED: { day: number };
+  WEEKLY_CHALLENGE_CHANGED: { week: number };
   REWARDS_CHANGED: { reason: 'inbox' | 'used' | 'exchange' };
   DISCOVERY_CHANGED: { definitionId: string };
   CHECK_IN_CHANGED: { day: number };

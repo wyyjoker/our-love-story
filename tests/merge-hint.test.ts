@@ -13,7 +13,7 @@ describe('merge guidance', () => {
   it('does not suggest swaps or a merge beyond the last item level', () => {
     const game = createGameContext({ deterministic: true });
     game.debugClearBoard();
-    game.debugSpawn('coffee_12'); game.debugSpawn('coffee_12'); game.debugSpawn('flower_01');
+    game.debugSpawn('coffee_18'); game.debugSpawn('coffee_18'); game.debugSpawn('flower_01');
     expect(game.getMergeHint()).toBeNull();
   });
 });

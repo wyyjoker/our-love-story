@@ -88,7 +88,7 @@ describe('automatic order replacement and daily tasks', () => {
   it('fills the completed slot automatically while manual replacement stays disabled', () => {
     const g=fixture().open();const old=g.orders.getOrders()[0];g.debugClearBoard();
     for(const req of old.requirements)for(let i=0;i<req.count;i++)g.debugSpawn(req.itemId);
-    expect(g.claimOrder(old.uid).ok).toBe(true);expect(g.orders.getOrders()).toHaveLength(3);
+    expect(g.claimOrder(old.uid).ok).toBe(true);expect(g.orders.getOrders()).toHaveLength(6);
     expect(g.orders.getOrders()[0].uid).not.toBe(old.uid);
     expect(g.getOrderRefreshStatus(g.orders.getOrders()[0].uid)).toBeNull();
   });

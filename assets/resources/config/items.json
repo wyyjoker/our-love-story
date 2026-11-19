@@ -557,7 +557,26 @@
     "level": 3,
     "displayName": "甜蜜糖罐",
     "sellValue": 4,
-    "wildcardEligible": true
+    "wildcardEligible": true,
+    "nextItemId": "sugar_04"
+  },
+  {
+    "id": "sugar_04",
+    "chainId": "sugar",
+    "level": 4,
+    "displayName": "玫瑰方糖礼盒",
+    "sellValue": 8,
+    "wildcardEligible": true,
+    "nextItemId": "sugar_05"
+  },
+  {
+    "id": "sugar_05",
+    "chainId": "sugar",
+    "level": 5,
+    "displayName": "花漾方糖礼塔",
+    "sellValue": 16,
+    "wildcardEligible": true,
+    "maxLevel": true
   },
   {
     "id": "wildcard",
@@ -634,7 +653,8 @@
     "displayName": "浪漫咖啡宴",
     "sellValue": 2048,
     "wildcardEligible": true,
-    "maxLevel": true
+    "maxLevel": false,
+    "nextItemId": "coffee_13"
   },
   {
     "id": "flower_09",
@@ -673,7 +693,8 @@
     "displayName": "婚礼捧花",
     "sellValue": 2048,
     "wildcardEligible": true,
-    "maxLevel": true
+    "maxLevel": false,
+    "nextItemId": "flower_13"
   },
   {
     "id": "dessert_09",
@@ -712,7 +733,8 @@
     "displayName": "梦幻甜品塔",
     "sellValue": 2048,
     "wildcardEligible": true,
-    "maxLevel": true
+    "maxLevel": false,
+    "nextItemId": "dessert_13"
   },
   {
     "id": "gift_09",
@@ -751,7 +773,8 @@
     "displayName": "心意珍藏箱",
     "sellValue": 2048,
     "wildcardEligible": true,
-    "maxLevel": true
+    "maxLevel": false,
+    "nextItemId": "gift_13"
   },
   {
     "id": "fruit_09",
@@ -790,7 +813,8 @@
     "displayName": "阳光水果宴",
     "sellValue": 4096,
     "wildcardEligible": true,
-    "maxLevel": true
+    "maxLevel": false,
+    "nextItemId": "fruit_13"
   },
   {
     "id": "scissors_01",
@@ -840,5 +864,71 @@
     "maxUses": 50,
     "maxLevel": true,
     "wildcardEligible": false
-  }
+  },
+  {"id":"coffee_13","chainId":"coffee","level":13,"displayName":"咖啡礼篮","sellValue":2480,"wildcardEligible":true,"maxLevel":false,"nextItemId":"coffee_14"},
+  {"id":"coffee_14","chainId":"coffee","level":14,"displayName":"手冲套装","sellValue":3000,"wildcardEligible":true,"maxLevel":false,"nextItemId":"coffee_15"},
+  {"id":"coffee_15","chainId":"coffee","level":15,"displayName":"双人下午茶","sellValue":3600,"wildcardEligible":true,"maxLevel":false,"nextItemId":"coffee_16"},
+  {"id":"coffee_16","chainId":"coffee","level":16,"displayName":"珍藏咖啡箱","sellValue":4300,"wildcardEligible":true,"maxLevel":false,"nextItemId":"coffee_17"},
+  {"id":"coffee_17","chainId":"coffee","level":17,"displayName":"咖啡品鉴台","sellValue":5200,"wildcardEligible":true,"maxLevel":false,"nextItemId":"coffee_18"},
+  {"id":"coffee_18","chainId":"coffee","level":18,"displayName":"周年咖啡宴","sellValue":6240,"wildcardEligible":true,"maxLevel":true},
+  {"id":"flower_13","chainId":"flower","level":13,"displayName":"花束礼匣","sellValue":2480,"wildcardEligible":true,"maxLevel":false,"nextItemId":"flower_14"},
+  {"id":"flower_14","chainId":"flower","level":14,"displayName":"花艺手提篮","sellValue":3000,"wildcardEligible":true,"maxLevel":false,"nextItemId":"flower_15"},
+  {"id":"flower_15","chainId":"flower","level":15,"displayName":"双层插花","sellValue":3600,"wildcardEligible":true,"maxLevel":false,"nextItemId":"flower_16"},
+  {"id":"flower_16","chainId":"flower","level":16,"displayName":"纪念花钟罩","sellValue":4300,"wildcardEligible":true,"maxLevel":false,"nextItemId":"flower_17"},
+  {"id":"flower_17","chainId":"flower","level":17,"displayName":"花艺拱门","sellValue":5200,"wildcardEligible":true,"maxLevel":false,"nextItemId":"flower_18"},
+  {"id":"flower_18","chainId":"flower","level":18,"displayName":"周年花景","sellValue":6240,"wildcardEligible":true,"maxLevel":true},
+  {"id":"dessert_13","chainId":"dessert","level":13,"displayName":"手作点心盒","sellValue":2480,"wildcardEligible":true,"maxLevel":false,"nextItemId":"dessert_14"},
+  {"id":"dessert_14","chainId":"dessert","level":14,"displayName":"甜品双层架","sellValue":3000,"wildcardEligible":true,"maxLevel":false,"nextItemId":"dessert_15"},
+  {"id":"dessert_15","chainId":"dessert","level":15,"displayName":"鲜花蛋糕","sellValue":3600,"wildcardEligible":true,"maxLevel":false,"nextItemId":"dessert_16"},
+  {"id":"dessert_16","chainId":"dessert","level":16,"displayName":"三层庆典蛋糕","sellValue":4300,"wildcardEligible":true,"maxLevel":false,"nextItemId":"dessert_17"},
+  {"id":"dessert_17","chainId":"dessert","level":17,"displayName":"甜品礼台","sellValue":5200,"wildcardEligible":true,"maxLevel":false,"nextItemId":"dessert_18"},
+  {"id":"dessert_18","chainId":"dessert","level":18,"displayName":"周年甜品宴","sellValue":6240,"wildcardEligible":true,"maxLevel":true},
+  {"id":"gift_13","chainId":"gift","level":13,"displayName":"丝带礼篮","sellValue":2480,"wildcardEligible":true,"maxLevel":false,"nextItemId":"gift_14"},
+  {"id":"gift_14","chainId":"gift","level":14,"displayName":"纪念礼匣","sellValue":3000,"wildcardEligible":true,"maxLevel":false,"nextItemId":"gift_15"},
+  {"id":"gift_15","chainId":"gift","level":15,"displayName":"叠层礼塔","sellValue":3600,"wildcardEligible":true,"maxLevel":false,"nextItemId":"gift_16"},
+  {"id":"gift_16","chainId":"gift","level":16,"displayName":"珍藏礼箱","sellValue":4300,"wildcardEligible":true,"maxLevel":false,"nextItemId":"gift_17"},
+  {"id":"gift_17","chainId":"gift","level":17,"displayName":"祝福礼台","sellValue":5200,"wildcardEligible":true,"maxLevel":false,"nextItemId":"gift_18"},
+  {"id":"gift_18","chainId":"gift","level":18,"displayName":"周年珍藏礼座","sellValue":6240,"wildcardEligible":true,"maxLevel":true},
+  {"id":"fruit_13","chainId":"fruit","level":13,"displayName":"柑橘野餐篮","sellValue":4960,"wildcardEligible":true,"maxLevel":false,"nextItemId":"fruit_14"},
+  {"id":"fruit_14","chainId":"fruit","level":14,"displayName":"橘香饮品套装","sellValue":6000,"wildcardEligible":true,"maxLevel":false,"nextItemId":"fruit_15"},
+  {"id":"fruit_15","chainId":"fruit","level":15,"displayName":"橘子果蛋糕","sellValue":7200,"wildcardEligible":true,"maxLevel":false,"nextItemId":"fruit_16"},
+  {"id":"fruit_16","chainId":"fruit","level":16,"displayName":"柑橘双层礼架","sellValue":8600,"wildcardEligible":true,"maxLevel":false,"nextItemId":"fruit_17"},
+  {"id":"fruit_17","chainId":"fruit","level":17,"displayName":"阳光果礼台","sellValue":10400,"wildcardEligible":true,"maxLevel":false,"nextItemId":"fruit_18"},
+  {"id":"fruit_18","chainId":"fruit","level":18,"displayName":"金橘丰收宴","sellValue":12480,"wildcardEligible":true,"maxLevel":true},
+  {"id":"painting_01","chainId":"painting","level":1,"displayName":"炭笔","sellValue":1,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_02"},
+  {"id":"painting_02","chainId":"painting","level":2,"displayName":"颜料管","sellValue":2,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_03"},
+  {"id":"painting_03","chainId":"painting","level":3,"displayName":"水彩笔","sellValue":4,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_04"},
+  {"id":"painting_04","chainId":"painting","level":4,"displayName":"调色盘","sellValue":8,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_05"},
+  {"id":"painting_05","chainId":"painting","level":5,"displayName":"速写本","sellValue":16,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_06"},
+  {"id":"painting_06","chainId":"painting","level":6,"displayName":"色彩练习","sellValue":32,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_07"},
+  {"id":"painting_07","chainId":"painting","level":7,"displayName":"花枝小稿","sellValue":64,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_08"},
+  {"id":"painting_08","chainId":"painting","level":8,"displayName":"窗边水彩","sellValue":128,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_09"},
+  {"id":"painting_09","chainId":"painting","level":9,"displayName":"海边小画","sellValue":256,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_10"},
+  {"id":"painting_10","chainId":"painting","level":10,"displayName":"日落风景画","sellValue":512,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_11"},
+  {"id":"painting_11","chainId":"painting","level":11,"displayName":"双人肖像","sellValue":1024,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_12"},
+  {"id":"painting_12","chainId":"painting","level":12,"displayName":"画框肖像","sellValue":2048,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_13"},
+  {"id":"painting_13","chainId":"painting","level":13,"displayName":"纪念画册","sellValue":2480,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_14"},
+  {"id":"painting_14","chainId":"painting","level":14,"displayName":"桌面画展","sellValue":3000,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_15"},
+  {"id":"painting_15","chainId":"painting","level":15,"displayName":"双联纪念画","sellValue":3600,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_16"},
+  {"id":"painting_16","chainId":"painting","level":16,"displayName":"四季组画","sellValue":4300,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_17"},
+  {"id":"painting_17","chainId":"painting","level":17,"displayName":"珍藏画集","sellValue":5200,"wildcardEligible":true,"maxLevel":false,"nextItemId":"painting_18"},
+  {"id":"painting_18","chainId":"painting","level":18,"displayName":"我们的故事画展","sellValue":6240,"wildcardEligible":true,"maxLevel":true},
+  {"id":"photo_01","chainId":"photo","level":1,"displayName":"胶卷","sellValue":1,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_02"},
+  {"id":"photo_02","chainId":"photo","level":2,"displayName":"底片","sellValue":2,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_03"},
+  {"id":"photo_03","chainId":"photo","level":3,"displayName":"相纸","sellValue":4,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_04"},
+  {"id":"photo_04","chainId":"photo","level":4,"displayName":"照片小样","sellValue":8,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_05"},
+  {"id":"photo_05","chainId":"photo","level":5,"displayName":"拍立得","sellValue":16,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_06"},
+  {"id":"photo_06","chainId":"photo","level":6,"displayName":"纪念相片","sellValue":32,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_07"},
+  {"id":"photo_07","chainId":"photo","level":7,"displayName":"相片套组","sellValue":64,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_08"},
+  {"id":"photo_08","chainId":"photo","level":8,"displayName":"旅行相册","sellValue":128,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_09"},
+  {"id":"photo_09","chainId":"photo","level":9,"displayName":"木框合影","sellValue":256,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_10"},
+  {"id":"photo_10","chainId":"photo","level":10,"displayName":"回忆影集","sellValue":512,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_11"},
+  {"id":"photo_11","chainId":"photo","level":11,"displayName":"旅行拼贴","sellValue":1024,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_12"},
+  {"id":"photo_12","chainId":"photo","level":12,"displayName":"故事相册","sellValue":2048,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_13"},
+  {"id":"photo_13","chainId":"photo","level":13,"displayName":"婚礼画册","sellValue":2480,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_14"},
+  {"id":"photo_14","chainId":"photo","level":14,"displayName":"周年纪念册","sellValue":3000,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_15"},
+  {"id":"photo_15","chainId":"photo","level":15,"displayName":"珍藏照片墙","sellValue":3600,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_16"},
+  {"id":"photo_16","chainId":"photo","level":16,"displayName":"双册留影集","sellValue":4300,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_17"},
+  {"id":"photo_17","chainId":"photo","level":17,"displayName":"时光档案馆","sellValue":5200,"wildcardEligible":true,"maxLevel":false,"nextItemId":"photo_18"},
+  {"id":"photo_18","chainId":"photo","level":18,"displayName":"我们的岁月影展","sellValue":6240,"wildcardEligible":true,"maxLevel":true}
 ]

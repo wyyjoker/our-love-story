@@ -7,7 +7,7 @@ function text(parent:Node,name:string,value:string,x:number,y:number,width:numbe
   const label=makeLabel(value,size,hexColor(color),true);label.node.name=name;parent.addChild(label.node);ensureTransform(label.node,width,height);label.node.setPosition(x,y,0);label.overflow=Label.Overflow.SHRINK;return label;
 }
 
-/** Three people standing behind service trays, with explicit delivery and inspection targets. */
+/** A customer portrait above its own service tray. */
 export class CocosOrderCard {
   readonly node:Node;
   private readonly avatar:Node;
@@ -35,23 +35,27 @@ export class CocosOrderCard {
   private onInspect:(uid:string,itemId:string)=>void=()=>{};
   private requirementIds:string[]=[];
   private readonly compact:boolean;
+  private readonly trayHeight:number;
 
   constructor(parent:Node,private readonly width:number,private readonly height:number,private readonly index:number) {
-    this.compact=height<230;
+    this.compact=height<265;
     this.node=createUiNode('OrderCard');parent.addChild(this.node);ensureTransform(this.node,width,height);
     this.avatar=createUiNode('CustomerAvatar');this.node.addChild(this.avatar);
     this.avatarFallback=text(this.avatar,'CustomerFallback','顾客',0,0,130,62,30);
     this.tray=createUiNode('OrderServiceTray');this.node.addChild(this.tray);
-    const trayH=this.compact?74:112, buttonH=this.compact?42:54;
+    const trayH=this.compact?68:104, buttonH=this.compact?40:52;
+    this.trayHeight=trayH;
     const buttonY=-height/2+buttonH/2+3, trayY=buttonY+buttonH/2-7+trayH/2;
     ensureTransform(this.tray,width-2,trayH);this.tray.setPosition(0,trayY,0);
     paintRoundRect(this.tray.addComponent(Graphics),width-2,trayH,18,hexColor('#FFF4DE'),hexColor('#D7B990'),2);
     applyMaterialFrame(this.tray,'paper',width-2,trayH,.40);
     this.halo=createUiNode('OrderReadyHalo');this.tray.addChild(this.halo);ensureTransform(this.halo,width-8,trayH-4);
     const hg=this.halo.addComponent(Graphics);hg.strokeColor=hexColor('#A2BC8B');hg.lineWidth=2;hg.roundRect(-width/2+4,-trayH/2+2,width-8,trayH-4,16);hg.stroke();
-    const heroH=Math.min(width*1.05,height-(this.compact?30:58));
-    applyArt(this.avatar,customerBustArt(index),width+6,heroH,ok=>{this.avatarFallback.node.active=!ok;});
-    this.avatar.setPosition(0,height/2-heroH/2-3,0);
+    // Fit the entire portrait above the tray; only its bottom can tuck behind the counter.
+    const portraitBottom=trayY+trayH/2-4;
+    const heroH=Math.min(width*1.10,height/2-3-portraitBottom);
+    applyArt(this.avatar,customerBustArt(index),width-10,heroH,ok=>{this.avatarFallback.node.active=!ok;});
+    this.avatar.setPosition(-5,portraitBottom+heroH/2,0);
 
     const badgeW=this.compact?66:84,badgeH=this.compact?23:29;
     const badge=(name:string,y:number,icon:string,color:string):Label=>{
@@ -60,9 +64,9 @@ export class CocosOrderCard {
       text(node,name+'Icon',icon,-badgeW/2+12,0,24,badgeH,20,color);
       return text(node,name+'Value','0',9,0,badgeW-26,badgeH-2,this.compact?15:19,color);
     };
-    this.reward=badge('RewardBadge',height/2-(this.compact?39:65),'●','#AA7837');
+    this.reward=badge('RewardBadge',portraitBottom+(this.compact?47:71),'●','#AA7837');
     this.reward.node.name='OrderReward';
-    this.xpReward=badge('OrderXpBadge',height/2-(this.compact?65:99),'✦','#B29149');
+    this.xpReward=badge('OrderXpBadge',portraitBottom+(this.compact?21:37),'✦','#B29149');
     this.xpReward.node.name='OrderXpReward';
     this.title=text(this.node,'OrderTitle','',-width/2+49,height/2-17,96,26,17,'#A58870');
     this.urgentBadge=createUiNode('OrderUrgentBadge');this.node.addChild(this.urgentBadge);ensureTransform(this.urgentBadge,56,25);this.urgentBadge.setPosition(-width/2+32,height/2-17,0);
@@ -87,8 +91,9 @@ export class CocosOrderCard {
     this.claim.on(Button.EventType.CLICK,()=>{if(!this.delivering&&this.ready&&this.uid)this.onClaim(this.uid);});
   }
   bind(onClaim:(uid:string)=>void,onInspect:(uid:string,itemId:string)=>void):void{this.onClaim=onClaim;this.onInspect=onInspect;}
-  beginDelivery(uid:string):Vec3|null{
+  beginDelivery(uid:string, reveal:()=>void):Vec3|null{
     if(uid!==this.uid||!this.ready||this.delivering)return null;
+    reveal();
     this.delivering=true;this.claimButton.interactable=false;this.caption.string='正在送达';return this.tray.worldPosition.clone();
   }
   receiveDelivery():void{
@@ -105,8 +110,12 @@ export class CocosOrderCard {
     this.requirementIds=vm.requirements.map(req=>req.itemId);this.halo.active=vm.ready;this.reward.string='+'+vm.rewardCoins;this.xpReward.string='+'+vm.rewardXp;
     const urgent=!!vm.urgentUntil&&vm.urgentUntil>now;this.urgentBadge.active=urgent;this.countdown.node.active=urgent;
     if(urgent){const sec=Math.max(0,Math.ceil((vm.urgentUntil!-now)/1000));this.countdown.string=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');}
-    this.title.node.active=!urgent&&!!vm.longTerm;this.title.string='长线订单';this.title.node.name=vm.longTerm?'OrderLongTermLabel':'OrderTitle';
-    const count=vm.requirements.length,holderW=(this.width-22)/Math.max(1,count),trayH=this.compact?74:112;
+    const orderNames = { quick: '快单', regular: '常规单', goal: '挑战单' };
+    this.title.node.active = !urgent && (!!vm.longTerm || !!vm.pace);
+    this.title.string = vm.longTerm ? '长线订单' : vm.pace ? orderNames[vm.pace] : '';
+    this.title.color = hexColor(vm.pace === 'goal' ? '#985441' : '#82614B');
+    this.title.node.name = vm.longTerm ? 'OrderLongTermLabel' : 'OrderTitle';
+    const count=vm.requirements.length,holderW=(this.width-22)/Math.max(1,count),trayH=this.trayHeight;
     for(let i=0;i<3;i++){
       const req=vm.requirements[i],holder=this.holders[i];holder.active=!!req;if(!req)continue;
       ensureTransform(holder,holderW,trayH-9);holder.setPosition((i-(count-1)/2)*holderW,7,0);
@@ -115,7 +124,9 @@ export class CocosOrderCard {
       if(art)applyArt(this.icons[i],{...art,preserveAspect:true},Math.min(holderW-7,artH*1.3),artH,ok=>{this.names[i].node.active=!ok;});
       ensureTransform(this.names[i].node,holderW-6,trayH-26);
       this.quantities[i].node.setPosition(0,this.compact?-23:-34,0);ensureTransform(this.quantities[i].node,holderW-4,25);
-      this.quantities[i].string=Math.min(req.have,req.count)+'/'+req.count;this.quantities[i].color=hexColor(req.done?'#66834F':'#8D7265');
+      const countText = Math.min(req.have, req.count) + '/' + req.count;
+      this.quantities[i].string = req.level >= 4 ? `Lv${req.level} · ${countText}` : countText;
+      this.quantities[i].color=hexColor(req.done?'#66834F':'#8D7265');
       const check=this.checks[i];check.active=req.done;check.setPosition(Math.min(holderW/2-14,artH*.44),this.compact?-4:-8,0);ensureTransform(check,this.compact?26:36,this.compact?26:36);
       if(req.done){const ink=check.getComponent(Graphics)!;ink.clear();const unit=this.compact?13:18;
         for(const [color,line]of [['#FFF8E3',8],['#70A04E',5]] as const){ink.strokeColor=hexColor(color);ink.lineWidth=this.compact?line*.8:line;ink.moveTo(-unit*.7,0);ink.lineTo(-unit*.15,-unit*.45);ink.lineTo(unit*.8,unit*.6);ink.stroke();}

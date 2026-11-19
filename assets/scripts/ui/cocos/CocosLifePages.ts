@@ -1,5 +1,6 @@
 import { BlockInputEvents, Button, Camera, EventTouch, Graphics, Input, isValid, Label, Mask, Node, ScrollView, Slider, Sprite, UITransform, Vec3 } from 'cc';
 import type { GameContext } from '../../gameplay/GameContext';
+import { WEDDING_CHAPTER_ID } from '../../core/play/types';
 import type { FurnitureDefinition, MemoryDefinition, WishDefinition } from '../../core/types';
 import type { UiRoots } from './UiFactory';
 import { applyArt, applyMaterialFrame, applyFurnitureArt, applyLocalPhoto, furnitureArtFor, itemArt } from './CocosArt';
@@ -276,10 +277,9 @@ export class CocosLifePages {
   }
 
   openWeddingEnding(): boolean {
-    const chapters = this.game.bundle.adventures;
-    const finalChapter = chapters[chapters.length - 1];
-    if (!finalChapter || !this.game.play.progress(finalChapter.id).claimed) return false;
-    const memoryIndex = this.game.bundle.memories.findIndex((item) => item.id === finalChapter.memoryId);
+    const chapter = this.game.bundle.adventures.find((entry) => entry.id === WEDDING_CHAPTER_ID);
+    if (!chapter || !this.game.play.progress(chapter.id).claimed) return false;
+    const memoryIndex = this.game.bundle.memories.findIndex((item) => item.id === chapter.memoryId);
     if (memoryIndex < 0) return false;
     const memory = this.game.bundle.memories[memoryIndex];
     if (!this.game.life.state.unlockedMemoryIds.includes(memory.id)) return false;
@@ -454,9 +454,8 @@ export class CocosLifePages {
       const artLabel = unlocked ? memory.artLabel ?? '故事插画' : '等待珍藏';
       label(card, unlocked ? `${artLabel} · 点击看大图${scrollable ? ' · 正文可滑动' : ''}` : artLabel, 0, -94, 20, 560, CocosTheme.textSecondary());
       const adventure = this.game.bundle.adventures.find((c) => c.memoryId === memory.id);
-      const finalChapter = this.game.bundle.adventures[this.game.bundle.adventures.length - 1];
-      const finalClaimed = !!finalChapter && finalChapter.id === adventure?.id
-        && this.game.play.progress(finalChapter.id).claimed;
+      const finalClaimed = adventure?.id === WEDDING_CHAPTER_ID
+        && this.game.play.progress(WEDDING_CHAPTER_ID).claimed;
       label(card, `第 ${this.memoryPage + 1} / ${total} 页`, finalClaimed ? 0 : adventure ? -177 : 0, finalClaimed ? -246 - extra : -292 - extra, 21, 260, CocosTheme.textSecondary());
       if (finalClaimed) {
         const hitArea = createUiNode('WeddingLetterReplay');
@@ -475,12 +474,13 @@ export class CocosLifePages {
         label(visual, '重读婚礼信 ›', 0, 0, 23, 252, CocosTheme.surface(), true);
         hitArea.addComponent(Button);
         hitArea.on(Button.EventType.CLICK, () => {
-          if (!this.openWeddingEnding()) this.toast('领取最后一章纪念后即可重读婚礼信');
+          if (!this.openWeddingEnding()) this.toast('珍藏草坪婚礼后即可重读婚礼信');
         });
       }
       if (adventure) {
-        const availability = this.game.play.chapterAvailability(adventure.id);
-        const explore = button(card, availability?.available ? '回忆探索 ›' : `Lv${adventure.unlockLevel} 开启探索`, 150, -292 - extra, 264, 60, () => this.openAdventure?.(adventure.id), 'pink');
+        const caption = this.game.play.progress(adventure.id).claimed ? '重看回忆谜题 ›'
+          : '玩这段回忆的谜题 ›';
+        const explore = button(card, caption, 150, -292 - extra, 264, 60, () => this.openAdventure?.(adventure.id), 'pink');
         explore.name = `MemoryAdventure_${adventure.id}`;
       }
       this.pager(total, () => this.memoryPage, (page) => { this.memoryPage = page; this.render(); });
@@ -540,7 +540,8 @@ export class CocosLifePages {
         }
         const result = this.game.unlockMemory(memory.id);
         this.toast(result.ok ? '新回忆已经珍藏 ♥'
-          : result.reason === 'NOT_ENOUGH_HEARTS' ? '爱心还不够，先完成订单和心愿吧' : '请先解锁前一段回忆');
+          : result.reason === 'NOT_ENOUGH_HEARTS' ? '爱心还不够，先完成订单和心愿吧'
+          : '请先解锁前一段回忆，也可从旅程直接探索');
         this.render();
       }, 'cream');
       row.name = `TimelineEntry_${memory.id}`;
@@ -633,7 +634,8 @@ export class CocosLifePages {
         return;
       }
       const result = this.game.unlockMemory(memory.id);
-      this.toast(result.ok ? '新回忆已经珍藏 ♥' : result.reason === 'NOT_ENOUGH_HEARTS' ? '爱心还不够，先完成订单和心愿吧' : '请先解锁前一段回忆');
+      this.toast(result.ok ? '新回忆已经珍藏 ♥' : result.reason === 'NOT_ENOUGH_HEARTS' ? '爱心还不够，先完成订单和心愿吧'
+        : '请先解锁前一段回忆，也可从旅程直接探索');
       this.render();
     }, unlocked ? 'sage' : 'pink');
   }
@@ -804,7 +806,9 @@ export class CocosLifePages {
       sortDepth(); this.drawFurnitureSelection(furnitureViews, furnitureLayer, homeLayout);
     };
     if (this.arranging) this.bindFurnitureGestures(scene, furnitureLayer, furnitureViews, homeLayout, sortDepth);
-    const souvenirs = this.game.bundle.adventures.filter((chapter) => this.game.play.progress(chapter.id).claimed && chapter.souvenir.room === this.homeRoom);
+    const souvenirs = this.game.bundle.adventures.flatMap((chapter) =>
+      chapter.souvenir?.room === this.homeRoom && this.game.play.progress(chapter.id).claimed
+        ? [{ id: chapter.id, memoryId: chapter.memoryId, souvenir: chapter.souvenir }] : []);
     const hasSouvenir = souvenirs.length > 0;
     const shelf = createUiNode('MemoryShelf'); scene.addChild(shelf);
     shelf.setPosition(0, -homeLayout.height / 2 + 72, 0);

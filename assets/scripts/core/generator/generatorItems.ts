@@ -1,5 +1,7 @@
 import type { GeneratorDefinition, GeneratorItemRules, GeneratorItemState, ItemDefinition } from '../types';
 
+export const MAX_GENERATOR_TIER = 9;
+
 export function generatorItemId(id: string, level: number): string { return `generator_${id}_${String(level).padStart(2, '0')}`; }
 
 /** Producer entities share the normal item model and run only on the board. */

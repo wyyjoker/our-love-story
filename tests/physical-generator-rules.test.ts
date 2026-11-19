@@ -20,13 +20,14 @@ const machine = (uid: string, id = 'coffee_machine', level = 1, now = 10_000): I
   definitionId: generatorItemId(id, level), generatorState: freshGeneratorState(rules(id, level), now) });
 
 describe('physical producer item rules', () => {
-  it('compiles eight distinct tiers from each configured producer without a second item inventory', () => {
+  it('compiles nine distinct tiers from each configured producer without a second item inventory', () => {
     for (const generator of bundle.generators) {
-      for (let level = 1; level <= 8; level += 1) {
+      for (let level = 1; level <= 9; level += 1) {
         const definition = catalog.get(generatorItemId(generator.id, level))!;
         expect(definition.generator?.id).toBe(generator.id); expect(definition.level).toBe(level);
         expect(definition.wildcardEligible).toBe(false);
-        expect(definition.nextItemId).toBe(level === 8 ? undefined : generatorItemId(generator.id, level + 1));
+        expect(definition.nextItemId).toBe(level === 9 ? undefined : generatorItemId(generator.id, level + 1));
+        if (level === 9) expect(catalog.get(generatorItemId(generator.id, 10))).toBeUndefined();
       }
     }
   });
@@ -119,7 +120,11 @@ describe('physical producer item rules', () => {
     board.cells[1].item = machine('d', 'coffee_machine', 2); expect(resolveDrop(board, catalog, 0, 1).kind).toBe('SWAP');
     board.cells[1].item = { uid: 'wild', definitionId: 'wildcard' }; expect(resolveDrop(board, catalog, 1, 0).kind).toBe('SWAP');
     board.cells[1].item = { uid: 'shears', definitionId: 'scissors_05' }; expect(resolveDrop(board, catalog, 1, 0).kind).toBe('CANCEL');
-    const max = new MergeEngine(catalog, 10_000).merge(machine('x', 'coffee_machine', 8), machine('y', 'coffee_machine', 8), 'z');
+    const engine = new MergeEngine(catalog, 10_000);
+    expect(engine.merge(machine('x', 'coffee_machine', 8), machine('y', 'coffee_machine', 8), 'z')).toMatchObject({
+      ok: true, item: { definitionId: 'generator_coffee_machine_09' },
+    });
+    const max = engine.merge(machine('x', 'coffee_machine', 9), machine('y', 'coffee_machine', 9), 'z');
     expect(max).toEqual({ ok: false, reason: 'MAX_LEVEL' });
   });
 

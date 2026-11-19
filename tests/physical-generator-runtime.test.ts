@@ -100,7 +100,7 @@ describe('physical producers on main board',()=>{
     const snapshot=g.buildSaveData();snapshot.board[0].item!.generatorState!.remainingUses=0;expect(g.getGeneratorStatus(uid)?.remainingUses).toBe(59);
     const h=f.open();expect(h.board.getBoard().cells[0].item?.uid).toBe(uid);expect(h.getGeneratorStatus(uid)?.remainingUses).toBe(59);
     expect(h.dropItem(0,b.index)).toMatchObject({ok:true,kind:'MERGE',resultDefinitionId:'generator_coffee_machine_02'});
-    expect(h.getGeneratorStatus('coffee_machine')).toMatchObject({level:2,remainingUses:59,inventory:[0,1,0,0,0,0,0,0]});
+    expect(h.getGeneratorStatus('coffee_machine')).toMatchObject({level:2,remainingUses:59,inventory:[0,1,0,0,0,0,0,0,0]});
     expect(h.player.coins).toBe(0);expect(h.rewardInbox).toHaveLength(0);expect(h.isItemDiscovered('generator_coffee_machine_02')).toBe(false);
     expect(f.open().getGeneratorStatus('coffee_machine')?.remainingUses).toBe(59);
   });
@@ -125,10 +125,10 @@ describe('physical producers on main board',()=>{
     const f=fixture(),save=createDefaultSaveData(f.bundle.game,f.clock.now());save.version=8;
     save.generatorInventory={coffee_machine:[3,1]};save.generatorCooldowns={coffee_machine:{streak:17,cooldownStartedAt:null}};
     f.values.set(f.bundle.game.saveKey,JSON.stringify(save));const g=f.open();
-    expect(g.getGeneratorStatus('coffee_machine')?.inventory).toEqual([3,1,0,0,0,0,0,0]);
+    expect(g.getGeneratorStatus('coffee_machine')?.inventory).toEqual([3,1,0,0,0,0,0,0,0]);
     const remaining=()=>g.board.getBoard().cells.reduce((sum,c)=>sum+(c.item?.generatorState?.remainingUses??0),0);
     expect(remaining()).toBe(43);expect(g.generators.getRewards()).toHaveLength(0);
-    const h=f.open();expect(h.getGeneratorStatus('coffee_machine')?.inventory).toEqual([3,1,0,0,0,0,0,0]);
+    const h=f.open();expect(h.getGeneratorStatus('coffee_machine')?.inventory).toEqual([3,1,0,0,0,0,0,0,0]);
     expect(h.board.getBoard().cells.reduce((sum,c)=>sum+(c.item?.generatorState?.remainingUses??0),0)).toBe(43);
   });
   it('migrates large entitlement counts without losing rights or allocating an unbounded board',()=>{

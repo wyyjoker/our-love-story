@@ -10,6 +10,8 @@ export type ArtCell = { sheet: string; index?: number; columns?: number; rows?: 
 const sheets = new Map<string, Promise<Texture2D | null>>();
 const frames = new Map<string, SpriteFrame>();
 const requests = new WeakMap<Node, string>();
+const CORE_CHAIN_ATLAS_ORDER = ['coffee', 'flower', 'dessert', 'gift', 'fruit'];
+const LATE_GENERATOR_ATLAS_ORDER = ['painting_easel', 'photo_station'];
 let artBundle: Promise<AssetManager.Bundle | null> | undefined;
 
 function loadArtBundle(): Promise<AssetManager.Bundle | null> {
@@ -62,7 +64,8 @@ export function applyMaterialFrame(parent: Node, material: 'paper' | 'wood' | 'b
 }
 
 export function customerBustArt(index: number): ArtCell {
-  return { sheet: 'customer_busts_sheet', index: ((index % 3) + 3) % 3, columns: 3, rows: 1, preserveAspect: true };
+  const portrait = ((index % 6) + 6) % 6;
+  return { sheet: portrait < 3 ? 'customer_busts_sheet' : 'customer_bust_sheet', index: portrait % 3, columns: 3, rows: 1, preserveAspect: true };
 }
 
 export function applyArt(node: Node, art: ArtCell, width: number, height: number, onReady?: (ok: boolean) => void): void {
@@ -110,22 +113,27 @@ export function applyArt(node: Node, art: ArtCell, width: number, height: number
 }
 
 export function itemArt(definitionId: string): ArtCell | null {
-  const producer = /^generator_(.+)_0[1-8]$/.exec(definitionId);
+  const producer = /^generator_(.+)_0[1-9]$/.exec(definitionId);
   if (producer) return generatorArt(producer[1]);
   if (/^scissors_0[1-5]$/.test(definitionId)) return { sheet: 'scissors_backpack_sheet', index: Number(definitionId.slice(-1)) - 1, columns: 3, rows: 2, preserveAspect: true };
   const sugarMatch = /^sugar_(0[1-3])$/.exec(definitionId);
   if (sugarMatch) return { sheet: 'special_sheet', index: Number(sugarMatch[1]) - 1, columns: 2, rows: 2 };
+  if (definitionId === 'sugar_04' || definitionId === 'sugar_05') return { sheet: definitionId, preserveAspect: true };
   if (definitionId === 'wildcard') return { sheet: 'special_sheet', index: 3, columns: 2, rows: 2 };
-  const fruitMatch = /^fruit_(0[1-9]|1[0-2])$/.exec(definitionId);
-  if (fruitMatch) { const level = Number(fruitMatch[1]); return level > 8
-    ? { sheet: 'fruit_extra_sheet', index: level - 9, columns: 2, rows: 2, preserveAspect: true }
-    : { sheet: 'fruit_sheet', index: level - 1, columns: 4, rows: 2 }; }
-  const match = /^(coffee|flower|dessert|gift)_(\d{2})$/.exec(definitionId);
+  const match = /^(coffee|flower|dessert|gift|fruit|painting|photo)_(\d{2})$/.exec(definitionId);
   if (match) {
+    const chainId = match[1];
     const level = Number(match[2]);
-    if (level < 1 || level > 12) return null;
-    if (level > 8) return { sheet: `${match[1]}_extra_sheet`, index: level - 9, columns: 2, rows: 2, preserveAspect: true };
-    return { sheet: `${match[1]}_sheet`, index: level - 1, columns: 4, rows: 2 };
+    if (level < 1 || level > 18) return null;
+    if (chainId === 'painting' || chainId === 'photo') {
+      return { sheet: `${chainId}_sheet`, index: level - 1, columns: 6, rows: 3, preserveAspect: true };
+    }
+    if (level > 12) {
+      const index = CORE_CHAIN_ATLAS_ORDER.indexOf(chainId) * 6 + level - 13;
+      return { sheet: 'main_chain_lv13_18_sheet', index, columns: 6, rows: 5, preserveAspect: true };
+    }
+    if (level > 8) return { sheet: `${chainId}_extra_sheet`, index: level - 9, columns: 2, rows: 2, preserveAspect: true };
+    return { sheet: `${chainId}_sheet`, index: level - 1, columns: 4, rows: 2 };
   }
   const rewardMatch = /^(coin|energy|diamond)_(0[1-5])$/.exec(definitionId);
   if (rewardMatch) {
@@ -149,6 +157,8 @@ export function openedChestArt(): ArtCell {
 
 export function generatorArt(id: string): ArtCell | null {
   if (id === 'orange_tree') return { sheet: 'orange_tree', preserveAspect: true };
+  const lateIndex = LATE_GENERATOR_ATLAS_ORDER.indexOf(id);
+  if (lateIndex >= 0) return { sheet: 'late_generators_sheet', index: lateIndex, columns: 2, rows: 1, preserveAspect: true };
   const index = ['coffee_machine', 'flower_basket', 'dessert_oven', 'gift_box'].indexOf(id);
   // The generator atlas is 2172×724, but its vertical cell margins are wide.
   // Crop to each alpha-content bound so preserveAspect fits the actual machine.

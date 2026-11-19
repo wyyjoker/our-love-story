@@ -18,6 +18,8 @@ import {
   generateTutorialOrder,
 } from '../core/order/orders';
 
+const ORDER_PACES = ['quick', 'regular', 'goal'] as const;
+
 export type ClaimResult =
   | {
       ok: true;
@@ -63,14 +65,20 @@ export class OrderService {
     // Existing orders retain their UID and promised rewards while oversized
     // requirements are reduced; owned items and already-earned assets stay untouched.
     const limit = 2;
-    for (const order of this.orders) {
+    for (const [index, order] of this.orders.entries()) {
+      const pace = this.paceForSlot(index);
+      if (pace) order.pace = pace;
       const valid = order.requirements.filter((r) => r && typeof r.itemId === 'string' && this.catalog.has(r.itemId)
         && Number.isSafeInteger(r.count) && r.count > 0);
       let remaining = limit;
-      order.requirements = valid.flatMap((requirement) => {
-        const count = Math.min(remaining, requirement.count); remaining -= count;
-        return count > 0 ? [{ itemId: requirement.itemId, count }] : [];
-      });
+      const counts = new Map<string, number>();
+      for (const { itemId, count } of valid) {
+        const accepted = Math.min(remaining, count);
+        counts.set(itemId, (counts.get(itemId) ?? 0) + accepted);
+        remaining -= accepted;
+        if (!remaining) break;
+      }
+      order.requirements = Array.from(counts.entries(), ([itemId, count]) => ({ itemId, count }));
     }
     // A malformed empty requirement is not a free order; replace its slot.
     for (let index = 0; index < this.orders.length; index++) {
@@ -85,7 +93,10 @@ export class OrderService {
   reconcileRequirements(): void {
     for (const order of this.orders) {
       if (this.board.findItemsForRequirements(order.requirements)) continue;
-      if (order.requirements.some((req) => !this.canProduceItem(req.itemId) || !this.player.unlockedChainIds.includes(this.catalog.get(req.itemId)?.chainId ?? ''))) {
+      if (order.requirements.some((req) => {
+        const chain = this.catalog.get(req.itemId)?.chainId;
+        return !this.canProduceItem(req.itemId) || (chain !== 'sugar' && !this.player.unlockedChainIds.includes(chain ?? ''));
+      })) {
         const replacement = this.createNextOrder(false, order.uid);
         if (replacement) {
           order.requirements = replacement.requirements; order.templateId = replacement.templateId;
@@ -132,7 +143,8 @@ export class OrderService {
 
   createNextOrder(forceTutorial = false, replacingUid?: string): ActiveOrder | null {
     const slot = replacingUid ? this.getSlot(replacingUid) : this.orders.length;
-    const pace = this.dynamic.pacedSlots ? (['quick', 'regular', 'goal'] as const)[Math.max(0, slot) % 3] : undefined;
+    const pace = this.paceForSlot(slot);
+    const stockedSugar = pace && pace !== 'quick' ? this.highestStockedSugar() : undefined;
     const order = forceTutorial
       ? generateTutorialOrder(this.templates, this.ids.next())
       : generateOrder({
@@ -150,10 +162,12 @@ export class OrderService {
           maxMergeCostForChain: this.maxMergeCostForChain,
           pace,
           limitedChainIds: this.limitedChainIds,
+          stockedBonusItemId: stockedSugar,
           random: this.random,
           id: this.ids.next(),
         });
     if (order) {
+      if (pace) order.pace = pace;
       this.recentOrderIds.push(order.templateId);
       if (this.recentOrderIds.length > 12) {
         this.recentOrderIds = this.recentOrderIds.slice(-12);
@@ -162,6 +176,22 @@ export class OrderService {
     return order;
   }
 
+  private paceForSlot(slot: number): ActiveOrder['pace'] {
+    return this.dynamic.pacedSlots ? ORDER_PACES[Math.max(0, slot) % ORDER_PACES.length] : undefined;
+  }
+
+  private highestStockedSugar(): string | undefined {
+    let bestLevel = 1;
+    let bestId: string | undefined;
+    for (const cell of this.board.getBoard().cells) {
+      const item = !cell.locked && cell.item ? this.catalog.get(cell.item.definitionId) : undefined;
+      if (item?.chainId === 'sugar' && item.level > bestLevel) {
+        bestLevel = item.level;
+        bestId = item.id;
+      }
+    }
+    return bestId;
+  }
   getSlot(orderUid: string): number { return this.orders.findIndex((order) => order.uid === orderUid); }
 
   refresh(orderUid: string): { ok: true; orderUid: string } | { ok: false; reason: 'ORDER_NOT_FOUND' | 'NO_REPLACEMENT' } {

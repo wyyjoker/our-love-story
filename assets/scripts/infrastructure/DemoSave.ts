@@ -9,15 +9,16 @@ import { freshGeneratorState, generatorItemId } from '../core/generator/generato
 export function createDemoSave(bundle: ConfigBundle, now: number): SaveData {
   const data = createDefaultSaveData(bundle.game, now);
   const level = bundle.progression.levels.find((entry) => entry.level === 12)!;
+  const producers = bundle.generators.filter((generator) => generator.unlockLevel <= level.level);
   data.player = { ...data.player, level: 12, xp: level.xpRequired + 320,
     coins: 12460, hearts: 520, energy: 86, maxEnergy: energyCapacity(bundle.game.energy, 12),
-    unlockedChainIds: bundle.generators.map((generator) => generator.chainId) };
+    unlockedChainIds: producers.map((generator) => generator.chainId) };
   const items = ['coffee_01', ...bundle.items
     .filter(item => item.level <= 6 && ['coffee', 'flower', 'dessert', 'gift'].includes(item.chainId))
     .map(item => item.id), 'fruit_01', 'fruit_03', 'treasure_chest', 'energy_02'];
   data.board = data.board.map((_, index) => items[index]
     ? { index, item: { uid: `demo_${index}`, definitionId: items[index] } } : { index });
-  const machines = [bundle.generators[0], ...bundle.generators];
+  const machines = [producers[0], ...producers];
   const firstMachineCell = bundle.game.board.columns * 5;
   for (const [offset, generator] of machines.entries()) {
     const index = firstMachineCell + offset;
@@ -27,7 +28,7 @@ export function createDemoSave(bundle: ConfigBundle, now: number): SaveData {
     data.board[index] = { index, item: { uid: `demo_${index}`, definitionId,
       generatorState: freshGeneratorState(definition.generator, now) } };
   }
-  data.generatorBoard = { ready: true, entitlements: bundle.generators.map(g => g.id), rewards: [] };
+  data.generatorBoard = { ready: true, entitlements: producers.map(g => g.id), rewards: [] };
   data.discoveredItemIds = [...new Set(items)];
   data.claimedDiscoveryIds = [...data.discoveredItemIds];
   const orderIds = ['order_romantic_combo', 'order_anniversary_preview', 'order_morning_set'];

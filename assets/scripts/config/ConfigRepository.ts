@@ -10,7 +10,7 @@ import type {
   LevelRewardConfig,
 } from '../core/types';
 import { createItemCatalog, type ItemCatalog } from '../core/item/catalog';
-import { generatorItemDefinitions } from '../core/generator/generatorItems';
+import { generatorItemDefinitions, MAX_GENERATOR_TIER } from '../core/generator/generatorItems';
 
 import gameJson from '../../resources/config/game.json';
 import itemsJson from '../../resources/config/items.json';
@@ -22,9 +22,12 @@ import furnitureJson from '../../resources/config/furniture.json';
 import wishesJson from '../../resources/config/wishes.json';
 import levelRewardsJson from '../../resources/config/level_rewards.json';
 import adventuresJson from '../../resources/config/adventures.json';
+import memoryAdventuresJson from '../../resources/config/memory_adventures.json';
 import smallDatesJson from '../../resources/config/small_dates.json';
 import { circuitState, requirementsBaseCost, type AdventureChapter, type PuzzleDefinition, type SmallDateDefinition } from '../core/play/types';
 import { collectUnlockChains } from '../core/progression/progression';
+
+const PRIMARY_CHAIN_MAX_LEVEL = 18;
 
 export type ConfigBundle = {
   adventures: readonly AdventureChapter[];
@@ -109,7 +112,10 @@ export function loadConfigBundle(): ConfigBundle {
   const levelRewards = levelRewardsJson as LevelRewardConfig;
   return {
     game, items, catalog, generators, orders, progression, memories, furniture, wishes, levelRewards,
-    adventures: adventuresJson as AdventureChapter[],
+    adventures: [
+      ...adventuresJson as AdventureChapter[],
+      ...memoryAdventuresJson.map((chapter) => ({ ...chapter, steps: [] })) as AdventureChapter[],
+    ],
     smallDates: smallDatesJson as SmallDateDefinition[],
   };
 }
@@ -144,7 +150,7 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
     }
   }
 
-  // chains continuous levels 1..8
+  // Every chain must start at level 1 with consecutive levels.
   const byChain = new Map<string, ItemDefinition[]>();
   for (const item of items) {
     const list = byChain.get(item.chainId) ?? [];
@@ -181,6 +187,10 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
     }
   }
 
+  if (new Set(generators.map((gen) => gen.id)).size !== generators.length
+    || new Set(generators.map((gen) => gen.chainId)).size !== generators.length) {
+    issues.push({ level: 'error', message: 'Generator IDs and chains must be unique' });
+  }
   for (const gen of generators) {
     if (!Number.isSafeInteger(gen.purchaseCoins) || gen.purchaseCoins <= 0) issues.push({ level: 'error', message: `Generator ${gen.id} purchase price invalid` });
     if (gen.recharge && (!Number.isInteger(gen.recharge.capacity) || gen.recharge.capacity < 1 || !Number.isFinite(gen.recharge.intervalMs) || gen.recharge.intervalMs <= 0 || gen.energyCost !== 0)) issues.push({ level: 'error', message: `Generator ${gen.id} recharge invalid` });
@@ -191,9 +201,10 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
       const validOutputs = (outputs: GeneratorDefinition['outputs'], minLevel: number): boolean => Array.isArray(outputs) && outputs.length > 0
         && outputs.every((output) => {
           const item = catalog.get(output.itemId);
-          return item?.chainId === gen.chainId && item.level >= minLevel && item.level <= Math.min(12, minLevel + 2) && Number.isFinite(output.weight) && output.weight > 0;
+          const maxOutput = minLevel + (minLevel === MAX_GENERATOR_TIER ? 3 : 2);
+          return item?.chainId === gen.chainId && item.level >= minLevel && item.level <= maxOutput && Number.isFinite(output.weight) && output.weight > 0;
         });
-      if (!Number.isSafeInteger(upgrade.maxLevel) || upgrade.maxLevel < 2 || upgrade.maxLevel > 8 || !Number.isFinite(upgrade.rechargeFactor) || upgrade.rechargeFactor <= 0 || upgrade.rechargeFactor > 1
+      if (!Number.isSafeInteger(upgrade.maxLevel) || upgrade.maxLevel < 2 || upgrade.maxLevel > MAX_GENERATOR_TIER || !Number.isFinite(upgrade.rechargeFactor) || upgrade.rechargeFactor <= 0 || upgrade.rechargeFactor > 1
         || (upgrade.mergeRemainingRatio!==undefined&&(!Number.isFinite(upgrade.mergeRemainingRatio)||upgrade.mergeRemainingRatio<=0||upgrade.mergeRemainingRatio>.5))
         || !Number.isSafeInteger(upgrade.boostEnergyMultiplier) || upgrade.boostEnergyMultiplier < 2 || !Array.isArray(upgrade.levels)
         || upgrade.levels.length !== upgrade.maxLevel - 1 || upgrade.levels.some((entry, index) => entry.level !== index + 2 || !validOutputs(entry.outputs, entry.level)
@@ -202,11 +213,15 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
         issues.push({ level: 'error', message: `Generator ${gen.id} upgrade invalid` });
       }
     }
-    if (!byChain.has(gen.chainId)) {
+    const chain = byChain.get(gen.chainId)?.slice().sort((a, b) => a.level - b.level);
+    if (!chain) {
       issues.push({
         level: 'error',
         message: `Generator ${gen.id} unknown chainId ${gen.chainId}`,
       });
+    } else if (chain.length !== PRIMARY_CHAIN_MAX_LEVEL || chain.some((item, index) =>
+      item.nextItemId !== chain[index + 1]?.id || !!item.maxLevel !== (index === chain.length - 1))) {
+      issues.push({ level: 'error', message: `Generator ${gen.id} needs a complete Lv1–${PRIMARY_CHAIN_MAX_LEVEL} item chain` });
     }
     if (gen.outputs.length === 0) {
       issues.push({ level: 'error', message: `Generator ${gen.id} has no outputs` });
@@ -252,9 +267,12 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
     }
   }
 
-  let prev = -Infinity;
-  for (const level of progression.levels) {
-    if (level.xpRequired < prev) {
+  const maxPlayerLevel = progression.levels.length;
+  let prev = -1;
+  if (!maxPlayerLevel) issues.push({ level: 'error', message: 'Progression levels required' });
+  for (const [index, level] of progression.levels.entries()) {
+    if (level.level !== index + 1 || !Number.isSafeInteger(level.xpRequired)
+      || level.xpRequired <= prev || (index === 0 && level.xpRequired !== 0)) {
       issues.push({
         level: 'error',
         message: `Progression xpRequired not increasing at level ${level.level}`,
@@ -314,6 +332,17 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
   if (!game.generatorRestore || !Number.isSafeInteger(game.generatorRestore.cooldownCost) || game.generatorRestore.cooldownCost < 1
     || !Number.isSafeInteger(game.generatorRestore.chargeCost) || game.generatorRestore.chargeCost < 1) issues.push({ level: 'error', message: 'Generator restore configuration invalid' });
   const daily = game.rewards?.dailyTasks;
+  const weekly = game.rewards?.weeklyChallenge;
+  if (weekly && (!Number.isSafeInteger(weekly.minLevel) || weekly.minLevel < 1 || weekly.minLevel > maxPlayerLevel
+    || !Number.isSafeInteger(weekly.advancedItemLevel) || weekly.advancedItemLevel < 2 || weekly.advancedItemLevel > PRIMARY_CHAIN_MAX_LEVEL
+    || weekly.themes.length !== 8 || new Set(weekly.themes.map(theme => theme.title)).size !== weekly.themes.length
+    || weekly.themes.some(theme => !nonEmptyText(theme.title) || ![theme.days, theme.orders, theme.challengeOrders, theme.advancedMerges]
+      .every(n => Number.isSafeInteger(n) && n > 0) || theme.days > 7 || theme.challengeOrders > theme.orders
+      || !theme.chains.length || new Set(theme.chains).size !== theme.chains.length
+      || theme.chains.some(chain => !generators.some(generator => generator.chainId === chain && generator.unlockLevel <= weekly.minLevel)))
+    || Object.values(weekly.reward).some(n => !Number.isSafeInteger(n) || n < 0))) {
+    issues.push({ level: 'error', message: 'Weekly challenge configuration invalid' });
+  }
   if (!Array.isArray(daily) || daily.length !== 3 || new Set(daily.map((task) => task.id)).size !== daily.length || daily.some((task) => !/^[a-z][a-z0-9_]*$/.test(task.id) || !['orders', 'merges', 'specific'].includes(task.kind) || !task.title || !Number.isSafeInteger(task.target) || task.target <= 0 || !task.reward || [task.reward.coins, task.reward.xp, task.reward.energy, task.reward.diamonds].some((n) => !Number.isSafeInteger(n) || n < 0)) || new Set(daily.map((task) => task.kind)).size !== 3) issues.push({ level: 'error', message: 'Daily tasks configuration invalid' });
   if (game.energy.recoverIntervalMs <= 0) {
     issues.push({ level: 'error', message: 'Energy recoverIntervalMs invalid' });
@@ -326,6 +355,15 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
     || !Number.isSafeInteger(dynamicOrders.rewardMultiplierMaxLevel) || dynamicOrders.rewardMultiplierMaxLevel < 1
     || !Number.isFinite(dynamicOrders.rewardMultiplierMin) || !Number.isFinite(dynamicOrders.rewardMultiplierMax)
     || dynamicOrders.rewardMultiplierMin <= 0 || dynamicOrders.rewardMultiplierMax < dynamicOrders.rewardMultiplierMin)) issues.push({ level: 'error', message: 'Dynamic order configuration invalid' });
+  if (dynamicOrders?.difficulty && (!dynamicOrders.difficulty.length || dynamicOrders.difficulty.some((tier, index, tiers) =>
+    ![tier.minPlayerLevel, tier.regularMin, tier.goalMin, tier.maxItemLevel].every(Number.isSafeInteger)
+    || tier.minPlayerLevel < 2 || tier.minPlayerLevel > maxPlayerLevel || tier.regularMin < 2
+    || tier.regularMin >= tier.goalMin || tier.goalMin > tier.maxItemLevel || tier.maxItemLevel > game.orders.maxItemLevel
+    || (index > 0 && (tiers[index - 1].minPlayerLevel >= tier.minPlayerLevel || tiers[index - 1].maxItemLevel > tier.maxItemLevel)))
+    || !Number.isSafeInteger(dynamicOrders.quickMaxItemLevel) || (dynamicOrders.quickMaxItemLevel ?? 0) < 1
+    || !Number.isFinite(dynamicOrders.regularTwoItemChance) || dynamicOrders.regularTwoItemChance! < 0 || dynamicOrders.regularTwoItemChance! > 1)) {
+    issues.push({ level: 'error', message: 'Order difficulty curve invalid' });
+  }
 
   for (const [name, values] of [
     ['memory', memories],
@@ -391,7 +429,10 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
   }
   const specialLevels = new Set<number>();
   for (const reward of levelRewards.special) {
-    if (specialLevels.has(reward.level) || reward.level < 2 || reward.coins < 0 || reward.hearts < 0 || reward.xp < 0) {
+    if (specialLevels.has(reward.level) || !Number.isSafeInteger(reward.level) || reward.level < 2 || reward.level > maxPlayerLevel
+      || [reward.coins, reward.hearts, reward.xp].some((n) => !Number.isSafeInteger(n) || n < 0)
+      || !validGeneratorGift(reward.generator)
+      || (reward.generator && !generators.some((g) => g.id === reward.generator?.generatorId && g.unlockLevel <= reward.level))) {
       issues.push({ level: 'error', message: `Level reward ${reward.level} invalid` });
     }
     specialLevels.add(reward.level);
@@ -410,21 +451,24 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
   const souvenirKeys = new Set<string>();
   for (const c of bundle.adventures) {
     const p = c.puzzle;
-    const unlockedAtLevel = new Set(collectUnlockChains(progression, c.unlockLevel));
-    const souvenirKey = `${c.souvenir.room}:${c.souvenir.x}:${c.souvenir.y}`;
+    const legacyLevel = c.unlockLevel ?? 1;
+    const unlockedAtLevel = new Set(collectUnlockChains(progression, legacyLevel));
+    const souvenir = c.souvenir;
+    const souvenirKey = souvenir ? `${souvenir.room}:${souvenir.x}:${souvenir.y}` : undefined;
+    const validSouvenir = !souvenir || (catalog.has(souvenir.artItemId)
+      && ['living', 'bedroom', 'garden'].includes(souvenir.room)
+      && nonEmptyText(souvenir.title) && Number.isFinite(souvenir.x) && Number.isFinite(souvenir.y)
+      && !souvenirKeys.has(souvenirKey!));
     const baseOk = /^[a-z][a-z0-9_]*$/.test(c.id) && !chapterIds.has(c.id) && memories.some((m) => m.id === c.memoryId)
       && !chapterMemoryIds.has(c.memoryId)
       && typeof c.title === 'string' && c.title.trim().length > 0
       && typeof c.intro === 'string' && c.intro.trim().length > 0
       && typeof c.instruction === 'string' && c.instruction.trim().length > 0
-      && c.steps.length === 2 && c.hints.length === 3
+      && (c.steps.length === 0 || c.steps.length === 2) && c.hints.length === 3
       && c.hints.every((hint) => typeof hint === 'string' && hint.trim().length > 0)
-      && Number.isInteger(c.unlockLevel) && c.unlockLevel >= 1 && c.unlockLevel <= 18
+      && Number.isInteger(legacyLevel) && legacyLevel >= 1 && legacyLevel <= maxPlayerLevel
       && [c.reward.coins,c.reward.hearts,c.reward.energy,c.reward.scissors].every((n) => Number.isInteger(n) && n >= 0)
-      && validGeneratorGift(c.reward.generator) && catalog.has(c.souvenir.artItemId)
-      && ['living', 'bedroom', 'garden'].includes(c.souvenir.room)
-      && typeof c.souvenir.title === 'string' && c.souvenir.title.trim().length > 0
-      && Number.isFinite(c.souvenir.x) && Number.isFinite(c.souvenir.y) && !souvenirKeys.has(souvenirKey)
+      && validGeneratorGift(c.reward.generator) && validSouvenir
       && c.steps.every((s) => typeof s.title === 'string' && typeof s.note === 'string'
         && s.requirements.length > 0 && s.requirements.every((r) => {
           const def = catalog.get(r.itemId);
@@ -432,7 +476,7 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
         }));
     chapterIds.add(c.id);
     chapterMemoryIds.add(c.memoryId);
-    souvenirKeys.add(souvenirKey);
+    if (souvenirKey) souvenirKeys.add(souvenirKey);
     let puzzleOk = false;
     if (p.kind === 'find') puzzleOk = /^\d{4}$/.test(p.solution) && p.hotspots.length >= 2
       && new Set(p.hotspots.map((h) => h.id)).size === p.hotspots.length
@@ -482,7 +526,7 @@ export function validateConfig(bundle: ConfigBundle): ConfigValidationIssue[] {
       && typeof date.title === 'string' && date.title.trim().length > 0
       && typeof date.description === 'string' && date.description.trim().length > 0
       && typeof date.memoryId === 'string' && date.memoryId.length > 0
-      && Number.isInteger(date.minLevel) && date.minLevel >= 1 && date.minLevel <= 18
+      && Number.isInteger(date.minLevel) && date.minLevel >= 1 && date.minLevel <= maxPlayerLevel
       && date.requirements.length > 0
       && date.requirements.reduce((sum, requirement) => sum + requirement.count, 0) <= 2
       && date.requirements.every((r) => {

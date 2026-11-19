@@ -40,20 +40,18 @@ function solve(game: GameContext, id: string): void {
   expect(game.playAction('solve', id)).toEqual({ ok: true });
 }
 
-describe('six-chapter journey progress', () => {
-  it('recommends the first chapter and explains the level lock', () => {
+describe('42-chapter journey progress', () => {
+  it('recommends the first chapter and permits chapters at Lv1', () => {
     const game = fixture();
     const journey = game.play.journeyProgress();
 
-    expect(journey).toMatchObject({ completed: 0, total: 6, nextChapter: { id: 'zhoushan' }, availability: { available: true } });
+    expect(journey).toMatchObject({ completed: 0, total: 42, nextChapter: { id: 'zhoushan' }, availability: { available: true } });
     expect(game.play.chapterAvailability('love_letters')).toMatchObject({
-      available: false,
-      requiredLevel: 3,
-      currentLevel: 1,
+      available: true,
     });
   });
 
-  it('keeps a solved chapter as the recommendation until claimed and restores the level-only lock', () => {
+  it('keeps a solved chapter as the recommendation until claimed and restores the next chapter', () => {
     const values = new Map<string, string>();
     const game = fixture(values);
     prepare(game, 'zhoushan');
@@ -65,8 +63,7 @@ describe('six-chapter journey progress', () => {
     const restored = fixture(values);
     const before = restored.buildSaveData();
     expect(restored.play.journeyProgress()).toMatchObject({
-      completed: 1, nextChapter: { id: 'love_letters' },
-      availability: { available: false, currentLevel: 1, requiredLevel: 3 },
+      completed: 1, nextChapter: { id: 'love_letters' }, availability: { available: true },
     });
     expect(restored.play.chapterAvailability('missing')).toBeUndefined();
     expect(restored.buildSaveData().play).toEqual(before.play);
@@ -74,31 +71,62 @@ describe('six-chapter journey progress', () => {
     expect(restored.buildSaveData().life).toEqual(before.life);
   });
 
-  it('opens a later chapter at its level without requiring an earlier claim', () => {
+  it('opens a later chapter at Lv1 without requiring an earlier claim', () => {
     const game = fixture();
-    game.progression.addXp(400);
-    expect(game.player.level).toBeGreaterThanOrEqual(3);
-    expect(game.play.chapterAvailability('love_letters')).toMatchObject({
-      available: true, requiredLevel: 3,
-    });
+    expect(game.player.level).toBe(1);
+    expect(game.play.chapterAvailability('memory_wedding_thanksgiving')).toEqual({ available: true });
     prepare(game, 'zhoushan');
     solve(game, 'zhoushan');
     game.playAction('claim', 'zhoushan');
     expect(game.play.journeyProgress().availability?.available).toBe(true);
   });
 
-  it('moves the recommendation forward in order and reports completion after all six claims', () => {
-    const game = fixture();
-    game.player.level = 10;
+  it('lets a reader of a previously purchased memory solve its new puzzle and earn its reward once', () => {
+    const values = new Map<string, string>();
+    const previous = fixture(values);
+    const chapter = previous.bundle.adventures.find(entry => entry.id === 'memory_marriage_registration')!;
+    const save = previous.buildSaveData();
+    save.life.unlockedMemoryIds.push(chapter.memoryId);
+    values.set(previous.config.saveKey, JSON.stringify(save));
 
-    for (const chapter of game.bundle.adventures) {
+    const restored = fixture(values);
+    expect(restored.player.level).toBe(1);
+    expect(restored.life.state.unlockedMemoryIds).toContain(chapter.memoryId);
+    expect(restored.play.progress(chapter.id).claimed).toBe(false);
+    expect(restored.play.isAvailable(chapter.id)).toBe(true);
+    const coins = restored.player.coins;
+    solve(restored, chapter.id);
+    expect(restored.playAction('claim', chapter.id)).toEqual({ ok: true });
+    expect(restored.player.coins).toBe(coins + chapter.reward.coins);
+    expect(restored.life.state.unlockedMemoryIds.filter(id => id === chapter.memoryId)).toHaveLength(1);
+    const restarted = fixture(values);
+    expect(restarted.playAction('claim', chapter.id)).toEqual({ ok: false, reason: 'ALREADY_CLAIMED' });
+    expect(restarted.playAction('replay', chapter.id)).toEqual({ ok: true });
+    expect(restarted.player.coins).toBe(coins + chapter.reward.coins);
+  });
+
+  it('continues the existing six-chapter save into new memories and solves all 42 without consuming items', () => {
+    const values = new Map<string, string>();
+    let game = fixture(values);
+    expect(game.player.level).toBe(1);
+    expect(game.bundle.adventures.filter(chapter => chapter.puzzle.kind === 'circuit')).toHaveLength(7);
+    expect(game.bundle.adventures.some(chapter => chapter.puzzle.kind === 'sequence' && chapter.puzzle.tiles.length === 6)).toBe(true);
+    const board = game.buildSaveData().board;
+    const energy = game.player.energy;
+
+    for (const [index, chapter] of game.bundle.adventures.entries()) {
+      if (index === 6) game = fixture(values);
       expect(game.play.journeyProgress().nextChapter?.id).toBe(chapter.id);
       expect(game.play.isAvailable(chapter.id)).toBe(true);
-      prepare(game, chapter.id);
       solve(game, chapter.id);
       expect(game.playAction('claim', chapter.id)).toEqual({ ok: true });
+      expect(game.playAction('claim', chapter.id)).toEqual({ ok: false, reason: 'ALREADY_CLAIMED' });
     }
 
-    expect(game.play.journeyProgress()).toMatchObject({ completed: 6, total: 6, nextChapter: null, nextProgress: null, availability: null });
+    const restored = fixture(values);
+    expect(restored.play.journeyProgress()).toMatchObject({ completed: 42, total: 42, nextChapter: null, nextProgress: null, availability: null });
+    expect(new Set(restored.life.state.unlockedMemoryIds)).toEqual(new Set(restored.bundle.memories.map(memory => memory.id)));
+    expect(restored.player.energy).toBe(energy + game.bundle.adventures.reduce((total, chapter) => total + chapter.reward.energy, 0));
+    for (const cell of board) if (cell.item) expect(restored.board.getBoard().cells[cell.index].item?.uid).toBe(cell.item.uid);
   });
 });

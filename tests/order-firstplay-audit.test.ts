@@ -13,7 +13,7 @@ describe('orders remain playable without manual replacement',()=>{
       if(level>1)g.debugAddXp(25*level*(level-1));
       expect(g.player.level).toBe(level);
       g.orders.hydrate([],[]);g.orders.ensureFilled();
-      const orders=g.orders.getOrders();expect(orders).toHaveLength(3);
+      const orders=g.orders.getOrders();expect(orders).toHaveLength(6);
       expect(orders.some(order=>order.requirements.reduce((sum,r)=>sum+r.count,0)===2)).toBe(true);
       const fruitOrders=orders.filter(order=>order.requirements.some(r=>bundle.catalog.get(r.itemId)!.chainId==='fruit'));
       expect(fruitOrders.length).toBe(level>=2?1:0);
@@ -23,6 +23,37 @@ describe('orders remain playable without manual replacement',()=>{
         expect(g.getGeneratorStatus(producer.id)?.unlocked).toBe(true);
       }
     }
+  });
+  it('keeps six distinct starter orders when the first choice pool fills up',()=>{
+    const g=createGameContext({deterministic:true,random:new FixedRandomService([.99])});
+    const orders=g.orders.getOrders();
+    expect(orders).toHaveLength(6);
+    expect(orders.map(order=>order.pace)).toEqual(['quick','regular','goal','quick','regular','goal']);
+    expect(new Set(orders.map(order=>requirementSignature(order.requirements))).size).toBe(6);
+    expect(orders.every(order=>order.requirements.reduce((total,req)=>total+req.count,0)<=2)).toBe(true);
+  });
+  it('fills the new slots around saved orders without replacing their identity or promised rewards',()=>{
+    const clock=new FakeClockService(1_000_000);
+    const save=createDefaultSaveData(bundle.game,clock.now());
+    save.player.level=18;save.player.xp=bundle.progression.levels[17].xpRequired;
+    const saved=save.activeOrders;
+    const map=new Map([[bundle.game.saveKey,JSON.stringify(save)]]);
+    const storage={getItem:(key:string)=>map.get(key)??null,setItem:(key:string,value:string)=>{map.set(key,value);},removeItem:(key:string)=>{map.delete(key);}};
+    const open=()=>createGameContext({clock,storage,deterministic:true,random:new FixedRandomService([.6])});
+    const g=open(),orders=g.orders.getOrders();
+    expect(orders.map(order=>order.pace)).toEqual(['quick','regular','goal','quick','regular','goal']);
+    for(const [index, order] of saved.entries()) expect(orders[index]).toMatchObject(order);
+    expect(orders[5].requirements.reduce((total,req)=>total+req.count,0)).toBe(2);
+    expect(orders[5].requirements.some(req=>bundle.catalog.get(req.itemId)!.level>=5)).toBe(true);
+    expect(open().orders.getOrders()).toEqual(orders);
+  });
+  it('falls back to a common order when the rare production budget cannot fulfill the roll',()=>{
+    const order=generateOrder({player:{level:14,unlockedChainIds:['coffee','fruit']},templates:bundle.orders,catalog:bundle.catalog,
+      recentOrderIds:[],minItemLevel:2,maxItemLevel:5,limitedChainIds:['fruit'],maxMergeCostForChain:chain=>chain==='fruit'?1:Infinity,
+      random:new FixedRandomService([0]),id:'rare-fallback',pace:'goal',dynamic:bundle.game.orders.dynamic});
+    expect(order).not.toBeNull();
+    expect(order!.requirements.every(req=>req.itemId.startsWith('coffee'))).toBe(true);
+    expect(order!.requirements.reduce((total,req)=>total+req.count,0)).toBe(2);
   });
   it('fills three distinct early coffee needs, reusing the completed kind before duplicating an occupied slot',()=>{
     for(const level of [1,2,3,4,5]) {

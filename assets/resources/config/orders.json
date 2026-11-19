@@ -371,7 +371,7 @@
   {
     "id": "order_orange_cup",
     "minLevel": 5,
-    "maxLevel": 18,
+    "maxLevel": 50,
     "requirements": [
       {
         "itemId": "fruit_02",
@@ -385,7 +385,7 @@
   {
     "id": "order_afternoon_together",
     "minLevel": 6,
-    "maxLevel": 18,
+    "maxLevel": 50,
     "requirements": [
       {
         "itemId": "coffee_03",
@@ -403,7 +403,7 @@
   {
     "id": "order_sunshine_longterm",
     "minLevel": 15,
-    "maxLevel": 18,
+    "maxLevel": 50,
     "requirements": [
       {
         "itemId": "fruit_04",

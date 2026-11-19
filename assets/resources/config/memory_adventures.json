@@ -1,0 +1,811 @@
+[
+  {
+    "id": "memory_zhoushan_bonfire",
+    "memoryId": "zhoushan_bonfire",
+    "title": "篝火旁的两只手",
+    "intro": "把舟山这一页从背景拼到最后的人物动作。",
+    "instruction": "把舟山这一页从背景拼到最后的人物动作。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「舟山沙滩」，再找它后面的卡。",
+      "顺序是 舟山沙滩 → 夜里篝火 → 第一次牵手。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_2","label":"夜里篝火","clue":"沙滩上有夜里亮起的篝火。"},
+        {"id":"card_3","label":"第一次牵手","clue":"画面中心，留给第一次牵手。"},
+        {"id":"card_1","label":"舟山沙滩","clue":"这一页画在舟山的沙滩上。"}
+      ],
+      "solution": ["card_1","card_2","card_3"]
+    },
+    "reward": {"coins":22,"hearts":5,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_shenxianju",
+    "memoryId": "shenxianju",
+    "title": "神仙居的登山路线",
+    "intro": "按由近到远的顺序摆好三张登山图卡。",
+    "instruction": "按由近到远的顺序摆好三张登山图卡。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「山脚」，再找它后面的卡。",
+      "顺序是 山脚 → 登山路 → 山间远景。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_3","label":"山间远景","clue":"这是最后一张，从高处望出去。"},
+        {"id":"card_1","label":"山脚","clue":"从山下开始。"},
+        {"id":"card_2","label":"登山路","clue":"这一张放在起点和远景之间。"}
+      ],
+      "solution": ["card_1","card_2","card_3"]
+    },
+    "reward": {"coins":22,"hearts":5,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_trampoline_park",
+    "memoryId": "trampoline_park",
+    "title": "蹦床公园的弹跳票",
+    "intro": "翻到「蹦床公园的弹跳票」。收齐插画里的三张卡，拼出属于这一页的日期。",
+    "instruction": "找齐三张卡，再把月份和日期各写两位，打开这页的纪念夹。",
+    "hints": [
+      "插画中有三个可点开的标记，打开后会留下各自的线索。",
+      "月份是十月，日期是十四日，不足两位在前面加 0。",
+      "纪念夹的密码是 1014。"
+    ],
+    "puzzle": {
+      "kind": "find",
+      "solution": "1014",
+      "hotspots": [
+        {"id":"card_1","label":"入场票","clue":"入场票：月份是十月。","x":-45,"y":-75},
+        {"id":"card_2","label":"约会日历","clue":"约会日历：日期是十四日。","x":-183,"y":72},
+        {"id":"card_3","label":"票夹便签","clue":"票夹便签：先写月份，再写日期，各用两位。","x":156,"y":8}
+      ]
+    },
+    "reward": {"coins":24,"hearts":5,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_christmas_portrait",
+    "memoryId": "christmas_portrait",
+    "title": "第一张圣诞相片",
+    "intro": "翻到「第一张圣诞相片」。收齐插画里的三张卡，拼出属于这一页的日期。",
+    "instruction": "找齐三张卡，再把月份和日期各写两位，打开这页的纪念夹。",
+    "hints": [
+      "插画中有三个可点开的标记，打开后会留下各自的线索。",
+      "月份是十二月，日期是二十二日，不足两位在前面加 0。",
+      "纪念夹的密码是 1222。"
+    ],
+    "puzzle": {
+      "kind": "find",
+      "solution": "1222",
+      "hotspots": [
+        {"id":"card_1","label":"圣诞卡","clue":"圣诞卡：月份是十二月。","x":-183,"y":72},
+        {"id":"card_2","label":"写真日历","clue":"写真日历：日期是二十二日。","x":156,"y":8},
+        {"id":"card_3","label":"相框背面","clue":"相框背面：先写月份，再写日期，各用两位。","x":-45,"y":-75}
+      ]
+    },
+    "reward": {"coins":24,"hearts":5,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_qinwang_palace",
+    "memoryId": "qinwang_palace",
+    "title": "秦王宫的全景拼贴",
+    "intro": "把秦王宫的灯引到画卷出口。宫门、回廊间有岔路，找出能亮到殿顶的一条。",
+    "instruction": "把秦王宫的灯引到画卷出口。宫门、回廊间有岔路，找出能亮到殿顶的一条。",
+    "hints": [
+      "每次点击会顺时针旋转一格。只有两边端口都相接，线路才会亮起。",
+      "先查看左上入口，连到它右边的画格。",
+      "正确线路经过 7 个画格。按从左到右、从上到下计数，依次经过 1、2、5、4、7、8、9。"
+    ],
+    "puzzle": {
+      "kind": "circuit",
+      "columns": 3,
+      "rows": 3,
+      "ports": [[0,2],[3,2],[3,1],[3,0],[1,0],[1,3],[3,0],[1,3],[0,2]],
+      "initial": [0,3,2,0,2,1,3,1,0],
+      "solution": [3,0,1,2,3,0,1,2,3],
+      "start": 0,
+      "end": 8
+    },
+    "reward": {"coins":26,"hearts":6,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_hengdian_hot_spring",
+    "memoryId": "hengdian_hot_spring",
+    "title": "温泉明信片",
+    "intro": "给温泉明信片做三步手工。按卡片上写的制作顺序排好。",
+    "instruction": "给温泉明信片做三步手工。按卡片上写的制作顺序排好。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「画出雾气」，再找它后面的卡。",
+      "顺序是 画出雾气 → 写下横店 → 放进信封。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_3","label":"放进信封","clue":"画和字都完成再封存。"},
+        {"id":"card_1","label":"画出雾气","clue":"先画温泉上方的雾气。"},
+        {"id":"card_2","label":"写下横店","clue":"画好后写地名。"}
+      ],
+      "solution": ["card_1","card_2","card_3"]
+    },
+    "reward": {"coins":26,"hearts":6,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_promise",
+    "memoryId": "promise",
+    "title": "三段山水路线",
+    "intro": "按我们去过的先后，把三张地图贴到旅程册上。",
+    "instruction": "按我们去过的先后，把三张地图贴到旅程册上。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「黄山」，再找它后面的卡。",
+      "顺序是 黄山 → 千岛湖 → 望宸阁。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_2","label":"千岛湖","clue":"爬完黄山，就去逛了千岛湖。"},
+        {"id":"card_3","label":"望宸阁","clue":"望宸阁是后来在杭州走的山路。"},
+        {"id":"card_1","label":"黄山","clue":"还记得先一起爬黄山。"}
+      ],
+      "solution": ["card_1","card_2","card_3"]
+    },
+    "reward": {"coins":26,"hearts":6,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_huangshan_trip",
+    "memoryId": "huangshan_trip",
+    "title": "黄山山路折页",
+    "intro": "将黄山插画从山路近处排到最远。",
+    "instruction": "将黄山插画从山路近处排到最远。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「脚下石阶」，再找它后面的卡。",
+      "顺序是 脚下石阶 → 山腰松枝 → 远处云山。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_3","label":"远处云山","clue":"云山放在最远处。"},
+        {"id":"card_1","label":"脚下石阶","clue":"石阶在脚下。"},
+        {"id":"card_2","label":"山腰松枝","clue":"松枝在石阶和云山之间。"}
+      ],
+      "solution": ["card_1","card_2","card_3"]
+    },
+    "reward": {"coins":28,"hearts":6,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_qiandao_lake",
+    "memoryId": "qiandao_lake",
+    "title": "湖面的层次",
+    "intro": "在千岛湖插画里，把画面由远到近排好。",
+    "instruction": "在千岛湖插画里，把画面由远到近排好。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「天边」，再找它后面的卡。",
+      "顺序是 天边 → 湖中小岛 → 近岸水波。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_2","label":"湖中小岛","clue":"小岛在湖的中央。"},
+        {"id":"card_3","label":"近岸水波","clue":"近岸水波离我们最近。"},
+        {"id":"card_1","label":"天边","clue":"抬头所见的天边最远。"}
+      ],
+      "solution": ["card_1","card_2","card_3"]
+    },
+    "reward": {"coins":28,"hearts":6,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_wangchen_pavilion",
+    "memoryId": "wangchen_pavilion",
+    "title": "望宸阁的画签",
+    "intro": "从地点到具体地标，把画签按范围从大到小排列。",
+    "instruction": "从地点到具体地标，把画签按范围从大到小排列。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「杭州」，再找它后面的卡。",
+      "顺序是 杭州 → 山路 → 望宸阁。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_3","label":"望宸阁","clue":"最后写下这次到过的阁楼名。"},
+        {"id":"card_1","label":"杭州","clue":"用城市名开头。"},
+        {"id":"card_2","label":"山路","clue":"在杭州走了一段山路。"}
+      ],
+      "solution": ["card_1","card_2","card_3"]
+    },
+    "reward": {"coins":30,"hearts":7,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_wedding",
+    "memoryId": "wedding",
+    "title": "嘉兴的校园纪念票",
+    "intro": "翻到「嘉兴的校园纪念票」。收齐插画里的三张卡，拼出属于这一页的日期。",
+    "instruction": "找齐三张卡，再把月份和日期各写两位，打开这页的纪念夹。",
+    "hints": [
+      "插画中有三个可点开的标记，打开后会留下各自的线索。",
+      "月份是三月，日期是三十日，不足两位在前面加 0。",
+      "纪念夹的密码是 0330。"
+    ],
+    "puzzle": {
+      "kind": "find",
+      "solution": "0330",
+      "hotspots": [
+        {"id":"card_1","label":"校园纪念票","clue":"校园纪念票：月份是三月。","x":156,"y":8},
+        {"id":"card_2","label":"嘉兴行程卡","clue":"嘉兴行程卡：日期是三十日。","x":-45,"y":-75},
+        {"id":"card_3","label":"相册密码签","clue":"相册密码签：先写月份，再写日期，各用两位。","x":-183,"y":72}
+      ]
+    },
+    "reward": {"coins":30,"hearts":7,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_jeju_first",
+    "memoryId": "jeju_first",
+    "title": "济州岛登机行程",
+    "intro": "把第一次去济州岛的三张行程卡按先后排列。",
+    "instruction": "把第一次去济州岛的三张行程卡按先后排列。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「来到上海」，再找它后面的卡。",
+      "顺序是 来到上海 → 乘飞机 → 抵达济州岛。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_3","label":"抵达济州岛","clue":"航程的目的地是济州岛。"},
+        {"id":"card_1","label":"来到上海","clue":"先到上海，从那里出发。"},
+        {"id":"card_2","label":"乘飞机","clue":"两地之间靠这段航程连接。"}
+      ],
+      "solution": ["card_1","card_2","card_3"]
+    },
+    "reward": {"coins":32,"hearts":7,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_shanghai_departure",
+    "memoryId": "shanghai_departure",
+    "title": "上海出发的行李签",
+    "intro": "翻到「上海出发的行李签」。收齐插画里的三张卡，拼出属于这一页的日期。",
+    "instruction": "找齐三张卡，再把月份和日期各写两位，打开这页的纪念夹。",
+    "hints": [
+      "插画中有三个可点开的标记，打开后会留下各自的线索。",
+      "月份是五月，日期是一日，不足两位在前面加 0。",
+      "纪念夹的密码是 0501。"
+    ],
+    "puzzle": {
+      "kind": "find",
+      "solution": "0501",
+      "hotspots": [
+        {"id":"card_1","label":"登机日期","clue":"登机日期：月份是五月。","x":-183,"y":72},
+        {"id":"card_2","label":"行李签","clue":"行李签：日期是一日。","x":156,"y":8},
+        {"id":"card_3","label":"收纳盒封条","clue":"收纳盒封条：先写月份，再写日期，各用两位。","x":-45,"y":-75}
+      ]
+    },
+    "reward": {"coins":32,"hearts":7,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_first_home",
+    "memoryId": "first_home",
+    "title": "第一份生日纪念",
+    "intro": "翻到「第一份生日纪念」。收齐插画里的三张卡，拼出属于这一页的日期。",
+    "instruction": "找齐三张卡，再把月份和日期各写两位，打开这页的纪念夹。",
+    "hints": [
+      "插画中有三个可点开的标记，打开后会留下各自的线索。",
+      "月份是五月，日期是二十日，不足两位在前面加 0。",
+      "纪念夹的密码是 0520。"
+    ],
+    "puzzle": {
+      "kind": "find",
+      "solution": "0520",
+      "hotspots": [
+        {"id":"card_1","label":"祝福卡","clue":"祝福卡：月份是五月。","x":156,"y":8},
+        {"id":"card_2","label":"生日日期","clue":"生日日期：日期是二十日。","x":-45,"y":-75},
+        {"id":"card_3","label":"纪念盒便签","clue":"纪念盒便签：先写月份，再写日期，各用两位。","x":-183,"y":72}
+      ]
+    },
+    "reward": {"coins":34,"hearts":8,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_barbie_summer",
+    "memoryId": "barbie_summer",
+    "title": "两张写真手记",
+    "intro": "排好夏日手记：先记录较早的活动，再记录较晚的活动，最后给这一页写标题。",
+    "instruction": "排好夏日手记：先记录较早的活动，再记录较晚的活动，最后给这一页写标题。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「芭比写真」，再找它后面的卡。",
+      "顺序是 芭比写真 → 南湖游船 → 夏日手记。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_2","label":"南湖游船","clue":"游船是七月七日。"},
+        {"id":"card_3","label":"夏日手记","clue":"两张卡都摆好，再放总标题。"},
+        {"id":"card_1","label":"芭比写真","clue":"写真是六月十五日。"}
+      ],
+      "solution": ["card_1","card_2","card_3"]
+    },
+    "reward": {"coins":34,"hearts":8,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_nanhu_boat",
+    "memoryId": "nanhu_boat",
+    "title": "南湖的船票",
+    "intro": "转动南湖的水路图，让左侧的游船靠到右下角。路线可以转弯，断开的水路无法通过。",
+    "instruction": "转动南湖的水路图，让左侧的游船靠到右下角。路线可以转弯，断开的水路无法通过。",
+    "hints": [
+      "每次点击会顺时针旋转一格。只有两边端口都相接，线路才会亮起。",
+      "左侧码头进来后，先向上绕过水湾。",
+      "正确线路经过 8 个画格。按从左到右、从上到下计数，依次经过 4、1、2、3、6、5、8、9。"
+    ],
+    "puzzle": {
+      "kind": "circuit",
+      "columns": 3,
+      "rows": 3,
+      "ports": [[2,1],[2,0],[1,0],[0,1],[1,2],[3,2],[2,0],[1,2],[3,1]],
+      "initial": [3,2,0,0,1,3,1,0,2],
+      "solution": [0,1,2,3,0,1,2,3,0],
+      "start": 3,
+      "end": 8
+    },
+    "reward": {"coins":34,"hearts":8,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_linan_rafting",
+    "memoryId": "linan_rafting",
+    "title": "临安漂流的行程夹",
+    "intro": "翻到「临安漂流的行程夹」。收齐插画里的三张卡，拼出属于这一页的日期。",
+    "instruction": "找齐三张卡，再把月份和日期各写两位，打开这页的纪念夹。",
+    "hints": [
+      "插画中有三个可点开的标记，打开后会留下各自的线索。",
+      "月份是七月，日期是二十日，不足两位在前面加 0。",
+      "纪念夹的密码是 0720。"
+    ],
+    "puzzle": {
+      "kind": "find",
+      "solution": "0720",
+      "hotspots": [
+        {"id":"card_1","label":"小组行程卡","clue":"小组行程卡：月份是七月。","x":156,"y":8},
+        {"id":"card_2","label":"漂流日历","clue":"漂流日历：日期是二十日。","x":-45,"y":-75},
+        {"id":"card_3","label":"文件夹便签","clue":"文件夹便签：先写月份，再写日期，各用两位。","x":-183,"y":72}
+      ]
+    },
+    "reward": {"coins":36,"hearts":8,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_winter_portraits",
+    "memoryId": "winter_portraits",
+    "title": "从运动会到雪乡",
+    "intro": "按这份冬日相册的归档顺序拼起五张卡。先找有明确日期的片段，再放篇名。",
+    "instruction": "按这份冬日相册的归档顺序拼起五张卡。先找有明确日期的片段，再放篇名。",
+    "hints": [
+      "先找开篇和收尾，再比较中间卡的日期或相对位置。",
+      "开头是「运动会」，结尾是「冬日篇名」。",
+      "按 运动会 → 红底写真 → 雪乡写真 → 教会圣诞 → 冬日篇名 排列。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_3","label":"雪乡写真","clue":"这张写真在红底之后，写着十二月二十三日。"},
+        {"id":"card_5","label":"冬日篇名","clue":"故事记录填好后，最后补上篇名。"},
+        {"id":"card_2","label":"红底写真","clue":"入冬后的第一套写真，背景是红色。"},
+        {"id":"card_1","label":"运动会","clue":"这是最早的一张，发生在十一月。"},
+        {"id":"card_4","label":"教会圣诞","clue":"相册将圣诞活动归在两组写真之后。"}
+      ],
+      "solution": ["card_1","card_2","card_3","card_4","card_5"]
+    },
+    "reward": {"coins":36,"hearts":8,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_new_year_balloons",
+    "memoryId": "new_year_balloons",
+    "title": "万达广场的跨年气球",
+    "intro": "按跨年游戏倒数的规则，把气球字牌从倒数排到祝福。",
+    "instruction": "按跨年游戏倒数的规则，把气球字牌从倒数排到祝福。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「3」，再找它后面的卡。",
+      "顺序是 3 → 2 → 1 → 新年快乐。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_2","label":"2","clue":"数到 1 前还差一步。"},
+        {"id":"card_4","label":"新年快乐","clue":"倒数完成后，把祝福挂在末尾。"},
+        {"id":"card_1","label":"3","clue":"倒数先从最大的数开始。"},
+        {"id":"card_3","label":"1","clue":"倒数的最后一个数字。"}
+      ],
+      "solution": ["card_1","card_2","card_3","card_4"]
+    },
+    "reward": {"coins":38,"hearts":9,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_garden",
+    "memoryId": "garden",
+    "title": "订婚纪念的日期",
+    "intro": "翻到「订婚纪念的日期」。收齐插画里的三张卡，拼出属于这一页的日期。",
+    "instruction": "找齐三张卡，再把月份和日期各写两位，打开这页的纪念夹。",
+    "hints": [
+      "插画中有三个可点开的标记，打开后会留下各自的线索。",
+      "月份是一月，日期是十八日，不足两位在前面加 0。",
+      "纪念夹的密码是 0118。"
+    ],
+    "puzzle": {
+      "kind": "find",
+      "solution": "0118",
+      "hotspots": [
+        {"id":"card_1","label":"一月月历","clue":"一月月历：月份是一月。","x":156,"y":8},
+        {"id":"card_2","label":"订婚记事卡","clue":"订婚记事卡：日期是十八日。","x":-45,"y":-75},
+        {"id":"card_3","label":"纪念盒便签","clue":"纪念盒便签：先写月份，再写日期，各用两位。","x":-183,"y":72}
+      ]
+    },
+    "reward": {"coins":38,"hearts":9,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_birthday",
+    "memoryId": "birthday",
+    "title": "雪场与四人合影",
+    "intro": "按二月的时间先后整理活动，再把月份页签放到末尾。",
+    "instruction": "按二月的时间先后整理活动，再把月份页签放到末尾。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「室内滑雪」，再找它后面的卡。",
+      "顺序是 室内滑雪 → 四人写真 → 二月页签。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_2","label":"四人写真","clue":"二月十六日拍四人写真。"},
+        {"id":"card_3","label":"二月页签","clue":"两件事都放好后，用页签收尾。"},
+        {"id":"card_1","label":"室内滑雪","clue":"二月一日在室内滑雪。"}
+      ],
+      "solution": ["card_1","card_2","card_3"]
+    },
+    "reward": {"coins":40,"hearts":9,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_quanzhou_birthday",
+    "memoryId": "quanzhou_birthday",
+    "title": "泉州旅行与27岁",
+    "intro": "给这页五月纪念排版：由早到晚贴回忆，生日的年龄贴纸放在最后。",
+    "instruction": "给这页五月纪念排版：由早到晚贴回忆，生日的年龄贴纸放在最后。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「泉州旅行」，再找它后面的卡。",
+      "顺序是 泉州旅行 → 5·20 生日 → 27 岁。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_3","label":"27 岁","clue":"今年的年龄贴纸贴在生日后面。"},
+        {"id":"card_1","label":"泉州旅行","clue":"劳动节时去了泉州。"},
+        {"id":"card_2","label":"5·20 生日","clue":"生日在五月二十日。"}
+      ],
+      "solution": ["card_1","card_2","card_3"]
+    },
+    "reward": {"coins":40,"hearts":9,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_rafting_again",
+    "memoryId": "rafting_again",
+    "title": "再去漂流的邀请卡",
+    "intro": "翻到「再去漂流的邀请卡」。收齐插画里的三张卡，拼出属于这一页的日期。",
+    "instruction": "找齐三张卡，再把月份和日期各写两位，打开这页的纪念夹。",
+    "hints": [
+      "插画中有三个可点开的标记，打开后会留下各自的线索。",
+      "月份是七月，日期是五日，不足两位在前面加 0。",
+      "纪念夹的密码是 0705。"
+    ],
+    "puzzle": {
+      "kind": "find",
+      "solution": "0705",
+      "hotspots": [
+        {"id":"card_1","label":"小组邀请卡","clue":"小组邀请卡：月份是七月。","x":156,"y":8},
+        {"id":"card_2","label":"出游日期","clue":"出游日期：日期是五日。","x":-45,"y":-75},
+        {"id":"card_3","label":"档案夹封条","clue":"档案夹封条：先写月份，再写日期，各用两位。","x":-183,"y":72}
+      ]
+    },
+    "reward": {"coins":42,"hearts":10,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_first_car",
+    "memoryId": "first_car",
+    "title": "第一辆爱车的钥匙盒",
+    "intro": "为第一辆爱车接通一条连续路线。车从左下出发，从右边的中间车道开出。",
+    "instruction": "为第一辆爱车接通一条连续路线。车从左下出发，从右边的中间车道开出。",
+    "hints": [
+      "每次点击会顺时针旋转一格。只有两边端口都相接，线路才会亮起。",
+      "从左下角向右开，遇弯后再往上。",
+      "正确线路经过 8 个画格。按从左到右、从上到下计数，依次经过 7、8、5、4、1、2、3、6。"
+    ],
+    "puzzle": {
+      "kind": "circuit",
+      "columns": 3,
+      "rows": 3,
+      "ports": [[2,1],[2,0],[1,0],[2,1],[2,3],[3,0],[1,3],[0,1],[0,2]],
+      "initial": [3,2,0,2,1,3,3,0,2],
+      "solution": [0,1,2,3,0,1,2,3,0],
+      "start": 6,
+      "end": 5
+    },
+    "reward": {"coins":42,"hearts":10,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_chengdu_jiuzhaigou",
+    "memoryId": "chengdu_jiuzhaigou",
+    "title": "熊猫与九寨风景卡",
+    "intro": "按题板的排版规则：地名在前，两张风景卡按城市到自然景观排列。",
+    "instruction": "按题板的排版规则：地名在前，两张风景卡按城市到自然景观排列。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「国庆旅行」，再找它后面的卡。",
+      "顺序是 国庆旅行 → 成都大熊猫 → 九寨沟风景。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_2","label":"成都大熊猫","clue":"城市站是成都的大熊猫。"},
+        {"id":"card_3","label":"九寨沟风景","clue":"自然风景卡留给九寨沟。"},
+        {"id":"card_1","label":"国庆旅行","clue":"封面标题先放上去。"}
+      ],
+      "solution": ["card_1","card_2","card_3"]
+    },
+    "reward": {"coins":44,"hearts":10,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_suzhou_portrait",
+    "memoryId": "suzhou_portrait",
+    "title": "苏州写真底片盒",
+    "intro": "翻到「苏州写真底片盒」。收齐插画里的三张卡，拼出属于这一页的日期。",
+    "instruction": "找齐三张卡，再把月份和日期各写两位，打开这页的纪念夹。",
+    "hints": [
+      "插画中有三个可点开的标记，打开后会留下各自的线索。",
+      "月份是十二月，日期是十四日，不足两位在前面加 0。",
+      "纪念夹的密码是 1214。"
+    ],
+    "puzzle": {
+      "kind": "find",
+      "solution": "1214",
+      "hotspots": [
+        {"id":"card_1","label":"苏州行程卡","clue":"苏州行程卡：月份是十二月。","x":156,"y":8},
+        {"id":"card_2","label":"写真日期","clue":"写真日期：日期是十四日。","x":-45,"y":-75},
+        {"id":"card_3","label":"底片盒便签","clue":"底片盒便签：先写月份，再写日期，各用两位。","x":-183,"y":72}
+      ]
+    },
+    "reward": {"coins":44,"hearts":10,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_snow_and_family",
+    "memoryId": "snow_and_family",
+    "title": "从雪道到家人同游",
+    "intro": "用两件行程的日期排序，最后给两张卡加二月页签。",
+    "instruction": "用两件行程的日期排序，最后给两张卡加二月页签。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「临安露天雪场」，再找它后面的卡。",
+      "顺序是 临安露天雪场 → 带父母去横店 → 二月页签。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_2","label":"带父母去横店","clue":"二月二十二日，和父母去横店。"},
+        {"id":"card_3","label":"二月页签","clue":"这张是两件事共用的月份页签。"},
+        {"id":"card_1","label":"临安露天雪场","clue":"二月七日，临安户外滑雪。"}
+      ],
+      "solution": ["card_1","card_2","card_3"]
+    },
+    "reward": {"coins":46,"hearts":11,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_hengdian_family",
+    "memoryId": "hengdian_family",
+    "title": "横店的家庭旅程票",
+    "intro": "翻到「横店的家庭旅程票」。收齐插画里的三张卡，拼出属于这一页的日期。",
+    "instruction": "找齐三张卡，再把月份和日期各写两位，打开这页的纪念夹。",
+    "hints": [
+      "插画中有三个可点开的标记，打开后会留下各自的线索。",
+      "月份是二月，日期是二十二日，不足两位在前面加 0。",
+      "纪念夹的密码是 0222。"
+    ],
+    "puzzle": {
+      "kind": "find",
+      "solution": "0222",
+      "hotspots": [
+        {"id":"card_1","label":"家庭出游卡","clue":"家庭出游卡：月份是二月。","x":-183,"y":72},
+        {"id":"card_2","label":"横店日期","clue":"横店日期：日期是二十二日。","x":156,"y":8},
+        {"id":"card_3","label":"票夹序签","clue":"票夹序签：先写月份，再写日期，各用两位。","x":-45,"y":-75}
+      ]
+    },
+    "reward": {"coins":46,"hearts":11,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_wedding_preparations",
+    "memoryId": "wedding_preparations",
+    "title": "草坪婚礼准备板",
+    "intro": "按这块游戏准备板的分类顺序归档：场地、服装、见闻。",
+    "instruction": "按这块游戏准备板的分类顺序归档：场地、服装、见闻。",
+    "hints": [
+      "点一下卡片，就会把它放进下一个空位，卡片旁有描述。",
+      "先放「草坪场地」，再找它后面的卡。",
+      "顺序是 草坪场地 → 试婚纱 → 朋友的婚礼。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_2","label":"试婚纱","clue":"试过的婚纱属于服装栏。"},
+        {"id":"card_3","label":"朋友的婚礼","clue":"参加朋友婚礼的记录属于见闻。"},
+        {"id":"card_1","label":"草坪场地","clue":"挑选的场地先归入场地栏。"}
+      ],
+      "solution": ["card_1","card_2","card_3"]
+    },
+    "reward": {"coins":48,"hearts":11,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_hangzhou_wedding",
+    "memoryId": "hangzhou_wedding",
+    "title": "杭州婚纱的分镜册",
+    "intro": "按这本杭州相册的目录归档六张卡。先视频、再排三组婚纱照；封面与尾页各归其位。",
+    "instruction": "按这本杭州相册的目录归档六张卡。先视频、再排三组婚纱照；封面与尾页各归其位。",
+    "hints": [
+      "先找开篇和收尾，再比较中间卡的日期或相对位置。",
+      "开头是「杭州封面」，结尾是「相册尾页」。",
+      "按 杭州封面 → 婚礼 MV → 船上红色汉服 → 经典黑白 → 暖黄光影 → 相册尾页 排列。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_4","label":"经典黑白","clue":"放在中式和光影之间。"},
+        {"id":"card_2","label":"婚礼 MV","clue":"比八月的第二套婚纱照早。"},
+        {"id":"card_6","label":"相册尾页","clue":"它不是照片，放在相册最末。"},
+        {"id":"card_1","label":"杭州封面","clue":"封面写着城市名，放在最前。"},
+        {"id":"card_5","label":"暖黄光影","clue":"三组照片中最后一组，是暖黄的画面。"},
+        {"id":"card_3","label":"船上红色汉服","clue":"婚纱照三组里，目录先排中式主题。"}
+      ],
+      "solution": ["card_1","card_2","card_3","card_4","card_5","card_6"]
+    },
+    "reward": {"coins":48,"hearts":11,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_wedding_mv",
+    "memoryId": "wedding_mv",
+    "title": "杭州婚礼 MV 场记",
+    "intro": "把婚礼 MV 的九格剪辑轨接成一条完整线路。从左上开始，到右下的心形收尾。",
+    "instruction": "把婚礼 MV 的九格剪辑轨接成一条完整线路。从左上开始，到右下的心形收尾。",
+    "hints": [
+      "每次点击会顺时针旋转一格。只有两边端口都相接，线路才会亮起。",
+      "这条剪辑轨会用到九格。入口后的下一格在下方。",
+      "正确线路经过 9 个画格。按从左到右、从上到下计数，依次经过 1、4、7、8、5、2、3、6、9。"
+    ],
+    "puzzle": {
+      "kind": "circuit",
+      "columns": 3,
+      "rows": 3,
+      "ports": [[2,1],[0,3],[0,3],[0,2],[1,3],[2,0],[1,2],[3,0],[3,0]],
+      "initial": [2,0,2,1,3,1,0,2,0],
+      "solution": [1,2,3,0,1,2,3,0,1],
+      "start": 0,
+      "end": 8
+    },
+    "reward": {"coins":50,"hearts":12,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_summer_before_wedding",
+    "memoryId": "summer_before_wedding",
+    "title": "婚礼前的三张夏日票",
+    "intro": "找出日期前后和相册归档的线索，整理婚礼前的夏天。封面开篇，尾页收尾。",
+    "instruction": "找出日期前后和相册归档的线索，整理婚礼前的夏天。封面开篇，尾页收尾。",
+    "hints": [
+      "先找开篇和收尾，再比较中间卡的日期或相对位置。",
+      "开头是「夏日封面」，结尾是「夏日尾页」。",
+      "按 夏日封面 → 演唱会 → 水上乐园 → 西安送妹妹 → 秦始皇陵和兵马俑 → 夏日尾页 排列。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_4","label":"西安送妹妹","clue":"八月二十七日出发。相册把送学卡放在同城的游览卡之前。"},
+        {"id":"card_2","label":"演唱会","clue":"这次出游比水上乐园早六天。"},
+        {"id":"card_6","label":"夏日尾页","clue":"最后这一页写着，夏天的纪念已收好。"},
+        {"id":"card_1","label":"夏日封面","clue":"放在任何行程之前。"},
+        {"id":"card_5","label":"秦始皇陵和兵马俑","clue":"和送学同属一趟旅程，收在送学卡之后。"},
+        {"id":"card_3","label":"水上乐园","clue":"在八月二十二日，发生在出发去西安之前。"}
+      ],
+      "solution": ["card_1","card_2","card_3","card_4","card_5","card_6"]
+    },
+    "reward": {"coins":50,"hearts":12,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_concert",
+    "memoryId": "concert",
+    "title": "演唱会门票夹",
+    "intro": "翻到「演唱会门票夹」。收齐插画里的三张卡，拼出属于这一页的日期。",
+    "instruction": "找齐三张卡，再把月份和日期各写两位，打开这页的纪念夹。",
+    "hints": [
+      "插画中有三个可点开的标记，打开后会留下各自的线索。",
+      "月份是八月，日期是十六日，不足两位在前面加 0。",
+      "纪念夹的密码是 0816。"
+    ],
+    "puzzle": {
+      "kind": "find",
+      "solution": "0816",
+      "hotspots": [
+        {"id":"card_1","label":"主题票页","clue":"主题票页：月份是八月。","x":-45,"y":-75},
+        {"id":"card_2","label":"演出日期","clue":"演出日期：日期是十六日。","x":-183,"y":72},
+        {"id":"card_3","label":"票夹便签","clue":"票夹便签：先写月份，再写日期，各用两位。","x":156,"y":8}
+      ]
+    },
+    "reward": {"coins":52,"hearts":12,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_xian_terracotta",
+    "memoryId": "xian_terracotta",
+    "title": "西安纪念的两面",
+    "intro": "拼好西安纪念册的九格游览图，从左下入口出发，沿相接的路线抵达右上。",
+    "instruction": "拼好西安纪念册的九格游览图，从左下入口出发，沿相接的路线抵达右上。",
+    "hints": [
+      "每次点击会顺时针旋转一格。只有两边端口都相接，线路才会亮起。",
+      "先接通最左一列，末端要从下方向右上出口汇入。",
+      "正确线路经过 9 个画格。按从左到右、从上到下计数，依次经过 7、4、1、2、5、8、9、6、3。"
+    ],
+    "puzzle": {
+      "kind": "circuit",
+      "columns": 3,
+      "rows": 3,
+      "ports": [[1,0],[1,0],[3,2],[2,0],[3,1],[0,2],[0,1],[0,1],[2,3]],
+      "initial": [2,0,2,1,3,1,0,2,0],
+      "solution": [1,2,3,0,1,2,3,0,1],
+      "start": 6,
+      "end": 2
+    },
+    "reward": {"coins":52,"hearts":12,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_marriage_registration",
+    "memoryId": "marriage_registration",
+    "title": "领证日的红色纪念册",
+    "intro": "翻到「领证日的红色纪念册」。收齐插画里的三张卡，拼出属于这一页的日期。",
+    "instruction": "找齐三张卡，再把月份和日期各写两位，打开这页的纪念夹。",
+    "hints": [
+      "插画中有三个可点开的标记，打开后会留下各自的线索。",
+      "月份是十月，日期是二十日，不足两位在前面加 0。",
+      "纪念夹的密码是 1020。"
+    ],
+    "puzzle": {
+      "kind": "find",
+      "solution": "1020",
+      "hotspots": [
+        {"id":"card_1","label":"十月日历","clue":"十月日历：月份是十月。","x":156,"y":8},
+        {"id":"card_2","label":"领证日期","clue":"领证日期：日期是二十日。","x":-45,"y":-75},
+        {"id":"card_3","label":"红色册套","clue":"红色册套：先写月份，再写日期，各用两位。","x":-183,"y":72}
+      ]
+    },
+    "reward": {"coins":54,"hearts":13,"energy":0,"scissors":0}
+  },
+  {
+    "id": "memory_wedding_thanksgiving",
+    "memoryId": "wedding_thanksgiving",
+    "title": "仙居答谢宴的位置卡",
+    "intro": "把仙居答谢宴的六张回顾卡排序。尽量先用相对日期排出婚礼、领证和答谢宴，再补前面的准备。",
+    "instruction": "把仙居答谢宴的六张回顾卡排序。尽量先用相对日期排出婚礼、领证和答谢宴，再补前面的准备。",
+    "hints": [
+      "先找开篇和收尾，再比较中间卡的日期或相对位置。",
+      "开头是「草坪场地筹备」，结尾是「仙居答谢宴」。",
+      "按 草坪场地筹备 → 丽江婚纱照 → 杭州婚礼 MV → 乐清草坪婚礼 → 登记领证 → 仙居答谢宴 排列。"
+    ],
+    "puzzle": {
+      "kind": "sequence",
+      "tiles": [
+        {"id":"card_4","label":"乐清草坪婚礼","clue":"国庆假期第三天，在乐清的草坪上。"},
+        {"id":"card_2","label":"丽江婚纱照","clue":"五月二十二日出发，六月的拍摄还未开始。"},
+        {"id":"card_6","label":"仙居答谢宴","clue":"这次在仙居酒店，记在十月的最后一天。"},
+        {"id":"card_1","label":"草坪场地筹备","clue":"劳动节挑选场地，早于去丽江。"},
+        {"id":"card_5","label":"登记领证","clue":"比草坪婚礼晚十七天，比答谢宴早十一天。"},
+        {"id":"card_3","label":"杭州婚礼 MV","clue":"在杭州拍摄，日期是六月六日。"}
+      ],
+      "solution": ["card_1","card_2","card_3","card_4","card_5","card_6"]
+    },
+    "reward": {"coins":54,"hearts":13,"energy":0,"scissors":0}
+  }
+]

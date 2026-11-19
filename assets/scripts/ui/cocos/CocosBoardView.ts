@@ -193,6 +193,9 @@ export class CocosBoardView {
     const gift = createUiNode('SupplyShortcutArt'); supplies.addChild(gift); gift.setPosition(0, 10, 0);
     const giftArt = itemArt('treasure_chest'); if (giftArt) applyArt(gift, { ...giftArt, preserveAspect: true }, 42, 38);
     const caption = makeLabel('补给', 19, hexColor('#825A54'), true); supplies.addChild(caption.node); ensureTransform(caption.node, 64, 25); caption.node.setPosition(0, -21, 0);
+    const weeklyBadge = createUiNode('WeeklyRewardBadge'); supplies.addChild(weeklyBadge); weeklyBadge.setPosition(28, 18, 0);
+    const dot = weeklyBadge.addComponent(Graphics); dot.fillColor = hexColor('#BC657B'); dot.circle(0, 0, 6); dot.fill();
+    weeklyBadge.active = false;
     for (const [node, tap] of [[supplies, this.deps.onOpenTools]] as const) {
       node.addComponent(Button); node.addComponent(BlockInputEvents);
       let intentionalTap = false;
@@ -210,6 +213,10 @@ export class CocosBoardView {
   setBackpackUsage(used: number, capacity: number): void {
     this.backpackFull = used >= capacity; this.backpackText = `${used}/${capacity}`;
     if (this.backpackLabel) this.backpackLabel.string = this.backpackText;
+  }
+  setWeeklyRewardReady(ready: boolean): void {
+    const badge = this.node.getChildByName('OpenTools')?.getChildByName('WeeklyRewardBadge');
+    if (badge) badge.active = ready;
   }
   setOrderHints(hints: Array<{ index: number; ready: boolean }>): void {
     this.orderHints = new Map(hints.map(hint => [hint.index, hint.ready]));

@@ -119,10 +119,11 @@ export class CocosItemGuide {
     const chain = this.game.bundle.items.filter((definition) => definition.chainId === item.chainId)
       .sort((a, b) => a.level - b.level);
     this.chainCaption.string = chain.length > 8 ? `${chain.length} 阶合成链 · 上下滑动查看更多` : `${chain.length} 阶合成链 · 两个同级合成升级`;
-    const generator = this.game.bundle.generators.find((candidate) => candidate.outputs.some((output) =>
-      chain.some((definition) => definition.id === output.itemId)));
+    const generator = this.game.bundle.generators.find(candidate => candidate.chainId === item.chainId);
+    const maxLevel = chain[chain.length - 1]?.level ?? item.level;
     this.nameLabel.string = `${item.displayName}  ·  Lv${item.level}`;
-    this.stepLabel.string = `当前是第 ${item.level} 级；从一级开始合成约需 ${2 ** (item.level - 1)} 个基础物品。`;
+    this.stepLabel.string = item.level >= maxLevel ? `这是该合成链的最高等级 Lv${maxLevel}。`
+      : `当前 Lv${item.level} / ${maxLevel} · 从一级合成约需 ${2 ** (item.level - 1)} 个基础物品`;
     this.sourceLabel.string = generator
       ? generator.id === 'orange_tree'
         ? `获取来源：${generator.displayName}（不消耗体力；每 ${Math.floor((generator.recharge?.intervalMs ?? 60000) / 60000)} 分钟恢复1次，最多 ${generator.recharge?.capacity ?? 10} 次；Lv${generator.unlockLevel} 解锁）`
@@ -133,7 +134,10 @@ export class CocosItemGuide {
     this.goalLabel.string = requirement
       ? `今日约会「${date?.template.title ?? ''}」需要 ${requirement.have}/${requirement.count} 件`
       : `今日约会「${date?.template.title ?? '—'}」暂不需要这件物品`;
-    if (item.chainId === 'sugar') this.sourceLabel.string = '获取来源：Lv2 及以上咖啡机有机会额外产出方糖';
+    if (item.chainId === 'sugar') {
+      this.sourceLabel.string = 'Lv2 及以上咖啡机有机会额外产出方糖';
+      this.goalLabel.string = 'Lv2 以上方糖留在棋盘时，顾客补单可能收购';
+    }
     if (item.definitionId === 'wildcard') {
       this.stepLabel.string = '拖到可升级的普通物品上，替代另一份相同等级的物品。';
       this.sourceLabel.string = '获取来源：高阶普通生成器极低概率额外产出';

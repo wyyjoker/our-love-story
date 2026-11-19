@@ -1,4 +1,5 @@
 import { RewardPalette } from './CocosRewardEffects';
+import type { GeneratorDefinition, LevelReward } from '../../core/types';
 import { Button, Graphics, Label, Node, Tween, tween, Vec3 } from 'cc';
 import { applyArt, applyMaterialFrame, generatorArt } from './CocosArt';
 import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect, paintTactileButton, pressButton } from './CocosTheme';
@@ -9,6 +10,7 @@ export class CocosLevelUpView {
   private levelLabel: Label;
   private descLabel: Label;
   private rewardLabels: Label[] = [];
+  private rewardCaptions: Label[] = [];
   private icon: Node;
   private claim: Node;
   private onClaim: (() => void) | null = null;
@@ -96,6 +98,7 @@ export class CocosLevelUpView {
       tile.addChild(caption.node);
       ensureTransform(caption.node, 150, 34);
       caption.node.setPosition(0, -29, 0);
+      this.rewardCaptions.push(caption);
     });
 
     this.claim = createUiNode('ClaimLevelReward');
@@ -117,19 +120,19 @@ export class CocosLevelUpView {
 
   rewardOrigin(): Vec3 { return this.claim.worldPosition.clone(); }
 
-  show(level: number, unlockedChains: string[], reward: { coins: number; hearts: number; xp: number }, onClaim: () => void): void {
+  show(level: number, unlocked: Pick<GeneratorDefinition, 'id' | 'displayName'> | undefined, reward: LevelReward, onClaim: () => void, giftName?: string): void {
     this.onClaim = onClaim;
     this.levelLabel.string = `Lv.${level}`;
-    const unlocked = unlockedChains[0];
-    const names: Record<string, string> = { coffee: '咖啡机', flower: '花篮', dessert: '甜品烤箱', gift: '礼物盒', fruit: '阳光橘树' };
-    this.descLabel.string = unlocked ? `${names[unlocked] ?? unlocked} 已解锁` : '又靠近我们的浪漫小屋一步';
-    const generatorId: Record<string, string> = { coffee: 'coffee_machine', flower: 'flower_basket', dessert: 'dessert_oven', gift: 'gift_box', fruit: 'orange_tree' };
-    const art = unlocked ? generatorArt(generatorId[unlocked]) : { sheet: 'game_icon' };
+    this.descLabel.string = unlocked ? `${unlocked.displayName} 已解锁`
+      : giftName && reward.generator ? `进阶礼包 · Lv.${reward.generator.level} ${giftName}` : '又靠近我们的浪漫小屋一步';
+    const generatorId = unlocked?.id ?? reward.generator?.generatorId;
+    const art = (generatorId && generatorArt(generatorId)) || { sheet: 'game_icon' };
     this.icon.active = true;
-    if (art) applyArt(this.icon, { ...art, preserveAspect: true }, 250, 216);
+    applyArt(this.icon, { ...art, preserveAspect: true }, 250, 216);
     this.rewardLabels[0].string = `◉ +${reward.coins}`;
     this.rewardLabels[1].string = `♥ +${reward.hearts}`;
-    this.rewardLabels[2].string = `✦ +${reward.xp}`;
+    this.rewardLabels[2].string = reward.xp > 0 ? `✦ +${reward.xp}` : '×1';
+    this.rewardCaptions[2].string = reward.xp > 0 ? '经验' : '宝箱';
     this.node.active = true;
     Tween.stopAllByTarget(this.card);
     this.card.setScale(0.88 * this.baseScale, 0.88 * this.baseScale, 1);

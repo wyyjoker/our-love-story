@@ -5,12 +5,12 @@ import { GameController } from '../assets/scripts/ui/GameController';
 describe('drop feedback', () => {
   it('explains two maximum-level items without changing merge rules or granting progress', () => {
     const game = createGameContext({ deterministic: true });
-    game.board.clearBoard(); game.board.placeAt(0, 'coffee_12'); game.board.placeAt(1, 'coffee_12');
+    game.board.clearBoard(); game.board.placeAt(0, 'coffee_18'); game.board.placeAt(1, 'coffee_18');
     const message = new GameController(game).onDrop(0, 1);
     expect(message).toMatchObject({ ok: true, kind: 'SWAP', tone: 'info' });
     expect(message.toast).toContain('最高等级');
     expect(game.life.state.stats.merges).toBe(0);
-    expect(game.board.getBoard().cells.slice(0, 2).map((cell) => cell.item?.definitionId)).toEqual(['coffee_12', 'coffee_12']);
+    expect(game.board.getBoard().cells.slice(0, 2).map((cell) => cell.item?.definitionId)).toEqual(['coffee_18', 'coffee_18']);
     game.flushSave();
   });
   it('keeps ordinary moves and cancelled drags quiet', () => {

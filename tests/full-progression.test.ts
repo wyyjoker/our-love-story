@@ -6,7 +6,7 @@ import { SequentialIdService } from '../assets/scripts/infrastructure/IdService'
 import type { StorageAdapter } from '../assets/scripts/infrastructure/PlatformService';
 
 describe('full progression with production configuration', () => {
-  it('earns Lv18, all stories, furniture and wishes through gameplay, then restores them', () => {
+  it('earns Lv18, early stories, furniture and wishes through gameplay, then restores them', () => {
     const values = new Map<string, string>();
     const storage: StorageAdapter = {
       getItem: (key) => values.get(key) ?? null,
@@ -30,8 +30,11 @@ describe('full progression with production configuration', () => {
       const existing = game.board.getBoard().cells.find((cell) =>
         cell.item?.definitionId === id && !reserved.has(cell.index));
       if (existing) return existing.index;
+      const item = game.bundle.catalog.get(id);
+      const generator = game.bundle.generators.find((entry) => entry.chainId === item?.chainId);
+      const tier = generator && game.getGeneratorStatus(generator.id)?.level;
       const previous = game.bundle.items.find((item) => item.nextItemId === id);
-      if (previous) {
+      if (previous && (!tier || previous.level >= tier)) {
         const first = craft(previous.id, reserved);
         reserved.add(first);
         const second = craft(previous.id, reserved);
@@ -40,7 +43,6 @@ describe('full progression with production configuration', () => {
         expect(merge.ok && merge.kind).toBe('MERGE');
         return second;
       }
-      const generator = game.bundle.generators.find((entry) => entry.outputs[0].itemId === id);
       if (!generator) throw new Error(`No generator for ${id}`);
       if (game.player.energy < generator.energyCost) {
         clock.advance(game.config.energy.recoverIntervalMs * game.player.maxEnergy);
@@ -87,8 +89,9 @@ describe('full progression with production configuration', () => {
       }
     }
 
-    const complete = () => game.player.level === 18
-      && game.life.state.unlockedMemoryIds.length === game.bundle.memories.length
+    const firstArc = game.bundle.memories.slice(0, 14);
+    const complete = () => game.player.level >= 18
+      && firstArc.every(memory => game.life.state.unlockedMemoryIds.includes(memory.id))
       && game.life.state.ownedFurnitureIds.length === game.bundle.furniture.length
       && game.life.state.claimedWishIds.length === 10;
     for (let count = 0; count < 1500 && !complete(); count += 1) {
@@ -107,7 +110,7 @@ describe('full progression with production configuration', () => {
       expect(game.player.coins).toBe(before.coins + order.rewardCoins);
       expect(game.player.hearts).toBe(before.hearts + order.rewardHearts);
       expect(game.claimOrder(order.uid)).toEqual({ ok: false, reason: 'ORDER_NOT_FOUND' });
-      expect(game.orders.getOrders()).toHaveLength(3);
+      expect(game.orders.getOrders()).toHaveLength(6);
       claimContent();
 
       // Interrupt actual progression to verify it resumes from a partial save.
@@ -122,11 +125,11 @@ describe('full progression with production configuration', () => {
       }
     }
     expect(complete()).toBe(true);
-    expect(levels).toEqual(Array.from({ length: 17 }, (_, index) => index + 2));
+    expect(levels).toEqual(Array.from({ length: game.player.level - 1 }, (_, index) => index + 2));
     expect(game.life.getDecorPoints()).toBe(game.bundle.furniture.reduce((sum, item) => sum + item.decorPoints, 0));
     expect(game.player.unlockedChainIds).toEqual(['coffee', 'fruit', 'flower', 'dessert', 'gift']);
-    // Every regular chain's last item is reachable on the same 6x7 board.
-    for (const item of game.bundle.items.filter((entry) => ['coffee', 'flower', 'dessert', 'gift'].includes(entry.chainId) && !entry.nextItemId)) {
+    // Reach the previous endgame tier through normal play before exercising late equipment in producer-expansion.test.ts.
+    for (const item of game.bundle.items.filter((entry) => ['coffee', 'flower', 'dessert', 'gift'].includes(entry.chainId) && entry.level === 12)) {
       const index = craft(item.id, new Set());
       expect(game.board.getBoard().cells[index].item?.definitionId).toBe(item.id);
     }

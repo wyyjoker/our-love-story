@@ -336,9 +336,10 @@ describe('replay save v4 to v5 and malformed v5 normalization', () => {
 describe('replay configuration invariants', () => {
   it('keeps the fixed six chapter order, validates cleanly, and gives each chapter exactly one named extra', () => {
     const bundle = loadConfigBundle();
-    expect(bundle.adventures.map((chapter) => chapter.id)).toEqual(chapterIds);
+    const original = bundle.adventures.slice(0, chapterIds.length);
+    expect(original.map((chapter) => chapter.id)).toEqual(chapterIds);
     expect(validateConfig(bundle).filter((issue) => issue.level === 'error')).toEqual([]);
-    for (const chapter of bundle.adventures) {
+    for (const chapter of original) {
       expect(chapter.replayVariants).toHaveLength(1);
       const ids = ['classic', ...chapter.replayVariants!.map((variant) => variant.id)];
       expect(new Set(ids).size).toBe(ids.length);

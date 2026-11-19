@@ -10,13 +10,26 @@
       "coins": 200,
       "hearts": 50,
       "xp": 300
-    }
+    },
+    {"level": 20, "coins": 400, "hearts": 40, "xp": 0, "generator": {"generatorId": "orange_tree", "level": 2, "count": 1}},
+    {"level": 25, "coins": 500, "hearts": 50, "xp": 0, "generator": {"generatorId": "coffee_machine", "level": 3, "count": 1}},
+    {"level": 28, "coins": 560, "hearts": 56, "xp": 0, "generator": {"generatorId": "painting_easel", "level": 3, "count": 1}},
+    {"level": 30, "coins": 600, "hearts": 60, "xp": 0, "generator": {"generatorId": "flower_basket", "level": 4, "count": 1}},
+    {"level": 35, "coins": 700, "hearts": 70, "xp": 0, "generator": {"generatorId": "dessert_oven", "level": 5, "count": 1}},
+    {"level": 37, "coins": 740, "hearts": 74, "xp": 0, "generator": {"generatorId": "photo_station", "level": 4, "count": 1}},
+    {"level": 40, "coins": 800, "hearts": 80, "xp": 0, "generator": {"generatorId": "gift_box", "level": 6, "count": 1}},
+    {"level": 43, "coins": 860, "hearts": 86, "xp": 0, "generator": {"generatorId": "painting_easel", "level": 5, "count": 1}},
+    {"level": 45, "coins": 900, "hearts": 90, "xp": 0, "generator": {"generatorId": "orange_tree", "level": 7, "count": 1}},
+    {"level": 47, "coins": 940, "hearts": 94, "xp": 0, "generator": {"generatorId": "photo_station", "level": 6, "count": 1}},
+    {"level": 50, "coins": 1000, "hearts": 100, "xp": 0, "generator": {"generatorId": "coffee_machine", "level": 8, "count": 1}}
   ],
   "generatorRotation": [
     "coffee_machine",
     "orange_tree",
     "flower_basket",
     "dessert_oven",
-    "gift_box"
+    "gift_box",
+    "painting_easel",
+    "photo_station"
   ]
 }

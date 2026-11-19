@@ -6,8 +6,12 @@ import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRo
 import { claimedCheckInDays, previewEnergyReplenishment } from './RewardUiMath';
 
 type PendingAction = { index: number; expectedUid: string; title: string; detail: string; unit: string; chest: boolean };
-const COLLECTION_NAMES: Readonly<Record<string, string>> = { coffee: '咖啡', flower: '花艺', dessert: '烘焙', gift: '礼物', fruit: '柑橘', sugar: '方糖' };
+type RewardTab = 'checkin' | 'daily' | 'weekly' | 'supplies';
+const COLLECTION_NAMES: Readonly<Record<string, string>> = {
+  coffee: '咖啡', flower: '花艺', dessert: '烘焙', gift: '礼物', fruit: '柑橘', sugar: '方糖', painting: '画艺', photo: '留影',
+};
 const COLLECTION_TABS_PER_PAGE = 4;
+const COLLECTION_ITEMS_PER_PAGE = 12;
 
 function addText(parent: Node, text: string, x: number, y: number, width: number, height: number, size = 20, bold = false): Label {
   const label = makeLabel(text, size, CocosTheme.textPrimary(), bold);
@@ -40,8 +44,9 @@ export class CocosRewardsPanel {
   private readonly collectionPages: Node;
   private readonly collectionFrameHeight: number;
   private collectionChain = '';
-  private lastRewardTab: 'checkin' | 'daily' | 'supplies' = 'supplies';
-  private activeTab: 'checkin' | 'daily' | 'supplies' | 'collection' = 'checkin';
+  private collectionItemPage = 0;
+  private lastRewardTab: RewardTab = 'supplies';
+  private activeTab: RewardTab | 'collection' = 'checkin';
   private readonly content: Node;
   private readonly feedback: (message: string, success?: boolean) => void;
   private pending: PendingAction | null = null;
@@ -144,7 +149,7 @@ export class CocosRewardsPanel {
     this.confirmLayer.active = false;
   }
 
-  open(tab: 'checkin' | 'daily' | 'supplies' | 'collection' = 'checkin'): void { this.pending = null; this.activeTab = tab; this.root.active = true; this.render(); }
+  open(tab: RewardTab | 'collection' = 'checkin'): void { this.pending = null; this.activeTab = tab; this.root.active = true; this.render(); }
   close(): void { this.pending = null; this.confirmLayer.active = false; this.root.active = false; this.onClose?.(); }
 
   private render(): void {
@@ -156,19 +161,23 @@ export class CocosRewardsPanel {
     this.collectionBook.active = showCollection;
     if (showCollection) { this.renderCollection(); return; }
     this.lastRewardTab = tab;
-    this.headerLabel.string = ({ checkin: '七日签到', daily: '每日任务', supplies: '小屋补给' } as const)[tab];
+    this.headerLabel.string = ({ checkin: '七日签到', daily: '每日任务', weekly: '每周经营', supplies: '小屋补给' } as const)[tab];
     const backpackButton = this.panel.children.find((child) => child.name === 'BackpackButton');
     const backpackLabel = backpackButton?.children[0]?.getComponent(Label);
     if (backpackLabel) backpackLabel.string = `背包 ${this.game.play.state.warehouse.length}/${this.game.play.warehouseCapacity}`;
     const balance = this.panel.getChildByName('DiamondBalance')?.getComponent(Label);
     if (balance) balance.string = `◆ ${this.game.player.diamonds}`;
     for (const child of [...this.panel.children]) if (child.name.startsWith('RewardsTab_')) child.destroy();
-    const tabs = [ ['checkin', '签到'], ['daily', '每日'], ['supplies', '补给'], ['collection', '图鉴'] ] as const;
+    const tabs = [ ['checkin', '签到'], ['daily', '每日'], ['weekly', '每周'], ['supplies', '补给'], ['collection', '图鉴'] ] as const;
     tabs.forEach(([key, caption], index) => {
-      const tab = addButton(this.panel, `RewardsTab_${key}`, caption, -240 + index * 160, 292, 156, 72, () => { this.activeTab = key; this.render(); });
+      const tab = addButton(this.panel, `RewardsTab_${key}`, caption, -252 + index * 126, 292, 120, 72, () => { this.activeTab = key; this.render(); });
       if (key !== this.activeTab) {
-        paintRoundRect(tab.getComponent(Graphics)!, 156, 72, 22, hexColor('#F2E5DD'), hexColor('#E7D5CA'), 1);
+        paintRoundRect(tab.getComponent(Graphics)!, 120, 72, 22, hexColor('#F2E5DD'), hexColor('#E7D5CA'), 1);
         const tabLabel = tab.children[0]?.getComponent(Label); if (tabLabel) tabLabel.color = hexColor('#80625A');
+      }
+      if (key === 'weekly' && this.game.hasWeeklyReward()) {
+        const badge = createUiNode('WeeklyTabRewardBadge'); tab.addChild(badge); badge.setPosition(41, 18, 0);
+        const dot = badge.addComponent(Graphics); dot.fillColor = hexColor('#BD6075'); dot.circle(0, 0, 5); dot.fill();
       }
     });
     for (const child of [...this.content.children]) child.destroy();
@@ -237,6 +246,33 @@ export class CocosRewardsPanel {
         const state = task.claimed ? '已领取' : task.ready ? '领取' : '进行中';
         row(title, detail, task.targetItemId && !hiddenTarget ? itemArt(task.targetItemId) : itemArt('coin_01'), { label: state, buttonName: `DailyTaskClaim_${task.id}`, enabled: task.ready && !task.claimed, click: () => this.claimDailyTask(task.id) }, `DailyTask_${task.id}`);
       }
+    } else if (this.activeTab === 'weekly') {
+      const weekly = this.game.getWeeklyChallenge();
+      if (!weekly) {
+        section('每周经营', '每周一更新');
+        const minLevel = this.game.config.rewards.weeklyChallenge?.minLevel;
+        row(minLevel ? `Lv.${minLevel} 开放` : '筹备中', '交付订单与合成物品，完成本周目标可领取补给。', itemArt('treasure_chest'));
+      } else {
+        section(weekly.title, `剩余 ${weekly.daysLeft} 天 · 已完成 ${weekly.completedWeeks} 周`);
+        for (const [index, goal] of weekly.goals.entries()) {
+          row(goal.title, `${Math.min(goal.current, goal.target)} / ${goal.target}${goal.current >= goal.target ? '  ✓ 已完成' : ''}${goal.note ? '\n' + goal.note : ''}`,
+            itemArt(index < 3 ? 'coin_01' : 'coffee_04'), undefined, `WeeklyGoal_${index}`);
+        }
+        const reward = weekly.reward;
+        const claimWeek = (week: number): void => {
+          const result = this.game.claimWeeklyChallenge(week);
+          this.feedback(result.ok ? '经营礼包已到账 ♥' : '每周目标已更新，请查看进度', result.ok);
+          this.render();
+        };
+        row('本周经营礼包', `金币 ${reward.coins} · 经验 ${reward.xp}\n体力 ${reward.energy} · 钻石 ${reward.diamonds}`,
+          itemArt('treasure_chest'), { label: weekly.claimed ? '已领取' : weekly.ready ? '领取' : '未完成', enabled: weekly.ready, buttonName: 'WeeklyClaim',
+            click: () => claimWeek(weekly.week) });
+        const pendingWeek = weekly.pendingRewardWeeks[0];
+        if (pendingWeek !== undefined) {
+          row('往期经营奖励', `还有 ${weekly.pendingRewardWeeks.length} 份已完成礼包可领取`,
+            itemArt('treasure_chest'), { label: '补领', click: () => claimWeek(pendingWeek), buttonName: 'WeeklyPastClaim' });
+        }
+      }
     } else if (this.activeTab === 'supplies') {
       section('钻石兑换体力', '兑换前会显示实际补充量');
       for (const offer of this.game.config.rewards.exchangeOffers) {
@@ -282,7 +318,11 @@ export class CocosRewardsPanel {
     const selected = chains[selectedIndex];
     if (!selected) return;
     this.collectionChain = selected.chainId;
-    const showChain = (id: string): void => { this.collectionChain = id; this.renderCollection(); };
+    const showChain = (id: string): void => {
+      this.collectionChain = id;
+      this.collectionItemPage = 0;
+      this.renderCollection();
+    };
     const frameTop = this.collectionFrameHeight / 2;
     const tabsY = frameTop - 140;
     const start = Math.floor(selectedIndex / COLLECTION_TABS_PER_PAGE) * COLLECTION_TABS_PER_PAGE;
@@ -321,10 +361,13 @@ export class CocosRewardsPanel {
     addButton(head, `CollectionClaim_${selected.chainId}`, action, 175, -24, 188, 54, () => this.claimCollection(selected.chainId), selected.ready);
 
     const definitions = this.game.bundle.items.filter((entry) => entry.chainId === selected.chainId).sort((a, b) => a.level - b.level);
-    const tileHeight = (this.collectionFrameHeight - 414) / 3;
-    definitions.forEach((definition, i) => {
+    const totalPages = Math.ceil(definitions.length / COLLECTION_ITEMS_PER_PAGE);
+    const startItem = this.collectionItemPage * COLLECTION_ITEMS_PER_PAGE;
+    const currentPage = definitions.slice(startItem, startItem + COLLECTION_ITEMS_PER_PAGE);
+    const tileHeight = (this.collectionFrameHeight - (totalPages > 1 ? 430 : 414)) / 3;
+    currentPage.forEach((definition, i) => {
       const known = this.game.isItemDiscovered(definition.id);
-      const tile = createUiNode(`CollectionSlot_${i}`); leaf.addChild(tile);
+      const tile = createUiNode(`CollectionSlot_${startItem + i}`); leaf.addChild(tile);
       ensureTransform(tile, 152, tileHeight);
       tile.setPosition((i % 4 - 1.5) * 163, frameTop - 321 - tileHeight / 2 - Math.floor(i / 4) * (tileHeight + 10), 0);
       const ink = tile.addComponent(Graphics);
@@ -345,6 +388,16 @@ export class CocosRewardsPanel {
       paintRoundRect(caption.addComponent(Graphics), 142, 34, 14, hexColor('#FFFAEA'), hexColor('#E3C7A6'), 1);
       addText(caption, known ? definition.displayName : '未发现', 0, 0, 133, 31, 21, known);
     });
+    if (totalPages > 1) {
+      const showPage = (page: number): void => { this.collectionItemPage = page; this.renderCollection(); };
+      const y = -frameTop + 42;
+      addButton(leaf, 'CollectionItemsPrevious', '‹ 低阶', -214, y, 158, 68,
+        () => showPage(this.collectionItemPage - 1), this.collectionItemPage > 0);
+      addText(leaf, `Lv.${currentPage[0].level}–${currentPage[currentPage.length - 1].level} · ${this.collectionItemPage + 1}/${totalPages}`,
+        0, y, 245, 50, 22, true);
+      addButton(leaf, 'CollectionItemsNext', '高阶 ›', 214, y, 158, 68,
+        () => showPage(this.collectionItemPage + 1), this.collectionItemPage + 1 < totalPages);
+    }
   }
 
   private askUse(index: number, expectedUid: string, title: string, detail: string, unit: string, chest: boolean): void {

@@ -351,14 +351,18 @@ describe('1.2 six-chapter story content', () => {
   it('keeps the original ids and unlock levels, then adds the three personal story chapters', () => {
     const bundle = loadConfigBundle();
     expect(validateConfig(bundle).filter((issue) => issue.level === 'error')).toEqual([]);
-    expect(bundle.adventures.map((chapter) => chapter.id)).toEqual([
+    const original = bundle.adventures.slice(0, 6);
+    expect(original.map((chapter) => chapter.id)).toEqual([
       'zhoushan', 'love_letters', 'namsan', 'hengdian_newyear', 'lijiang_photos', 'leqing_wedding',
     ]);
-    expect(bundle.adventures.map((chapter) => chapter.unlockLevel)).toEqual([1, 3, 5, 6, 8, 10]);
-    const newChapters = bundle.adventures.slice(3);
+    expect(original.map((chapter) => chapter.unlockLevel)).toEqual([1, 3, 5, 6, 8, 10]);
+    const newChapters = original.slice(3);
     for (const chapter of newChapters) expect(chapter.steps).toHaveLength(2);
     expect(newChapters.map((chapter) => chapter.memoryId)).toEqual(['night_view', 'lijiang_wedding', 'anniversary']);
-    const souvenirKeys = bundle.adventures.map((chapter) => `${chapter.souvenir.room}:${chapter.souvenir.x}:${chapter.souvenir.y}`);
+    const souvenirKeys = original.map(({ souvenir }) => {
+      if (!souvenir) throw new Error('Original chapter souvenir missing');
+      return `${souvenir.room}:${souvenir.x}:${souvenir.y}`;
+    });
     expect(new Set(souvenirKeys).size).toBe(souvenirKeys.length);
     expect(bundle.memories.find((memory) => memory.id === 'anniversary')?.dateLabel).toContain('2026 年 10 月 3 日');
   });
@@ -377,7 +381,7 @@ describe('1.2 six-chapter story content', () => {
     }
     expect(lijiang.puzzle.kind).toBe('find');
     expect(lijiang.puzzle.kind === 'find' ? lijiang.puzzle.solution : '').toBe('0522');
-    expect(lijiang.souvenir.title).toBe('丽江旅拍花束');
+    expect(lijiang.souvenir?.title).toBe('丽江旅拍花束');
     expect(leqing.puzzle.kind).toBe('circuit');
     if (leqing.puzzle.kind === 'circuit') {
       expect(circuitState(leqing.puzzle, leqing.puzzle.solution).solved).toBe(true);
@@ -392,7 +396,7 @@ describe('1.2 six-chapter story content', () => {
       }
     }
 
-    const overlap = { ...bundle, adventures: bundle.adventures.map((chapter) => chapter.id === 'leqing_wedding'
+    const overlap = { ...bundle, adventures: bundle.adventures.map((chapter) => chapter.id === 'leqing_wedding' && chapter.souvenir
       ? { ...chapter, souvenir: { ...chapter.souvenir, room: 'living' as const, x: 155, y: -6 } } : chapter) };
     expect(validateConfig(overlap).some((issue) => issue.message.includes('Adventure leqing_wedding invalid'))).toBe(true);
 
@@ -408,7 +412,7 @@ describe('1.2 six-chapter story content', () => {
   it('completes all six chapters through delivery, distinct puzzles and one-time claims', () => {
     const { game } = fixture();
     game.debugAddXp(7650);
-    for (const chapter of game.bundle.adventures) {
+    for (const chapter of game.bundle.adventures.slice(0, 6)) {
       prepare(game, chapter.id);
       solve(game, chapter.id);
       const before = {

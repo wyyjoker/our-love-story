@@ -124,6 +124,7 @@ export class CocosGameView {
       roots.ordersSlot,
       ordersSize.width,
       ordersSize.height,
+      game.config.orders.activeSlots,
     );
     this.board = new CocosBoardView(
       roots.boardSlot,
@@ -140,7 +141,7 @@ export class CocosGameView {
         onDragStart: () => this.tutorial?.hide(),
         onDragFinished: () => this.renderTutorial(),
         onOpenAdventure: () => this.playPages.openHub(),
-        onOpenTools: () => this.openRewards(),
+        onOpenTools: () => this.openRewards(game.hasWeeklyReward() ? 'weekly' : 'supplies'),
         onOpenBackpack: () => { this.hideTutorialAndClearToast(); this.playPages.openTools(); },
         onOpenOrangeTree: () => this.focusProducer('orange_tree'),
         onStore: (index, uid) => {
@@ -325,7 +326,11 @@ export class CocosGameView {
     const level = this.game.life.pendingLevelRewards()[0];
     if (!level) return;
     const chains = this.game.bundle.progression.levels.find((entry) => entry.level === level)?.unlockChains ?? [];
-    this.levelUp.show(level, chains, this.game.life.rewardForLevel(level), () => {
+    const unlockedGenerator = this.game.bundle.generators.find(entry => chains.includes(entry.chainId));
+    const levelReward = this.game.life.rewardForLevel(level);
+    const gift = levelReward.generator;
+    const giftName = gift ? this.game.generators.get(gift.generatorId)?.displayName : undefined;
+    this.levelUp.show(level, unlockedGenerator, levelReward, () => {
       const reward = this.game.life.rewardForLevel(level), id = `level_reward_${level}`;
       this.levelRewardInFlight = true;
       this.status.holdRewards(id, reward);
@@ -341,7 +346,7 @@ export class CocosGameView {
         this.feedback.play('reward');
         this.effects.payout(origin, reward, (kind) => this.status.rewardAnchor(kind), (kind) => this.status.arriveReward(id, kind), finish);
       } else finish();
-    });
+    }, giftName);
   }
 
   private handleDrop(from: number, to: number | null): boolean {
@@ -414,6 +419,10 @@ export class CocosGameView {
     this.unsubs.push(bus.on('REWARDS_CHANGED', () => { this.renderStatus(); this.rewards.refresh(); }));
     this.unsubs.push(bus.on('CHECK_IN_CHANGED', () => { this.renderStatus(); this.rewards.refresh(); }));
     this.unsubs.push(bus.on('DAILY_TASKS_CHANGED', () => this.rewards.refresh()));
+    this.unsubs.push(bus.on('WEEKLY_CHALLENGE_CHANGED', () => {
+      this.board.setWeeklyRewardReady(this.game.hasWeeklyReward());
+      this.rewards.refresh();
+    }));
     this.unsubs.push(bus.on('COLLECTION_CHANGED', () => this.rewards.refresh()));
     this.unsubs.push(bus.on('GENERATOR_CHANGED', () => {
       this.renderStatus();
@@ -528,7 +537,7 @@ export class CocosGameView {
     this.toast.clear();
   }
 
-  private openRewards(tab: 'checkin' | 'daily' | 'supplies' | 'collection' = 'supplies'): void {
+  private openRewards(tab: 'checkin' | 'daily' | 'weekly' | 'supplies' | 'collection' = 'supplies'): void {
     this.hideTutorialAndClearToast();
     this.rewards.open(tab);
   }
@@ -634,6 +643,7 @@ export class CocosGameView {
     this.status.setCheckInAvailable(this.game.getCheckInStatus().canClaim);
     this.status.setShopRewardCount(this.game.generators.getRewards().reduce((sum,reward)=>sum+reward.count,0));
     this.board.setBackpackUsage(this.game.play.state.warehouse.length, this.game.play.warehouseCapacity);
+    this.board.setWeeklyRewardReady(this.game.hasWeeklyReward());
   }
 
   private renderBoard(): void {

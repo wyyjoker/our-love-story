@@ -1,6 +1,6 @@
 import { BlockInputEvents, Button, Graphics, Label, Node, tween, UIOpacity, Vec3 } from 'cc';
 import type { GameContext } from '../../gameplay/GameContext';
-import type { AdventureChapter, PlayResult, ReplayProgress } from '../../core/play/types';
+import { WEDDING_CHAPTER_ID, type AdventureChapter, type PlayResult, type ReplayProgress } from '../../core/play/types';
 import type { UiRoots } from './UiFactory';
 import { applyArt, applyMaterialFrame, itemArt } from './CocosArt';
 import { CocosTheme, createUiNode, ensureOpacity, ensureTransform, hexColor, makeLabel, paintRoundRect, paintTactileButton, pressButton } from './CocosTheme';
@@ -11,10 +11,10 @@ function text(parent: Node, value: string, x: number, y: number, width = 590, he
   l.enableWrapText = true; l.overflow = Label.Overflow.SHRINK; l.lineHeight = size + 8;
   return l;
 }
-function box(parent: Node, name: string, x: number, y: number, width: number, height: number, fill = '#FFF0E9'): Node {
+function box(parent: Node, name: string, x: number, y: number, width: number, height: number, fill = '#FFF0E9', paperFrame = true): Node {
   const n = createUiNode(name); parent.addChild(n); ensureTransform(n, width, height); n.setPosition(x, y, 0);
   paintRoundRect(n.addComponent(Graphics), width, height, 20, hexColor(fill), hexColor('#EDD9CD'), 1);
-  if (width >= 300 && height >= 160 && !name.includes('Shield')) applyMaterialFrame(n, 'paper', width, height);
+  if (paperFrame && width >= 300 && height >= 160 && !name.includes('Shield')) applyMaterialFrame(n, 'paper', width, height);
   return n;
 }
 function button(parent: Node, name: string, caption: string, x: number, y: number, width: number, height: number, tap: () => void, selected = false): Node {
@@ -24,7 +24,7 @@ function button(parent: Node, name: string, caption: string, x: number, y: numbe
   pressButton(n); n.on(Button.EventType.CLICK, tap); return n;
 }
 const failures: Record<Exclude<PlayResult, { ok: true }>['reason'], string> = {
-  LOCKED: '达到本章要求的等级即可开启', NOT_READY: '还没准备齐，先把所需物品放回棋盘吧',
+  LOCKED: '这段谜题暂时无法打开', NOT_READY: '先完成谜题，再回来领取吧',
   ALREADY_CLAIMED: '这份纪念已经珍藏，奖励不会重复领取',
   NOT_CLAIMED: '先领取这一章的纪念，才能免费重玩谜题',
   NO_DATE: '当前还没有可赴的小约会，解锁更多物品后再来看看吧',
@@ -69,7 +69,8 @@ export class CocosPlayPages {
     this.render(); this.changed();
   }
   openChapter(id: string): void {
-    if (!this.game.play.isAvailable(id)) { this.toast(`开启条件：${this.chapterLockText(id)}`); return; }
+    if (!this.game.play.isAvailable(id)) { this.toast(failures.LOCKED); return; }
+    if (this.game.play.progress(id).claimed) { this.openReplay(id); return; }
     this.clearToast();
     this.chapterId = id; this.screen = 'chapter'; this.skipping = false; this.root.active = true; this.render(); this.changed();
   }
@@ -95,7 +96,7 @@ export class CocosPlayPages {
     if (result.ok && action === 'small_date' && dateOrder) {
       this.onDateDelivered(dateOrder.template.rewardCoins, dateOrder.template.rewardXp, dateOrder.template.rewardHearts);
     }
-    if (result.ok && action === 'claim' && this.isFinalChapter(value)) this.showWeddingEnding();
+    if (result.ok && action === 'claim' && value === WEDDING_CHAPTER_ID) this.showWeddingEnding();
     if (result.ok && action === 'solve' && puzzleWasPlaying && this.game.play.puzzleProgress(value).outcome === 'solved') {
       this.onPuzzleSuccess();
       this.showPuzzleSuccess();
@@ -119,32 +120,21 @@ export class CocosPlayPages {
     for (const child of [...this.root.children]) { child.removeFromParent(); child.destroy(); }
     paintRoundRect(this.root.getComponent(Graphics) ?? this.root.addComponent(Graphics), this.roots.designWidth, this.roots.designHeight, 0, hexColor('#362B2B', 174));
     if (this.screen === 'tools') { this.renderBackpack(); return; }
-    const panel = box(this.root, 'PlayPanel', 0, 0, 690, 970, '#FFF8F1');
-    const scale = Math.min(1, (this.roots.designHeight - 90) / 970, (this.roots.designWidth - 32) / 690);
+    const hub = this.screen === 'hub';
+    const panelHeight = hub ? 1100 : 970;
+    const panel = box(this.root, 'PlayPanel', 0, 0, 690, panelHeight, '#FFF8F1', !hub);
+    const scale = Math.min(1, (this.roots.designHeight - 90) / panelHeight, (this.roots.designWidth - 32) / 690);
     panel.setScale(scale, scale, 1);
-    text(panel, this.screen === 'hub' ? '我们的旅程'
-      : this.screen === 'date' ? '小约会' : this.definition()?.title ?? '', -30, 429, 500, 55, 31);
+    if (hub) { this.hub(panel); return; }
+    text(panel, this.screen === 'date' ? '小约会' : this.definition()?.title ?? '', -30, 429, 500, 55, 31);
     button(panel, 'PlayClose', '关闭', 272, 431, 90, 48, () => this.close());
-    if (this.screen === 'hub') this.hub(panel);
-    else if (this.screen === 'date') this.smallDate(panel);
+    if (this.screen === 'date') this.smallDate(panel);
     else this.chapter(panel);
   }
   private definition(): AdventureChapter | undefined { return this.game.bundle.adventures.find((c) => c.id === this.chapterId); }
-  private isFinalChapter(id: string): boolean {
-    return this.game.bundle.adventures[this.game.bundle.adventures.length - 1]?.id === id;
-  }
   private showWeddingEnding(): void {
     if (this.openWeddingEnding()) this.close();
     else { this.close(); this.goHome(); this.toast('先珍藏婚礼回忆，再来读这封信吧'); }
-  }
-  private chapterLockText(id: string, separator = '；'): string {
-    const availability = this.game.play.chapterAvailability(id);
-    if (!availability) return '章节配置暂不可用';
-    const reasons: string[] = [];
-    if (availability.currentLevel < availability.requiredLevel) {
-      reasons.push(`达到 Lv.${availability.requiredLevel}（当前 Lv.${availability.currentLevel}）`);
-    }
-    return reasons.length ? reasons.join(separator) : '现在可以开启';
   }
   private picture(parent: Node, memoryId: string, width: number, height: number, x: number, y: number, focusY?: number): Node {
     const memory = this.game.bundle.memories.find((m) => m.id === memoryId)!;
@@ -153,72 +143,93 @@ export class CocosPlayPages {
     return n;
   }
   private hub(panel: Node): void {
+    const leftText = (parent: Node, name: string, content: string, left: number, y: number, width: number, height: number, size: number, color = '#795447', bold = false): Label => {
+      const label = text(parent, content, left + width / 2, y, width, height, size, color);
+      label.node.name = name;
+      label.horizontalAlign = Label.HorizontalAlign.LEFT;
+      label.isBold = bold;
+      return label;
+    };
+    leftText(panel, 'AdventureHubTitle', '我们的旅程', -283, 475, 384, 74, 38, '#684337', true);
+    button(panel, 'PlayClose', '关闭', 242, 475, 122, 76, () => this.close());
+
+    const rowWidth = 626;
+    const gap = 16;
+    let nextTop = 420;
+    const useRow = (height: number): number => {
+      const center = nextTop - height / 2;
+      nextTop -= height + gap;
+      return center;
+    };
     const journey = this.game.play.journeyProgress();
     const next = journey.nextChapter;
-    const available = journey.availability?.available ?? false;
-    const journeyText = next
-      ? `旅程 ${journey.completed}/${journey.total}\n推荐：${available ? next.title : '未解锁章节'}`
-      : `旅程 ${journey.completed}/${journey.total}\n六章回忆已珍藏`;
-    text(panel, journeyText, -82, 350, 450, 70, 24, '#A85D65');
-    button(panel, 'JourneyNextStep', available ? '继续 ›' : next ? '回合成 ›' : '婚礼来信 ›', 244, 344, 150, 104, () => {
+    const summary = box(panel, 'JourneySummary', 0, useRow(154), rowWidth, 154, '#F8EBDD', false);
+    leftText(summary, 'JourneyCount', `旅程 ${journey.completed} / ${journey.total}`, -283, 41, 380, 34, 26, '#93575C', true);
+    const recommendation = next ? `下一章：${next.title}` : '每一段回忆都已珍藏';
+    leftText(summary, 'JourneyRecommendation', recommendation, -283, -7, 380, 58, 23);
+    button(summary, 'JourneyNextStep', next ? '继续 ›' : '婚礼来信 ›', 206, 10, 156, 104, () => {
       if (!next) { this.showWeddingEnding(); return; }
-      if (available) this.openChapter(next.id);
-      else { this.root.active = false; this.goMerge(); this.changed(); }
-    }, available);
-    box(panel, 'JourneyProgressTrack', 0, 281, 620, 12, '#EBDAD2');
+      this.openChapter(next.id);
+    }, !!next);
+    const trackWidth = rowWidth - 60;
+    box(summary, 'JourneyProgressTrack', 0, -57, trackWidth, 10, '#E8D5C5');
     if (journey.completed > 0) {
-      const fillWidth = 620 * journey.completed / Math.max(1, journey.total);
-      box(panel, 'JourneyProgressFill', -310 + fillWidth / 2, 281, fillWidth, 12, '#E993A3');
+      const fillWidth = trackWidth * journey.completed / Math.max(1, journey.total);
+      box(summary, 'JourneyProgressFill', (fillWidth - trackWidth) / 2, -57, fillWidth, 10, '#D88A99');
     }
     const pages = Math.max(1, Math.ceil(this.game.bundle.adventures.length / this.hubPageSize));
     this.hubPage = Math.max(0, Math.min(this.hubPage, pages - 1));
     const firstChapter = this.hubPage * this.hubPageSize;
     const chapters = this.game.bundle.adventures.slice(firstChapter, firstChapter + this.hubPageSize);
-    chapters.forEach((chapter, index) => {
+    for (const chapter of chapters) {
       const p = this.game.play.progress(chapter.id);
-      const chapterAvailability = this.game.play.chapterAvailability(chapter.id);
-      const chapterAvailable = chapterAvailability?.available ?? false;
       const recommended = journey.nextChapter?.id === chapter.id;
-      const fill = chapterAvailable ? recommended ? '#FFE3DA' : '#FFEEE7' : '#EDE8E1';
-      const card = box(panel, 'Adventure_' + chapter.id, 0, 143 - index * 258, 630, 244, fill);
-      if (chapterAvailable || p.claimed) this.picture(card, chapter.memoryId, 130, 130, -235, 47);
-      else text(card, '🔒', -235, 47, 130, 130, 30);
-      text(card, chapterAvailable || p.claimed ? chapter.title : '未解锁章节', 75, 87, 440, 44, 25);
-      const caption = p.claimed ? '已完成 · 纪念已珍藏\n可重玩谜题或查看回忆'
-        : !chapterAvailable ? this.chapterLockText(chapter.id, '\n')
-        : p.outcome !== 'playing' ? '谜题已完成\n领取纪念，继续旅程吧'
-        : `Lv${chapter.unlockLevel} 解锁\n可直接探索，寻找线索吧`;
-      text(card, caption, 75, 28, 440, 60, 22);
+      const fill = recommended ? '#FFE3DA' : '#FFEEE7';
+      const card = box(panel, 'Adventure_' + chapter.id, 0, useRow(240), rowWidth, 240, fill, false);
+      const portrait = box(card, 'AdventurePortrait', -207, 0, 166, 192, '#F3DDCB');
+      if (p.claimed || recommended || this.game.life.state.unlockedMemoryIds.includes(chapter.memoryId)) {
+        this.picture(portrait, chapter.memoryId, 154, 180, 0, 0);
+      } else text(portrait, '✦', 0, 0, 132, 156, 36);
+      const contentLeft = -101;
+      const contentWidth = 388;
+      const contentCenter = contentLeft + contentWidth / 2;
+      leftText(card, 'AdventureCardTitle', chapter.title, contentLeft, 67, contentWidth, 62, 28, '#6C483A', true);
+      const caption = p.claimed ? '已完成 · 纪念已珍藏'
+        : p.outcome !== 'playing' ? '谜题已完成 · 可领取纪念'
+        : '等待探索';
+      leftText(card, 'AdventureCardCaption', caption, contentLeft, 15, contentWidth, 36, 23, '#865D50');
       if (p.claimed) {
-        button(card, 'AdventureReplay_' + chapter.id, '重玩谜题', -50, -66, 210, 104,
+        button(card, 'AdventureReplay_' + chapter.id, '重玩谜题', -8, -61, 186, 96,
           () => this.openReplay(chapter.id), true);
-        button(card, 'AdventureMemory_' + chapter.id, '查看纪念', 175, -66, 210, 104, () => {
+        button(card, 'AdventureMemory_' + chapter.id, '查看纪念', 194, -61, 186, 96, () => {
           this.root.active = false; this.readMemory(chapter.memoryId); this.changed();
         });
       } else {
-        button(card, 'AdventureOpen_' + chapter.id, chapterAvailable ? recommended ? '继续这段约会 ›' : '打开约会 ›' : '查看条件', 75, -66, 330, 104,
-          () => chapterAvailable ? this.openChapter(chapter.id) : this.toast(`开启条件：${this.chapterLockText(chapter.id)}`), recommended);
+        button(card, 'AdventureOpen_' + chapter.id, recommended ? '继续探索 ›' : '开始探索 ›', contentCenter, -61, contentWidth, 96,
+          () => this.openChapter(chapter.id), recommended);
       }
-    });
+    }
+    nextTop -= (this.hubPageSize - chapters.length) * (240 + gap);
     const date = this.game.play.smallDateOrder();
-    const dateCard = box(panel, 'SmallDateEntry', 0, -291, 630, 104, '#FFF3E5');
+    const dateCard = box(panel, 'SmallDateEntry', 0, useRow(100), rowWidth, 100, '#FFF0E2');
     if (date) {
-      text(dateCard, '小约会 · ' + date.template.title, -85, 23, 380, 34, 23, '#B05A64');
-      text(dateCard, `已完成 ${date.completed} 次 · ${date.ready ? '心意已备齐' : '备好心意再出发'}`, -85, -21, 400, 34, 22);
-      button(dateCard, 'SmallDateOpen', '去赴约 ›', 238, 0, 132, 104, () => this.openDate(), true);
+      leftText(dateCard, 'AdventureDateTitle', '小约会 · ' + date.template.title, -283, 20, 410, 36, 24, '#93575C', true);
+      leftText(dateCard, 'AdventureDateCaption', `已完成 ${date.completed} 次 · ${date.ready ? '心意已备齐' : '备好心意再出发'}`, -283, -21, 410, 34, 22);
+      button(dateCard, 'SmallDateOpen', '去赴约 ›', 221, 0, 144, 82, () => this.openDate(), true);
     } else {
-      text(dateCard, '小约会 · 准备中', -85, 23, 380, 34, 23, '#B05A64');
-      text(dateCard, '解锁更多物品，开启小约会', -85, -21, 400, 34, 22);
-      button(dateCard, 'SmallDateMerge', '回合成页', 238, 0, 132, 104, () => { this.root.active = false; this.goMerge(); this.changed(); });
+      leftText(dateCard, 'AdventureDateTitle', '小约会 · 准备中', -283, 20, 410, 36, 24, '#93575C', true);
+      leftText(dateCard, 'AdventureDateCaption', '解锁更多物品，开启小约会', -283, -21, 410, 34, 22);
+      button(dateCard, 'SmallDateMerge', '回合成页', 221, 0, 144, 82, () => { this.root.active = false; this.goMerge(); this.changed(); });
     }
+    const pagingY = useRow(92);
     if (pages > 1) {
-      button(panel, 'HubPrev', '‹ 上一页', -215, -399, 180, 104, () => { this.hubPage = (this.hubPage - 1 + pages) % pages; this.render(); });
-      text(panel, `${this.hubPage + 1} / ${pages}`, 0, -399, 120, 34, 24);
-      button(panel, 'HubNext', '下一页 ›', 215, -399, 180, 104, () => { this.hubPage = (this.hubPage + 1) % pages; this.render(); });
+      button(panel, 'HubPrev', '‹ 上一页', -208, pagingY, 188, 92, () => { this.hubPage = (this.hubPage - 1 + pages) % pages; this.render(); });
+      text(panel, `${this.hubPage + 1} / ${pages}`, 0, pagingY, 120, 42, 24);
+      button(panel, 'HubNext', '下一页 ›', 208, pagingY, 188, 92, () => { this.hubPage = (this.hubPage + 1) % pages; this.render(); });
     } else {
-      text(panel, '全部章节已在此页', 0, -399, 300, 34, 22);
+      text(panel, '全部章节已在此页', 0, pagingY, 300, 34, 22);
     }
-    text(panel, '免费提示 · 可跳过谜题 · 免费重玩不重复发奖', 0, -469, 620, 32, 22);
+    text(panel, '提示免费 · 可跳过谜题 · 重玩不重复发奖', 0, useRow(38), 566, 38, 21).node.name = 'AdventureHubFooter';
   }
   private smallDate(panel: Node): void {
     button(panel, 'SmallDateBack', '‹ 约会目录', -232, 368, 170, 42, () => this.openHub());
@@ -329,7 +340,7 @@ export class CocosPlayPages {
     if (replay) { this.replayChapter(panel, chapter, replay); return; }
     const p = this.game.play.progress(chapter.id);
     button(panel, 'AdventureBack', '‹ 约会目录', -232, 368, 170, 42, () => this.openHub());
-    text(panel, `Lv${chapter.unlockLevel} 解锁  ·  ${p.claimed ? '已珍藏' : p.outcome === 'playing' ? '探索中' : '待领取'}`, 110, 368, 350, 42, 22);
+    text(panel, p.claimed ? '已珍藏' : p.outcome === 'playing' ? '探索中' : '待领取', 110, 368, 350, 42, 22);
     if (p.outcome !== 'playing') { this.completed(panel, chapter); return; }
     this.puzzleBoard(panel, chapter, p.hints, false);
   }
@@ -394,25 +405,31 @@ export class CocosPlayPages {
     const puzzle = this.game.play.puzzleDefinition(chapter.id)?.puzzle;
     if (puzzle?.kind !== 'sequence') return;
     const p = this.game.play.puzzleProgress(chapter.id);
+    const columns = puzzle.tiles.length > 4 ? 3 : 2;
+    const spacing = columns === 3 ? 202 : 312;
+    const cardWidth = spacing - 16;
     puzzle.tiles.forEach((tile, i) => {
       const selectedAt = p.selected.indexOf(tile.id);
-      const card = button(panel, 'Letter_' + tile.id, '', i % 2 ? 156 : -156, i < 2 ? 144 : -13, 294, 140,
+      const x = (i % columns - (columns - 1) / 2) * spacing;
+      const y = i < columns ? 144 : -13;
+      const card = button(panel, 'Letter_' + tile.id, '', x, y, cardWidth, 140,
         () => this.puzzle('select', tile.id), selectedAt >= 0);
       const fold = createUiNode('EnvelopeFold');
       card.addChild(fold);
       const ink = fold.addComponent(Graphics);
       ink.strokeColor = hexColor(selectedAt >= 0 ? '#FFF0E4' : '#E2C9AB', 180);
       ink.lineWidth = 2;
-      ink.moveTo(-133, 51); ink.lineTo(0, -2); ink.lineTo(133, 51); ink.stroke();
+      const edge = cardWidth / 2 - 14;
+      ink.moveTo(-edge, 51); ink.lineTo(0, -2); ink.lineTo(edge, 51); ink.stroke();
       const seal = createUiNode('LetterSeal');
-      card.addChild(seal); seal.setPosition(-108, 28, 0);
+      card.addChild(seal); seal.setPosition(-cardWidth / 2 + 33, 28, 0);
       const wax = seal.addComponent(Graphics);
       wax.fillColor = hexColor(selectedAt >= 0 ? '#AD6475' : '#DE9DA0');
       wax.circle(0, 0, 19); wax.fill();
       text(seal, selectedAt >= 0 ? String(selectedAt + 1) : '♥', 0, 0, 34, 34, 21, '#FFF9EA');
       const color = selectedAt >= 0 ? '#FFFDF4' : '#825A54';
-      text(card, tile.label, 20, 31, 196, 44, 28, color);
-      text(card, tile.clue, 0, -34, 263, 59, 21, color);
+      text(card, tile.label, 20, 31, cardWidth - 64, 44, columns === 3 ? 22 : 28, color);
+      text(card, tile.clue, 0, -34, cardWidth - 28, 59, columns === 3 ? 19 : 21, color);
     });
     const slotWidth = Math.min(136, 570 / puzzle.tiles.length - 8);
     puzzle.tiles.forEach((_, index) => {
@@ -456,47 +473,47 @@ export class CocosPlayPages {
       const horizontal = column === 0 ? '左' : column === puzzle.columns - 1 ? '右' : '';
       return `${vertical}${horizontal}` || '入口';
     };
-    text(panel, `${corner(puzzle.start)}连入 · ${corner(puzzle.end)}连出 · 点格子旋转`, 0, -232, 590, 36, 21);
+    const entry = corner(puzzle.start) === '入口' ? '左侧中间' : corner(puzzle.start);
+    const exit = corner(puzzle.end) === '入口' ? '右侧中间' : corner(puzzle.end);
+    text(panel, `${entry}连入 · ${exit}连出 · 点格子旋转`, 0, -232, 590, 36, 21);
   }
   private completed(panel: Node, chapter: AdventureChapter): void {
     const p = this.game.play.progress(chapter.id);
     this.picture(panel, chapter.memoryId, 590, 260, 0, 177);
-    text(panel, p.claimed ? '这段回忆和纪念物，已经珍藏 ♥' : '心意已送达，这一页回忆为你展开 ♥', 0, 0, 610, 50, 27);
+    const souvenir = chapter.souvenir;
+    text(panel, p.claimed ? '这段回忆已经珍藏 ♥' : '线索已经收好，这一页回忆为你展开 ♥', 0, 0, 610, 50, 27);
     const r = chapter.reward;
     const gift=r.generator,extra=gift?`${this.game.generators.get(gift.generatorId)?.displayName??'生成器'} Lv${gift.level} ×${gift.count}`:p.claimed?'一次性奖励已领取':'完成后可领取一次';
-    text(panel, `金币 +${r.coins} · 爱心 +${r.hearts} · 体力 +${r.energy}\n剪刀 +${r.scissors} · ${extra}`, 0, -65, 610, 72, 22);
-    text(panel, `家园纪念：${chapter.souvenir.title}`, 0, -125, 600, 40, 23);
+    const rewards = [`金币 +${r.coins}`, `爱心 +${r.hearts}`];
+    if (r.energy > 0) rewards.push(`体力 +${r.energy}`);
+    if (r.scissors > 0) rewards.push(`剪刀 +${r.scissors}`);
+    text(panel, `${rewards.join(' · ')}\n${extra}`, 0, -65, 610, 72, 22);
+    text(panel, souvenir ? `家园纪念：${souvenir.title}` : '珍藏后可在回忆相册中重读', 0, -125, 600, 40, 23);
     if (p.claimed) {
       const journey = this.game.play.journeyProgress();
       const next = journey.nextChapter;
       if (!next) {
-        text(panel, '六章旅程已珍藏\n之后仍可继续经营小屋', 0, -183, 610, 64, 22);
-        button(panel, 'JourneyContinue', this.isFinalChapter(chapter.id) ? '重看婚礼来信 ›' : '继续经营小屋 ›', 0, -275, 500, 104, () => {
-          if (this.isFinalChapter(chapter.id)) this.showWeddingEnding();
-          else { this.root.active = false; this.goHome(); this.changed(); }
+        text(panel, `${journey.total} 段回忆已全部珍藏\n之后仍可继续经营小屋`, 0, -171, 610, 58, 22);
+        button(panel, 'JourneyContinue', '继续经营小屋 ›', 0, -253, 500, 104, () => {
+          this.root.active = false; this.goHome(); this.changed();
         }, true);
-      } else if (journey.availability?.available) {
-        text(panel, `下一章：${next.title}`, 0, -183, 610, 64, 22);
-        button(panel, 'JourneyContinue', '继续下一章 ›', 0, -275, 500, 104,
-          () => this.openChapter(next.id), true);
       } else {
-        text(panel, `下一章尚未解锁\n${this.chapterLockText(next.id)}`, 0, -183, 620, 64, 22);
-        button(panel, 'JourneyContinue', '回合成继续经营 ›', 0, -275, 500, 104, () => {
-          this.root.active = false; this.goMerge(); this.changed();
-        }, true);
+        text(panel, `下一章：${next.title}`, 0, -171, 610, 58, 22);
+        button(panel, 'JourneyContinue', '继续下一章 ›', 0, -253, 500, 104,
+          () => this.openChapter(next.id), true);
       }
-      button(panel, 'AdventureReplay', '重玩谜题', -200, -389, 190, 104, () => this.openReplay(chapter.id), true);
-      button(panel, 'AdventureMemory', '查看纪念', 0, -389, 190, 104, () => {
+      button(panel, 'AdventureReplay', '重玩谜题', -200, -367, 190, 104, () => this.openReplay(chapter.id), true);
+      button(panel, 'AdventureMemory', '查看纪念', 0, -367, 190, 104, () => {
         this.root.active = false; this.readMemory(chapter.memoryId); this.changed();
       });
-      button(panel, 'JourneyHome', '装扮小屋', 200, -389, 190, 104, () => {
+      button(panel, 'JourneyHome', '装扮小屋', 200, -367, 190, 104, () => {
         this.root.active = false; this.goHome(); this.changed();
       });
-      text(panel, '练习独立保存 · 不消耗体力 · 不重复发奖', 0, -463, 620, 36, 22);
+      text(panel, '练习独立保存 · 不消耗体力 · 不重复发奖', 0, -443, 620, 32, 22);
     } else {
-      button(panel, 'AdventureClaim', '领取回忆与纪念物', 0, -275, 500, 104,
-        () => this.action('claim', chapter.id, '回忆与纪念物已珍藏，奖励已领取 ♥'), true);
-      text(panel, '纪念物会出现在对应房间\n点击可再看这段故事', 0, -389, 630, 64, 22);
+      button(panel, 'AdventureClaim', souvenir ? '领取回忆与纪念物' : '珍藏回忆并领奖', 0, -275, 500, 104,
+        () => this.action('claim', chapter.id, '回忆已珍藏，奖励已领取 ♥'), true);
+      if (souvenir) text(panel, '纪念物会出现在对应房间\n点击可再看这段故事', 0, -389, 630, 64, 22);
     }
   }
 }

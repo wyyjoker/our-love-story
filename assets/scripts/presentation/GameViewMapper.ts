@@ -32,6 +32,7 @@ export type ItemVm = {
 export type OrderReqVm = {
   itemId: string;
   displayName: string;
+  level: number;
   have: number;
   count: number;
   done: boolean;
@@ -93,6 +94,8 @@ const CHAIN_CODE: Record<string, string> = {
   flower: '花',
   dessert: '甜',
   gift: '礼',
+  painting: '画',
+  photo: '影',
 };
 
 export function chainCode(chainId: string): string {
@@ -192,6 +195,7 @@ export class GameViewMapper {
       return {
         itemId: req.itemId,
         displayName: def?.displayName ?? req.itemId,
+        level: def?.level ?? 1,
         have: req.have,
         count: req.count,
         done: req.done,

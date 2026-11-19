@@ -32,9 +32,12 @@ describe('Config validation', () => {
     expect(issues).toEqual([]);
   });
 
-  it('has 4 chains × 12 levels', () => {
+  it('has seven primary chains with 18 items apiece', () => {
     const bundle = loadConfigBundle();
-    expect(bundle.items.filter((item) => ['coffee', 'flower', 'dessert', 'gift'].includes(item.chainId))).toHaveLength(48);
+    expect(bundle.generators).toHaveLength(7);
+    for (const generator of bundle.generators) {
+      expect(bundle.items.filter((item) => item.chainId === generator.chainId)).toHaveLength(18);
+    }
   });
 });
 

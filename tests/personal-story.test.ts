@@ -76,6 +76,7 @@ describe('personal story content compatibility', () => {
     expect(game.unlockMemory('marriage_registration').ok).toBe(true);
     expect(game.life.state.unlockedMemoryIds).not.toContain('wedding_thanksgiving');
     expect(game.unlockMemory('wedding_thanksgiving').ok).toBe(true);
+    expect(game.play.isAvailable('memory_wedding_thanksgiving')).toBe(true);
     expect(game.player.hearts).toBe(0);
   });
 

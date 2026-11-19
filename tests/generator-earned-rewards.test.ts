@@ -55,7 +55,7 @@ describe('earned physical producer gifts',()=>{
   });
   it('rejects unknown, excessive and invalid tier configuration',()=>{
     const bundle=loadConfigBundle();expect(validateConfig(bundle).filter(x=>x.level==='error')).toEqual([]);
-    for(const gift of [{generatorId:'unknown',level:1,count:1},{generatorId:'coffee_machine',level:9,count:1},{generatorId:'coffee_machine',level:1,count:9}]){
+    for(const gift of [{generatorId:'unknown',level:1,count:1},{generatorId:'coffee_machine',level:10,count:1},{generatorId:'coffee_machine',level:1,count:9}]){
       const wishes=bundle.wishes.map((wish,index)=>index===0?{...wish,generatorReward:gift}:wish);
       expect(validateConfig({...bundle,wishes}).some(issue=>issue.level==='error'&&issue.message.includes('Wish'))).toBe(true);
       const adventures=bundle.adventures.map((chapter,index)=>index===0?{...chapter,reward:{...chapter.reward,generator:gift}}:chapter);

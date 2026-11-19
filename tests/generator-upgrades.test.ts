@@ -15,14 +15,14 @@ describe('generator upgrades', () => {
   it('grants coffee on the Lv2 reward once, merges same levels and persists highest active level', () => {
     const f = fixture(); const g = f.open();
     const coffeeConfig=g.generators.get('coffee_machine')!;
-    expect(g.getGeneratorStatus('coffee_machine')).toMatchObject({level:1, inventory:[1,0,0,0,0,0,0,0], boostAvailable:false, cooldownMs:coffeeConfig.streakCooldown!.durationMs});
+    expect(g.getGeneratorStatus('coffee_machine')).toMatchObject({level:1, inventory:[1,0,0,0,0,0,0,0,0], boostAvailable:false, cooldownMs:coffeeConfig.streakCooldown!.durationMs});
     expect(g.mergeGenerators('coffee_machine',1)).toEqual({ok:false,reason:'NOT_ENOUGH_GENERATORS'});
     g.debugAddXp(50); expect(g.claimLevelReward(2).ok).toBe(true);
-    expect(g.getGeneratorStatus('coffee_machine')?.inventory).toEqual([2,0,0,0,0,0,0,0]);
+    expect(g.getGeneratorStatus('coffee_machine')?.inventory).toEqual([2,0,0,0,0,0,0,0,0]);
     expect(g.claimLevelReward(2).ok).toBe(false);
     expect(g.mergeGenerators('coffee_machine',1)).toEqual({ok:true,level:2});
-    expect(g.getGeneratorStatus('coffee_machine')).toMatchObject({level:2, inventory:[0,1,0,0,0,0,0,0], boostAvailable:true, cooldownMs:Math.round(coffeeConfig.streakCooldown!.durationMs*coffeeConfig.upgrade!.rechargeFactor)});
-    const h=f.open(); expect(h.getGeneratorStatus('coffee_machine')).toMatchObject({level:2, inventory:[0,1,0,0,0,0,0,0]});
+    expect(g.getGeneratorStatus('coffee_machine')).toMatchObject({level:2, inventory:[0,1,0,0,0,0,0,0,0], boostAvailable:true, cooldownMs:Math.round(coffeeConfig.streakCooldown!.durationMs*coffeeConfig.upgrade!.rechargeFactor)});
+    const h=f.open(); expect(h.getGeneratorStatus('coffee_machine')).toMatchObject({level:2, inventory:[0,1,0,0,0,0,0,0,0]});
     expect(h.mergeGenerators('coffee_machine',2)).toEqual({ok:false,reason:'NOT_ENOUGH_GENERATORS'});
   });
   it('uses configured better output weights and requires 2x energy only when boost is selected', () => {
@@ -48,9 +48,9 @@ describe('generator upgrades', () => {
     g.generators.grantLevelReward(2,['coffee_machine']); g.generators.grantLevelReward(2,['coffee_machine']);
     expect(g.mergeGenerators('coffee_machine',1)).toEqual({ok:true,level:2});
     expect(g.mergeGenerators('coffee_machine',2)).toEqual({ok:true,level:3});
-    expect(g.getGeneratorStatus('coffee_machine')).toMatchObject({level:3,inventory:[0,0,1,0,0,0,0,0],boostAvailable:true});
+    expect(g.getGeneratorStatus('coffee_machine')).toMatchObject({level:3,inventory:[0,0,1,0,0,0,0,0,0],boostAvailable:true});
     expect(g.mergeGenerators('coffee_machine',3)).toEqual({ok:false,reason:'NOT_ENOUGH_GENERATORS'});
-    expect(g.mergeGenerators('coffee_machine',8)).toEqual({ok:false,reason:'MAX_LEVEL'});
+    expect(g.mergeGenerators('coffee_machine',9)).toEqual({ok:false,reason:'MAX_LEVEL'});
     expect(g.mergeGenerators('gift_box',1)).toEqual({ok:false,reason:'LOCKED'});
     expect(f.open().getGeneratorStatus('coffee_machine')?.level).toBe(3);
   });
@@ -68,27 +68,31 @@ describe('generator upgrades', () => {
     const f=fixture(); const cfg=loadConfigBundle().game; const old=createDefaultSaveData(cfg,f.clock.now());
     old.version=5; old.player.level=3; old.player.xp=150; old.life.claimedLevelRewards=[2,3]; delete old.generatorInventory;
     f.data.set(cfg.saveKey,JSON.stringify(old)); const g=f.open();
-    expect(g.getGeneratorStatus('coffee_machine')?.inventory).toEqual([1,0,0,0,0,0,0,0]);
-    expect(g.getGeneratorStatus('orange_tree')?.inventory).toEqual([1,0,0,0,0,0,0,0]);
-    expect(g.getGeneratorStatus('flower_basket')?.inventory).toEqual([1,0,0,0,0,0,0,0]);
-    expect(g.getGeneratorStatus('dessert_oven')?.inventory).toEqual([0,0,0,0,0,0,0,0]);
-    expect(f.open().getGeneratorStatus('coffee_machine')?.inventory).toEqual([1,0,0,0,0,0,0,0]);
+    expect(g.getGeneratorStatus('coffee_machine')?.inventory).toEqual([1,0,0,0,0,0,0,0,0]);
+    expect(g.getGeneratorStatus('orange_tree')?.inventory).toEqual([1,0,0,0,0,0,0,0,0]);
+    expect(g.getGeneratorStatus('flower_basket')?.inventory).toEqual([1,0,0,0,0,0,0,0,0]);
+    expect(g.getGeneratorStatus('dessert_oven')?.inventory).toEqual([0,0,0,0,0,0,0,0,0]);
+    expect(f.open().getGeneratorStatus('coffee_machine')?.inventory).toEqual([1,0,0,0,0,0,0,0,0]);
   });
-  it('keeps all twelve chain levels and level-specific generator pools', () => {
+  it('keeps all eighteen chain levels and level-specific generator pools', () => {
     const g = fixture().open();
-    for (const id of ['coffee_machine', 'flower_basket', 'dessert_oven', 'gift_box', 'orange_tree']) {
+    for (const id of ['coffee_machine', 'flower_basket', 'dessert_oven', 'gift_box', 'orange_tree', 'painting_easel', 'photo_station']) {
       const gen = g.generators.get(id)!;
-      expect(gen.upgrade!.maxLevel).toBe(8);
+      expect(gen.upgrade!.maxLevel).toBe(9);
       for (let level = 1; level <= 8; level++) {
         const pool = level === 1 ? gen.outputs : gen.upgrade!.levels[level - 2].outputs;
         expect(pool.map((p) => p.itemId)).toEqual([level, level + 1, level + 2].map((n) => `${gen.chainId}_${String(n).padStart(2, '0')}`));
         expect(pool.map((p) => p.weight)).toEqual([70, 25, 5]);
         if (level > 1 && gen.energyCost > 0) expect(gen.upgrade!.levels[level - 2].boostOutputs!.map((p) => p.weight)).toEqual([25, 50, 25]);
       }
-      for (let level = 8; level <= 12; level++) {
+      const maxTier = gen.upgrade!.levels[7];
+      expect(maxTier.outputs.map((p) => p.itemId)).toEqual([9, 10, 11, 12].map((n) => `${gen.chainId}_${String(n).padStart(2, '0')}`));
+      expect(maxTier.outputs.map((p) => p.weight)).toEqual([60, 26, 12, 2]);
+      if (gen.energyCost > 0) expect(maxTier.boostOutputs!.map((p) => p.weight)).toEqual([20, 42, 32, 6]);
+      for (let level = 8; level <= 18; level++) {
         const item = loadConfigBundle().items.find((entry) => entry.id === `${gen.chainId}_${String(level).padStart(2, '0')}`)!;
-        expect(item.maxLevel).toBe(level === 12);
-        if (level < 12) expect(item.nextItemId).toBe(`${gen.chainId}_${String(level + 1).padStart(2, '0')}`);
+        expect(item.maxLevel).toBe(level === 18);
+        if (level < 18) expect(item.nextItemId).toBe(`${gen.chainId}_${String(level + 1).padStart(2, '0')}`);
       }
     }
   });
@@ -96,23 +100,24 @@ describe('generator upgrades', () => {
     const f = fixture(); const cfg = loadConfigBundle().game; const old = createDefaultSaveData(cfg, f.clock.now());
     old.generatorInventory = { coffee_machine: [2, 1, 1] };
     f.data.set(cfg.saveKey, JSON.stringify(old));
-    expect(f.open().getGeneratorStatus('coffee_machine')).toMatchObject({ level: 3, inventory: [2,1,1,0,0,0,0,0] });
+    expect(f.open().getGeneratorStatus('coffee_machine')).toMatchObject({ level: 3, inventory: [2,1,1,0,0,0,0,0,0] });
   });
-  it('buys and merges 128 machines through level eight and preserves them after restart', () => {
+  it('buys and merges 256 machines through level nine and preserves them after restart', () => {
     const f = fixture(); const g = f.open();
     expect(g.getGeneratorPurchaseQuote('coffee_machine')).toEqual({ok:true,generatorId:'coffee_machine',cost:100});
     expect(g.purchaseGenerator('orange_tree')).toEqual({ok:false,reason:'LOCKED'});
     expect(g.purchaseGenerator('missing')).toEqual({ok:false,reason:'NOT_FOUND'});
-    g.debugAddXp(7650); g.debugClearBoard(); g.player.coins = 12700;
-    for (let n = 0; n < 127; n++) {
+    g.debugAddXp(7650); g.debugClearBoard(); g.player.coins = 25500;
+    for (let n = 0; n < 255; n++) {
       expect(g.purchaseGenerator('coffee_machine').ok).toBe(true);
-      for (let level = 1; level < 8; level++) {
+      for (let level = 1; level < 9; level++) {
         if (g.getGeneratorStatus('coffee_machine')!.inventory[level - 1] >= 2) expect(g.mergeGenerators('coffee_machine', level).ok).toBe(true);
       }
     }
     expect(g.player.coins).toBe(0);
     expect(g.purchaseGenerator('coffee_machine')).toEqual({ok:false,reason:'NOT_ENOUGH_COINS'});
-    expect(f.open().getGeneratorStatus('coffee_machine')).toMatchObject({level:8,inventory:[0,0,0,0,0,0,0,1]});
+    expect(f.open().getGeneratorStatus('coffee_machine')).toMatchObject({level:9,inventory:[0,0,0,0,0,0,0,0,1]});
+    expect(g.mergeGenerators('coffee_machine',9)).toEqual({ok:false,reason:'MAX_LEVEL'});
   });
   it('keeps orders, dates and daily merge targets obtainable after generator upgrades', () => {
     const f = fixture(); const g = f.open(); g.debugClearBoard();

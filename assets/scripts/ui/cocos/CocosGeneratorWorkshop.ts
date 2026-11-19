@@ -5,6 +5,8 @@ import { applyArt, applyMaterialFrame, generatorArt, itemArt } from './CocosArt'
 import { CocosTheme, createUiNode, ensureTransform, hexColor, makeLabel, paintRoundRect, paintTactileButton, pressButton } from './CocosTheme';
 
 
+const GENERATORS_PER_PAGE = 5;
+
 function countdown(milliseconds: number): string {
   const seconds = Math.ceil(Math.max(0, milliseconds) / 1000);
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
@@ -45,6 +47,7 @@ export class CocosGeneratorWorkshop {
   private readonly card: Node;
   private readonly content: Node;
   private selectedUid: string | undefined;
+  private shopPage = 0;
   constructor(private readonly game: GameContext, roots: UiRoots,
     private readonly feedback: (message: string, success?: boolean) => void,
     private readonly onClose: () => void,
@@ -63,7 +66,7 @@ export class CocosGeneratorWorkshop {
     this.root.active = false;
   }
   get isOpen(): boolean { return this.root.active; }
-  open(uid?: string): void { this.selectedUid = uid; this.root.active = true; this.render(); }
+  open(uid?: string): void { this.selectedUid = uid; this.shopPage = 0; this.root.active = true; this.render(); }
   close(): void { this.root.active = false; this.onClose(); }
   render(): void {
     if (!this.root.active) return;
@@ -96,15 +99,19 @@ export class CocosGeneratorWorkshop {
     const outputs=(status.boosted?pool?.boostOutputs:pool?.outputs)??generator.outputs;
     const total=outputs.reduce((sum,entry)=>sum+entry.weight,0);
     label(this.content,'GeneratorOutputHeading',status.boosted?'强化产出概率':'普通产出概率',0,-200,570,32,22,true);
+    const spacing = Math.min(184, 592 / outputs.length), tileWidth = spacing - 12;
+    const iconSize = outputs.length > 3 ? 49 : 62;
     outputs.forEach((entry,index)=>{
-      const tile=createUiNode('GeneratorOutput_'+entry.itemId);this.content.addChild(tile);tile.setPosition((index-(outputs.length-1)/2)*184,-263,0);
-      paintRoundRect(tile.addComponent(Graphics),172,90,14,hexColor('#FFF7E7'),hexColor('#E4CEB5'),1);
+      const tile=createUiNode('GeneratorOutput_'+entry.itemId);this.content.addChild(tile);tile.setPosition((index-(outputs.length-1)/2)*spacing,-263,0);
+      ensureTransform(tile, tileWidth, 90);
+      paintRoundRect(tile.addComponent(Graphics),tileWidth,90,14,hexColor('#FFF7E7'),hexColor('#E4CEB5'),1);
       const known=this.game.isItemDiscovered(entry.itemId),definition=this.game.bundle.catalog.get(entry.itemId);
       const art=known&&itemArt(entry.itemId);
-      if(art){const icon=createUiNode('GeneratorOutputArt');tile.addChild(icon);icon.setPosition(-48,7,0);applyArt(icon,{...art,preserveAspect:true},62,62);}
-      else label(tile,'UnknownOutput','?',-48,7,58,62,32,true);
-      label(tile,'OutputTier','Lv'+(definition?.level??1),37,18,68,28,20,true);
-      label(tile,'OutputChance',Math.round(entry.weight/total*100)+'%',37,-14,68,28,21);
+      const iconX = -tileWidth * .28, textX = tileWidth * .23, textWidth = Math.min(68, tileWidth * .48);
+      if(art){const icon=createUiNode('GeneratorOutputArt');tile.addChild(icon);icon.setPosition(iconX,7,0);applyArt(icon,{...art,preserveAspect:true},iconSize,iconSize);}
+      else label(tile,'UnknownOutput','?',iconX,7,iconSize,62,32,true);
+      label(tile,'OutputTier','Lv'+(definition?.level??1),textX,18,textWidth,28,20,true);
+      label(tile,'OutputChance',Math.round(entry.weight/total*100)+'%',textX,-14,textWidth,28,21);
     });
     label(this.content,'GeneratorBoardInstruction','点击棋盘生成 · 长按查看详情\n拖动两台同级生成器可合成升级',0,-357,570,78,23,true);
     label(this.content,'GeneratorTierRule','最高 Lv' + status.maxLevel + ' · 当前最低产出' + status.level + '级主链物品',0,-420,570,42,21);
@@ -142,19 +149,38 @@ export class CocosGeneratorWorkshop {
       });
       y-=90;
     }
-    for(const gen of this.game.bundle.generators) {
-      const unlocked=this.game.generators.isUnlocked(gen);
-      const row=createUiNode('GeneratorShop_'+gen.id);this.content.addChild(row);row.setPosition(0,y,0);
-      paintRoundRect(row.addComponent(Graphics),592,94,18,hexColor('#F9EFE1'),hexColor('#EAD5BF'),1);
-      const icon=createUiNode('GeneratorShopArt');row.addChild(icon);icon.setPosition(-224,0,0);
-      const art=generatorArt(gen.id);if(art)applyArt(icon,art,80,80);
-      label(row,'GeneratorShopName',gen.displayName+' Lv1',-37,23,270,36,24,true);
-      label(row,'GeneratorShopRule',unlocked?'占1格 · 同级可拖动合成':'Lv'+gen.unlockLevel+' 开放',-37,-24,270,32,20);
-      button(row,'PurchaseGenerator_'+gen.id,unlocked?gen.purchaseCoins+' 金币':'未解锁',210,0,148,72,()=>{
+    const generators = this.game.bundle.generators;
+    const totalPages = Math.ceil(generators.length / GENERATORS_PER_PAGE);
+    const start = this.shopPage * GENERATORS_PER_PAGE;
+    const page = generators.slice(start, start + GENERATORS_PER_PAGE);
+    const showcase = this.shopPage > 0 && page.length <= 2;
+    for (const [index, gen] of page.entries()) {
+      const unlocked = this.game.generators.isUnlocked(gen);
+      const row = createUiNode('GeneratorShop_' + gen.id);
+      this.content.addChild(row);
+      row.setPosition(showcase ? (index - (page.length - 1) / 2) * 300 : 0, showcase ? y - 164 : y, 0);
+      paintRoundRect(row.addComponent(Graphics), showcase ? 286 : 592, showcase ? 418 : 94, 18, hexColor('#F9EFE1'), hexColor('#EAD5BF'), 1);
+      const icon = createUiNode('GeneratorShopArt');
+      row.addChild(icon); icon.setPosition(showcase ? 0 : -224, showcase ? 26 : 0, 0);
+      const art = generatorArt(gen.id);
+      if (art) applyArt(icon, art, showcase ? 208 : 80, showcase ? 208 : 80);
+      label(row, 'GeneratorShopName', gen.displayName + ' Lv1', showcase ? 0 : -37, showcase ? 170 : 23, 270, 36, showcase ? 30 : 24, true);
+      label(row, 'GeneratorShopRule', unlocked ? '占1格 · 同级可拖动合成' : 'Lv' + gen.unlockLevel + ' 开放',
+        showcase ? 0 : -37, showcase ? -108 : -24, 270, 32, showcase ? 23 : 20);
+      button(row, 'PurchaseGenerator_' + gen.id, unlocked ? gen.purchaseCoins + ' 金币' : '未解锁',
+        showcase ? 0 : 210, showcase ? -163 : 0, showcase ? 212 : 148, 72, () => {
         const result=this.game.purchaseGenerator(gen.id);
         this.feedback(result.ok?'已放入棋盘空格':result.reason==='BOARD_FULL'?'棋盘已满，购买未扣费':result.reason==='NOT_ENOUGH_COINS'?'金币不足':'暂时无法购买',result.ok);this.render();
-      },unlocked&&this.game.player.coins>=gen.purchaseCoins);
-      y-=102;
+      }, unlocked && this.game.player.coins >= gen.purchaseCoins);
+      if (!showcase) y -= 102;
+    }
+    if (totalPages > 1) {
+      const showPage = (page: number): void => { this.shopPage = page; this.render(); };
+      button(this.content, 'GeneratorShopPrev', '‹ 上一页', -199, -390, 168, 72,
+        () => showPage(this.shopPage - 1), this.shopPage > 0);
+      label(this.content, 'GeneratorShopPage', `第 ${this.shopPage + 1}/${totalPages} 页 · 共 ${generators.length} 种`, 0, -390, 202, 50, 23, true);
+      button(this.content, 'GeneratorShopNext', '下一页 ›', 199, -390, 168, 72,
+        () => showPage(this.shopPage + 1), this.shopPage + 1 < totalPages);
     }
   }
   refreshClock(): void {

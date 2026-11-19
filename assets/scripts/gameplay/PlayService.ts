@@ -137,21 +137,13 @@ export class PlayService {
     return (replay && this.variantDefinition(chapter, replay.variantId)) ?? this.classicDefinition(chapter);
   }
   chapterAvailability(id: string): ChapterAvailability | undefined {
-    const index = this.bundle.adventures.findIndex((chapter) => chapter.id === id);
-    if (index < 0) return undefined;
-    const chapter = this.bundle.adventures[index];
-    const currentLevel = this.progression.level;
-    return {
-      available: currentLevel >= chapter.unlockLevel,
-      requiredLevel: chapter.unlockLevel,
-      currentLevel,
-    };
+    return this.bundle.adventures.some((chapter) => chapter.id === id) ? { available: true } : undefined;
   }
   journeyProgress(): JourneyProgress {
-    const completed = this.bundle.adventures.filter((chapter) => this.progress(chapter.id).claimed).length;
-    const nextChapter = this.bundle.adventures.find((chapter) => !this.progress(chapter.id).claimed) ?? null;
+    const pending = this.bundle.adventures.filter((chapter) => !this.state.chapters[chapter.id]?.claimed);
+    const nextChapter = pending[0] ?? null;
     return {
-      completed,
+      completed: this.bundle.adventures.length - pending.length,
       total: this.bundle.adventures.length,
       nextChapter,
       nextProgress: nextChapter ? this.progress(nextChapter.id) : null,

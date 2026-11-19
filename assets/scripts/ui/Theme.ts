@@ -16,6 +16,8 @@ export const Theme = {
     flower: '#E8A0B5',
     dessert: '#E8C07A',
     gift: '#B8A0D8',
+    painting: '#B486A3',
+    photo: '#93A8C4',
   },
 } as const;
 
